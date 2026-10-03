@@ -11,6 +11,67 @@
 
 ---
 
+# 0. 빠른 방법 — 동작 전부를 한 장으로 (권장)
+
+마스터 이미지 1장 + **시트 1장**이면 캐릭터 하나가 끝납니다. Gemini가 행을 섞어 그려도 괜찮습니다.
+가공 도구의 **"동작 순서 지정"** 칸에 아래 적힌 줄을 넣으면, 왼쪽 위부터 읽는 순서대로 나눠 줍니다.
+> Gemini가 프레임 수를 다르게 그렸으면(예: 걷기 7장) **그림을 세어서 숫자만 고치세요.** 예: `idle 4, walk 7, hit 3, death 4`
+
+### 0-1. 플레이어 시트 (기본 몸·방어구 4벌 공통) → 🔧 **player** (방어구별이면 player_vest 등) · 동작 순서 칸: `idle 4, walk 6, hit 2, death 5`
+📎 해당 마스터 (기본: 1-1 / 방어구: 2-1~2-4)
+```
+Using the attached character as the exact reference (same face, hair, clothes, colors and proportions), create ONE sprite sheet image with these rows: row 1: 4 frames of idle breathing; row 2: 6 frames of a walk cycle; row 3: 2 frames of getting hit and flinching backward; row 4: 5 frames of a death animation, falling down and lying on the ground. Bare head, no helmet, no weapon, empty hands raised forward at chest height in every standing frame. All frames facing right, wide empty gaps between frames, feet of each row on the same line, same character size in every frame. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the image empty. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+### 0-2. 지금 만든 그림에서 "방어구 없는 기본 몸" 만들기
+첫 결과물(조끼 입은 모습)은 **방탄 조끼 몸(player_vest)** 으로 이미 게임에 들어가 있습니다. 시작 모습(방어구 없음)은 이걸로 만드세요.
+📎 조끼 입은 마스터(또는 첫 결과 이미지) · 💾 `player_master.png` → 그다음 0-1로 시트 → 🔧 **player**
+```
+Same person as the attached character (same face, same short hair, same body, same backpack, bare head), but WITHOUT any vest, armor or pouches: wearing only a worn dark gray hoodie, plain dark pants and dirty sneakers. Empty hands raised forward at chest height, no weapon. Full body, standing, facing right. Isometric 3/4 top-down view, detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no border.
+```
+
+### 0-3. 감염자 시트 → 🔧 **zombie** · 동작 순서 칸: `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 `zombie_master.png` (5번 섹션의 마스터 프롬프트로 먼저 만들기)
+```
+Using the attached character as the exact reference (same design, colors and proportions), create ONE sprite sheet image with these rows: row 1: 4 frames of idle swaying; row 2: 6 frames of a slow shambling walk; row 3: 4 frames of a claw attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. All frames facing right, wide empty gaps between frames, feet of each row on the same line, same character size in every frame. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the image empty. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+### 0-4. 약탈자 시트 → 🔧 **raider** · 동작 순서 칸: `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 `raider_master.png` (5번 섹션의 마스터 프롬프트로 먼저 만들기)
+```
+Using the attached character as the exact reference (same design, colors and proportions), create ONE sprite sheet image with these rows: row 1: 4 frames of idle holding the pistol; row 2: 6 frames of a walk cycle holding the pistol; row 3: 4 frames of firing the pistol with recoil, no muzzle flash; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling down and lying on the ground. All frames facing right, wide empty gaps between frames, feet of each row on the same line, same character size in every frame. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the image empty. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+### 0-5. 변이견 시트 → 🔧 **dog** · 동작 순서 칸: `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 `dog_master.png` (5번 섹션의 마스터 프롬프트로 먼저 만들기)
+```
+Using the attached character as the exact reference (same design, colors and proportions), create ONE sprite sheet image with these rows: row 1: 4 frames of idle growling; row 2: 6 frames of a running cycle; row 3: 4 frames of a biting attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling on its side. All frames facing right, wide empty gaps between frames, feet of each row on the same line, same character size in every frame. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the image empty. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+### 0-6. 변이 거한 시트 → 🔧 **brute** · 동작 순서 칸: `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 `brute_master.png` (5번 섹션의 마스터 프롬프트로 먼저 만들기)
+```
+Using the attached character as the exact reference (same design, colors and proportions), create ONE sprite sheet image with these rows: row 1: 4 frames of idle heavy breathing; row 2: 6 frames of a heavy stomping walk; row 3: 4 frames of a ground smash attack with both fists; row 4: 2 frames of getting hit and staggering; row 5: 5 frames of a death animation, falling forward and lying on the ground. All frames facing right, wide empty gaps between frames, feet of each row on the same line, same character size in every frame. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the image empty. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+### 0-7. 경비 드론 시트 → 🔧 **drone** · 동작 순서 칸: `idle 4, attack 4, hit 2, death 5`
+📎 `drone_master.png` (5번 섹션의 마스터 프롬프트로 먼저 만들기)
+```
+Using the attached character as the exact reference (same design, colors and proportions), create ONE sprite sheet image with these rows: row 1: 4 frames of hovering with spinning rotors; row 2: 4 frames of firing its machine gun, no muzzle flash; row 3: 2 frames of getting hit, sparking and tilting; row 4: 5 frames of smoking and crashing to the ground. All frames facing right, wide empty gaps between frames, feet of each row on the same line, same character size in every frame. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the image empty. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+### 0-8. 타이탄(보스) 시트 → 🔧 **boss** · 동작 순서 칸: `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 `boss_master.png` (5번 섹션의 마스터 프롬프트로 먼저 만들기)
+```
+Using the attached character as the exact reference (same design, colors and proportions), create ONE sprite sheet image with these rows: row 1: 4 frames of a menacing idle with glowing veins pulsing; row 2: 6 frames of a heavy walk; row 3: 4 frames of a massive claw swipe attack; row 4: 2 frames of getting hit and roaring; row 5: 5 frames of a death animation, collapsing to its knees and falling. All frames facing right, wide empty gaps between frames, feet of each row on the same line, same character size in every frame. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the image empty. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+> NPC 4명은 대기 동작만 필요하므로 6번 섹션의 대기 프롬프트 하나면 됩니다.
+
+아래 1~8번은 **한 장씩 따로** 만드는 방법입니다. 한 장으로 잘 안 나올 때 사용하세요.
+
+---
+
 # 1. 플레이어 — 기본 몸 (방어구 없음)
 
 ### 1-1. 마스터
@@ -415,4 +476,6 @@ A single game item icon of a military ammunition box, centered, slight 3/4 angle
 | 프레임끼리 붙어 있음 | 다시 생성 (프롬프트에 이미 "wide empty gaps"가 있음) |
 | 캐릭터에 분홍·자주색이 있음 | 프롬프트의 `#FF00FF magenta`를 `#00FF00 green`으로 바꿔 다시 생성 |
 | 체크무늬(가짜 투명) 배경이 나옴 | 다시 생성. "transparent"라는 단어는 절대 넣지 않기 |
+| 행이 섞임 (걷기 줄 끝에 피격 프레임 등) | 괜찮습니다. 도구의 "동작 순서 지정" 칸에 실제 개수대로 입력 |
+| 오른쪽 아래 Gemini ✦ 표시 | 도구가 자동으로 지움 (체크 기본 켜짐). 캐릭터에 걸쳐 있으면 흔적이 조금 남을 수 있음 |
 | 플레이어가 무기·헬멧을 들고/쓰고 나옴 | 다시 생성 (게임이 따로 붙이므로 빈손·맨머리여야 함) |

@@ -18,7 +18,8 @@ const ART = {
   // 화면에 그릴 무기 길이(px)와 손잡이 위치(그림 왼쪽에서 비율)
   weaponLen: { pipe: 30, pistol: 15, axe: 32, smg: 22, shotgun: 30, rifle: 32, katana: 38, sniper: 40, lmg: 36 },
   weaponGrip: { pipe: 0.15, pistol: 0.3, axe: 0.15, smg: 0.35, shotgun: 0.3, rifle: 0.32, katana: 0.12, sniper: 0.3, lmg: 0.35 },
-  handY: 0.5,      // 손 높이 (플레이어 키 대비)
+  handY: 0.62,     // 손 높이 (플레이어 키 대비, 가슴 높이)
+  handX: 0.1,      // 손이 몸 중심에서 앞으로 나온 정도 (플레이어 키 대비)
   weaponThick: 1.7, // 무기 그림 세로 과장 배율 (작은 화면에서 총이 실처럼 가늘어 보이지 않게)
 
   // 헬멧 그림 (1장, 오른쪽을 보는 3/4 시점). 몸 그림의 프레임별 머리 위치(heads)에 씌움
@@ -34,5 +35,7 @@ const ART = {
   sprites: {
     // 예시 (도구가 만들어 주는 형식):
     // zombie: { file: 'zombie.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    // 방탄 조끼를 입은 플레이어 (Gemini 첫 결과물)
+    player_vest: { file: 'player_vest.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 7], hit: [2, 3], death: [3, 4] }, headW: 18, heads: { idle: [[3,-99],[5,-101],[3,-99],[3,-99]], walk: [[1,-93],[-1,-94],[-2,-94],[-2,-93],[-4,-96],[-1,-96],[4,-97]], hit: [[5,-93],[3,-95],[11,-81]], death: [[-5,-85],[-59,-69],[-17,-47],[-16,-48]] } },
   },
 };

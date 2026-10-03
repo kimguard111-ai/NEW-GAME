@@ -80,6 +80,10 @@
       <input id="cell" type="number" value="128" min="32" step="16">
       <label>캐릭터가 오른쪽을 보고 있음 (왼쪽을 보면 체크 해제 → 자동 반전)</label>
       <input id="facingRight" type="checkbox" checked>
+      <label>동작 순서 지정 (선택) — Gemini가 행을 섞어 그렸을 때. 왼쪽 위부터 읽는 순서대로 나눔<br>예: <code>idle 4, walk 7, hit 3, death 4</code></label>
+      <input id="order" type="text" placeholder="비워두면 행 = 동작">
+      <label><input id="wm" type="checkbox" checked> Gemini 워터마크(오른쪽 아래 ✦) 지우기</label>
+      <label><input id="despill" type="checkbox" checked> 테두리 분홍 번짐 제거 (캐릭터에 분홍·보라가 없을 때)</label>
       <button id="run">다시 가공</button>
     </div>
     <div class="box">
@@ -161,6 +165,30 @@ function keyOut(c, tol) {
   return { key, data: d };
 }
 const clamp = v => v < 0 ? 0 : v > 255 ? 255 : v;
+
+// 배경색 번짐 제거: 배경이 마젠타(빨강·파랑 > 초록)면 그쪽으로 치우친 픽셀을 중립으로. 주황(파랑 낮음)·갈색은 영향 없음
+function despill(cv, d, key) {
+  const mag = key[0] > key[1] + 80 && key[2] > key[1] + 80, grn = key[1] > key[0] + 80 && key[1] > key[2] + 80;
+  if (!mag && !grn) return;
+  for (let i = 0; i < d.length; i += 4) {
+    if (!d[i + 3]) continue;
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    if (mag) { const m = Math.min(r, b); if (m > g) { d[i] = r - (m - g); d[i + 2] = b - (m - g); } }
+    else if (g > Math.max(r, b)) d[i + 1] = Math.max(r, b);
+  }
+  cv.getContext('2d').putImageData(new ImageData(d, cv.width, cv.height), 0, 0);
+}
+
+// Gemini 워터마크: 오른쪽 아래 구석의 밝은 회색·흰색(채도 낮음) 픽셀만 지움. 어두운 캐릭터는 건드리지 않음
+function removeWatermark(cv, d) {
+  const w = cv.width, h = cv.height;
+  for (let y = Math.floor(h * 0.84); y < h; y++) for (let x = Math.floor(w * 0.88); x < w; x++) {
+    const i = (y * w + x) * 4, r = d[i], g = d[i + 1], b = d[i + 2];
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    if (mx > 80 && (mx - mn) / mx < 0.2) d[i + 3] = 0;
+  }
+  cv.getContext('2d').putImageData(new ImageData(d, w, h), 0, 0);
+}
 
 // ---------- 프레임 찾기 ----------
 // 자동: 덩어리(연결 영역)를 찾고, 가까운 조각(총구 화염, 떨어진 무기)은 합친 뒤 행/열로 정렬
@@ -274,6 +302,8 @@ function process() {
     const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height;
     cv.getContext('2d').drawImage(im, 0, 0);
     const { key, data } = keyOut(cv, +$('tol').value);
+    if ($('wm').checked) removeWatermark(cv, data);
+    if ($('despill').checked) despill(cv, data, key);
     keys.push(key);
     const rws = mode === 'grid' ? detectGrid(data, im.width, im.height) : detectAuto(data, im.width, im.height);
     if (rws.length) parts.push({ cv, data, w: im.width, rows: rws, refH: median(rws[0].map(b => b.y1 - b.y0)), fileName: im.fileName || '' });
@@ -288,9 +318,20 @@ function process() {
     const flat = pt !== base && median(pt.rows[0].map(b => (b.y1 - b.y0) / (b.x1 - b.x0))) < 0.6 * median(base.rows[0].map(b => (b.y1 - b.y0) / (b.x1 - b.x0)));
     pt.scale = cell * CHAR_FILL / (flat ? base.refH * (pt.w / base.w) : pt.refH);
   }
-  const rows = [];
-  for (const pt of parts) for (const r of pt.rows) rows.push({ items: r, pt });
+  let rows = [];
+  for (const pt of parts) for (const r of pt.rows) { r.forEach(b => { b.pt = pt; }); rows.push({ items: r, pt }); }
   const key = keys[0];
+  const spec = [...$('order').value.matchAll(/(back_)?(idle|walk|attack|hit|death)\s*[:x]?\s*(\d+)/gi)];
+  let specNames = null;
+  if (spec.length) {
+    const flat = rows.flatMap(r => r.items), total = spec.reduce((a, m) => a + +m[3], 0);
+    if (total !== flat.length) $('order').style.borderColor = '#f66';
+    else {
+      $('order').style.borderColor = '#6f6';
+      let k = 0; rows = []; specNames = [];
+      for (const m of spec) { const items = flat.slice(k, k + +m[3]); k += +m[3]; rows.push({ items, pt: items[0].pt }); specNames.push(m[0].replace(/[\s:x]*\d+$/i, '').toLowerCase()); }
+    }
+  }
   const maxCols = Math.max(...rows.map(r => r.items.length));
   const out = $('out'); out.width = maxCols * cellW; out.height = rows.length * cell;
   const og = out.getContext('2d'); og.imageSmoothingQuality = 'high';
@@ -298,18 +339,18 @@ function process() {
   let clipped = 0;
   rows.forEach(({ items: row, pt }, r) => {
    // 행 안의 크기 흔들림 보정: 머리 폭을 행 중간값에 맞춤 (±15% 이내만). 키가 아니라 머리 폭을 쓰므로 걷기의 위아래 흔들림은 유지됨
-   const hws = row.map(b => headWidth(pt.data, pt.w, b)), rowHW = median(hws);
+   const hws = row.map(b => headWidth(b.pt.data, b.pt.w, b)), rowHW = median(hws);
    row.forEach((b, c) => {
-    const fx = feetX(pt.data, pt.w, b);
+    const fx = feetX(b.pt.data, b.pt.w, b);
     const ratio = rowHW / hws[c];
-    let s = pt.scale * (Math.abs(ratio - 1) < 0.15 ? ratio : 1);
+    let s = b.pt.scale * (Math.abs(ratio - 1) < 0.15 ? ratio : 1);
     const hTop = (b.y1 - b.y0) * s;
     if (hTop > cell - FEET_PAD - 2) { s = (cell - FEET_PAD - 2) / (b.y1 - b.y0); clipped++; } // 너무 큰 프레임은 칸에 맞춤
     og.save();
     og.translate(c * cellW + cellW / 2, r * cell + cell - FEET_PAD);
     if (flip) og.scale(-1, 1);
     og.beginPath(); og.rect(-cellW / 2, -(cell - FEET_PAD), cellW, cell); og.clip(); // 옆 칸 침범 방지
-    og.drawImage(pt.cv, b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0, (b.x0 - fx) * s, -(b.y1 - b.y0) * s, (b.x1 - b.x0) * s, (b.y1 - b.y0) * s);
+    og.drawImage(b.pt.cv, b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0, (b.x0 - fx) * s, -(b.y1 - b.y0) * s, (b.x1 - b.x0) * s, (b.y1 - b.y0) * s);
     og.restore();
    });
   });
@@ -335,11 +376,12 @@ function process() {
   } else { result.heads = null; }
   $('info').innerHTML = `<span class="ok">이미지 ${imgs.length}장 · 배경색 rgb(${key.join(',')}) 제거 · ${rows.length}개 행, 프레임 ${result.rows.join('/')}개 감지</span>`
     + (clipped ? `<br><span class="warn">${clipped}개 프레임이 칸보다 커서 축소됨 (칸 크기를 키우면 해결)</span>` : '')
+    + ($('order').value && !specNames ? `<br><span class="warn">동작 순서의 프레임 합계가 감지된 프레임 수(${rows.reduce((a, r) => a + r.items.length, 0)})와 다릅니다.</span>` : '')
     + (rows.some(r => r.items.length === 1) && rows.length > 3 ? '<br><span class="warn">프레임이 1개뿐인 행이 있습니다. 격자 모드를 시도해 보세요.</span>' : '');
   // 행 이름 입력 + 미리보기
   const box = $('anims'); box.innerHTML = '';
   // 파일 이름에 동작 이름이 있으면 그걸 사용 (예: 3_hit.png → hit). 없으면 순서대로 idle, walk, attack, hit, death
-  result.names = rows.map((r, i) => {
+  result.names = specNames || rows.map((r, i) => {
     const m = /(back_)?(idle|walk|attack|hit|death)/i.exec(r.pt.fileName);
     return m && r.pt.rows.length === 1 ? m[0].toLowerCase() : DEFAULT_NAMES[i] || 'anim' + i;
   });

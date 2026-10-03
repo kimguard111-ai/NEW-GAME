@@ -349,7 +349,8 @@ function drawWeaponOverlay(sx, sy, w, p) {
   const swing = b.melee ? (p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * meleeReach(w).arc : -0.5) : 0;
   const d = Iso.dir(p.aim + swing), ang = Math.atan2(d.y, d.x);
   const rc = !b.melee && p.recoilT > 0 ? (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07 : 0; // 반동
-  const hx = sx + d.x * (4 - rc), hy = sy - (ART.height.player || 44) * ART.handY + d.y * (2 - rc);
+  const H = ART.height.player || 44, fw = H * (ART.handX ?? 0.1);
+  const hx = sx + d.x * (fw - rc), hy = sy - H * ART.handY + d.y * (fw * 0.5 - rc);
   const art = ART.weapons[w.key];
   ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
   if (Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게
