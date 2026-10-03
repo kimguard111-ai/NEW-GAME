@@ -257,3 +257,9 @@ body.touch .controls .desk { display: none; }
   body.touch #rotate { display: flex; position: fixed; inset: 0; z-index: 100; background: #0b0c0e; color: #e0b23a;
     align-items: center; justify-content: center; text-align: center; font-size: 18px; padding: 20px; }
 }
+
+/* v0.15 설정 */
+#panel-settings { right: 210px; top: 80px; width: 340px; }
+#settings-body { padding: 10px 14px; font-size: 14px; line-height: 1.6; }
+.set-row { display: block; margin: 6px 0; cursor: pointer; }
+.set-row input[type=range] { width: 100%; }

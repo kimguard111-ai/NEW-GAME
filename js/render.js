@@ -30,7 +30,7 @@ const Iso = {
 const TILE_COLORS = {
   [T.ROAD]: '#2a2c30', [T.WALK]: '#45464b', [T.RUBBLE]: '#3d3833', [T.GRASS]: '#2c3824',
   [T.CAMP]: '#363c45', [T.CAR]: '#2a2c30', [T.BARRICADE]: '#363c45', [T.BUILDING]: '#1d1d20', [T.LANDMARK]: '#3a3833',
-  [T.WALL]: '#2a2420', [T.FLOOR]: '#4a4038', [T.DOOR]: '#4a4038',
+  [T.WALL]: '#2a2420', [T.FLOOR]: '#4a4038', [T.DOOR]: '#4a4038', [T.PROP]: '#4a4038',
 };
 
 // ---------------- 바닥 ----------------
@@ -155,6 +155,7 @@ function tileHeight(tx, ty) {
   if (t === T.BUILDING) return World.height[ty * World.W + tx] || 60;
   if (t === T.WALL) return insideBid(tx, ty) ? CUT_H : World.height[ty * World.W + tx];
   if (t === T.FLOOR || t === T.DOOR) return insideBid(tx, ty) ? 0 : World.height[ty * World.W + tx];
+  if (t === T.PROP) return insideBid(tx, ty) ? World.height[ty * World.W + tx] : World.buildings[World.bid[ty * World.W + tx]].h; // 소품 / 바깥에서는 지붕
   return 0;
 }
 
@@ -172,13 +173,24 @@ function drawSolidTile(o) {
     if (!ruin && h < 0.04) { // 옥상 환풍기
       drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0);
     }
-  } else if (t === T.WALL || t === T.FLOOR || t === T.DOOR) { // 들어갈 수 있는 건물 (상가)
+  } else if (t === T.PROP && insideBid(tx, ty)) { // 실내 소품 (v0.15)
+    const bd = World.buildings[World.bid[ty * World.W + tx]], S = SHOP_STYLES[bd.style], ph = tileHeight(tx, ty);
+    const ins = bd.style === 'table' || bd.style === 'washer' ? 5 : 2; // 식탁·세탁기는 한 칸 안에서 작게
+    drawBox(x0 + ins, y0 + ins, x1 - ins, y1 - ins, ph, S.c[0], S.c[1], S.c[2], 0, 0, 0);
+    if (bd.style === 'shelf') { // 진열 상품 (색 점)
+      for (let i = 0; i < 3; i++) { ctx.fillStyle = ['#c84a3a', '#d8b040', '#4a8ac8'][(tx + ty + i) % 3]; ctx.fillRect(Iso.sx(x0 + 8 + i * 8, y0 + 16) - 2, Iso.sy(x0 + 8 + i * 8, y0 + 16, ph) - 3, 4, 3); }
+    } else if (bd.style === 'desk') { // 모니터 불빛
+      drawBox(x0 + 10, y0 + 12, x1 - 10, y1 - 12, ph + 14, '#1a1c20', '#7ab8e8', '#4a7aa8', ph, ph, 0);
+    } else if (bd.style === 'washer') {
+      ctx.fillStyle = '#3a4048'; ctx.beginPath(); ctx.arc(Iso.sx(x0 + 16, y1 - 5), Iso.sy(x0 + 16, y1 - 5, ph * 0.5), 5, 0, TAU); ctx.fill();
+    }
+  } else if (t === T.WALL || t === T.FLOOR || t === T.DOOR || t === T.PROP) { // 들어갈 수 있는 건물 (상가) · 소품 칸은 바깥에서 지붕
     const i = ty * World.W + tx, s = World.shade[i], cut = insideBid(tx, ty), ht = tileHeight(tx, ty);
     const b = 92 + Math.floor(s * 30);
     const top = `rgb(${b + 6},${b - 10},${b - 26})`, south = `rgb(${b - 40},${b - 52},${b - 62})`, east = `rgb(${b - 24},${b - 36},${b - 46})`;
     if (t === T.WALL) {
       drawBox(x0, y0, x1, y1, ht, cut ? '#6a5a4c' : top, south, east, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), cut ? 0 : tx * 977 + ty);
-    } else if (t === T.FLOOR) { // 지붕 (바깥에서만)
+    } else if (t === T.FLOOR || t === T.PROP) { // 지붕 (바깥에서만)
       drawBox(x0, y0, x1, y1, ht, `rgb(${b - 20},${b - 26},${b - 32})`, south, east, -1, -1, 0);
       if (h < 0.05) drawBox(x0 + 8, y0 + 8, x1 - 8, y1 - 8, ht + 10, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 실외기
     } else { // 출입문: 위쪽 문틀만, 아래는 어두운 입구
@@ -434,15 +446,17 @@ function drawEnemy(e) {
     ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.5, e.r * 0.75, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1;
     if (e.affix === 'commander') { ctx.strokeStyle = 'rgba(255,215,106,0.18)'; ctx.beginPath(); ctx.ellipse(sx, sy, 230 * ISO_K, 115 * ISO_K, 0, 0, TAU); ctx.stroke(); }
   }
-  const k = e.scale || 1; // 네임드·엘리트: 크게
+  // 보스 전용 그림(e.art)이 있으면 그 그림을 제 크기로, 없으면 기본 적 그림을 e.scale 배로
+  const ak = e.art && Sprites.get(e.art) ? e.art : e.type;
+  const k = ak === e.type ? e.scale || 1 : 1; // 네임드·엘리트: 크게
   if (k !== 1) { ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k); ctx.translate(-sx, -sy); }
-  if (Sprites.get(e.type)) {
+  if (Sprites.get(ak)) {
     const hz = e.def.flying ? (34 + Math.sin(G.time * 5 + e.x) * 4) * ISO_K : 0;
-    drawShadow(sx, sy, e.r * (e.def.flying ? 0.8 : 1));
+    drawShadow(sx, sy, e.r * (e.def.flying ? 0.8 : 1) / k);
     if (e.def.boss) { ctx.fillStyle = 'rgba(80,255,90,0.16)'; ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.7, e.r * 0.85, 0, 0, TAU); ctx.fill(); }
-    const [anim, at] = animState(walk !== 0 && e.stunT <= 0, e.stunT > 0 ? Math.min(0.1, e.stunT) : e.hitT, e.lastAtk, e.type);
-    Sprites.draw(e.type, anim, at, sx, sy - hz, f, flash);
-    topY = sy - hz - ART.height[e.type] - 6;
+    const [anim, at] = animState(walk !== 0 && e.stunT <= 0, e.stunT > 0 ? Math.min(0.1, e.stunT) : e.hitT, e.lastAtk, ak);
+    Sprites.draw(ak, anim, at, sx, sy - hz, f, flash);
+    topY = sy - hz - (ART.height[ak] || 44) - 6;
   } else switch (e.type) {
     case 'zombie':
       drawShadow(sx, sy, e.r);
@@ -543,6 +557,10 @@ function addLight(x, y, r, a = 1, color = null) { Light.list.push({ x, y, r, a, 
 function isBurningCar(tx, ty) { return hash2(tx * 7, ty * 13) < 0.18 && World.distTiles(tx * TILE, ty * TILE) > World.safeR + 4; }
 
 function renderLighting(dark) {
+  if (!Settings.light) { // 조명 끔: 단순 어둠만 (저사양·모바일)
+    ctx.fillStyle = `rgba(4,5,12,${dark * 0.45})`; ctx.fillRect(0, 0, VW, VH);
+    Light.list.length = 0; return;
+  }
   // 어둠 레이어는 부드러운 그라데이션뿐이라 절반 해상도로 그리고 확대 (성능)
   const c = Light.cv, LW = Math.ceil(VW / 2), LH = Math.ceil(VH / 2);
   if (c.width !== LW || c.height !== LH) { c.width = LW; c.height = LH; }
@@ -608,7 +626,7 @@ function render() {
     const t = World.tiles[ty * World.W + tx];
     const roof = (t === T.FLOOR || t === T.DOOR) && !insideBid(tx, ty); // 바깥에서 본 상가 지붕·문틀
     if ((!SOLID.has(t) && !roof) || t === T.LANDMARK) continue;
-    const tall = t === T.BUILDING || t === T.WALL || roof ? tileHeight(tx, ty) * ISO_K + 20 : 30;
+    const tall = t === T.BUILDING || t === T.WALL || t === T.PROP || roof ? tileHeight(tx, ty) * ISO_K + 20 : 30;
     if (inView(tx, ty, tall)) solids.push({ d: tx + ty + 1, tx, ty, t });
   }
   Iso.groundTransform();
@@ -677,7 +695,7 @@ function render() {
   const watch = [{ d: pd, sx: psx, sy: psy, w: 60 }];
   for (const e of G.enemies) if (e.state === 'chase' && e.hp > 0) watch.push({ d: (e.x + e.y) / TILE, sx: Iso.sx(e.x, e.y), sy: Iso.sy(e.x, e.y, 18), w: 30 + e.r });
   for (const o of solids) {
-    if (o.t !== T.BUILDING && o.t !== T.WALL && o.t !== T.FLOOR && o.t !== T.DOOR) continue;
+    if (o.t !== T.BUILDING && !SHOP_TILES.has(o.t)) continue;
     const cx = o.tx * TILE + 16, cy = o.ty * TILE + 16;
     const sx = Iso.sx(cx, cy), ht = tileHeight(o.tx, o.ty), top = Iso.sy(cx, cy, ht) - 20, bot = Iso.sy(cx, cy) + 20;
     for (const v of watch) if (o.d > v.d + 0.3 && Math.abs(sx - v.sx) < v.w && v.sy > top && v.sy < bot) { o.fade = true; break; }

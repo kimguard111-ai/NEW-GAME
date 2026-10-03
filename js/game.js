@@ -41,6 +41,7 @@ window.addEventListener('keydown', e => {
   else if (k === 'i') UI.toggle('inventory');
   else if (k === 'c') UI.toggle('stats');
   else if (k === 'j') UI.toggle('quest');
+  else if (k === 'o') UI.toggle('settings');
   else if (k === 'escape') UI.closeAll();
   else if (k >= '1' && k <= '4') useSkill(+k - 1);
   else if (k === '5') quickMedkit();
@@ -364,7 +365,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
     if (hit.stagger) e.stunT = Math.max(e.stunT, hit.stagger / wt);
   }
   const big = dmg >= e.maxHp * 0.25 || crit;
-  floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : e.def.boss ? '#ffb0ff' : '#fff', crit ? 18 : big ? 15 : 13);
+  if (Settings.dmgNum) floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : e.def.boss ? '#ffb0ff' : '#fff', crit ? 18 : big ? 15 : 13);
   burst(e.x, e.y, e.type === 'drone' ? '#ffc' : '#8a1010', crit ? 9 : 4, crit ? 150 : 110, 0.35);
   if (crit) burst(e.x, e.y, '#fff3a0', 5, 180, 0.15, 2);
   if (e.def.boss && (crit || (hit.stagger || 0) >= 0.5)) { G.shake = Math.max(G.shake, 5); hitstop(0.035); }
@@ -396,8 +397,9 @@ function killEnemy(e) {
   gainExp(exp);
   floatText(e.x, e.y - 10, `+${fmt(exp)} EXP`, '#e0c040', 12);
   p.totalKills++;
-  if (Sprites.get(e.type) && ART.sprites[e.type].anims.death) {
-    G.corpses.push({ key: e.type, x: e.x, y: e.y, face: e.face || 0, t0: G.time });
+  const ck = e.art && Sprites.get(e.art) ? e.art : e.type; // 보스 전용 그림이면 그 그림으로 쓰러짐
+  if (Sprites.get(ck) && ART.sprites[ck].anims.death) {
+    G.corpses.push({ key: ck, x: e.x, y: e.y, face: e.face || 0, t0: G.time });
     if (G.corpses.length > 30) G.corpses.shift();
   }
   if (e.type !== 'drone') G.decals.push({ x: e.x, y: e.y, r: e.r * rand(1, 1.6), a: rand(0, TAU) });
@@ -796,6 +798,7 @@ function update(dt) {
 
   // 카메라
   G.shake *= Math.pow(0.002, dt);
+  if (!Settings.shake) G.shake = 0; // 설정: 화면 흔들림 끔
   G.cam.x = (p.x - p.y) * ISO_K - VW / 2 + rand(-G.shake, G.shake);
   G.cam.y = (p.x + p.y) * ISO_K / 2 - VH / 2 - 20 + rand(-G.shake, G.shake);
 

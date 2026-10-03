@@ -18,13 +18,14 @@ const UI = {
     if (name === 'inventory') UI.refreshInventory();
     if (name === 'stats') UI.refreshStats();
     if (name === 'quest') UI.refreshQuest();
+    if (name === 'settings') UI.refreshSettings();
   },
   close(name) {
     $('panel-' + name).classList.add('hidden');
     if (name === 'shop') { UI.shopOpen = false; UI.refreshInventory(); }
   },
   toggle(name) { UI.isOpen(name) ? UI.close(name) : UI.open(name); },
-  closeAll() { ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance'].forEach(n => UI.close(n)); },
+  closeAll() { ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings'].forEach(n => UI.close(n)); },
   refreshAll() { UI.refreshInventory(); UI.refreshStats(); UI.refreshQuest(); },
 
   log(msg, color) {
@@ -290,6 +291,18 @@ const UI = {
         UI.refreshStats(); UI.refreshInventory(); UI.buildHotbar();
       };
     });
+  },
+
+  // ---------------- 설정 ----------------
+  refreshSettings() {
+    const opt = (k, label, desc) => `<label class="set-row"><input type="checkbox" data-set="${k}" ${Settings[k] ? 'checked' : ''}> <b>${label}</b> <span class="muted">${desc}</span></label>`;
+    $('settings-body').innerHTML = opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
+      + opt('shake', '화면 흔들림', '타격·폭발 시 화면 흔들림')
+      + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
+      + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="1.8" step="0.1" value="${ZOOM}"></div>`
+      + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
+    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); }; });
+    $('zoom-range').oninput = e => { setZoom(+e.target.value); $('zoom-val').textContent = ZOOM.toFixed(1) + '배'; };
   },
 
   // ---------------- 임무 ----------------

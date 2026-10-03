@@ -2,9 +2,9 @@
 
 // 지역마다 주기적으로 한 마리씩 나타나는 필드 보스 (플레이어가 그 지역에 있을 때)
 const FIELD_BOSSES = {
-  1: { name: '거대 변이견 「붉은 이빨」', base: 'dog', level: 5, hpMul: 70, dmgMul: 1.6, scale: 1.9, patterns: ['dash', 'howl', 'dash', 'quake'] },
-  2: { name: '약탈단장 「독사」', base: 'raider', level: 10, hpMul: 24, dmgMul: 1.4, scale: 1.4, fireMul: 0.5, patterns: ['fan', 'dash', 'panther'] },
-  3: { name: '실험체 「골리앗」', base: 'brute', level: 16, hpMul: 20, dmgMul: 1.3, scale: 1.6, patterns: ['quake', 'dash', 'glutton', 'quake'] },
+  1: { name: '거대 변이견 「붉은 이빨」', art: 'redfang', base: 'dog', level: 5, hpMul: 70, dmgMul: 1.6, scale: 1.9, patterns: ['dash', 'howl', 'dash', 'quake'] },
+  2: { name: '약탈단장 「독사」', art: 'viper', base: 'raider', level: 10, hpMul: 24, dmgMul: 1.4, scale: 1.4, fireMul: 0.5, patterns: ['fan', 'dash', 'panther'] },
+  3: { name: '실험체 「골리앗」', art: 'goliath', base: 'brute', level: 16, hpMul: 20, dmgMul: 1.3, scale: 1.6, patterns: ['quake', 'dash', 'glutton', 'quake'] },
 };
 const FIELD_BOSS_CD = 360; // 처치 후 다음 출현까지 (초)
 
@@ -32,7 +32,7 @@ const Bosses = {
       const a = rand(0, TAU), r = rand(700, 1300), x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
       if (World.zoneIndex(x, y) !== z || World.circleBlocked(x, y, ENEMIES[def.base].r * def.scale + 4) || World.inSafe(x, y) || World.buildingAt(x, y)) continue;
       const e = makeEnemy(def.base, x, y, def.level);
-      e.bossName = def.name; e.fieldBoss = z; e.patterns = def.patterns; e.scale = def.scale; e.expMul = 10;
+      e.bossName = def.name; e.art = def.art; e.fieldBoss = z; e.patterns = def.patterns; e.scale = def.scale; e.expMul = 10;
       e.hp = e.maxHp = Math.round(e.maxHp * def.hpMul); e.dmg *= def.dmgMul;
       e.r = Math.round(e.r * def.scale); e.fireMul = def.fireMul || 1; e.weight = e.def.weight * 6; e.skillT = 2;
       G.enemies.push(e); G.fieldBoss = e;

@@ -111,6 +111,59 @@ Create ONE sprite sheet image of a military security quadcopter drone: dark gray
 Create ONE sprite sheet image of a giant radioactive mutant boss, three times human size: dark green scarred skin, glowing bright green radioactive veins and cracks, armored bony plates, huge claws, glowing yellow eyes. Rows: row 1: 4 frames of a menacing idle with veins pulsing; row 2: 6 frames of a heavy walk; row 3: 4 frames of a massive claw swipe attack; row 4: 2 frames of getting hit and roaring; row 5: 5 frames of a death animation, collapsing to its knees and falling. The same monster in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
 ```
 
+### 보스 전용 그림 (선택 · v0.15) · 🔢 모두 `idle 4, walk 6, attack 4, hit 2, death 5`
+등록하지 않으면 기본 적 그림을 크게 키워 씁니다. 가공 도구의 에셋 이름에서 같은 키를 고르세요.
+
+#### 5-7. 네임드 먹보 · 🔧 **glutton**
+```
+Create ONE sprite sheet image of a grotesque bloated giant zombie, very fat swollen belly, green-yellow pus boils, tiny head, stubby arms, acid vomit dripping from the mouth. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of vomiting a stream of green acid forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same monster in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-8. 네임드 흑표 · 🔧 **panther**
+```
+Create ONE sprite sheet image of a raider gang leader: black panther pelt cloak, spiked shoulder armor, black face paint, holding a sawed-off shotgun. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of firing the shotgun with recoil, no muzzle flash; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same leader in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-9. 네임드 아르고스 · 🔧 **argos**
+```
+Create ONE sprite sheet image of a large autonomous combat drone: heavy black armored hexagonal body, six rotors, a big glowing red central eye, twin missile pods on the sides, hovering. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of launching missiles from its pods, no explosion; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same drone in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-10. 필드 보스 붉은 이빨 · 🔧 **redfang**
+```
+Create ONE sprite sheet image of a giant mutated wolf-dog, size of a bear, red-tinted hairless hide, rows of oversized teeth, bony spikes along the spine, four legs, seen from the side. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of a charging bite lunge; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same beast in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-11. 필드 보스 독사 · 🔧 **viper**
+```
+Create ONE sprite sheet image of a raider warlord: green snake-scale leather coat, gas mask with snake fangs painted on it, ammo belts, holding an assault rifle. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of firing the rifle in a wide sweep, no muzzle flash; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same warlord in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-12. 필드 보스 골리앗 · 🔧 **goliath**
+```
+Create ONE sprite sheet image of a gigantic lab-experiment mutant, three times human size: pale gray skin with surgical stitches, metal braces bolted to its arms and spine, broken restraint chains hanging from the wrists. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of a two-handed ground slam; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same mutant in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-13. 거점 보스 파수꾼 · 🔧 **warden**
+```
+Create ONE sprite sheet image of a huge mutant brute guarding a ruined cathedral: cracked stone-gray skin, a broken church bell fused to one arm like a shield, tattered priest robes. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of swinging the bell arm in a heavy smash; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same brute in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-14. 거점 보스 도살자 · 🔧 **butcher**
+```
+Create ONE sprite sheet image of a raider executioner: bloody butcher apron over scrap armor, metal executioner hood, holding a pistol and a cleaver. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of firing the pistol, no muzzle flash; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same executioner in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-15. 거점 보스 케르베로스 · 🔧 **cerberus**
+```
+Create ONE sprite sheet image of a three-headed military defense robot dog made of armored steel plates, three red sensor heads, a gun turret on its back, four mechanical legs. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of firing the back turret, no muzzle flash; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same robot in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+#### 5-16. 거점 보스 군체 · 🔧 **colony**
+```
+Create ONE sprite sheet image of a towering radioactive hive mutant, three times human size, made of many fused bodies, glowing green tumors and veins, several arms and mouths. Rows: row 1: 4 frames of idle; row 2: 6 frames of a walk cycle; row 3: 4 frames of lashing out with multiple arms; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling and lying on the ground. The same mutant in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
 ---
 
 ## 6. NPC (NPC마다 1장) · 🔢 4장 모두 `idle 4`

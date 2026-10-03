@@ -136,3 +136,9 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 ## 참고
 
 Gemini로 생성한 이미지의 상업적 이용 조건은 사용 중인 Gemini 서비스 약관을 직접 확인하세요.
+
+## 보스 전용 그림 (v0.15, 선택)
+네임드·필드 보스·거점 보스는 기본 적 그림을 크게 키워 쓰다가, 전용 그림을 등록하면 그 그림을 씁니다.
+- 프롬프트: `docs/GEMINI_PROMPTS.md` 5-7 ~ 5-16
+- 가공 도구 에셋 이름: glutton · panther · argos · redfang · viper · goliath · warden · butcher · cerberus · colony
+- 등록: 도구가 주는 한 줄을 `js/assets.js` 의 `sprites` 에 붙여넣기 (화면 키는 `height` 에 이미 들어 있음)

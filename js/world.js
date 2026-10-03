@@ -1,7 +1,18 @@
 // 맵 생성 및 지형 쿼리
 const T = { ROAD: 0, BUILDING: 1, RUBBLE: 2, CAR: 3, GRASS: 4, CAMP: 5, BARRICADE: 6, WALK: 7, LANDMARK: 8,
-  WALL: 9, FLOOR: 10, DOOR: 11 }; // v0.13 들어갈 수 있는 건물: 외벽·실내 바닥·출입문
-const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE, T.LANDMARK, T.WALL]);
+  WALL: 9, FLOOR: 10, DOOR: 11, PROP: 12 }; // v0.13 들어갈 수 있는 건물: 외벽·실내 바닥·출입문 · v0.15 실내 소품
+const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE, T.LANDMARK, T.WALL, T.PROP]);
+const SHOP_TILES = new Set([T.WALL, T.FLOOR, T.DOOR, T.PROP]);
+// 상가 종류별 실내 소품: style = 배치 방식, h = 높이, c = [윗면, 남쪽면, 동쪽면]
+const SHOP_STYLES = {
+  shelf:   { h: 40, c: ['#7a6a52', '#4a3e2e', '#5e503c'] },  // 진열대 (긴 줄)
+  table:   { h: 22, c: ['#8a6a44', '#54402a', '#6a5236'] },  // 식탁 (한 칸씩)
+  counter: { h: 30, c: ['#6a7078', '#3e4248', '#52585e'] },  // 창구·카운터 (문 앞 긴 줄 + 책상)
+  desk:    { h: 24, c: ['#3a3e46', '#24272c', '#2e3238'] },  // 컴퓨터 책상 (모니터 불빛)
+  washer:  { h: 30, c: ['#c8ccd0', '#8a8e92', '#a8acb0'] },  // 세탁기 (벽 따라)
+};
+const SHOP_STYLE_OF = { 편의점: 'shelf', 약국: 'shelf', 마트: 'shelf', 서점: 'shelf', 전자상가: 'shelf', 카페: 'table', 분식집: 'table',
+  은행: 'counter', 병원: 'counter', 파출소: 'counter', PC방: 'desk', 세탁소: 'washer' };
 const FLOOR_H = 36; // 한 층 높이 (v0.13: 24 → 36, 실제 스케일에 가깝게)
 const SHOP_NAMES = ['편의점', '약국', '은행', '카페', '병원', '마트', 'PC방', '파출소', '분식집', '전자상가', '서점', '세탁소'];
 
@@ -181,6 +192,9 @@ const World = {
       put(x, y, T.DOOR);
       for (let k = 1; k <= 2; k++) put(south ? x : x - k, south ? y - k : y, T.FLOOR); // 문 안쪽 2칸은 항상 비움 (칸막이와 겹침 방지)
     }
+    // 실내 소품 (v0.15): 길을 막으면 그 줄은 취소
+    const name = SHOP_NAMES[Math.floor(rng() * SHOP_NAMES.length)], style = SHOP_STYLE_OF[name];
+    this.placeProps(id, x0, y0, x1, y1, door, style, rng, h);
     // 보급 상자 2~3개 (출입문에서 먼 실내 바닥)
     const crates = [];
     for (let tries = 0; tries < 60 && crates.length < 2 + (rng() < 0.5 ? 1 : 0); tries++) {
@@ -188,9 +202,47 @@ const World = {
       if (this.tiles[cy * W + cx] !== T.FLOOR || Math.hypot(cx - door[0][0], cy - door[0][1]) < 4 || crates.some(c => Math.abs(c.tx - cx) + Math.abs(c.ty - cy) < 3)) continue;
       crates.push({ tx: cx, ty: cy, x: cx * TILE + 16, y: cy * TILE + 16, openT: -1e9 });
     }
-    this.buildings.push({ id, x0, y0, x1, y1, h, south, door, crates, name: SHOP_NAMES[Math.floor(rng() * SHOP_NAMES.length)],
+    this.buildings.push({ id, x0, y0, x1, y1, h, south, door, crates, name, style,
       doorX: (door[0][0] + door[1][0] + 1) / 2 * TILE, doorY: (door[0][1] + door[1][1] + 1) / 2 * TILE, spawnT: -1e9,
       cx: (x0 + x1 + 1) / 2 * TILE, cy: (y0 + y1 + 1) / 2 * TILE });
+  },
+  placeProps(id, x0, y0, x1, y1, door, style, rng, roofH) {
+    const W = this.W, S = SHOP_STYLES[style], runs = [];
+    const nearDoor = (x, y) => door.some(([dx, dy]) => Math.abs(dx - x) + Math.abs(dy - y) <= 2);
+    if (style === 'shelf') for (let y = y0 + 2; y < y1 - 1; y += 3) for (let x = x0 + 2; x < x1 - 2; x += 4) runs.push([[x, y], [x + 1, y], [x + 2, y]]);
+    if (style === 'table') for (let y = y0 + 2; y < y1 - 1; y += 3) for (let x = x0 + 2; x < x1 - 1; x += 3) runs.push([[x, y]]);
+    if (style === 'desk') for (let y = y0 + 2; y < y1 - 1; y += 2) for (let x = x0 + 2; x < x1 - 2; x += 4) runs.push([[x, y], [x + 1, y]]);
+    if (style === 'washer') { for (let x = x0 + 2; x < x1 - 1; x++) runs.push([[x, y0 + 1]]); for (let y = y0 + 3; y < y1 - 1; y++) runs.push([[x0 + 1, y]]); }
+    if (style === 'counter') {
+      const [dx, dy] = door[0], south = dy === y1;
+      runs.counterAt = runs.length; // 창구: 문에서 3~6칸 안쪽 중 먼저 들어가는 줄 하나
+      for (const k of [4, 3, 5, 6]) runs.push(south ? [[dx - 2, dy - k], [dx - 1, dy - k], [dx, dy - k], [dx + 1, dy - k]] : [[dx - k, dy - 2], [dx - k, dy - 1], [dx - k, dy], [dx - k, dy + 1]]);
+      for (let y = y0 + 2; y < y1 - 1; y += 4) for (let x = x0 + 2; x < x1 - 1; x += 4) runs.push([[x, y]]);
+    }
+    // 출입문에서 실내 바닥 전체가 이어지는지 (소품 배치 후 확인)
+    const connected = () => {
+      const seen = new Set(), q = [door[0]];
+      while (q.length) {
+        const [x, y] = q.pop(), k = y * W + x;
+        if (seen.has(k)) continue; seen.add(k);
+        for (const [ax, ay] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + ax, ny = y + ay, t = this.tiles[ny * W + nx];
+          if (this.bid[ny * W + nx] === id && (t === T.FLOOR || t === T.DOOR)) q.push([nx, ny]);
+        }
+      }
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (this.tiles[y * W + x] === T.FLOOR && !seen.has(y * W + x)) return false;
+      return true;
+    };
+    let counterDone = false;
+    for (let ri = 0; ri < runs.length; ri++) {
+      const run = runs[ri], isCounter = runs.counterAt !== undefined && ri >= runs.counterAt && ri < runs.counterAt + 4;
+      if (isCounter && counterDone) continue;
+      if (!isCounter && rng() < 0.15) continue; // 조금씩 비워 폐허 느낌
+      if (!run.every(([x, y]) => this.tiles[y * W + x] === T.FLOOR && this.bid[y * W + x] === id && !nearDoor(x, y))) continue;
+      for (const [x, y] of run) { this.tiles[y * W + x] = T.PROP; this.height[y * W + x] = S.h; }
+      if (!connected()) for (const [x, y] of run) { this.tiles[y * W + x] = T.FLOOR; this.height[y * W + x] = roofH; }
+      else if (isCounter) counterDone = true;
+    }
   },
   // 캠프·랜드마크·아레나에 덮여 훼손된 건물은 일반 건물/잔해로 바꿈
   validateShops() {
@@ -199,14 +251,14 @@ const World = {
       let ok = true;
       for (let y = b.y0; y <= b.y1 && ok; y++) for (let x = b.x0; x <= b.x1; x++) {
         const t = this.tiles[y * W + x];
-        if (this.bid[y * W + x] !== b.id || (t !== T.WALL && t !== T.FLOOR && t !== T.DOOR)) { ok = false; break; }
+        if (this.bid[y * W + x] !== b.id || !SHOP_TILES.has(t)) { ok = false; break; }
       }
       if (ok) { keep.push(b); continue; }
       for (let y = b.y0; y <= b.y1; y++) for (let x = b.x0; x <= b.x1; x++) {
         const i = y * W + x;
         if (this.bid[i] !== b.id) continue;
         this.bid[i] = -1;
-        if (this.tiles[i] === T.WALL || this.tiles[i] === T.FLOOR || this.tiles[i] === T.DOOR) this.tiles[i] = T.RUBBLE;
+        if (SHOP_TILES.has(this.tiles[i])) this.tiles[i] = T.RUBBLE;
       }
     }
     keep.forEach((b, i) => { // 번호 다시 매김
@@ -275,7 +327,7 @@ const World = {
     const col = {
       [T.ROAD]: [45, 47, 52], [T.BUILDING]: [95, 92, 88], [T.RUBBLE]: [70, 64, 56], [T.CAR]: [110, 60, 40],
       [T.GRASS]: [48, 70, 40], [T.CAMP]: [60, 90, 120], [T.BARRICADE]: [140, 110, 60], [T.WALK]: [62, 62, 66],
-      [T.LANDMARK]: [200, 170, 90], [T.WALL]: [120, 100, 80], [T.FLOOR]: [80, 68, 56], [T.DOOR]: [230, 200, 110],
+      [T.LANDMARK]: [200, 170, 90], [T.WALL]: [120, 100, 80], [T.FLOOR]: [80, 68, 56], [T.DOOR]: [230, 200, 110], [T.PROP]: [96, 84, 70],
     };
     for (let i = 0; i < this.tiles.length; i++) {
       const c3 = col[this.tiles[i]];

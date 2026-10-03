@@ -134,7 +134,7 @@ const Story = {
       const x = l.x + Math.cos(a) * r, y = l.y + Math.sin(a) * r;
       if (World.circleBlocked(x, y, ENEMIES[def.base].r * def.scale) || World.buildingAt(x, y)) continue;
       const e = makeEnemy(def.base, x, y, def.level);
-      e.elite = id; e.scale = def.scale;
+      e.elite = id; e.scale = def.scale; e.art = id; // 전용 그림 키 (assets.js)
       e.hp = e.maxHp = Math.round(e.maxHp * def.hpMul); e.dmg *= def.dmgMul;
       e.r = Math.round(e.r * def.scale); e.speed *= def.speedMul || 1; e.fireMul = def.fireMul || 1;
       e.weight = e.def.weight * 4; // 잘 밀리지 않음

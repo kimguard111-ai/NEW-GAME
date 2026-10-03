@@ -5,16 +5,16 @@
 const ASSAULTS = {
   cathedral: { name: '성당 탈환전', level: 4, minLevel: 3, par: 70, limit: 240,
     waves: [{ zombie: 6, dog: 2 }, { zombie: 8, dog: 4 }, { zombie: 6, brute: 1, elites: 1 }],
-    boss: { name: '변이 거한 「파수꾼」', base: 'brute', hpMul: 7, dmgMul: 1.2, scale: 1.35, patterns: ['glutton'] } },
+    boss: { name: '변이 거한 「파수꾼」', art: 'warden', base: 'brute', hpMul: 7, dmgMul: 1.2, scale: 1.35, patterns: ['glutton'] } },
   bosingak: { name: '보신각 소탕전', level: 9, minLevel: 7, par: 90, limit: 240,
     waves: [{ raider: 4, dog: 3 }, { raider: 6, dog: 3 }, { raider: 5, zombie: 4, elites: 2 }],
-    boss: { name: '약탈자 처형인 「도살자」', base: 'raider', hpMul: 12, dmgMul: 1.3, scale: 1.3, fireMul: 0.5, patterns: ['panther', 'glutton'] } },
+    boss: { name: '약탈자 처형인 「도살자」', art: 'butcher', base: 'raider', hpMul: 12, dmgMul: 1.3, scale: 1.3, fireMul: 0.5, patterns: ['panther', 'glutton'] } },
   base: { name: '용산 기지 재점령', level: 14, minLevel: 12, par: 75, limit: 270,
     waves: [{ drone: 3, raider: 3, dog: 2 }, { brute: 2, drone: 4, dog: 2 }, { drone: 3, raider: 3, brute: 2, elites: 2 }],
-    boss: { name: '방어 시스템 「케르베로스」', base: 'drone', hpMul: 16, dmgMul: 1.2, scale: 1.8, fireMul: 0.35, patterns: ['argos', 'panther'] } },
+    boss: { name: '방어 시스템 「케르베로스」', art: 'cerberus', base: 'drone', hpMul: 16, dmgMul: 1.2, scale: 1.8, fireMul: 0.35, patterns: ['argos', 'panther'] } },
   tower63: { name: '63빌딩 정화 작전', level: 19, minLevel: 16, par: 85, limit: 300,
     waves: [{ zombie: 8, brute: 2 }, { drone: 4, raider: 3, zombie: 4 }, { brute: 3, drone: 3, zombie: 4, elites: 3 }],
-    boss: { name: '방사능 변이체 「군체」', base: 'brute', hpMul: 9, dmgMul: 1.3, scale: 1.6, patterns: ['glutton', 'argos'], affix: 'commander' } },
+    boss: { name: '방사능 변이체 「군체」', art: 'colony', base: 'brute', hpMul: 9, dmgMul: 1.3, scale: 1.6, patterns: ['glutton', 'argos'], affix: 'commander' } },
 };
 const ASSAULT_R = 13 * TILE; // 봉쇄 구역 반지름
 // 위협 등급 (v0.14 엔드게임): 등급마다 적 레벨 +3 · 체력 +30% · 보상 증가. 등급 N을 깨면 N+1 개방
@@ -136,7 +136,7 @@ const Assault = {
   spawnBoss(a) {
     const b = a.boss, at = this.spot(ASSAULT_R * 0.35, ASSAULT_R * 0.7, ENEMIES[b.base].r * b.scale + 4) || { x: G.assault.l.x, y: G.assault.l.y + G.assault.l.size * TILE };
     const e = makeEnemy(b.base, at.x, at.y, a.level + 1 + tierLvl(G.assault.tier));
-    e.bossName = b.name; e.patterns = b.patterns; e.scale = b.scale; e.expMul = 6;
+    e.bossName = b.name; e.art = b.art; e.patterns = b.patterns; e.scale = b.scale; e.expMul = 6;
     e.hp = e.maxHp = Math.round(e.maxHp * b.hpMul); e.dmg *= b.dmgMul;
     e.r = Math.round(e.r * b.scale); e.fireMul = b.fireMul || 1; e.weight = e.def.weight * 5;
     if (b.affix) { e.affix = b.affix; e.announced = true; }
