@@ -8,7 +8,7 @@ const MAP_SEED = 2049;
 
 const G = {
   player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [],
-  npcs: [], cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
+  npcs: [], corpses: [], cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
 };
@@ -99,7 +99,7 @@ function startGame(save, name) {
     log('대붕괴 20년 후, 서울. 시청역 생존자 캠프에서 눈을 떴다.', '#e0b23a');
     log('생존자 대장 한씨(오른쪽 위)에게 말을 걸어 임무를 받으세요. [E]', '#8cf');
   }
-  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = [];
+  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
   G.boss = null;
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
@@ -149,6 +149,7 @@ function playerAttack() {
   if (!w || p.atkT > 0 || p.reloadT > 0) return;
   const b = WEAPONS[w.key];
   p.atkT = b.rate * PlayerStats.rateMul(p);
+  p.lastAtk = G.time; // 공격 애니메이션용
   const critMul = PlayerStats.critMul(p, w), cc = PlayerStats.crit(p, w);
   if (b.melee) {
     const reach = meleeReach(w);
@@ -372,6 +373,10 @@ function killEnemy(e) {
   gainExp(exp);
   floatText(e.x, e.y - 10, `+${fmt(exp)} EXP`, '#e0c040', 12);
   p.totalKills++;
+  if (Sprites.get(e.type) && ART.sprites[e.type].anims.death) {
+    G.corpses.push({ key: e.type, x: e.x, y: e.y, face: e.face || 0, t0: G.time });
+    if (G.corpses.length > 30) G.corpses.shift();
+  }
   if (e.type !== 'drone') G.decals.push({ x: e.x, y: e.y, r: e.r * rand(1, 1.6), a: rand(0, TAU) });
   if (G.decals.length > 150) G.decals.shift();
   burst(e.x, e.y, e.type === 'drone' ? '#aab' : '#7a0d0d', e.def.boss ? 60 : 18, e.def.boss ? 260 : 170, 0.6, 4);
@@ -491,13 +496,13 @@ function updateEnemies(dt) {
         else if (los && d < e.def.range * 0.9) { moveA = a + e.sideDir * Math.PI / 2; spd *= 0.6; }
         if (los && d < e.def.range && e.fireT <= 0) {
           e.fireT = e.def.fireCd * rand(0.8, 1.25);
-          spawnEnemyBullet(e, a + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg);
+          spawnEnemyBullet(e, a + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg); e.lastAtk = G.time;
         }
         if (Math.random() < dt * 0.4) e.sideDir *= -1;
       }
       if (d > e.r + p.r + 2) tryMoveSmart(e, moveA, spd * dt);
       if (!e.def.ranged && d < e.r + p.r + 8 && e.atkT <= 0) {
-        e.atkT = e.def.atkCd;
+        e.atkT = e.def.atkCd; e.lastAtk = G.time;
         damagePlayer(e.dmg, e.x, e.y);
       }
     } else {
@@ -677,7 +682,8 @@ function update(dt) {
   updateGrenades(dt);
   updateDrops(dt);
 
-  for (const pt of G.particles) { pt.t += dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= 0.9; pt.vy *= 0.9; }
+  for (const pt of G.particles) { pt.t += dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= 0.9; pt.vy *= 0.9; if (pt.vz) pt.z += pt.vz * dt; }
+  G.corpses = G.corpses.filter(c => G.time - c.t0 < 8);
   G.particles = G.particles.filter(pt => pt.t < pt.life);
   for (const t of G.texts) { t.t += dt; t.z += 36 * dt; }
   G.texts = G.texts.filter(t => t.t < t.life);
@@ -719,6 +725,7 @@ function frame(now) {
 // ---------------- 타이틀 ----------------
 (function initTitle() {
   UI.init();
+  Sprites.load();
   const save = loadSave();
   document.getElementById('version-label').textContent = GAME_VERSION;
   const btnC = document.getElementById('btn-continue');

@@ -160,6 +160,48 @@ function drawSolidTile(o) {
   ctx.globalAlpha = 1;
 }
 
+// ---------------- 스프라이트 (js/assets.js 에 등록된 그림) ----------------
+const Sprites = {
+  load() {
+    for (const s of Object.values(ART.sprites)) {
+      const im = new Image();
+      im.onload = () => { s.ready = true; };
+      im.onerror = () => console.warn('에셋을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
+      im.src = ART.dir + s.file; s.img = im;
+    }
+  },
+  get(key) { const s = ART.sprites[key]; return s && s.ready ? s : null; },
+  // 애니메이션 길이(초)
+  dur(s, anim) { return s.anims[anim] ? s.anims[anim][1] / (ART.fps[anim] || 8) : 0; },
+  // 그리기. anim 이 없으면 idle 로 대체. t = 애니메이션 시작 후 경과(초). 성공 시 true
+  draw(key, anim, t, sx, sy, faceA, flash) {
+    const s = this.get(key);
+    if (!s) return false;
+    const d = Iso.dir(faceA || 0);
+    if (!s.anims[anim]) anim = s.anims.idle ? 'idle' : Object.keys(s.anims)[0];
+    if (d.y < -0.35 && s.anims['back_' + anim]) anim = 'back_' + anim; // 등 돌린 그림이 있으면 사용
+    const [row, n] = s.anims[anim], fps = ART.fps[anim.replace('back_', '')] || 8;
+    const once = /attack|hit|death/.test(anim);
+    const f = once ? Math.min(n - 1, Math.floor(t * fps)) : Math.floor(t * fps) % n;
+    const sc = (ART.height[key] || 44) / (s.cell * ART.charFill), size = s.cell * sc, cw = s.w || s.cell; // w: 칸 가로 (없으면 정사각형)
+    ctx.save();
+    ctx.translate(sx, sy + ART.feetPad * sc);
+    if (d.x < 0) ctx.scale(-1, 1); // 그림은 오른쪽을 보는 기준, 왼쪽은 좌우 반전
+    if (flash && 'filter' in ctx) ctx.filter = 'brightness(2.6)';
+    ctx.drawImage(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
+    ctx.restore();
+    return true;
+  },
+};
+
+// 엔티티 상태 → 애니메이션 (lastAtk: 마지막 공격 시각)
+function animState(moving, hitT, lastAtk, key) {
+  const s = Sprites.get(key);
+  if (hitT > 0) return ['hit', 0.12 - hitT];
+  if (s && lastAtk !== undefined && G.time - lastAtk < Math.max(0.15, Sprites.dur(s, 'attack'))) return ['attack', G.time - lastAtk];
+  return moving ? ['walk', G.time] : ['idle', G.time];
+}
+
 // ---------------- 캐릭터 ----------------
 function drawShadow(sx, sy, r) {
   ctx.fillStyle = 'rgba(0,0,0,0.38)';
@@ -238,7 +280,8 @@ function drawPlayer(p) {
     o.gun = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 12 : w.key === 'lmg' ? 26 : w.key === 'shotgun' ? 22 : w.key === 'smg' ? 15 : 20;
     if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
   }
-  drawHuman(sx, sy, o);
+  const [anim, at] = animState(moving, p.hurtT, p.lastAtk, 'player');
+  if (!Sprites.draw('player', anim, at, sx, sy, p.aim, p.hurtT > 0)) drawHuman(sx, sy, o);
   if (p.buffs.adren > 0 || p.buffs.rapid > 0) {
     ctx.strokeStyle = p.buffs.adren > 0 ? 'rgba(255,120,40,0.7)' : 'rgba(120,255,220,0.7)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(sx, sy, 20, 10, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
@@ -257,7 +300,14 @@ function drawEnemy(e) {
   const flash = e.hitT > 0, f = e.face || 0;
   const walk = e.state === 'chase' || e.wandering ? G.time + e.x * 0.01 : 0;
   let topY = sy - 44;
-  switch (e.type) {
+  if (Sprites.get(e.type)) {
+    const hz = e.def.flying ? (34 + Math.sin(G.time * 5 + e.x) * 4) * ISO_K : 0;
+    drawShadow(sx, sy, e.r * (e.def.flying ? 0.8 : 1));
+    if (e.def.boss) { ctx.fillStyle = 'rgba(80,255,90,0.16)'; ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.7, e.r * 0.85, 0, 0, TAU); ctx.fill(); }
+    const [anim, at] = animState(walk !== 0 && e.stunT <= 0, e.stunT > 0 ? Math.min(0.1, e.stunT) : e.hitT, e.lastAtk, e.type);
+    Sprites.draw(e.type, anim, at, sx, sy - hz, f, flash);
+    topY = sy - hz - ART.height[e.type] - 6;
+  } else switch (e.type) {
     case 'zombie':
       drawShadow(sx, sy, e.r);
       drawHuman(sx, sy + 1, { s: 1, body: '#4f5e3a', skin: '#7f9a5c', legs: '#3b3328', aim: f, claws: true, flash, walk: walk * 0.6, eyes: '#e33' });
@@ -326,7 +376,8 @@ function drawNpc(n) {
     medic: { body: '#e8e8e8', helmet: '#c33', legs: '#555' },
     mechanic: { body: '#5a5a62', helmet: '#c98a20', legs: '#33333a', blade: '#aaa' },
   }[n.id];
-  drawHuman(sx, sy, { s: 1.05, skin: '#d9b48f', aim: angleTo(n, G.player), ...look });
+  if (!Sprites.draw(n.id, 'idle', G.time + n.x * 0.01, sx, sy, angleTo(n, G.player), false))
+    drawHuman(sx, sy, { s: 1.05, skin: '#d9b48f', aim: angleTo(n, G.player), ...look });
   nameTag(sx, sy - 50, n.name, '#ffd76a', 'bold 12px sans-serif');
   let mark = null;
   if (n.id === 'captain') {
@@ -340,6 +391,53 @@ function drawNpc(n) {
     ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = mark[1];
     ctx.fillText(mark[0], sx, sy - 66 + Math.sin(G.time * 3) * 3);
   }
+}
+
+// ---------------- 조명 ----------------
+// 어둠 레이어를 깔고 광원 위치만 지워서 밝힘. color 가 있는 광원은 색 번짐(가산)도 더함
+const Light = { cv: document.createElement('canvas'), list: [] };
+function addLight(x, y, r, a = 1, color = null) { Light.list.push({ x, y, r, a, color }); }
+function isBurningCar(tx, ty) { return hash2(tx * 7, ty * 13) < 0.18 && World.distTiles(tx * TILE, ty * TILE) > World.safeR + 4; }
+
+function renderLighting(dark) {
+  // 어둠 레이어는 부드러운 그라데이션뿐이라 절반 해상도로 그리고 확대 (성능)
+  const c = Light.cv, LW = Math.ceil(VW / 2), LH = Math.ceil(VH / 2);
+  if (c.width !== LW || c.height !== LH) { c.width = LW; c.height = LH; }
+  const g = c.getContext('2d');
+  g.setTransform(0.5, 0, 0, 0.5, 0, 0);
+  g.globalCompositeOperation = 'source-over';
+  g.clearRect(0, 0, VW, VH);
+  g.fillStyle = `rgba(4,5,12,${dark})`; g.fillRect(0, 0, VW, VH);
+  g.globalCompositeOperation = 'destination-out';
+  for (const l of Light.list) {
+    if (l.x < -l.r || l.y < -l.r || l.x > VW + l.r || l.y > VH + l.r) continue;
+    g.save(); g.translate(l.x, l.y); g.scale(1, 0.62); // 쿼터뷰 바닥에 맞춰 타원형
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, l.r);
+    gr.addColorStop(0, `rgba(0,0,0,${l.a})`); gr.addColorStop(0.55, `rgba(0,0,0,${l.a * 0.55})`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(-l.r, -l.r, l.r * 2, l.r * 2);
+    g.restore();
+  }
+  ctx.drawImage(c, 0, 0, VW, VH);
+  // 색 번짐
+  ctx.globalCompositeOperation = 'lighter';
+  for (const l of Light.list) {
+    if (!l.color || l.x < -l.r || l.y < -l.r || l.x > VW + l.r || l.y > VH + l.r) continue;
+    const gr2 = l.r * 0.5;
+    const gr = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, gr2);
+    gr.addColorStop(0, l.color.replace('A', (0.35 * l.a).toFixed(2))); gr.addColorStop(1, l.color.replace('A', '0'));
+    ctx.fillStyle = gr; ctx.fillRect(l.x - gr2, l.y - gr2, gr2 * 2, gr2 * 2);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  Light.list.length = 0;
+}
+
+// 불타는 폐차: 불꽃·연기 파티클 (월드가 멈춘 히트스톱 중에는 생성 안 함)
+function burnFx(tx, ty) {
+  const x = tx * TILE + 16, y = ty * TILE + 16, fl = 0.85 + Math.sin(G.time * 13 + tx) * 0.08 + Math.sin(G.time * 7.3 + ty) * 0.07;
+  addLight(Iso.sx(x, y), Iso.sy(x, y, 18), 170 * fl, 0.85, 'rgba(255,140,40,A)');
+  if (G.hitstop > 0 || G.particles.length > 500) return;
+  if (Math.random() < 0.5) G.particles.push({ x: x + rand(-8, 8), y: y + rand(-8, 8), vx: rand(-8, 8), vy: rand(-8, 8), z: 16, vz: rand(30, 60), t: 0, life: rand(0.35, 0.7), color: pick(['#ff9a30', '#ffcf5a', '#ff6a20']), size: rand(3, 6) });
+  if (Math.random() < 0.12) G.particles.push({ x: x + rand(-6, 6), y: y + rand(-6, 6), vx: rand(-5, 5), vy: rand(-5, 5), z: 30, vz: rand(20, 32), t: 0, life: rand(1.2, 2), color: 'rgba(55,55,60,0.55)', size: rand(8, 13) });
 }
 
 // ---------------- 메인 렌더 ----------------
@@ -421,9 +519,13 @@ function render() {
   for (const n of G.npcs) objs.push({ d: depth(n), draw: drawNpc, ent: n });
   for (const e of G.enemies) objs.push({ d: depth(e) + (e.def.flying ? 0.5 : 0), draw: drawEnemy, ent: e });
   for (const d of G.drops) objs.push({ d: depth(d), draw: drawDrop, ent: d });
+  for (const c of G.corpses) objs.push({ d: depth(c) - 0.3, draw: drawCorpse, ent: c });
   if (!p.dead) objs.push({ d: pd, draw: drawPlayer, ent: p });
   objs.sort((a, b) => a.d - b.d);
-  for (const o of objs) o.draw ? o.draw(o.ent) : drawSolidTile(o);
+  for (const o of objs) {
+    if (o.draw) o.draw(o.ent);
+    else { drawSolidTile(o); if (o.t === T.CAR && isBurningCar(o.tx, o.ty)) burnFx(o.tx, o.ty); }
+  }
 
   // 3) 투사체 / 파티클 (위에 그림)
   for (const b of G.bullets) {
@@ -456,11 +558,15 @@ function render() {
   ctx.globalAlpha = 1;
 
   // 4) 분위기 / 조명
-  const grd = ctx.createRadialGradient(psx, psy, 140, psx, psy, Math.max(VW, VH) * 0.75);
-  grd.addColorStop(0, 'rgba(0,0,0,0)');
-  grd.addColorStop(1, `rgba(0,0,0,${G.darkness + 0.25})`);
-  ctx.fillStyle = grd; ctx.fillRect(0, 0, VW, VH);
-  ctx.fillStyle = `rgba(10,8,20,${G.darkness * 0.35})`; ctx.fillRect(0, 0, VW, VH);
+  if (!p.dead) addLight(psx, psy, Math.max(VW, VH) * 0.62, 0.97);
+  if (p.recoilT > 0) addLight(psx + Math.cos(p.aim) * 20, psy - 6, 150, 0.9, 'rgba(255,200,110,A)');
+  const cc = World.campCenter();
+  addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
+  for (const ef of G.effects) if (ef.type === 'boom') addLight(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y), ef.r * 2.4 * (1 - ef.t / ef.life), 1, 'rgba(255,150,50,A)');
+  for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(120,255,100,A)' : 'rgba(255,90,60,A)');
+  if (G.boss) addLight(Iso.sx(G.boss.x, G.boss.y), Iso.sy(G.boss.x, G.boss.y), 230, 0.7, 'rgba(90,255,100,A)');
+  for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 2) addLight(Iso.sx(d.x, d.y), Iso.sy(d.x, d.y), 70, 0.8, RARITIES[d.item.rarity].color.replace(/^#(..)(..)(..)$/, (m, r, g, b) => `rgba(${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},A)`));
+  renderLighting(Math.min(0.9, G.darkness + 0.32));
   const tint = ZONES[G.zone].tint;
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(200,0,0,${p.hurtT})`; ctx.fillRect(0, 0, VW, VH); }
@@ -481,6 +587,15 @@ function render() {
     ctx.fillStyle = '#000'; ctx.fillText(t.text, sx + 1, sy + 1);
     ctx.fillStyle = t.color; ctx.fillText(t.text, sx, sy);
   }
+  ctx.globalAlpha = 1;
+}
+
+function drawCorpse(c) {
+  const t = G.time - c.t0, s = Sprites.get(c.key);
+  if (!s) return;
+  const fade = Math.max(0, 1 - Math.max(0, t - Sprites.dur(s, 'death') - 2.5) / 1.5);
+  ctx.globalAlpha = fade;
+  Sprites.draw(c.key, 'death', t, Iso.sx(c.x, c.y), Iso.sy(c.x, c.y), c.face, false);
   ctx.globalAlpha = 1;
 }
 
