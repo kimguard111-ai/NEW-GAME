@@ -133,7 +133,7 @@ function startGame(save, name) {
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.exits = []; G.extractT = 0;
-  const P = G.player; P.stam = 100; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
+  const P = G.player; P.stam = 100; P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
   Bounty.refresh(); // v0.14 일일 의뢰
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
@@ -345,6 +345,8 @@ function interact() {
   if (npc) { UI.openNpc(npc); return; }
   const crate = Interiors.nearCrate();
   if (crate) { Interiors.openCrate(crate); return; }
+  const sc = Raid.inRaid() && Scavenge.near(); // v1.4 뒤지기 · 시체 가방
+  if (sc) { Scavenge.start(sc); return; }
   const l = Assault.available();
   if (l) Assault.choose(l);
 }
@@ -395,7 +397,8 @@ function playerDie() {
   const p = G.player;
   p.hp = 0; p.dead = true; input.down = false; p.deaths++;
   burst(p.x, p.y, '#a00', 30, 160, 0.8, 4);
-  const msg = Raid.onDeath() || '캠프로 돌아갑니다.'; // v1.3: 이번 출격에서 주운 것만 잃음
+  const rr = p.raid, msg = Raid.onDeath() || '캠프로 돌아갑니다.'; // v1.3: 이번 출격에서 주운 것만 잃음 · v1.4 시체 가방
+  if (rr) Raid.summary(false, rr, Raid.lastDeath.items);
   log(`사망했습니다. ${msg}`, '#f55');
   document.querySelector('#death-screen p').textContent = msg;
   UI.closeAll();
@@ -461,6 +464,7 @@ function killEnemy(e) {
   const p = G.player;
   // 보스 소환수는 경험치 20%, 드랍 없음 (보스 옆 무한 파밍 방지)
   // 연속 처치 콤보 (v0.16): 3초 안에 이어 잡으면 경험치 +5%씩 (최대 +50%)
+  if (p.raid && !e.minion) p.raid.kills++;
   if (!e.minion) {
     G.combo = G.time - (G.comboT || -9) < 3 ? (G.combo || 0) + 1 : 1; G.comboT = G.time;
     if (G.combo >= 3) SFX.play('combo', G.combo);
@@ -852,6 +856,7 @@ function update(dt) {
   updateBossSpawn(dt);
   Interiors.update();
   Raid.update(dt);
+  Scavenge.update(dt);
   Nav.update(dt);
   updateEnemies(dt);
   Assault.update(dt);

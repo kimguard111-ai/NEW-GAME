@@ -13,11 +13,15 @@ const Raid = {
 
   // 출격 지도 (작전 장교 대화)
   openMap() {
-    const p = G.player, btns = [];
-    let h = '"어디로 나갈 건가? 탈출 지점까지 살아서 돌아와야 주운 걸 챙길 수 있어."<br><br>';
+    const p = G.player, btns = [], med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
+    let h = '"어디로 나갈 건가? 탈출 지점까지 살아서 돌아와야 주운 걸 챙길 수 있어."<br>'
+      + `<div class="prep">출격 준비: 💊 구급상자 <b>${med}</b> · 예비 탄약 <b>${fmt(p.reserve)}</b> · 가방 <b>${p.inventory.length}/24</b> · ₵${fmt(p.credits)}</div>`;
+    btns.push(['💊 +3 (120₵)', () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
+    btns.push(['탄약 +120 (45₵)', () => { if (p.credits < 45) return log('크레딧이 부족합니다.', '#f88'); p.reserve += 120; p.credits -= 45; SFX.play('ammo'); this.openMap(); }]);
     for (const id of MAP_ORDER) {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id);
-      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? '🗺' : '🔒'} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : `「${CHAPTERS[d.chapter].title}」에서 해금`}</span></div>`;
+      const gr = p.graves[id];
+      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? '🗺' : '🔒'} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">💀 시체 가방 (장비 ${gr.items.length})</span>` : ''}</div>`;
       if (ok) btns.push([`${d.name} 출격`, () => { UI.close('dialog'); this.deploy(id); }]);
     }
     btns.push(['닫기', () => UI.close('dialog')]);
@@ -32,8 +36,11 @@ const Raid = {
     const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
     G.exits = pts.filter(q => q !== start);
     p.x = start.x; p.y = start.y; p.hp = PlayerStats.maxHp(p); p.stam = 100;
-    p.raid = { map: id, credits: 0, items: 0, t: 0 };
-    G.extractT = 0;
+    p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0 };
+    G.extractT = 0; G.search = null;
+    Scavenge.generate(); // v1.4 뒤질 곳
+    G.grave = p.graves[id] || null; // v1.4 지난번 시체 가방
+    if (G.grave) log(`💀 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
     UI.toast(`출격 — ${MAPS[id].name}`, `탈출 지점 ${G.exits.length}곳 (미니맵 초록 ◎) · 주운 것은 탈출해야 확정`);
     log(`${MAPS[id].name}에 진입했다. 탈출 지점: ${G.exits.map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(' · ')}쪽 끝`, '#8cf');
     saveGame();
@@ -67,7 +74,7 @@ const Raid = {
     for (const it of items) delete it.raid;
     p.raid = null;
     this.toCamp();
-    UI.toast('탈출 성공', `장비 ${items.length}개 · ₵${fmt(r.credits)} 확보 · ${Math.floor(r.t / 60)}분 ${Math.floor(r.t % 60)}초`);
+    this.summary(true, r, items);
     log(`탈출 성공! 이번 출격: 장비 ${items.length}개, 크레딧 ${fmt(r.credits)} 확보.`, '#7fe08a');
     SFX.play('quest');
     Bounty.on('extract');
@@ -78,16 +85,19 @@ const Raid = {
   onDeath() {
     const p = G.player, r = p.raid;
     if (!r) return '';
-    let n = 0;
-    for (const k of Object.keys(p.equip)) if (p.equip[k] && p.equip[k].raid) { p.equip[k] = null; n++; }
-    const before = p.inventory.length;
-    p.inventory = p.inventory.filter(it => !it.raid); n += before - p.inventory.length;
+    const lostItems = [];
+    for (const k of Object.keys(p.equip)) if (p.equip[k] && p.equip[k].raid) { lostItems.push(p.equip[k]); p.equip[k] = null; }
+    lostItems.push(...p.inventory.filter(it => it.raid));
+    p.inventory = p.inventory.filter(it => !it.raid);
     if (!p.equip.w1) p.equip.w1 = makeWeapon('pistol', 1, 0); // 주무기가 비면 기본 권총
     if (!p.equip[p.active]) p.active = 'w1';
     const lost = Math.min(p.credits, r.credits);
     p.credits -= lost;
+    for (const it of lostItems) delete it.raid;
+    Scavenge.makeGrave(lostItems, lost); // v1.4: 다음 출격 때 같은 맵에서 회수
     p.raid = null;
-    return `이번 출격에서 얻은 장비 ${n}개와 ₵${fmt(lost)}를 잃었다.`;
+    this.lastDeath = { r, items: lostItems, credits: lost };
+    return lostItems.length || lost ? `이번 출격의 장비 ${lostItems.length}개와 ₵${fmt(lost)}가 시체 가방에 남았다. 다음에 「${MAPS[r.map].name}」에 출격해 회수할 수 있다.` : '캠프로 돌아갑니다.';
   },
 
   toCamp() {
@@ -97,6 +107,20 @@ const Raid = {
     Object.assign(p, World.campCenter());
     p.dead = false; p.hp = PlayerStats.maxHp(p); p.stam = 100;
     UI.refreshAll();
+  },
+
+  // 출격 결과 (탈출 성공 / 사망)
+  summary(ok, r, items) {
+    const li = items.length ? items.map(it => `<span class="r${it.rarity || 0}">${it.icon} ${itemName(it)}</span>`).join('<br>') : '<span class="muted">없음</span>';
+    $('summary-title').textContent = ok ? '탈출 성공' : '사망';
+    $('summary-title').className = ok ? 'ok' : 'bad';
+    $('summary-body').innerHTML = `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}</b></div>`
+      + `<div class="sum-row"><span>시간</span><b>${Math.floor(r.t / 60)}분 ${Math.floor(r.t % 60)}초</b></div>`
+      + `<div class="sum-row"><span>처치</span><b>${r.kills || 0}</b></div>`
+      + `<div class="sum-row"><span>${ok ? '확보한 크레딧' : '잃은 크레딧'}</span><b>₵${fmt(ok ? r.credits : this.lastDeath.credits)}</b></div>`
+      + `<div class="sum-head">${ok ? '가져온 장비' : '시체 가방에 남은 장비'} (${items.length})</div><div class="sum-items">${li}</div>`
+      + (ok ? '' : `<div class="muted">다음에 「${MAPS[r.map].name}」에 출격하면 쓰러진 자리(미니맵 붉은 ✚)에서 회수할 수 있습니다. 다시 죽으면 새 가방으로 바뀝니다.</div>`);
+    $('raid-summary').classList.remove('hidden');
   },
 
   allItems() { const p = G.player; return [...p.inventory, ...Object.values(p.equip).filter(Boolean)]; },

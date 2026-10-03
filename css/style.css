@@ -387,3 +387,14 @@ body.touch .title-quote { display: none; } body.touch .title-tags { display: non
 #extract-bar { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); width: 260px; text-align: center; color: #7fe08a; font-weight: bold; text-shadow: 1px 1px 2px #000; }
 #extract-bar .bar { height: 10px; } #extract-fill { background: linear-gradient(#7fe08a, #2a8a3a); height: 100%; }
 body.touch #panel-stash.panel { width: 96vw !important; } body.touch .stash-body { flex-direction: column; }
+
+/* v1.4 출격 결과 · 준비 */
+.summary-box { min-width: 380px; background: rgba(14,16,20,.95); border: 1px solid #3a3f48; border-radius: 8px; }
+#summary-title.ok { color: #7fe08a; } #summary-title.bad { color: #e04848; }
+#summary-title { font-size: 42px !important; letter-spacing: 6px; margin-bottom: 12px; }
+.sum-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #222; text-align: left; }
+.sum-row span { color: #999; }
+.sum-head { margin: 12px 0 4px; color: #e0b23a; text-align: left; }
+.sum-items { text-align: left; max-height: 30vh; overflow-y: auto; font-size: 13px; line-height: 1.7; margin-bottom: 10px; }
+.prep { margin: 8px 0; padding: 6px 8px; background: #111; border: 1px solid #333; border-radius: 4px; font-size: 13px; }
+#raid-summary { z-index: 60; }

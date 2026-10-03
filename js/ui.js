@@ -26,6 +26,7 @@ const Pause = {
     $('btn-save').onclick = () => { saveGame(false); $('pause-stats').innerHTML = Pause.statsHtml() + '<br>저장했습니다.'; };
     $('btn-pause-settings').onclick = () => { Pause.toggle(); UI.open('settings'); };
     $('btn-title').onclick = () => { saveGame(); location.reload(); };
+    $('btn-summary-ok').onclick = () => $('raid-summary').classList.add('hidden');
     $('btn-ending-continue').onclick = () => { $('ending-screen').classList.add('hidden'); G.paused = false; };
   },
 };
@@ -129,8 +130,9 @@ const UI = {
       const el = $('cd' + i);
       if (el) el.style.height = (100 * p.skillCd[i] / s.cd) + '%';
     });
-    $('extract-bar').classList.toggle('hidden', !(G.extractT > 0)); // 탈출 진행
-    if (G.extractT > 0) $('extract-fill').style.width = (100 * G.extractT / EXTRACT_TIME) + '%';
+    const prog = G.search ? [G.search.t / G.search.dur, G.search.target.grave ? '시체 가방 회수 중…' : '뒤지는 중…'] : G.extractT > 0 ? [G.extractT / EXTRACT_TIME, '탈출 중…'] : null; // 진행 바
+    $('extract-bar').classList.toggle('hidden', !prog);
+    if (prog) { $('extract-fill').style.width = (100 * prog[0]) + '%'; $('extract-label').textContent = prog[1]; }
     if ($('cdroll')) $('cdroll').style.height = (p.stam < ROLL.cost ? 100 * (ROLL.cost - p.stam) / ROLL.cost : 0) + '%'; // 스태미나 부족
     const live = G.combo >= 3 && G.time - G.comboT < 3; // 연속 처치 표시
     $('combo').classList.toggle('hidden', !live);
@@ -148,8 +150,8 @@ const UI = {
     } else $('boss-bar').classList.add('hidden');
 
     const npc = !p.dead && nearestNpc();
-    const crate = !npc && Interiors.nearCrate(), asl = !npc && !crate && Assault.available();
-    if (npc || crate || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : crate ? '[E] 보급 상자 열기' : Assault.hint(asl); }
+    const crate = !npc && Interiors.nearCrate(), sc = !npc && !crate && Raid.inRaid() && !G.search && Scavenge.near(), asl = !npc && !crate && !sc && Assault.available();
+    if (npc || crate || sc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : crate ? '[E] 보급 상자 열기' : sc ? Scavenge.hint(sc) : Assault.hint(asl); }
     else $('interact-hint').classList.add('hidden');
 
     // 임무 추적 (챕터)

@@ -44,6 +44,15 @@
   </div>
 </div>
 
+<!-- 출격 결과 (v1.4) -->
+<div id="raid-summary" class="overlay hidden">
+  <div class="title-box summary-box">
+    <h1 id="summary-title"></h1>
+    <div id="summary-body"></div>
+    <button id="btn-summary-ok">확인</button>
+  </div>
+</div>
+
 <!-- 일시정지 (v1.0) -->
 <div id="pause-screen" class="overlay hidden">
   <div class="title-box">
@@ -101,7 +110,7 @@
   <div id="log"></div>
   <div id="interact-hint" class="hidden"></div>
   <div id="tip" class="hidden"></div>
-  <div id="extract-bar" class="hidden">탈출 중…<div class="bar"><div id="extract-fill"></div></div></div>
+  <div id="extract-bar" class="hidden"><span id="extract-label">탈출 중…</span><div class="bar"><div id="extract-fill"></div></div></div>
   <div id="toast" class="hidden"><div id="toast-title"></div><div id="toast-sub"></div></div>
   <div id="combo" class="hidden"><span id="combo-n"></span><small>연속 처치</small><div id="combo-bar"></div></div>
   <div id="menu-buttons">
@@ -189,6 +198,7 @@
 <script src="js/monsters.js"></script>
 <script src="js/assault.js"></script>
 <script src="js/raid.js"></script>
+<script src="js/scavenge.js"></script>
 <script src="js/bosses.js"></script>
 <script src="js/assets.js"></script>
 <script src="js/render.js"></script>
