@@ -126,7 +126,7 @@ function newPlayer(name) {
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0 },
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
-    bossKills: 0, totalKills: 0, pity: 0,
+    bossKills: 0, totalKills: 0, pity: 0, respecs: 0,
   };
 }
 
@@ -165,6 +165,30 @@ const PlayerStats = {
   expMul: p => 1 + gearBonus(p, 'exp'),
   expNext: lvl => Math.floor(45 * Math.pow(lvl, 1.65)),
 };
+
+// 스킬 수치: 각 스킬은 연동 능력치 하나를 따라 강해짐
+const STAT_NAMES = { str: '근력', dex: '사격', vit: '체력', agi: '민첩' };
+const statUp = (p, k) => Math.max(0, p.stats[k] - 5);
+const SkillCalc = {
+  rapidDur: p => 4 + Math.min(4, statUp(p, 'agi') * 0.1),
+  grenadeR: p => 110 + Math.min(50, statUp(p, 'dex') * 2),
+  grenadeDmg: p => (45 + p.level * 9) * PlayerStats.gunMul(p),
+  healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006),
+  adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01),
+};
+function skillDesc(s, p) {
+  const pc = v => Math.round(v * 100) + '%';
+  switch (s.id) {
+    case 'rapid': return `${SkillCalc.rapidDur(p).toFixed(1)}초간 공격 속도 2배`;
+    case 'grenade': return `반경 ${SkillCalc.grenadeR(p)} 폭발, 피해 ${Math.round(SkillCalc.grenadeDmg(p))}`;
+    case 'heal': return `즉시 최대 체력 ${pc(SkillCalc.healPct(p))} 회복`;
+    case 'adren': return `8초간 이동속도 +35%, 피해 +${pc(SkillCalc.adrenDmg(p))}, 재장전 +30%`;
+  }
+  return '';
+}
+
+// 능력치 초기화 비용 (첫 1회 무료)
+function respecCost(p) { return p.respecs ? p.level * 80 : 0; }
 
 function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w))); }
 function weaponDmg(w) { return w.dmg * (1 + (w.plus || 0) * 0.08) * (1 + gearBonus(G.player, 'dmg', w)); }

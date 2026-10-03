@@ -85,6 +85,7 @@ function startGame(save, name) {
     for (const k of Object.keys(G.player.equip)) normalizeItem(G.player.equip[k]);
     G.player.inventory.forEach(normalizeItem);
     G.player.pity = G.player.pity || 0;
+    G.player.respecs = G.player.respecs || 0;
     for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
     G.bossT = save.bossT || 0;
     G.player.dead = false;
@@ -139,7 +140,7 @@ function finishReload() {
 
 function playerDamageMul(melee) {
   const p = G.player;
-  return (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1.3 : 1);
+  return (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1);
 }
 
 function playerAttack() {
@@ -208,13 +209,13 @@ function useSkill(i) {
   const p = G.player, s = SKILLS[i];
   if (p.level < s.lvl) { log(`${s.name}: Lv${s.lvl}에 습득합니다.`, '#aaa'); return; }
   if (p.skillCd[i] > 0) return;
-  if (s.id === 'rapid') { p.buffs.rapid = 4; floatText(p.x, p.y - 30, '집중 사격!', '#7fd'); }
+  if (s.id === 'rapid') { p.buffs.rapid = SkillCalc.rapidDur(p); floatText(p.x, p.y - 30, '집중 사격!', '#7fd'); }
   else if (s.id === 'grenade') {
     const { x: tx, y: ty } = Iso.toWorld(input.mx, input.my);
     const a = Math.atan2(ty - p.y, tx - p.x), d = Math.min(380, Math.hypot(tx - p.x, ty - p.y));
     G.grenades.push({ sx: p.x, sy: p.y, x: p.x, y: p.y, tx: p.x + Math.cos(a) * d, ty: p.y + Math.sin(a) * d, t: 0, dur: 0.55 });
   } else if (s.id === 'heal') {
-    const mh = PlayerStats.maxHp(p), amt = Math.round(mh * 0.35);
+    const mh = PlayerStats.maxHp(p), amt = Math.round(mh * SkillCalc.healPct(p));
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16); burst(p.x, p.y, '#6f6', 16, 80);
   } else if (s.id === 'adren') { p.buffs.adren = 8; floatText(p.x, p.y - 30, '아드레날린!', '#f84'); }
@@ -585,7 +586,7 @@ function updateGrenades(dt) {
     g.x = lerp(g.sx, g.tx, k); g.y = lerp(g.sy, g.ty, k); g.h = Math.sin(k * Math.PI) * 40;
     if (k >= 1) {
       g.done = true;
-      explode(g.x, g.y, (45 + p.level * 9) * playerDamageMul(false), 110, { knock: 30, stagger: 0.6 });
+      explode(g.x, g.y, SkillCalc.grenadeDmg(p) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1), SkillCalc.grenadeR(p), { knock: 30, stagger: 0.6 });
       hitstop(0.05);
     }
   }

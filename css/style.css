@@ -169,3 +169,10 @@ button:disabled { opacity: .4; cursor: default; }
 .stat-eff { font-size: 12px; color: #8fd0ff; margin: -4px 0 4px 4px; }
 #btn-sell-junk { font-size: 11px; padding: 2px 8px; margin-left: 6px; }
 #item-detail { max-height: 40vh; overflow-y: auto; }
+
+/* v0.3 스킬-능력치 연동 */
+.hot .sk-stat { position: absolute; right: 2px; top: 1px; font-size: 9px; color: #c9b27a; }
+.sk-link { color: #ffd76a; }
+.skill-row { font-size: 13px; margin: 4px 0; }
+.skill-row.locked { opacity: 0.45; }
+#stats-body { max-height: calc(100vh - 140px); overflow-y: auto; }

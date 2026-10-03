@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.2.1';
+const GAME_VERSION = 'v0.3';
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -100,10 +100,11 @@ const ZONES = [
 ];
 
 const SKILLS = [
-  { id: 'rapid',   name: '집중 사격', icon: '⚡', lvl: 1,  cd: 14, desc: '4초간 공격 속도 2배' },
-  { id: 'grenade', name: '수류탄',   icon: '💣', lvl: 3,  cd: 8,  desc: '마우스 위치에 폭발 피해' },
-  { id: 'heal',    name: '응급 처치', icon: '✚',  lvl: 6,  cd: 22, desc: '즉시 최대 체력 35% 회복' },
-  { id: 'adren',   name: '아드레날린', icon: '🔥', lvl: 10, cd: 40, desc: '8초간 이동속도 +35%, 피해 +30%' },
+// stat: 스킬을 강화하는 능력치 (v0.3)
+  { id: 'rapid',   name: '집중 사격', icon: '⚡', lvl: 1,  cd: 14, stat: 'agi' },
+  { id: 'grenade', name: '수류탄',   icon: '💣', lvl: 3,  cd: 8,  stat: 'dex' },
+  { id: 'heal',    name: '응급 처치', icon: '✚',  lvl: 6,  cd: 22, stat: 'vit' },
+  { id: 'adren',   name: '아드레날린', icon: '🔥', lvl: 10, cd: 40, stat: 'str' },
 ];
 
 const QUESTS = [

@@ -44,8 +44,8 @@ const UI = {
     SKILLS.forEach((s, i) => {
       const d = document.createElement('div');
       d.className = 'hot' + (p.level < s.lvl ? ' locked' : '');
-      d.title = `${s.name} (Lv${s.lvl}) - ${s.desc}`;
-      d.innerHTML = `<span class="key">${i + 1}</span><div class="icon">${s.icon}</div>${s.name}<div class="cd" id="cd${i}"></div>`;
+      d.title = `${s.name} (Lv${s.lvl}) - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;
+      d.innerHTML = `<span class="key">${i + 1}</span><div class="icon">${s.icon}</div>${s.name}<span class="sk-stat">${STAT_NAMES[s.stat]}</span><div class="cd" id="cd${i}"></div>`;
       hb.appendChild(d);
     });
     const m = document.createElement('div');
@@ -246,9 +246,14 @@ const UI = {
     for (const k of Object.keys(rows)) {
       const [n, role, eff, tip] = rows[k];
       h += `<div class="stat-row" title="${tip}"><span>${n} <span class="tag">${role}</span></span><span><b>${st[k]}</b> <button data-stat="${k}" ${p.statPoints ? '' : 'disabled'}>+</button></span></div>
-        <div class="stat-eff">${eff}</div>`;
+        <div class="stat-eff">${eff}${(() => { const sk = SKILLS.find(s => s.stat === k); return sk ? ` · <span class="sk-link">${sk.icon} ${sk.name} 강화</span>` : ''; })()}</div>`;
     }
     const wline = sl => { const w = p.equip[sl]; return w ? `<div class="stat-row"><span>${sl === 'w1' ? '주무기' : '보조무기'} DPS <span class="muted">${w.name}</span></span><b>${Math.round(weaponDps(p, w))}</b></div>` : ''; };
+    h += '<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐)</div>';
+    for (const s of SKILLS) {
+      const locked = p.level < s.lvl;
+      h += `<div class="skill-row${locked ? ' locked' : ''}">${s.icon} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">Lv${s.lvl} 습득</span>` : ''}<br><span class="stat-eff">${skillDesc(s, p)}</span></div>`;
+    }
     h += `<hr style="border-color:#333">${wline('w1')}${wline('w2')}
       <div class="stat-row"><span>최대 체력</span><span>${PlayerStats.maxHp(p)}</span></div>
       <div class="stat-row"><span>방어력</span><span>${PlayerStats.def(p)} (피해 -${(PlayerStats.dmgReduce(p) * 100).toFixed(0)}%)</span></div>
@@ -257,7 +262,8 @@ const UI = {
       <div class="stat-row"><span>체력 재생</span><span>${PlayerStats.regen(p).toFixed(1)}/초</span></div>
       ${gearBonus(p, 'exp') ? `<div class="stat-row"><span>경험치 획득</span><span>+${pc(gearBonus(p, 'exp'))}</span></div>` : ''}
       <div class="stat-row" title="몬스터 장비 드랍이 ${PITY_DROPS}번 연속 영웅 미만이면 다음은 영웅 이상 확정"><span>영웅 장비 확정까지</span><span class="r3">${Math.max(0, PITY_DROPS - (p.pity || 0))}개</span></div>
-      <div class="stat-row"><span>처치 수</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div>`;
+      <div class="stat-row"><span>처치 수</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div>
+      <div class="muted" style="margin-top:6px">능력치 초기화: 캠프의 의무병 이씨 (${respecCost(p) ? fmt(respecCost(p)) + '₵' : '첫 1회 무료'})</div>`;
     $('stats-body').innerHTML = h;
     $('stats-body').querySelectorAll('button[data-stat]').forEach(b => {
       b.onclick = () => {
@@ -265,7 +271,7 @@ const UI = {
         const before = PlayerStats.maxHp(p);
         p.stats[b.dataset.stat]++; p.statPoints--;
         p.hp += PlayerStats.maxHp(p) - before;
-        UI.refreshStats(); UI.refreshInventory();
+        UI.refreshStats(); UI.refreshInventory(); UI.buildHotbar();
       };
     });
   },
@@ -305,9 +311,26 @@ const UI = {
         ['거래하기', () => { UI.close('dialog'); UI.openShop(); }], bye]);
     } else if (npc.id === 'medic') {
       const mh = PlayerStats.maxHp(p);
-      UI.dialog(npc.name, p.hp < mh ? '"많이 다쳤군. 이리 와, 치료해 줄게."' : '"멀쩡해 보이네. 몸 조심하고."', [
-        ['치료받기 (무료)', () => { p.hp = mh; log('의무병이 상처를 치료해 주었다.', '#6f6'); UI.close('dialog'); }], bye]);
+      const cost = respecCost(p);
+      UI.dialog(npc.name, (p.hp < mh ? '"많이 다쳤군. 이리 와, 치료해 줄게."' : '"멀쩡해 보이네. 몸 조심하고."')
+        + '<br><span class="muted">신체 재조정: 모든 능력치를 5로 되돌리고 포인트를 돌려받습니다. ' + (cost ? `비용 ${fmt(cost)}₵` : '첫 1회 무료') + '</span>', [
+        ['치료받기 (무료)', () => { p.hp = mh; log('의무병이 상처를 치료해 주었다.', '#6f6'); UI.close('dialog'); }],
+        [`능력치 초기화 (${cost ? fmt(cost) + '₵' : '무료'})`, () => UI.respec()], bye]);
     } else if (npc.id === 'captain') UI.captainDialog(npc);
+  },
+
+  respec() {
+    const p = G.player, cost = respecCost(p);
+    const spent = Object.values(p.stats).reduce((a, v) => a + Math.max(0, v - 5), 0);
+    if (!spent) { log('초기화할 능력치가 없습니다.', '#aaa'); return; }
+    if (p.credits < cost) { log('크레딧이 부족합니다.', '#f88'); return; }
+    if (!confirm(`능력치 ${spent}포인트를 모두 돌려받습니다.${cost ? ` 비용 ${fmt(cost)}₵` : ''} 진행할까요?`)) return;
+    p.credits -= cost; p.respecs++;
+    for (const k of Object.keys(p.stats)) p.stats[k] = Math.min(p.stats[k], 5);
+    p.statPoints += spent;
+    p.hp = Math.min(p.hp, PlayerStats.maxHp(p));
+    log(`능력치 초기화 완료: 포인트 ${spent} 반환. 능력치 창(C)에서 다시 분배하세요.`, '#8cf');
+    UI.close('dialog'); UI.open('stats'); UI.buildHotbar(); UI.refreshInventory(); saveGame();
   },
 
   captainDialog(npc) {
