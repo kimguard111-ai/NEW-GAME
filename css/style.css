@@ -153,3 +153,19 @@ button:disabled { opacity: .4; cursor: default; }
 .shop-item .price { color: #ffd76a; white-space: nowrap; margin-left: 10px; }
 #dialog-text { padding: 14px; line-height: 1.7; font-size: 14px; }
 #dialog-buttons { padding: 0 14px 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* v0.2 장비 옵션 / 비교 */
+#version-label { color: #777; font-size: 12px; margin: -14px 0 14px; }
+#weapon-role { font-size: 11px; color: #aaa; max-width: 260px; }
+.role { color: #c9b27a; font-size: 12px; }
+.affix { color: #8fd0ff; font-size: 12px; }
+.legend { color: #ffa53a; font-size: 12px; font-weight: bold; }
+.cmp { margin-top: 6px; padding-top: 4px; border-top: 1px dashed #333; font-size: 12px; }
+.inv-cell .mark { position: absolute; left: 2px; top: 1px; font-size: 10px; font-weight: bold; }
+.inv-cell .mark.up { color: #4f4; }
+.inv-cell .mark.lvl { color: #f66; }
+.inv-cell .mark.new { left: auto; right: 2px; color: #ffd76a; }
+.tag { font-size: 11px; color: #c9b27a; border: 1px solid #5a5040; padding: 0 4px; border-radius: 2px; }
+.stat-eff { font-size: 12px; color: #8fd0ff; margin: -4px 0 4px 4px; }
+#btn-sell-junk { font-size: 11px; padding: 2px 8px; margin-left: 6px; }
+#item-detail { max-height: 40vh; overflow-y: auto; }

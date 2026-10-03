@@ -177,7 +177,8 @@ function drawHuman(sx, sy, o) {
   const weapon = () => {
     if (o.gun) {
       ctx.strokeStyle = '#151515'; ctx.lineWidth = 4 * s; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(sx + d.x * 3 * s, shY + 2 * s); ctx.lineTo(sx + d.x * (3 + o.gun) * s, shY + 2 * s + d.y * o.gun * s); ctx.stroke();
+      const rc = -(o.recoil || 0); // 사격 반동으로 총이 뒤로 밀림
+      ctx.beginPath(); ctx.moveTo(sx + d.x * (3 + rc) * s, shY + 2 * s + d.y * rc * s); ctx.lineTo(sx + d.x * (3 + rc + o.gun) * s, shY + 2 * s + d.y * (o.gun + rc) * s); ctx.stroke();
     }
     if (o.blade) {
       const dd = Iso.dir((o.aim || 0) + (o.swing || 0));
@@ -233,7 +234,10 @@ function drawPlayer(p) {
   if (b && b.melee) {
     o.blade = w.key === 'katana' ? '#bfe6ff' : w.key === 'axe' ? '#b33' : '#999';
     o.swing = p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * b.arc : -0.5;
-  } else if (b) o.gun = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 12 : w.key === 'lmg' ? 26 : 20;
+  } else if (b) {
+    o.gun = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 12 : w.key === 'lmg' ? 26 : w.key === 'shotgun' ? 22 : w.key === 'smg' ? 15 : 20;
+    if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
+  }
   drawHuman(sx, sy, o);
   if (p.buffs.adren > 0 || p.buffs.rapid > 0) {
     ctx.strokeStyle = p.buffs.adren > 0 ? 'rgba(255,120,40,0.7)' : 'rgba(120,255,220,0.7)'; ctx.lineWidth = 2;
@@ -243,12 +247,12 @@ function drawPlayer(p) {
   if (p.reloadT > 0) {
     const b2 = WEAPONS[w.key];
     ctx.fillStyle = '#000'; ctx.fillRect(sx - 18, sy + 8, 36, 4);
-    ctx.fillStyle = '#ffd27a'; ctx.fillRect(sx - 18, sy + 8, 36 * (1 - p.reloadT / b2.reload), 4);
+    ctx.fillStyle = '#ffd27a'; ctx.fillRect(sx - 18, sy + 8, 36 * (1 - p.reloadT / (p.reloadMax || b2.reload)), 4);
   }
 }
 
 function drawEnemy(e) {
-  const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y);
+  const sx = Iso.sx(e.x, e.y) + (e.stunT > 0 ? Math.sin(G.time * 70) * 2 : 0), sy = Iso.sy(e.x, e.y); // 경직 중 흔들림
   if (sx < -120 || sy < -160 || sx > VW + 120 || sy > VH + 80) return;
   const flash = e.hitT > 0, f = e.face || 0;
   const walk = e.state === 'chase' || e.wandering ? G.time + e.x * 0.01 : 0;
@@ -479,7 +483,14 @@ function drawDrop(d) {
     ctx.fillStyle = '#7a7a3a'; ctx.fillRect(sx - 6, sy - 5, 12, 8);
     ctx.fillStyle = '#cc8'; ctx.fillRect(sx - 4, sy - 3, 8, 2);
   } else {
-    const c = RARITIES[d.item.rarity || 0].color;
+    const r = d.item.rarity || 0, c = RARITIES[r].color;
+    if (r >= 2) { // 희귀 이상: 멀리서도 보이는 빛기둥
+      const gy = Iso.sy(d.x, d.y), hgt = 40 + r * 25;
+      const g = ctx.createLinearGradient(0, gy - hgt, 0, gy);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, c);
+      ctx.globalAlpha = 0.35 + Math.sin(G.time * 4) * 0.1; ctx.fillStyle = g;
+      ctx.fillRect(sx - 3 - r, gy - hgt, 6 + r * 2, hgt); ctx.globalAlpha = 1;
+    }
     ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(d.item.icon, sx, sy - 2);
     nameTag(sx, sy - 20, d.item.name, c);
   }

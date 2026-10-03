@@ -9,7 +9,7 @@ const MAP_SEED = 2049;
 const G = {
   player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [],
   npcs: [], cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
-  spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0,
+  spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
 };
 const input = { keys: {}, mx: 0, my: 0, down: false };
@@ -53,13 +53,15 @@ function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
   }
 }
 function curWeapon() { const p = G.player; return p.equip[p.active]; }
+// 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
+function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); }
 
 // ---------------- 저장 ----------------
 function saveGame(silent = true) {
   if (!G.player) return;
   try {
     const p = { ...G.player, reloadT: 0, atkT: 0 };
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ p, nextItemId, bossT: G.bossT }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ ver: 2, p, nextItemId, bossT: G.bossT }));
     if (!silent) log('게임이 저장되었습니다.', '#8f8');
   } catch (e) { /* 저장 불가 환경 */ }
 }
@@ -79,6 +81,10 @@ function startGame(save, name) {
   if (save) {
     G.player = Object.assign(newPlayer(save.p.name), save.p);
     nextItemId = save.nextItemId || 1000;
+    // v0.1 → v0.2: 아이템에 옵션 필드 추가 (기존 장비는 옵션 없음으로 유지)
+    for (const k of Object.keys(G.player.equip)) normalizeItem(G.player.equip[k]);
+    G.player.inventory.forEach(normalizeItem);
+    for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
     G.bossT = save.bossT || 0;
     G.player.dead = false;
     if (G.player.hp <= 0) G.player.hp = PlayerStats.maxHp(G.player);
@@ -113,18 +119,20 @@ function startReload() {
   const p = G.player, w = curWeapon();
   if (!w) return;
   const b = WEAPONS[w.key];
-  if (b.melee || p.reloadT > 0 || w.loaded >= b.mag) return;
-  if (p.reserve <= 0) {
+  if (b.melee || p.reloadT > 0 || w.loaded >= magSize(w)) return;
+  if (p.reserve <= 0 && !b.infinite) {
     if (G.noAmmoT <= 0) { log('예비 탄약이 없습니다! 상점에서 구매하거나 근접 무기로 교체(Q)하세요.', '#f88'); G.noAmmoT = 2; }
     return;
   }
-  p.reloadT = b.reload * (p.buffs.adren > 0 ? 0.7 : 1);
+  p.reloadT = p.reloadMax = b.reload * PlayerStats.reloadMul(p);
 }
 
 function finishReload() {
   const p = G.player, w = curWeapon();
   if (!w || WEAPONS[w.key].melee) return;
-  const take = Math.min(WEAPONS[w.key].mag - w.loaded, p.reserve);
+  const need = magSize(w) - w.loaded;
+  if (WEAPONS[w.key].infinite) { w.loaded += need; return; } // 권총: 예비 탄약 소모 없음
+  const take = Math.min(need, p.reserve);
   w.loaded += take; p.reserve -= take;
 }
 
@@ -138,38 +146,61 @@ function playerAttack() {
   if (!w || p.atkT > 0 || p.reloadT > 0) return;
   const b = WEAPONS[w.key];
   p.atkT = b.rate * PlayerStats.rateMul(p);
+  const critMul = PlayerStats.critMul(p, w), cc = PlayerStats.crit(p, w);
   if (b.melee) {
     p.swingT = 0.18;
-    const mul = playerDamageMul(true);
-    let hit = false;
+    World.move(p, Math.cos(p.aim) * 6, Math.sin(p.aim) * 6); // 휘두르며 살짝 전진
+    const dmg = weaponDmg(w) * playerDamageMul(true);
+    let hits = 0, anyCrit = false;
     for (const e of G.enemies) {
+      if (e.hp <= 0) continue;
       const d = dist(p, e);
       if (d > b.range + e.r) continue;
-      let da = Math.abs(((angleTo(p, e) - p.aim + Math.PI * 3) % TAU) - Math.PI);
+      const da = Math.abs(((angleTo(p, e) - p.aim + Math.PI * 3) % TAU) - Math.PI);
       if (da > b.arc / 2 && d > e.r + p.r + 4) continue;
-      const crit = Math.random() < PlayerStats.crit(p);
-      damageEnemy(e, w.dmg * mul * (crit ? 1.8 : 1), crit, p.aim);
-      hit = true;
+      if (!World.lineOfSight(p, e)) continue; // 벽 너머 타격 방지
+      const crit = Math.random() < cc;
+      anyCrit = anyCrit || crit;
+      damageEnemy(e, dmg * (crit ? critMul : 1), crit, angleTo(p, e), { knock: b.knock, stagger: b.stagger, w });
+      hits++;
     }
-    if (hit) G.shake = Math.max(G.shake, 4);
+    if (hits) {
+      G.shake = Math.max(G.shake, 3 + b.knock * 0.12);
+      hitstop(anyCrit ? 0.075 : 0.04 + Math.min(0.03, b.stagger * 0.04));
+    }
     return;
   }
   if (w.loaded <= 0) { p.atkT = 0; startReload(); return; }
-  w.loaded--;
-  const pellets = b.pellets || 1, mul = playerDamageMul(false);
+  if (!(w.legend === 'thrift' && Math.random() < 0.35)) w.loaded--;
+  const pellets = b.pellets || 1, dmg = weaponDmg(w) * playerDamageMul(false);
   const mx = p.x + Math.cos(p.aim) * 22, my = p.y + Math.sin(p.aim) * 22;
+  const life = b.range / b.speed;
   for (let i = 0; i < pellets; i++) {
     const a = p.aim + rand(-b.spread, b.spread);
     const s = b.speed * rand(0.95, 1.05);
-    const crit = Math.random() < PlayerStats.crit(p);
+    const crit = Math.random() < cc;
     G.bullets.push({
-      x: mx, y: my, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life: 0.9,
-      dmg: w.dmg * mul * (crit ? 1.8 : 1), crit, pierce: b.pierce || 0, hit: [], color: crit ? '#ffef7a' : '#ffd27a',
+      x: mx, y: my, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, falloff: b.falloff,
+      dmg: dmg * (crit ? critMul : 1), crit, pierce: b.pierce || 0, hit: [], w,
+      color: crit ? '#ffef7a' : w.legend === 'boom' ? '#ff8a3a' : '#ffd27a',
     });
   }
-  G.particles.push({ x: mx, y: my, vx: 0, vy: 0, t: 0, life: 0.06, color: '#ffe9a0', size: 9 });
-  G.shake = Math.max(G.shake, b.pellets ? 5 : b.key === 'sniper' ? 6 : 1.5);
+  p.recoilT = 0.07;
+  G.particles.push({ x: mx, y: my, vx: 0, vy: 0, t: 0, life: 0.06, color: '#ffe9a0', size: b.pellets ? 14 : w.key === 'sniper' ? 12 : 8, z: 22 });
+  G.shake = Math.max(G.shake, b.pellets ? 6 : w.key === 'sniper' ? 7 : w.key === 'lmg' ? 2.2 : 1.5);
   if (w.loaded === 0) startReload();
+}
+
+// 범위 폭발 (수류탄 / 폭발탄 공용)
+function explode(x, y, dmg, r, opts = {}) {
+  for (const e of G.enemies) {
+    const d = Math.hypot(e.x - x, e.y - y);
+    if (e.hp > 0 && d < r + e.r) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true });
+  }
+  G.effects.push({ type: 'boom', x, y, t: 0, life: 0.4, r });
+  burst(x, y, '#ffb040', opts.small ? 12 : 30, opts.small ? 160 : 260, 0.5, 4);
+  if (!opts.small) burst(x, y, '#555', 20, 120, 0.9, 6);
+  G.shake = Math.max(G.shake, opts.small ? 4 : 12);
 }
 
 function useSkill(i) {
@@ -280,7 +311,7 @@ function playerDie() {
 
 function respawn() {
   const p = G.player, c = World.campCenter();
-  p.x = c.x; p.y = c.y; p.dead = false; p.hp = PlayerStats.maxHp(p); p.reloadT = 0;
+  p.x = c.x; p.y = c.y; p.dead = false; p.hp = PlayerStats.maxHp(p); p.reloadT = 0; p.hurtT = 0;
   p.buffs.rapid = 0; p.buffs.adren = 0;
   G.enemies = G.enemies.filter(e => e.def.boss || dist(e, p) > 900);
   G.bullets = [];
@@ -288,25 +319,45 @@ function respawn() {
 }
 
 // ---------------- 적 ----------------
-function damageEnemy(e, dmg, crit, angle) {
+// hit: { knock 넉백, stagger 경직(초), w 사용 무기, noProc 전설효과 미발동 }
+function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (e.hp <= 0) return;
+  const p = G.player, w = hit.w;
+  if (w && w.legend === 'execute' && e.hp < e.maxHp * 0.3) dmg *= 1.6;
   dmg = Math.max(1, Math.round(dmg));
-  e.hp -= dmg; e.hitT = e.def.boss ? 0.04 : 0.1; e.state = 'chase';
-  floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : '#fff', crit ? 17 : 13);
-  burst(e.x, e.y, e.type === 'drone' ? '#ffc' : '#8a1010', crit ? 8 : 4, 110, 0.35);
-  if (!e.def.boss && angle !== undefined) World.move(e, Math.cos(angle) * 4, Math.sin(angle) * 4);
+  e.hp -= dmg; e.hitT = e.def.boss ? 0.05 : 0.1; e.state = 'chase';
+  // 넉백·경직은 적의 무게에 반비례 (보스는 무시)
+  const wt = e.def.weight;
+  if (wt > 0 && angle !== undefined) {
+    const k = (hit.knock || 3) / wt;
+    if (e.def.flying) { e.x += Math.cos(angle) * k; e.y += Math.sin(angle) * k; }
+    else World.move(e, Math.cos(angle) * k, Math.sin(angle) * k);
+    if (hit.stagger) e.stunT = Math.max(e.stunT, hit.stagger / wt);
+  }
+  const big = dmg >= e.maxHp * 0.25 || crit;
+  floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : e.def.boss ? '#ffb0ff' : '#fff', crit ? 18 : big ? 15 : 13);
+  burst(e.x, e.y, e.type === 'drone' ? '#ffc' : '#8a1010', crit ? 9 : 4, crit ? 150 : 110, 0.35);
+  if (crit) burst(e.x, e.y, '#fff3a0', 5, 180, 0.15, 2);
+  if (e.def.boss && (crit || (hit.stagger || 0) >= 0.5)) { G.shake = Math.max(G.shake, 5); hitstop(0.035); }
+  if (w && !hit.noProc) {
+    if (w.legend === 'leech') p.hp = Math.min(PlayerStats.maxHp(p), p.hp + dmg * 0.04);
+    if (w.legend === 'boom' && Math.random() < 0.2) explode(e.x, e.y, dmg * 0.6, 55, { small: true, knock: 10, stagger: 0.15 });
+  }
   if (e.hp <= 0) killEnemy(e);
 }
 
 function killEnemy(e) {
   const p = G.player;
-  const exp = Math.round(e.def.boss ? e.def.exp : e.def.exp * e.level);
+  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p));
   gainExp(exp);
   floatText(e.x, e.y - 10, `+${fmt(exp)} EXP`, '#e0c040', 12);
   p.totalKills++;
   if (e.type !== 'drone') G.decals.push({ x: e.x, y: e.y, r: e.r * rand(1, 1.6), a: rand(0, TAU) });
   if (G.decals.length > 150) G.decals.shift();
-  burst(e.x, e.y, e.type === 'drone' ? '#aab' : '#7a0d0d', e.def.boss ? 60 : 14, e.def.boss ? 260 : 140, 0.6, 4);
+  burst(e.x, e.y, e.type === 'drone' ? '#aab' : '#7a0d0d', e.def.boss ? 60 : 18, e.def.boss ? 260 : 170, 0.6, 4);
+  G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.3, color: e.type === 'drone' ? '#cde' : '#fff', r: e.r * 2.5 });
+  if (e.type === 'brute') hitstop(0.06);
+  if (e.def.boss) hitstop(0.3);
   // 퀘스트
   const q = QUESTS[p.quest.idx];
   if (p.quest.active && q && q.target === e.type && p.quest.progress < q.count) {
@@ -331,8 +382,10 @@ function killEnemy(e) {
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
-  const gearChance = e.type === 'brute' ? 0.16 : 0.06;
-  if (Math.random() < gearChance) dropAt('item', { item: randomGear(e.level, e.type === 'brute' ? 0.6 : 0) });
+  // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
+  const gearChance = e.type === 'brute' ? 0.2 : 0.09;
+  const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
+  if (Math.random() < gearChance) dropAt('item', { item: randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0)) });
 }
 
 function spawnEnemyBullet(e, a, speed, dmg, color = '#ff6a4a', r = 3) {
@@ -388,6 +441,7 @@ function updateEnemies(dt) {
     if (e.hp <= 0) continue;
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt;
     const d = dist(e, p);
+    if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); continue; } // 경직: 이동·공격 불가
     if (!p.dead && !pSafe && d < e.def.aggro) e.state = 'chase';
     else if (e.state === 'chase' && (p.dead || pSafe || d > e.def.aggro * 1.7)) e.state = 'idle';
     if (e.def.boss) updateBoss(e, dt, d);
@@ -497,7 +551,11 @@ function updateBullets(dt) {
           if (e.hp <= 0 || b.hit.includes(e)) continue;
           if ((e.x - b.x) ** 2 + (e.y - b.y) ** 2 < (e.r + 3) ** 2) {
             b.hit.push(e);
-            damageEnemy(e, b.dmg, b.crit, Math.atan2(b.vy, b.vx));
+            // 산탄총·기관단총: 사거리 후반부 피해 감소 (최대 -50%)
+            const fall = b.falloff ? clamp(1 - Math.max(0, (1 - b.life / b.maxLife) - 0.5), 0.5, 1) : 1;
+            const wb = b.w && WEAPONS[b.w.key];
+            damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock : 3, stagger: wb ? wb.stagger : 0, w: b.w });
+            if (wb && wb.key === 'sniper') hitstop(0.035);
             if (b.pierce-- <= 0) { b.life = 0; break; }
           }
         }
@@ -520,15 +578,8 @@ function updateGrenades(dt) {
     g.x = lerp(g.sx, g.tx, k); g.y = lerp(g.sy, g.ty, k); g.h = Math.sin(k * Math.PI) * 40;
     if (k >= 1) {
       g.done = true;
-      const dmg = (45 + p.level * 9) * playerDamageMul(false);
-      for (const e of G.enemies) {
-        const d = Math.hypot(e.x - g.x, e.y - g.y);
-        if (d < 110 + e.r) damageEnemy(e, dmg * (d < 50 ? 1 : 0.7), false, Math.atan2(e.y - g.y, e.x - g.x));
-      }
-      G.effects.push({ type: 'boom', x: g.x, y: g.y, t: 0, life: 0.45, r: 110 });
-      burst(g.x, g.y, '#ffb040', 30, 260, 0.5, 4);
-      burst(g.x, g.y, '#555', 20, 120, 0.9, 6);
-      G.shake = Math.max(G.shake, 12);
+      explode(g.x, g.y, (45 + p.level * 9) * playerDamageMul(false), 110, { knock: 30, stagger: 0.6 });
+      hitstop(0.05);
     }
   }
   G.grenades = G.grenades.filter(g => !g.done);
@@ -548,7 +599,12 @@ function updateDrops(dt) {
       else if (d.kind === 'ammo') { p.reserve += d.amount; floatText(p.x, p.y - 26, `탄약 +${d.amount}`, '#cc8', 12); d.gone = true; }
       else if (d.kind === 'item') {
         if (addItem(d.item)) {
-          log(`획득: ${d.item.name}${d.item.count > 1 ? ' x' + d.item.count : ''}`, RARITIES[d.item.rarity || 0].color);
+          const r = d.item.rarity || 0, up = isUpgrade(p, d.item);
+          log(`획득: ${d.item.name}${d.item.count > 1 ? ' x' + d.item.count : ''}${up ? '  ▲ 장착 장비보다 좋음!' : ''}`, RARITIES[r].color);
+          if (r >= 2) {
+            floatText(p.x, p.y - 30, `${RARITIES[r].name} 장비!`, RARITIES[r].color, 16 + r * 2);
+            G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.7, color: RARITIES[r].color, r: 60 + r * 15 });
+          }
           d.gone = true;
         } else if (!d.warned) { log('인벤토리가 가득 찼습니다.', '#f88'); d.warned = true; }
       }
@@ -582,8 +638,9 @@ function update(dt) {
     // 캠프 안에서는 천천히 회복
     const mh = PlayerStats.maxHp(p);
     if (World.inSafe(p.x, p.y) && p.hp < mh) p.hp = Math.min(mh, p.hp + mh * 0.08 * dt);
+    else if (p.hp < mh) p.hp = Math.min(mh, p.hp + PlayerStats.regen(p) * dt); // 체력 스탯·옵션 재생
   }
-  p.atkT -= dt; p.hurtT -= dt; p.swingT -= dt; G.noAmmoT -= dt;
+  p.atkT -= dt; p.hurtT -= dt; p.swingT -= dt; p.recoilT = (p.recoilT || 0) - dt; G.noAmmoT -= dt;
   for (let i = 0; i < 4; i++) p.skillCd[i] = Math.max(0, p.skillCd[i] - dt);
   p.buffs.rapid = Math.max(0, p.buffs.rapid - dt);
   p.buffs.adren = Math.max(0, p.buffs.adren - dt);
@@ -626,7 +683,8 @@ function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   if (G.running) {
-    update(dt);
+    if (G.hitstop > 0) G.hitstop -= dt; // 타격 정지 중에는 월드 정지
+    else update(dt);
     render();
     UI.updateHUD(dt);
   }
@@ -637,6 +695,7 @@ function frame(now) {
 (function initTitle() {
   UI.init();
   const save = loadSave();
+  document.getElementById('version-label').textContent = GAME_VERSION;
   const btnC = document.getElementById('btn-continue');
   if (!save) btnC.disabled = true;
   else btnC.textContent = `이어하기 (${save.p.name} Lv${save.p.level})`;

@@ -78,8 +78,9 @@ const UI = {
     if (w) {
       const b = WEAPONS[w.key];
       $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${w.icon} ${w.name}</span> <span class="muted">[Q]</span>`;
-      $('weapon-ammo').textContent = b.melee ? '근접 무기' : p.reloadT > 0 ? '재장전 중...' : `${w.loaded} / ${b.mag}`;
-    } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; }
+      $('weapon-ammo').textContent = b.melee ? '근접 무기' : p.reloadT > 0 ? '재장전 중...' : `${w.loaded} / ${magSize(w)}${b.infinite ? '  ∞' : ''}`;
+      $('weapon-role').textContent = `${b.role} · DPS ${Math.round(weaponDps(p, w))}`;
+    } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; $('weapon-role').textContent = ''; }
 
     SKILLS.forEach((s, i) => {
       const el = $('cd' + i);
@@ -114,8 +115,14 @@ const UI = {
 
   // ---------------- 인벤토리 ----------------
   itemCell(it) {
-    const r = it.rarity || 0;
-    return `<span class="icon">${it.icon}</span><span class="r${r}">${it.name}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
+    const r = it.rarity || 0, p = G.player;
+    let mark = '';
+    if (it.kind !== 'cons') {
+      if (p.level < itemReqLevel(it)) mark = '<span class="mark lvl">Lv' + itemReqLevel(it) + '</span>';
+      else if (isUpgrade(p, it)) mark = '<span class="mark up">▲</span>';
+      if (it.isNew) mark += '<span class="mark new">N</span>';
+    }
+    return `${mark}<span class="icon">${it.icon}</span><span class="r${r}">${it.name}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
   },
 
   refreshInventory() {
@@ -125,7 +132,7 @@ const UI = {
       const it = p.equip[el.dataset.slot];
       el.classList.toggle('active', el.dataset.slot === p.active);
       el.className = el.className.replace(/ ?bc\d/g, '') + (it ? ' bc' + it.rarity : '');
-      el.querySelector('div').innerHTML = it ? `${it.icon} <span class="r${it.rarity}">${it.name}</span>` : '<span class="muted">비어 있음</span>';
+      el.querySelector('div').innerHTML = it ? `${it.icon} <span class="r${it.rarity}">${it.name}</span>` + (it.affixes && it.affixes.length ? `<br><span class="affix">◆ 옵션 ${it.affixes.length}개${it.legend ? ' ★' : ''}</span>` : '') : '<span class="muted">비어 있음</span>';
     });
     const grid = $('inv-grid');
     grid.innerHTML = '';
@@ -133,7 +140,7 @@ const UI = {
       const it = p.inventory[i];
       const c = document.createElement('div');
       c.className = 'inv-cell' + (it ? ' bc' + (it.rarity || 0) : '') + (it && UI.selected === it ? ' sel' : '');
-      if (it) { c.innerHTML = UI.itemCell(it); c.onclick = () => { UI.selected = it; UI.refreshInventory(); }; }
+      if (it) { c.innerHTML = UI.itemCell(it); c.onclick = () => { UI.selected = it; it.isNew = false; UI.refreshInventory(); }; }
       grid.appendChild(c);
     }
     if (UI.selected && !p.inventory.includes(UI.selected) && !Object.values(p.equip).includes(UI.selected)) UI.selected = null;
@@ -147,16 +154,33 @@ const UI = {
 
   renderDetail() {
     const box = $('item-detail'), it = UI.selected, p = G.player;
-    if (!it) { box.innerHTML = '<span class="muted">아이템을 선택하세요.</span>'; return; }
+    if (!it) { box.innerHTML = '<span class="muted">아이템을 선택하세요. ▲ = 지금 장비보다 좋음</span>'; return; }
     const equippedSlot = Object.keys(p.equip).find(k => p.equip[k] === it);
     const sellPrice = Math.max(1, Math.floor((it.value || 0) * 0.3)) * (it.count || 1);
+    const diffSpan = (a, b, unit = '') => {
+      const d = b - a, pct = a > 0 ? ` (${d >= 0 ? '+' : ''}${Math.round(d / a * 100)}%)` : '';
+      return `<span style="color:${d >= 0 ? '#6f6' : '#f66'}">${d >= 0 ? '+' : ''}${Math.round(d)}${unit}${pct}</span>`;
+    };
     let cmp = '';
-    if (it.kind === 'weapon' && !equippedSlot && p.equip[p.active]) {
-      const cur = p.equip[p.active];
-      const diff = it.dmg * (WEAPONS[it.key].pellets || 1) / WEAPONS[it.key].rate - cur.dmg * (WEAPONS[cur.key].pellets || 1) / WEAPONS[cur.key].rate;
-      cmp = `<br><span class="muted">초당 피해 비교(현재 무기): </span><span style="color:${diff >= 0 ? '#6f6' : '#f66'}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}</span>`;
+    if (it.kind === 'weapon') {
+      const dps = weaponDps(p, it);
+      cmp = `<div class="cmp">초당 피해(DPS) <b>${Math.round(dps)}</b>`;
+      if (!equippedSlot) {
+        for (const sl of ['w1', 'w2']) {
+          const cur = p.equip[sl];
+          if (cur) cmp += `<br><span class="muted">vs ${sl === 'w1' ? '주무기' : '보조무기'} ${cur.name} (${Math.round(weaponDps(p, cur))}):</span> ${diffSpan(weaponDps(p, cur), dps)}`;
+        }
+      }
+      cmp += '</div>';
+    } else if (it.kind === 'armor' && !equippedSlot) {
+      const cur = p.equip.armor;
+      cmp = `<div class="cmp">방어력 ${cur ? diffSpan(cur.def, it.def) : '+' + it.def} · 버티는 체력 ${diffSpan(armorEhp(p, cur), armorEhp(p, it))}`;
+      if (cur && cur.affixes.length) cmp += `<br><span class="muted">장착 중 옵션: ${cur.affixes.map(affixText).join(', ')}</span>`;
+      cmp += '</div>';
     }
-    box.innerHTML = `<b class="r${it.rarity || 0}">${it.icon} ${it.name}</b> ${it.ilvl ? `<span class="muted">(아이템 Lv${it.ilvl})</span>` : ''}<br>${itemDesc(it)}${cmp}<div class="btns"></div>`;
+    const req = itemReqLevel(it);
+    box.innerHTML = `<b class="r${it.rarity || 0}">${it.icon} ${it.name}</b> ${it.ilvl ? `<span class="muted">(아이템 Lv${it.ilvl})</span>` : ''}`
+      + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + `<br>${itemHtml(it)}${cmp}<div class="btns"></div>`;
     const btns = box.querySelector('.btns');
     const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = fn; btns.appendChild(b); };
     if (equippedSlot) {
@@ -178,6 +202,9 @@ const UI = {
     p.equip[slot] = it;
     if (old) p.inventory[idx] = old; else p.inventory.splice(idx, 1);
     if (p.active === slot) p.reloadT = 0;
+    it.isNew = false;
+    if (it.kind === 'weapon' && !WEAPONS[it.key].melee) it.loaded = Math.min(it.loaded, magSize(it));
+    p.hp = Math.min(p.hp, PlayerStats.maxHp(p));
     log(`장착: ${it.name}`, RARITIES[it.rarity].color);
     UI.selected = it;
     UI.refreshInventory(); UI.refreshStats();
@@ -190,7 +217,9 @@ const UI = {
     p.inventory.push(p.equip[slot]);
     p.equip[slot] = null;
     if (slot === p.active) { const o = slot === 'w1' ? 'w2' : 'w1'; if (p.equip[o]) p.active = o; }
+    p.hp = Math.min(p.hp, PlayerStats.maxHp(p));
     UI.refreshInventory(); UI.refreshStats();
+    saveGame();
   },
 
   sell(it, price) {
@@ -205,19 +234,28 @@ const UI = {
   // ---------------- 능력치 ----------------
   refreshStats() {
     if (!G.player) return;
-    const p = G.player;
-    const names = { str: ['근력', '근접 피해 +5%'], dex: ['사격', '총기 피해 +3.5%'], vit: ['체력', '최대 체력 +14'], agi: ['민첩', '치명타·이동·공속 증가'] };
+    const p = G.player, st = p.stats, up = k => Math.max(0, st[k] - 5);
+    const pc = v => Math.round(v * 100) + '%';
+    const rows = {
+      str: ['근력', '근접형', `근접 피해 +${pc(up('str') * 0.06)} · 방어력 +${up('str')}`, '포인트당 근접 피해 +6%, 방어력 +1'],
+      dex: ['사격', '총잡이', `총기 피해 +${pc(up('dex') * 0.04)} · 재장전 +${pc(up('dex') * 0.015)}`, '포인트당 총기 피해 +4%, 재장전 +1.5%'],
+      vit: ['체력', '생존형', `최대 체력 +${up('vit') * 15} · 재생 +${(up('vit') * 0.25).toFixed(1)}/초`, '포인트당 최대 체력 +15, 재생 +0.25/초'],
+      agi: ['민첩', '기동형', `이동·공속 +${pc(PlayerStats.agiMul(p))} · 치명타 +${(up('agi') * 0.8).toFixed(1)}%`, '포인트당 이동·공격속도 +0.8%, 치명타 +0.8% (속도 최대 30%)'],
+    };
     let h = `<div class="stat-row"><span>남은 포인트</span><b style="color:#ffd76a">${p.statPoints}</b></div><hr style="border-color:#333">`;
-    for (const k of Object.keys(names)) {
-      h += `<div class="stat-row"><span>${names[k][0]} <span class="muted">${names[k][1]}</span></span><span><b>${p.stats[k]}</b> <button data-stat="${k}" ${p.statPoints ? '' : 'disabled'}>+</button></span></div>`;
+    for (const k of Object.keys(rows)) {
+      const [n, role, eff, tip] = rows[k];
+      h += `<div class="stat-row" title="${tip}"><span>${n} <span class="tag">${role}</span></span><span><b>${st[k]}</b> <button data-stat="${k}" ${p.statPoints ? '' : 'disabled'}>+</button></span></div>
+        <div class="stat-eff">${eff}</div>`;
     }
-    h += `<hr style="border-color:#333">
+    const wline = sl => { const w = p.equip[sl]; return w ? `<div class="stat-row"><span>${sl === 'w1' ? '주무기' : '보조무기'} DPS <span class="muted">${w.name}</span></span><b>${Math.round(weaponDps(p, w))}</b></div>` : ''; };
+    h += `<hr style="border-color:#333">${wline('w1')}${wline('w2')}
       <div class="stat-row"><span>최대 체력</span><span>${PlayerStats.maxHp(p)}</span></div>
       <div class="stat-row"><span>방어력</span><span>${PlayerStats.def(p)} (피해 -${(PlayerStats.dmgReduce(p) * 100).toFixed(0)}%)</span></div>
-      <div class="stat-row"><span>총기 피해 배율</span><span>x${PlayerStats.gunMul(p).toFixed(2)}</span></div>
-      <div class="stat-row"><span>근접 피해 배율</span><span>x${PlayerStats.meleeMul(p).toFixed(2)}</span></div>
-      <div class="stat-row"><span>치명타 확률</span><span>${(PlayerStats.crit(p) * 100).toFixed(1)}%</span></div>
+      <div class="stat-row"><span>치명타 확률 / 피해</span><span>${(PlayerStats.crit(p) * 100).toFixed(1)}% / x${PlayerStats.critMul(p, curWeapon()).toFixed(2)}</span></div>
       <div class="stat-row"><span>이동 속도</span><span>${PlayerStats.speed(p).toFixed(0)}</span></div>
+      <div class="stat-row"><span>체력 재생</span><span>${PlayerStats.regen(p).toFixed(1)}/초</span></div>
+      ${gearBonus(p, 'exp') ? `<div class="stat-row"><span>경험치 획득</span><span>+${pc(gearBonus(p, 'exp'))}</span></div>` : ''}
       <div class="stat-row"><span>처치 수</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div>`;
     $('stats-body').innerHTML = h;
     $('stats-body').querySelectorAll('button[data-stat]').forEach(b => {
@@ -226,7 +264,7 @@ const UI = {
         const before = PlayerStats.maxHp(p);
         p.stats[b.dataset.stat]++; p.statPoints--;
         p.hp += PlayerStats.maxHp(p) - before;
-        UI.refreshStats();
+        UI.refreshStats(); UI.refreshInventory();
       };
     });
   },
@@ -317,6 +355,7 @@ const UI = {
       G.shopStock = stock;
     }
     UI.shopOpen = true;
+    $('btn-sell-junk').onclick = () => UI.sellJunk();
     UI.renderShop();
     UI.open('shop'); UI.open('inventory');
   },
@@ -337,12 +376,26 @@ const UI = {
     }
     for (const it of G.shopStock) {
       const req = itemReqLevel(it);
-      row(`${it.icon} <span class="r${it.rarity}">${it.name}</span><br><span class="muted">${itemDesc(it)}</span>` + (req > p.level ? ` <span style="color:#f66">(Lv${req} 필요)</span>` : ''),
+      row(`${it.icon} <span class="r${it.rarity}">${it.name}</span>` + (req > p.level ? ` <span style="color:#f66">(Lv${req} 필요)</span>` : '') + `<br>${itemHtml(it)}`,
         it.value, () => {
-          const copy = it.kind === 'weapon' ? makeWeapon(it.key, it.ilvl, it.rarity) : makeArmor(it.key, it.ilvl, it.rarity);
+          // 진열품과 같은 옵션 그대로 구매
+          const copy = JSON.parse(JSON.stringify(it));
+          copy.id = nextItemId++; copy.isNew = true;
           UI.buy(copy, it.value);
         });
     }
+  },
+
+  // 일반·고급 장비 일괄 판매 (파밍 중 인벤토리 정리)
+  sellJunk() {
+    const p = G.player;
+    const junk = p.inventory.filter(it => it.kind !== 'cons' && it.rarity <= 1 && !isUpgrade(p, it));
+    if (!junk.length) { log('판매할 일반·고급 장비가 없습니다. (▲ 표시 장비는 제외)', '#aaa'); return; }
+    let total = 0;
+    for (const it of junk) { total += Math.max(1, Math.floor((it.value || 0) * 0.3)); removeItem(it); }
+    p.credits += total;
+    log(`장비 ${junk.length}개 일괄 판매: +${fmt(total)}₵`, '#ffd76a');
+    UI.selected = null; UI.refreshInventory(); saveGame();
   },
 
   buy(it, price) {

@@ -1,26 +1,64 @@
 // 게임 데이터 정의
 const TILE = 32;
 
+const GAME_VERSION = 'v0.2';
+
 const RARITIES = [
-  { name: '일반', mul: 1.0, color: '#dddddd', weight: 60 },
-  { name: '고급', mul: 1.15, color: '#6fdc6f', weight: 25 },
-  { name: '희귀', mul: 1.35, color: '#5aa8ff', weight: 10 },
-  { name: '영웅', mul: 1.6, color: '#c77dff', weight: 4 },
-  { name: '전설', mul: 2.0, color: '#ffa53a', weight: 1 },
+  { name: '일반', mul: 1.0, color: '#dddddd', weight: 58 },
+  { name: '고급', mul: 1.15, color: '#6fdc6f', weight: 27 },
+  { name: '희귀', mul: 1.35, color: '#5aa8ff', weight: 11 },
+  { name: '영웅', mul: 1.6, color: '#c77dff', weight: 3.4 },
+  { name: '전설', mul: 2.0, color: '#ffa53a', weight: 0.6 },
 ];
 
 // 무기 기본 정보
+// range: 사거리(px) · knock: 넉백 · stagger: 경직(초) · move: 장착 시 이동속도 배율
+// role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
-  pipe:    { name: '쇠파이프',      icon: '🔧', melee: true, dmg: 18, rate: 0.45, range: 60, arc: 1.2, lvl: 1, price: 60 },
-  pistol:  { name: 'M1911 권총',    icon: '🔫', dmg: 14, rate: 0.28, mag: 12, reload: 1.2, spread: 0.04, speed: 950, lvl: 1, price: 80 },
-  axe:     { name: '소방 도끼',     icon: '🪓', melee: true, dmg: 38, rate: 0.75, range: 70, arc: 1.4, lvl: 4, price: 220 },
-  smg:     { name: 'MP5 기관단총',  icon: '🔫', dmg: 9, rate: 0.085, mag: 30, reload: 1.6, spread: 0.09, speed: 900, lvl: 3, price: 260 },
-  shotgun: { name: 'M870 산탄총',   icon: '🔫', dmg: 9, pellets: 7, rate: 0.8, mag: 6, reload: 2.2, spread: 0.26, speed: 800, lvl: 5, price: 380 },
-  rifle:   { name: 'K2 돌격소총',   icon: '🔫', dmg: 17, rate: 0.11, mag: 30, reload: 1.8, spread: 0.05, speed: 1100, lvl: 8, price: 620 },
-  katana:  { name: '고주파 블레이드', icon: '🗡️', melee: true, dmg: 70, rate: 0.5, range: 80, arc: 1.6, lvl: 11, price: 900 },
-  sniper:  { name: 'K14 저격소총',  icon: '🎯', dmg: 110, rate: 1.25, mag: 5, reload: 2.5, spread: 0.004, speed: 1600, pierce: 3, lvl: 12, price: 1100 },
-  lmg:     { name: 'K3 기관총',     icon: '🔫', dmg: 15, rate: 0.07, mag: 100, reload: 4.0, spread: 0.08, speed: 1050, lvl: 16, price: 1800 },
+  pipe:    { name: '쇠파이프',      icon: '🔧', melee: true, dmg: 18, rate: 0.40, range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
+             role: '빠른 연타 · 탄약 불필요' },
+  pistol:  { name: 'M1911 권총',    icon: '🔫', dmg: 14, rate: 0.26, mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
+             infinite: true, lvl: 1, price: 80, role: '탄약 무한 · 언제나 믿을 수 있는 보조무기' },
+  axe:     { name: '소방 도끼',     icon: '🪓', melee: true, dmg: 44, rate: 0.8, range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
+             role: '느리지만 넓은 일격 · 여러 적을 밀치고 경직' },
+  smg:     { name: 'MP5 기관단총',  icon: '🔫', dmg: 9, rate: 0.075, mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
+             lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
+  shotgun: { name: 'M870 산탄총',   icon: '🔫', dmg: 10, pellets: 7, rate: 0.8, mag: 6, reload: 2.2, spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
+             lvl: 5, price: 380, role: '근거리 폭발력 · 맞은 적을 크게 밀쳐냄' },
+  rifle:   { name: 'K2 돌격소총',   icon: '🔫', dmg: 17, rate: 0.11, mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
+             lvl: 8, price: 620, role: '안정적인 중거리 지속 화력' },
+  katana:  { name: '고주파 블레이드', icon: '🗡️', melee: true, dmg: 60, rate: 0.38, range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
+             role: '빠르고 긴 칼날 · 가장 빠른 이동' },
+  sniper:  { name: 'K14 저격소총',  icon: '🎯', dmg: 120, rate: 1.2, mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
+             lvl: 12, price: 1100, role: '장거리 일격 · 관통 · 치명타 x2.6' },
+  lmg:     { name: 'K3 기관총',     icon: '🔫', dmg: 15, rate: 0.07, mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
+             lvl: 16, price: 1800, role: '압도적 지속 화력 · 무겁고 탄약 소모 큼' },
 };
+
+// 장비 추가 옵션 (v0.2). pct: 퍼센트 표시 · slot: weapon(모든 무기) / gun(총기만) / armor
+const AFFIXES = {
+  dmg:     { name: '공격력',      slot: 'weapon', min: 0.05, max: 0.15, pct: true },
+  rate:    { name: '공격 속도',   slot: 'weapon', min: 0.04, max: 0.12, pct: true },
+  crit:    { name: '치명타 확률', slot: 'weapon', min: 0.02, max: 0.06, pct: true },
+  critDmg: { name: '치명타 피해', slot: 'weapon', min: 0.15, max: 0.40, pct: true },
+  mag:     { name: '탄창 용량',   slot: 'gun',    min: 0.15, max: 0.40, pct: true },
+  reload:  { name: '재장전 속도', slot: 'gun',    min: 0.10, max: 0.25, pct: true },
+  hp:      { name: '최대 체력',   slot: 'armor',  min: 0.05, max: 0.15, pct: true },
+  move:    { name: '이동 속도',   slot: 'armor',  min: 0.03, max: 0.08, pct: true },
+  regen:   { name: '체력 재생',   slot: 'armor',  min: 1, max: 3, perLvl: 0.15, unit: '/초' },
+  exp:     { name: '경험치 획득', slot: 'armor',  min: 0.05, max: 0.15, pct: true },
+};
+
+// 전설 무기 고유 효과 (무기를 들고 있을 때만 발동)
+const LEGENDARY = {
+  boom:    { name: '폭발탄',    desc: '명중 시 20% 확률로 소형 폭발' },
+  leech:   { name: '흡혈',      desc: '입힌 피해의 4%만큼 체력 회복' },
+  execute: { name: '처형자',    desc: '체력 30% 이하의 적에게 피해 +60%' },
+  thrift:  { name: '보급 장인', desc: '35% 확률로 탄약을 소모하지 않음', gun: true },
+};
+
+// 등급별 추가 옵션 개수
+const AFFIX_COUNT = { weapon: [0, 1, 2, 3, 3], armor: [0, 1, 2, 3, 4] };
 
 const ARMORS = {
   vest:     { name: '방탄 조끼',     icon: '🦺', def: 8, lvl: 1, price: 120 },
@@ -36,14 +74,14 @@ const CONSUMABLES = {
 
 // 적 정의
 const ENEMIES = {
-  zombie: { name: '감염자',   hp: 40,  dmg: 8,  speed: 68,  r: 12, exp: 10, color: '#6b8f4e', atkCd: 1.0, aggro: 360 },
-  dog:    { name: '변이견',   hp: 26,  dmg: 6,  speed: 155, r: 10, exp: 12, color: '#8a5a3c', atkCd: 0.7, aggro: 420 },
-  raider: { name: '약탈자',   hp: 50,  dmg: 7,  speed: 92,  r: 12, exp: 18, color: '#b5523b', atkCd: 1.0, aggro: 460,
+  zombie: { name: '감염자',   hp: 40,  dmg: 8,  speed: 68,  r: 12, exp: 10, weight: 1, color: '#6b8f4e', atkCd: 1.0, aggro: 360 },
+  dog:    { name: '변이견',   hp: 26,  dmg: 6,  speed: 155, r: 10, exp: 12, weight: 0.7, color: '#8a5a3c', atkCd: 0.7, aggro: 420 },
+  raider: { name: '약탈자',   hp: 50,  dmg: 7,  speed: 92,  r: 12, exp: 18, weight: 1, color: '#b5523b', atkCd: 1.0, aggro: 460,
             ranged: true, range: 320, fireCd: 1.2, bulletSpeed: 430 },
-  brute:  { name: '변이 거한', hp: 190, dmg: 22, speed: 56,  r: 20, exp: 45, color: '#7a4f8a', atkCd: 1.5, aggro: 360 },
-  drone:  { name: '경비 드론', hp: 60,  dmg: 9,  speed: 115, r: 11, exp: 26, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
+  brute:  { name: '변이 거한', hp: 190, dmg: 22, speed: 56,  r: 20, exp: 45, weight: 2.5, color: '#7a4f8a', atkCd: 1.5, aggro: 360 },
+  drone:  { name: '경비 드론', hp: 60,  dmg: 9,  speed: 115, r: 11, exp: 26, weight: 0.8, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
             ranged: true, range: 290, fireCd: 0.9, bulletSpeed: 480, flying: true },
-  boss:   { name: '방사능 군주 타이탄', hp: 5200, dmg: 40, speed: 75, r: 36, exp: 6000, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
+  boss:   { name: '방사능 군주 타이탄', hp: 5200, dmg: 40, speed: 75, r: 36, exp: 6000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
 };
 
 // 지역 (캠프 중심으로부터 타일 거리)
