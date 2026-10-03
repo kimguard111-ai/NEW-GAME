@@ -167,6 +167,7 @@ const World = {
       const i = y * W + x;
       if (this.tiles[i] === T.BUILDING && !this.height[i]) this.height[i] = 60;
     }
+    City.generate(seed); // v1.2 간판·거리 소품·버스
 
     this.buildMinimap();
   },

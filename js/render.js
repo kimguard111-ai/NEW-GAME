@@ -170,6 +170,7 @@ function drawSolidTile(o) {
     const top = ruin ? `rgb(${b - 8},${b - 14},${b - 20})` : `rgb(${b},${b - 3},${b - 8})`;
     const south = `rgb(${b - 34},${b - 37},${b - 42})`, east = `rgb(${b - 20},${b - 23},${b - 28})`;
     drawBox(x0, y0, x1, y1, ht, top, south, east, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), ruin ? 0 : tx * 977 + ty);
+    if (!ruin) City.drawSign(tx, ty); // v1.2 한글 네온 간판
     if (!ruin && h < 0.04) { // 옥상 환풍기
       drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0);
     }
@@ -204,6 +205,7 @@ function drawSolidTile(o) {
       if (bd.south) poly([S(x0, y1), Y(x0, y1, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x0, y1), Y(x0, y1, z1)], '#c9a24a');
       else poly([S(x1, y0), Y(x1, y0, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x1, y0), Y(x1, y0, z1)], '#c9a24a');
     }
+  } else if (t === T.CAR && City.carSkip.has(ty * World.W + tx)) { /* 버스·경찰차는 소품으로 그림 */
   } else if (t === T.CAR) {
     const cols = [['#7b4a32', '#4b2a1a', '#5f3824'], ['#56626e', '#333b44', '#454f5a'], ['#6d6a44', '#43412a', '#575536'], ['#44566a', '#28323e', '#364556']];
     const c = cols[Math.floor(h * 4)];
@@ -765,6 +767,7 @@ function render() {
   for (const d of G.drops) objs.push({ d: depth(d), draw: drawDrop, ent: d });
   for (const c of G.corpses) objs.push({ d: depth(c) - 0.3, draw: drawCorpse, ent: c });
   if (G.inside) for (const c of G.inside.crates) objs.push({ d: depth(c), draw: drawCrate, ent: c });
+  City.collect(objs, (x, y) => { const sx = Iso.sx(x, y), sy = Iso.sy(x, y); return sx > -120 && sx < VW + 120 && sy > -40 && sy < VH + 140; });
   for (const l of World.landmarks) {
     const sx = Iso.sx(l.x, l.y);
     if (sx < -400 || sx > VW + 400) continue;
@@ -777,7 +780,7 @@ function render() {
   objs.sort((a, b) => a.d - b.d);
   for (const o of objs) {
     if (o.draw) o.draw(o.ent);
-    else { drawSolidTile(o); if (o.t === T.CAR && isBurningCar(o.tx, o.ty)) burnFx(o.tx, o.ty); }
+    else { drawSolidTile(o); if (o.t === T.CAR && isBurningCar(o.tx, o.ty) && !City.carSkip.has(o.ty * World.W + o.tx)) burnFx(o.tx, o.ty); }
   }
 
   drawShopSigns();
@@ -852,6 +855,7 @@ function render() {
   if (G.boss) addLight(Iso.sx(G.boss.x, G.boss.y), Iso.sy(G.boss.x, G.boss.y), 230, 0.7, 'rgba(90,255,100,A)');
   for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 2) addLight(Iso.sx(d.x, d.y), Iso.sy(d.x, d.y), 70, 0.8, RARITIES[d.item.rarity].color.replace(/^#(..)(..)(..)$/, (m, r, g, b) => `rgba(${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},A)`));
   renderLighting(Math.min(0.9, G.darkness + 0.32));
+  Ash.draw(); // v1.2 재 날림
   const tint = ZONES[G.zone].tint;
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(200,0,0,${p.hurtT})`; ctx.fillRect(0, 0, VW, VH); }
@@ -982,6 +986,9 @@ function drawShopSigns() {
   for (const b of World.buildings) {
     if (b === G.inside || Math.hypot(p.x - b.doorX, p.y - b.doorY) > 420) continue;
     const ready = b.crates.some(c => G.time - c.openT > CRATE_RESTOCK);
+    const [dx, dy] = b.door[0]; // 문 위 노란 간판에 상호
+    ctx.save(); City.faceTransform(dx, dy, b.south ? 's' : 'e', 54 + 22); if (!b.south) ctx.translate(-TILE, 0);
+    ctx.fillStyle = '#2a1c08'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.name, TILE, 8); ctx.restore();
     nameTag(Iso.sx(b.doorX, b.doorY), Iso.sy(b.doorX, b.doorY, 92), `🚪 ${b.name}${ready ? ' ·상자' : ''}`, '#e0c070', 'bold 12px sans-serif');
   }
 }
