@@ -141,7 +141,7 @@ const UI = {
     if ($('medcnt')) $('medcnt').textContent = med ? med.count : 0;
 
     // 보스 바
-    const fb = G.fieldBoss && dist(G.fieldBoss, p) < 900 ? G.fieldBoss : null;
+    const fb = G.fieldBoss && dist(G.fieldBoss, p) < 900 ? G.fieldBoss : G.labBoss && G.labBoss.hp > 0 && dist(G.labBoss, p) < 900 ? G.labBoss : null;
     const boss = (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 900) ? G.boss : (G.assault && G.assault.boss) || fb || G.elite; // 보스 · 어설트 보스 · 필드 보스 · 네임드
     if (boss && boss.hp > 0 && dist(boss, p) < 900) {
       $('boss-bar').classList.remove('hidden');
@@ -160,7 +160,7 @@ const UI = {
 
   trackerHtml(p) {
     const c = Story.chapter(p);
-    if (!c) return '<b>모든 장 완료</b><br>타이탄은 4분마다 부활합니다';
+    if (!c) return `<b>모든 장 완료</b><br>${p.labKills ? `키메라 처치 ${p.labKills}회 · 지하 연구소는 출격마다 구조가 바뀝니다` : '<span style="color:#ff8a8a">🗺 지하 연구소 해금 — 격리실의 「키메라」를 처치하라</span>'}`;
     if (!p.quest.active) return p.level >= c.minLevel ? `<b>${c.title}</b><br>한씨에게 말을 걸거나, 「${MAPS[MAP_ORDER[p.quest.ch]].name}」에 출격하면 시작` : `<b>다음: ${c.title}</b><br>Lv${c.minLevel} 이상`;
     const st = c.steps[p.quest.step], tg = Story.target(p), mapId = MAP_ORDER[p.quest.ch];
     let h = `<b>${c.title} (${p.quest.step + 1}/${c.steps.length})</b><br>${Story.objective(st)}`;

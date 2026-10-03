@@ -7,6 +7,8 @@ const FIELD_BOSSES = {
   3: { name: '실험체 「골리앗」', art: 'goliath', base: 'brute', level: 16, hpMul: 20, dmgMul: 1.3, scale: 1.6, patterns: ['quake', 'dash', 'glutton', 'quake'] },
 };
 const FIELD_BOSS_CD = 360; // 처치 후 다음 출현까지 (초)
+// v1.5 지하 연구소 격리실 보스 (출격마다 한 번)
+const LAB_BOSS = { name: '최종 실험체 「키메라」', art: 'chimera', base: 'brute', level: 24, hpMul: 20, dmgMul: 1.35, scale: 1.9, patterns: ['glutton', 'dash', 'brood', 'quake'] };
 
 const Bosses = {
   // ---------------- 필드 보스 ----------------
@@ -58,6 +60,53 @@ const Bosses = {
     p.fieldBossKills = (p.fieldBossKills || 0) + 1;
     Workshop.gain(10, 2, '필드 보스 잔해 회수');
     hitstop(0.15); G.shake = Math.max(G.shake, 12);
+  },
+
+  // ---------------- 연구소 키메라 (v1.5) ----------------
+  // 격리실(미니맵 붉은 방)에 들어가면 깨어남. 체력 50% 이하에서 탈피 → 빨라지고 패턴 간격 짧아짐
+  updateLab(dt) {
+    const p = G.player, r = World.labBoss;
+    if (!r || p.dead) return;
+    const e = G.labBoss;
+    if (!e) {
+      if (G.labBossDone) return;
+      const tx = p.x / TILE, ty = p.y / TILE;
+      if (tx < r.x0 - 0.5 || tx > r.x1 + 1.5 || ty < r.y0 - 0.5 || ty > r.y1 + 1.5) return;
+      const b = makeEnemy(LAB_BOSS.base, (r.cx + 0.5) * TILE, (r.cy + 0.5) * TILE, LAB_BOSS.level);
+      b.bossName = LAB_BOSS.name; b.art = LAB_BOSS.art; b.patterns = LAB_BOSS.patterns; b.scale = LAB_BOSS.scale; b.expMul = 14; b.labBoss = true;
+      b.hp = b.maxHp = Math.round(b.maxHp * LAB_BOSS.hpMul); b.dmg *= LAB_BOSS.dmgMul; b.r = Math.round(b.r * LAB_BOSS.scale);
+      b.weight = b.def.weight * 8; b.skillT = 2.5; b.state = 'chase';
+      G.enemies.push(b); G.labBoss = b;
+      G.shake = 14; SFX.play('roar', 1);
+      UI.toast('격리실 봉인 해제', `${LAB_BOSS.name} — 산성 장판 · 돌진 · 실험체 호출 · 내려찍기`);
+      log(`⚠ 격리 탱크가 깨졌다! ${LAB_BOSS.name}이(가) 깨어났다!`, '#ff5050');
+      return;
+    }
+    if (e.hp <= 0) { G.labBoss = null; return; }
+    if (!e.molted && e.hp < e.maxHp * 0.5) { // 탈피
+      e.molted = true; e.speed *= 1.35; e.skillT = 0.8;
+      G.shake = 18; hitstop(0.15);
+      G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.8, color: '#ff5050', r: 300 });
+      for (let i = 0; i < 6; i++) Monsters.strike(e.x + Math.cos(i / 6 * TAU) * 140, e.y + Math.sin(i / 6 * TAU) * 140, 60, 1.0, e.dmg * 0.8, 'rgba(140,220,70,', true);
+      UI.toast('키메라 탈피', '더 빨라졌다 — 장판 사이로 구르며 거리를 유지하라');
+      log('키메라가 껍질을 찢고 나온다! 주변에 산성액이 튄다!', '#ff5050');
+    }
+    if (e.molted && e.skillT > 2.5) e.skillT = 2.5; // 탈피 후 패턴 간격 단축
+  },
+  onLabKill(e, dropAt) {
+    const p = G.player;
+    G.labBoss = null; G.labBossDone = true;
+    log(`${e.bossName} 처치! 격리실의 연구 기록을 회수했다.`, '#ffa53a');
+    UI.toast('키메라 처치', '영웅 이상 장비 확정 · 전자 부품 — 탈출해야 확정');
+    dropAt('credits', { amount: e.level * 120 });
+    dropAt('item', { item: randomGear(e.level, 2, Math.random() < 0.3 ? 4 : 3, ZONES[5].gear) });
+    dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[5].gear) });
+    dropAt('item', { item: makeConsumable('medkit', 3) });
+    for (const o of G.enemies) if (o.guardOf === e) o.hp = 0;
+    p.labKills = (p.labKills || 0) + 1;
+    Workshop.gain(14, 6, '실험 장비 잔해 회수');
+    Bounty.on('fieldBoss');
+    hitstop(0.2); G.shake = Math.max(G.shake, 16);
   },
 
   // ---------------- 타이탄 페이즈 ----------------

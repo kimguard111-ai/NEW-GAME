@@ -434,9 +434,9 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
     if (hit.stagger) e.stunT = Math.max(e.stunT, hit.stagger / wt);
   }
   const big = dmg >= e.maxHp * 0.25 || crit;
-  SFX.play(crit ? 'crit' : e.type === 'drone' ? 'metal' : 'hit', 0.8);
+  SFX.play(crit ? 'crit' : FACTION[e.type] === 'machine' ? 'metal' : 'hit', 0.8);
   if (Settings.dmgNum) floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : e.def.boss ? '#ffb0ff' : '#fff', crit ? 18 : big ? 15 : 13);
-  burst(e.x, e.y, e.type === 'drone' ? '#ffc' : '#8a1010', crit ? 9 : 4, crit ? 150 : 110, 0.35);
+  burst(e.x, e.y, FACTION[e.type] === 'machine' ? '#ffc' : '#8a1010', crit ? 9 : 4, crit ? 150 : 110, 0.35);
   if (crit) burst(e.x, e.y, '#fff3a0', 5, 180, 0.15, 2);
   if (e.def.boss && (crit || (hit.stagger || 0) >= 0.5)) { G.shake = Math.max(G.shake, 5); hitstop(0.035); }
   if (w && !hit.noProc) {
@@ -482,10 +482,10 @@ function killEnemy(e) {
     G.corpses.push({ key: ck, x: e.x, y: e.y, face: e.face || 0, t0: G.time });
     if (G.corpses.length > 30) G.corpses.shift();
   }
-  if (e.type !== 'drone') G.decals.push({ x: e.x, y: e.y, r: e.r * rand(1, 1.6), a: rand(0, TAU) });
+  if (FACTION[e.type] !== 'machine') G.decals.push({ x: e.x, y: e.y, r: e.r * rand(1, 1.6), a: rand(0, TAU) });
   if (G.decals.length > 150) G.decals.shift();
-  burst(e.x, e.y, e.type === 'drone' ? '#aab' : '#7a0d0d', e.def.boss ? 60 : 18, e.def.boss ? 260 : 170, 0.6, 4);
-  G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.3, color: e.type === 'drone' ? '#cde' : '#fff', r: e.r * 2.5 });
+  burst(e.x, e.y, FACTION[e.type] === 'machine' ? '#aab' : '#7a0d0d', e.def.boss ? 60 : 18, e.def.boss ? 260 : 170, 0.6, 4);
+  G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.3, color: FACTION[e.type] === 'machine' ? '#cde' : '#fff', r: e.r * 2.5 });
   if (e.type === 'brute') hitstop(0.06);
   if (e.def.boss) hitstop(0.3);
   // 퀘스트
@@ -508,6 +508,7 @@ function killEnemy(e) {
   }
   if (e.minion) return;
   if (e.fieldBoss) Bosses.onFieldKill(e, dropAt);
+  if (e.labBoss) Bosses.onLabKill(e, dropAt);
   if (e.elite) { // 네임드: 장비 확정 + 크레딧
     G.elite = null;
     log(`${ELITES[e.elite].name} 처치!`, '#ffa53a');
@@ -524,7 +525,7 @@ function killEnemy(e) {
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
-  const gearChance = e.assault || e.fieldBoss ? 0 : e.type === 'brute' ? 0.11 : 0.05; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체)
+  const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.11 : 0.05; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
   if (Math.random() < gearChance) {
     const it = randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
@@ -644,8 +645,8 @@ function updateEnemies(dt) {
     const dx = b.x - a.x, dy = b.y - a.y, rr = a.r + b.r, dd = dx * dx + dy * dy;
     if (dd > 0 && dd < rr * rr) {
       const dl = Math.sqrt(dd), push = (rr - dl) / 2, nx = dx / dl, ny = dy / dl;
-      if (!a.def.boss) World.move(a, -nx * push, -ny * push);
-      if (!b.def.boss) World.move(b, nx * push, ny * push);
+      if (!a.def.boss && !a.def.turret) World.move(a, -nx * push, -ny * push); // 포탑은 고정
+      if (!b.def.boss && !b.def.turret) World.move(b, nx * push, ny * push);
     }
   }
   G.enemies = G.enemies.filter(e => e.hp > 0);
@@ -657,7 +658,7 @@ function spawnEnemies(dt) {
   if (G.spawnT > 0 || G.assault || World.map === 'camp') return; // 어설트 중·캠프에는 일반 스폰 없음
   G.spawnT = 0.35;
   // 먼 적 정리
-  G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || e.fieldBoss || dist(e, p) < 1800 || e.state === 'chase');
+  G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || e.fieldBoss || e.labBoss || dist(e, p) < 1800 || e.state === 'chase');
   if (G.elite && G.elite.hp <= 0) G.elite = null;
   const z = World.zoneIndex(p.x, p.y);
   const near = G.enemies.filter(e => !e.def.boss && dist(e, p) < 1300).length;
@@ -861,6 +862,7 @@ function update(dt) {
   updateEnemies(dt);
   Assault.update(dt);
   Bosses.updateField(dt);
+  Bosses.updateLab(dt); // v1.5 연구소 키메라
   updateBullets(dt);
   updateGrenades(dt);
   Monsters.updateHazards(dt);

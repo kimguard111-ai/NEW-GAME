@@ -31,6 +31,7 @@ const TILE_COLORS = {
   [T.ROAD]: '#2a2c30', [T.WALK]: '#45464b', [T.RUBBLE]: '#3d3833', [T.GRASS]: '#2c3824',
   [T.CAMP]: '#363c45', [T.CAR]: '#2a2c30', [T.BARRICADE]: '#363c45', [T.BUILDING]: '#1d1d20', [T.LANDMARK]: '#3a3833',
   [T.WALL]: '#2a2420', [T.FLOOR]: '#4a4038', [T.DOOR]: '#4a4038', [T.PROP]: '#4a4038',
+  [T.LWALL]: '#060709', [T.LFLOOR]: '#3a3f46', [T.LPROP]: '#3a3f46',
 };
 
 // ---------------- 바닥 ----------------
@@ -70,6 +71,12 @@ function drawGroundTile(tx, ty, t) {
     if (t === T.DOOR) { ctx.fillStyle = '#5a5048'; ctx.fillRect(x, y, TILE, TILE); }
   } else if (t === T.CAMP) {
     ctx.strokeStyle = 'rgba(120,150,190,0.14)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+  } else if (t === T.LFLOOR || t === T.LPROP) { // v1.5 연구소 바닥: 금속 패널 · 배수 격자 · 얼룩
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(x + 2, y + 2, TILE - 4, 2);
+    if (h < 0.08) { ctx.fillStyle = 'rgba(20,22,26,0.8)'; for (let i = 6; i < TILE - 4; i += 5) ctx.fillRect(x + 6, y + i, TILE - 12, 2); } // 배수 격자
+    else if (h < 0.13) { ctx.fillStyle = 'rgba(90,10,10,0.5)'; ctx.beginPath(); ctx.ellipse(x + 16, y + 16, 6 + h * 60, 4 + h * 30, h * 20, 0, TAU); ctx.fill(); } // 핏자국
+    else if (h > 0.96) { ctx.fillStyle = 'rgba(200,170,40,0.35)'; for (let i = 0; i < 4; i++) ctx.fillRect(x + i * 8, y + 13, 4, 6); } // 경고 줄무늬
   }
 }
 
@@ -156,6 +163,7 @@ function tileHeight(tx, ty) {
   if (t === T.WALL) return insideBid(tx, ty) ? CUT_H : World.height[ty * World.W + tx];
   if (t === T.FLOOR || t === T.DOOR) return insideBid(tx, ty) ? 0 : World.height[ty * World.W + tx];
   if (t === T.PROP) return insideBid(tx, ty) ? World.height[ty * World.W + tx] : World.buildings[World.bid[ty * World.W + tx]].h; // 소품 / 바깥에서는 지붕
+  if (t === T.LWALL || t === T.LPROP) return World.height[ty * World.W + tx];
   return 0;
 }
 
@@ -204,6 +212,23 @@ function drawSolidTile(o) {
       const z0 = LIN + 6, z1 = LIN + 22;
       if (bd.south) poly([S(x0, y1), Y(x0, y1, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x0, y1), Y(x0, y1, z1)], '#c9a24a');
       else poly([S(x1, y0), Y(x1, y0, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x1, y0), Y(x1, y0, z1)], '#c9a24a');
+    }
+  } else if (t === T.LWALL) { // v1.5 연구소 벽 (콘크리트 + 아래쪽 경고 띠 + 가끔 패널 불빛)
+    const ht = tileHeight(tx, ty), S = Iso.sx, Y = Iso.sy;
+    drawBox(x0, y0, x1, y1, ht, '#3c4048', '#23262c', '#2d3138', tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), 0);
+    if (tileHeight(tx, ty + 1) === 0) {
+      poly([S(x0, y1), Y(x0, y1, 6), S(x1, y1), Y(x1, y1, 6), S(x1, y1), Y(x1, y1, 11), S(x0, y1), Y(x0, y1, 11)], tx % 2 ? '#8a7020' : '#1a1a1a');
+      if (h < 0.1) poly([S(x0 + 10, y1), Y(x0 + 10, y1, 26), S(x0 + 18, y1), Y(x0 + 18, y1, 26), S(x0 + 18, y1), Y(x0 + 18, y1, 34), S(x0 + 10, y1), Y(x0 + 10, y1, 34)], Math.sin(G.time * 3 + tx) > 0 ? '#40ff70' : '#1a4a24');
+    }
+  } else if (t === T.LPROP) { // 실험 장비: 낮은 것 = 작업대, 높은 것 = 배양 탱크 (초록 빛)
+    const ht = tileHeight(tx, ty);
+    if (ht < 30) {
+      drawBox(x0 + 3, y0 + 3, x1 - 3, y1 - 3, ht, '#6a727c', '#3a4048', '#4e555e', 0, 0, 0);
+      ctx.fillStyle = h < 0.5 ? '#7ab8e8' : '#c84a3a'; ctx.fillRect(Iso.sx(x0 + 12, y0 + 12) - 3, Iso.sy(x0 + 12, y0 + 12, ht) - 4, 6, 3);
+    } else {
+      drawBox(x0 + 4, y0 + 4, x1 - 4, y1 - 4, 8, '#4a525c', '#2a2e34', '#363c44', 0, 0, 0);
+      drawBox(x0 + 6, y0 + 6, x1 - 6, y1 - 6, ht, 'rgba(120,255,150,0.55)', 'rgba(60,170,90,0.55)', 'rgba(80,200,110,0.55)', 8, 8, 0);
+      if (Settings.light && Light.list.length < LIGHT_CAP) addLight(Iso.sx(x0 + 16, y0 + 16), Iso.sy(x0 + 16, y0 + 16, 24), 80, 0.6, 'rgba(90,255,140,A)');
     }
   } else if (t === T.CAR && City.carSkip.has(ty * World.W + tx)) { /* 버스·경찰차는 소품으로 그림 */
   } else if (t === T.CAR) {
@@ -523,7 +548,8 @@ function drawEnemy(e) {
       break;
     case 'brute':
       drawShadow(sx, sy, e.r);
-      drawHuman(sx, sy, { s: 1.7, body: '#6a4578', skin: '#9a72a8', legs: '#3a2840', aim: f, claws: true, flash, walk: walk * 0.5, eyes: '#ff0' });
+      if (e.labBoss) drawHuman(sx, sy, { s: 1.7, body: '#7a2a2a', skin: '#d8c0b0', legs: '#3a1a1a', aim: f, claws: true, flash, walk: walk * 0.5, eyes: '#40ff70' }); // 키메라: 벗겨진 피부 · 초록 눈
+      else drawHuman(sx, sy, { s: 1.7, body: '#6a4578', skin: '#9a72a8', legs: '#3a2840', aim: f, claws: true, flash, walk: walk * 0.5, eyes: '#ff0' });
       topY = sy - 70;
       break;
     case 'dog': {
@@ -550,6 +576,32 @@ function drawEnemy(e) {
       for (const ox of [-13, 13]) { ctx.beginPath(); ctx.ellipse(sx + ox, y - 10, 9, 3, 0, 0, TAU); ctx.fill(); }
       ctx.fillStyle = e.state === 'chase' ? '#f33' : '#3f3'; ctx.beginPath(); ctx.arc(sx, y + 1, 2.5, 0, TAU); ctx.fill();
       topY = y - 18;
+      break;
+    }
+    case 'subject': // v1.5 탈주 실험체: 창백한 피부, 구속복 조각, 긴 발톱
+      drawShadow(sx, sy, e.r);
+      drawHuman(sx, sy + 2, { s: 1.02, body: '#d8d4c8', skin: '#c8b8b0', legs: '#4a4644', aim: f, claws: true, flash, walk: walk * 0.9, eyes: '#ff3030' });
+      break;
+    case 'spitter': { // 산성 실험체: 부푼 초록 몸, 목에 빛나는 주머니
+      drawShadow(sx, sy, e.r);
+      drawHuman(sx, sy, { s: 1.15, body: '#5a7a34', skin: '#8fd14a', legs: '#33421e', aim: f, flash, walk: walk * 0.5, eyes: '#eaff5a' });
+      const gl = 0.6 + Math.sin(G.time * 5 + e.x) * 0.3;
+      ctx.fillStyle = `rgba(160,255,80,${gl})`; ctx.beginPath(); ctx.arc(sx, sy - 34, 5, 0, TAU); ctx.fill();
+      if (Settings.light && Light.list.length < LIGHT_CAP) addLight(sx, sy - 30, 60, 0.5, 'rgba(140,255,70,A)');
+      topY = sy - 54;
+      break;
+    }
+    case 'sentry': { // 보안 포탑: 바닥 고정 받침 + 회전 포신 + 붉은 눈
+      drawShadow(sx, sy, e.r);
+      const d = Iso.dir(f), x0 = e.x - 11, y0 = e.y - 11, x1 = e.x + 11, y1 = e.y + 11;
+      drawBox(x0, y0, x1, y1, 14, flash ? '#fff' : '#6a727c', '#3a4048', '#4e555e', 0, 0, 0);
+      ctx.fillStyle = flash ? '#fff' : '#9aa4b0'; ctx.beginPath(); ctx.ellipse(sx, sy - 20, 10, 7, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = flash ? '#fff' : '#2a2e34'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(sx, sy - 21); ctx.lineTo(sx + d.x * 20, sy - 21 + d.y * 10); ctx.stroke(); ctx.lineWidth = 1;
+      const on = e.state === 'chase';
+      ctx.fillStyle = on ? '#ff3030' : '#30ff60'; ctx.beginPath(); ctx.arc(sx + d.x * 6, sy - 23 + d.y * 3, 2.5, 0, TAU); ctx.fill();
+      if (on && Settings.light && Light.list.length < LIGHT_CAP) addLight(sx, sy - 22, 50, 0.5, 'rgba(255,40,40,A)');
+      topY = sy - 36;
       break;
     }
     case 'boss': {
@@ -680,8 +732,8 @@ function render() {
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
     const t = World.tiles[ty * World.W + tx];
     const roof = (t === T.FLOOR || t === T.DOOR) && !insideBid(tx, ty); // 바깥에서 본 상가 지붕·문틀
-    if ((!SOLID.has(t) && !roof) || t === T.LANDMARK) continue;
-    const tall = t === T.BUILDING || t === T.WALL || t === T.PROP || roof ? tileHeight(tx, ty) * ISO_K + 20 : 30;
+    if ((!SOLID.has(t) && !roof) || t === T.LANDMARK || (t === T.LWALL && !World.height[ty * World.W + tx])) continue; // 연구소 암반(높이 0)은 그리지 않음
+    const tall = t === T.BUILDING || t === T.WALL || t === T.PROP || t === T.LWALL || t === T.LPROP || roof ? tileHeight(tx, ty) * ISO_K + 20 : 30;
     if (inView(tx, ty, tall)) solids.push({ d: tx + ty + 1, tx, ty, t });
   }
   Iso.groundTransform();
@@ -764,7 +816,7 @@ function render() {
   const watch = [{ d: pd, sx: psx, sy: psy, w: 60 }];
   for (const e of G.enemies) if (e.state === 'chase' && e.hp > 0) watch.push({ d: (e.x + e.y) / TILE, sx: Iso.sx(e.x, e.y), sy: Iso.sy(e.x, e.y, 18), w: 30 + e.r });
   for (const o of solids) {
-    if (o.t !== T.BUILDING && !SHOP_TILES.has(o.t)) continue;
+    if (o.t !== T.BUILDING && o.t !== T.LWALL && !SHOP_TILES.has(o.t)) continue;
     const cx = o.tx * TILE + 16, cy = o.ty * TILE + 16;
     const sx = Iso.sx(cx, cy), ht = tileHeight(o.tx, o.ty), top = Iso.sy(cx, cy, ht) - 20, bot = Iso.sy(cx, cy) + 20;
     for (const v of watch) if (o.d > v.d + 0.3 && Math.abs(sx - v.sx) < v.w && v.sy > top && v.sy < bot) { o.fade = true; break; }
@@ -849,7 +901,14 @@ function render() {
   ctx.globalAlpha = 1;
 
   // 4) 분위기 / 조명
-  if (!p.dead) addLight(psx, psy, Math.max(VW, VH) * 0.62, 0.97);
+  if (!p.dead) addLight(psx, psy, Math.max(VW, VH) * (World.def && World.def.lab ? 0.4 : 0.62), 0.97); // 연구소는 시야가 좁음
+  if (p.recoilT > 0 && World.def && World.def.lab) addLight(psx + Math.cos(p.aim) * 20, psy - 6, 260, 0.9); // 총구 섬광이 어둠을 밝힘
+  for (const a of World.alarms) { // v1.5 붉은 비상등 (격리실은 빠르게)
+    const sx = Iso.sx(a.x, a.y), sy = Iso.sy(a.x, a.y, 30);
+    if (sx < -200 || sx > VW + 200 || sy < -200 || sy > VH + 200) continue;
+    const k = 0.55 + 0.45 * Math.sin(G.time * (a.boss ? 6 : 2.2) + a.ph);
+    addLight(sx, sy, 210, 0.55 + k * 0.4, 'rgba(255,30,20,A)');
+  }
   if (p.recoilT > 0) addLight(psx + Math.cos(p.aim) * 20, psy - 6, 150, 0.9, 'rgba(255,200,110,A)');
   const cc = World.campCenter();
   if (World.map === 'camp') addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
@@ -865,7 +924,7 @@ function render() {
   if (G.boss) addLight(Iso.sx(G.boss.x, G.boss.y), Iso.sy(G.boss.x, G.boss.y), 230, 0.7, 'rgba(90,255,100,A)');
   for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 2) addLight(Iso.sx(d.x, d.y), Iso.sy(d.x, d.y), 70, 0.8, RARITIES[d.item.rarity].color.replace(/^#(..)(..)(..)$/, (m, r, g, b) => `rgba(${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},A)`));
   renderLighting(Math.min(0.9, G.darkness + 0.32));
-  Ash.draw(); // v1.2 재 날림
+  if (!(World.def && World.def.lab)) Ash.draw(); // v1.2 재 날림 (지하는 없음)
   const tint = ZONES[G.zone].tint;
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(200,0,0,${p.hurtT})`; ctx.fillRect(0, 0, VW, VH); }
@@ -1048,6 +1107,9 @@ function drawMinimapIso(mm) {
   for (const e of G.enemies) dot(e.x, e.y, e.def.boss ? '#d4f' : '#f44', e.def.boss ? 6 : 2.5);
   if (G.fieldBoss && Math.sin(G.time * 8) > -0.3) dot(G.fieldBoss.x, G.fieldBoss.y, '#ff3020', 8); // 필드 보스 깜빡임
   if (World.bossTile) dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.85)', 5);
+  const lb = World.labBoss; // v1.5 격리실 (키메라를 잡기 전까지 붉은 테두리)
+  if (lb && !G.labBossDone) { g.strokeStyle = `rgba(255,50,40,${0.5 + Math.sin(G.time * 5) * 0.3})`; g.lineWidth = 1; g.strokeRect(lb.x0, lb.y0, lb.x1 - lb.x0 + 1, lb.y1 - lb.y0 + 1); }
+  if (G.labBoss && G.labBoss.hp > 0) dot(G.labBoss.x, G.labBoss.y, '#ff3020', 7);
   if (G.grave && Math.sin(G.time * 5) > -0.3) { g.fillStyle = '#ff3030'; g.fillRect(G.grave.x / TILE - 0.6, G.grave.y / TILE - 2.5, 1.2, 5); g.fillRect(G.grave.x / TILE - 2.5, G.grave.y / TILE - 0.6, 5, 1.2); } // 시체 가방
   if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
   for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);

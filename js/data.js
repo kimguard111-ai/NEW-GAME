@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.4';
+const GAME_VERSION = 'v1.5';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -106,6 +106,12 @@ const ENEMIES = {
   brute:  { name: '변이 거한', hp: 190, dmg: 22, speed: 56,  r: 20, exp: 45, weight: 2.5, color: '#7a4f8a', atkCd: 1.5, aggro: 360 },
   drone:  { name: '경비 드론', hp: 60,  dmg: 9,  speed: 115, r: 11, exp: 26, weight: 0.8, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
             ranged: true, range: 290, fireCd: 0.9, bulletSpeed: 480, flying: true },
+  // v1.5 지하 연구소
+  subject: { name: '탈주 실험체', hp: 70, dmg: 13, speed: 128, r: 12, exp: 30, weight: 0.9, color: '#c8b8b0', atkCd: 0.8, aggro: 400 },
+  spitter: { name: '산성 실험체', hp: 85, dmg: 16, speed: 70,  r: 13, exp: 34, weight: 1.1, color: '#8fd14a', atkCd: 1.0, aggro: 440,
+             ranged: true, lob: true, range: 340, fireCd: 2.6 },
+  sentry:  { name: '보안 포탑', hp: 160, dmg: 8, speed: 0, r: 14, exp: 38, weight: 99, color: '#9aa4b0', atkCd: 1.0, aggro: 520,
+             ranged: true, range: 480, fireCd: 1.5, burst: 3, bulletSpeed: 520, turret: true },
   boss:   { name: '방사능 군주 타이탄', hp: 90000, dmg: 130, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
 };
 
@@ -129,6 +135,11 @@ const ZONES = [
     spawns: [['brute', 30], ['drone', 30], ['raider', 20], ['zombie', 20]],
     desc: '방사능 웅덩이 — 들어가면 체력이 깎인다', packs: { zombie: [3, 5] },
     gear: ['katana', 'lmg', 'sniper', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },
+  // v1.5 지하 연구소 (실내 던전): 방과 복도, 붉은 비상등만 켜진 어둠
+  { name: '지하 연구소', maxDist: 999, lvl: [18, 24], dark: 0.82, tint: 'rgba(70,0,0,0.10)',
+    spawns: [['subject', 40], ['spitter', 25], ['sentry', 15], ['drone', 20]],
+    desc: '어둠 속 실험체 · 보안 포탑 · 최종 실험체 「키메라」', packs: { subject: [2, 4] },
+    gear: ['katana', 'sniper', 'lmg', 'exo', 'exoHelm'], gearText: '고주파 블레이드·저격소총·기관총·외골격 장비' },
 ];
 
 // v1.3 맵 (출격·탈출): 캠프(거점)에서 맵을 골라 출격하고, 맵 가장자리 탈출 지점으로 귀환
@@ -139,8 +150,9 @@ const MAPS = {
   jongno:     { name: '종로 폐허', zone: 2, size: 90, seed: 1202, landmark: 'bosingak', chapter: 1 },
   yongsan:    { name: '용산 군사구역', zone: 3, size: 90, seed: 1303, landmark: 'base', chapter: 2 },
   yeouido:    { name: '여의도 방사능 지대', zone: 4, size: 108, seed: 1404, landmark: 'tower63', chapter: 3, boss: true, hazards: true },
+  lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, chapter: 4, lab: true, lock: '제4장 완료 후 해금' }, // v1.5 실내 던전 (출격마다 구조가 바뀜)
 };
-const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido'];
+const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'lab'];
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상
 const LANDMARKS = [

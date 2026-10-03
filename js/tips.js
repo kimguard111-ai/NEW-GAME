@@ -14,6 +14,7 @@ const TIPS = {
   bounty:    () => `오늘의 의뢰 3개가 있습니다 (${tipKey('J', '임무 버튼')}). 끝내면 희귀 이상 장비를 받습니다.`,
   fieldboss: () => '필드 보스는 미니맵의 붉은 깜빡임을 따라가세요. 희귀 이상 장비 확정!',
   deploy:    () => '캠프의 작전 장교 윤씨(출격 지도)에게서 맵을 골라 출격하세요. 창고 관리인에게 맡긴 물건은 안전합니다.',
+  lab:       () => '지하 연구소는 어둡고 시야가 좁습니다. 총을 쏘면 섬광이 주변을 비춥니다. 보안 포탑은 움직이지 않으니 벽 뒤로 돌아가고, 초록 원(산성)은 굴러서 피하세요.',
   extract:   () => '이번 출격에서 주운 장비·크레딧은 맵 끝의 초록 ◎ 탈출 지점에 5초 머물러야 확정됩니다. 죽으면 그것만 잃어요.',
 };
 
@@ -39,6 +40,7 @@ const Tips = {
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
     if (World.map === 'camp' && p.level >= 1) { this.show('deploy'); if (World.map === 'camp') return; }
     if (p.raid && p.raid.t > 4) this.show('extract');
+    if (World.def && World.def.lab && p.raid && p.raid.t > 12 && !p.tips.includes('lab')) return this.show('lab');
     if (G.enemies.some(e => near(e, 400) && (e.windT > 0 || e.pounceT > 0 || e.aimT > 0)) || G.strikes.some(s => Math.hypot(s.x - p.x, s.y - p.y) < 300)) return this.show('telegraph');
     if (G.enemies.filter(e => e.heard && near(e, 600)).length >= 2) return this.show('noise');
     if (p.statPoints > 0 && p.level >= 2) return this.show('levelup');

@@ -21,7 +21,7 @@ const Raid = {
     for (const id of MAP_ORDER) {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id);
       const gr = p.graves[id];
-      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? '🗺' : '🔒'} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">💀 시체 가방 (장비 ${gr.items.length})</span>` : ''}</div>`;
+      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? '🗺' : '🔒'} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">💀 시체 가방 (장비 ${gr.items.length})</span>` : ''}</div>`;
       if (ok) btns.push([`${d.name} 출격`, () => { UI.close('dialog'); this.deploy(id); }]);
     }
     btns.push(['닫기', () => UI.close('dialog')]);
@@ -40,9 +40,19 @@ const Raid = {
     G.extractT = 0; G.search = null;
     Scavenge.generate(); // v1.4 뒤질 곳
     G.grave = p.graves[id] || null; // v1.4 지난번 시체 가방
+    if (G.grave && World.def.lab) { // v1.5 연구소는 출격마다 구조가 바뀜 → 가장 가까운 바닥으로 옮김
+      let best = null, bd = 1e9;
+      for (let ty = 1; ty < World.H - 1; ty++) for (let tx = 1; tx < World.W - 1; tx++) {
+        if (World.tiles[ty * World.W + tx] !== T.LFLOOR) continue;
+        const d = Math.hypot(tx * TILE + 16 - G.grave.x, ty * TILE + 16 - G.grave.y);
+        if (d < bd) { bd = d; best = [tx * TILE + 16, ty * TILE + 16]; }
+      }
+      if (best) [G.grave.x, G.grave.y] = best;
+    }
     if (G.grave) log(`💀 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
     UI.toast(`출격 — ${MAPS[id].name}`, `탈출 지점 ${G.exits.length}곳 (미니맵 초록 ◎) · 주운 것은 탈출해야 확정`);
-    log(`${MAPS[id].name}에 진입했다. 탈출 지점: ${G.exits.map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(' · ')}쪽 끝`, '#8cf');
+    log(`${MAPS[id].name}에 진입했다. 탈출 지점: ${G.exits.map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(' · ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}`, '#8cf');
+    if (World.def.lab) log('비상 전원만 남은 연구소다. 붉은 비상등 아래가 그나마 밝다. 격리실(미니맵 붉은 방)에 무언가 있다.', '#ff8a8a');
     saveGame();
   },
 
@@ -50,6 +60,7 @@ const Raid = {
   resetWorld() {
     G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
     G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
+    G.labBoss = null; G.labBossDone = false; // v1.5
     G.exits = []; G.extractT = 0; G.zone = World.zoneIndex(); G.bossT = Math.min(G.bossT, 0);
     if (World.map === 'camp') setupCampNpcs(); else G.npcs = [];
     GroundCache.map.clear(); Nav.dist = null; Nav.t = 0;

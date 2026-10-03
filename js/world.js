@@ -1,7 +1,8 @@
 // 맵 생성 및 지형 쿼리
 const T = { ROAD: 0, BUILDING: 1, RUBBLE: 2, CAR: 3, GRASS: 4, CAMP: 5, BARRICADE: 6, WALK: 7, LANDMARK: 8,
-  WALL: 9, FLOOR: 10, DOOR: 11, PROP: 12 }; // v0.13 들어갈 수 있는 건물: 외벽·실내 바닥·출입문 · v0.15 실내 소품
-const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE, T.LANDMARK, T.WALL, T.PROP]);
+  WALL: 9, FLOOR: 10, DOOR: 11, PROP: 12, // v0.13 들어갈 수 있는 건물: 외벽·실내 바닥·출입문 · v0.15 실내 소품
+  LWALL: 13, LFLOOR: 14, LPROP: 15 }; // v1.5 연구소 벽·바닥·실험 장비
+const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE, T.LANDMARK, T.WALL, T.PROP, T.LWALL, T.LPROP]);
 const SHOP_TILES = new Set([T.WALL, T.FLOOR, T.DOOR, T.PROP]);
 // 상가 종류별 실내 소품: style = 배치 방식, h = 높이, c = [윗면, 남쪽면, 동쪽면]
 const SHOP_STYLES = {
@@ -23,11 +24,14 @@ const World = {
   map: 'camp', def: null, edgePts: [],
   bossTile: null,
   landmarks: [], hazards: [], buildings: [], bid: null,
+  rooms: [], alarms: [], labBoss: null, // v1.5 연구소: 방 · 비상등 · 보스 방
 
   generate(mapId) {
     const def = MAPS[mapId];
     this.map = mapId; this.def = def; this.W = this.H = def.size; this.cx = this.cy = Math.floor(def.size / 2);
     this.bossTile = def.boss ? { x: 18, y: 18 } : null;
+    this.rooms = []; this.alarms = []; this.labBoss = null;
+    if (def.lab) return this.generateLab(def);
     const seed = def.seed, W = this.W, H = this.H, B = this.BLOCK;
     const rng = mulberry32(seed);
     this.tiles = new Uint8Array(W * H);
@@ -160,6 +164,89 @@ const World = {
     this.makeEdgePoints();
     City.generate(seed); // v1.2 간판·거리 소품·버스
 
+    this.buildMinimap();
+  },
+
+  // v1.5 지하 연구소: 격자마다 방 하나 → 이웃 방을 3칸 복도로 잇는 신장 트리 + 고리 몇 개
+  // 출격마다 구조가 바뀜 (seed 무작위). 가장자리 쪽 방 4개 = 비상 계단(시작·탈출), 가운데 방 = 키메라 격리실
+  generateLab(def) {
+    const W = this.W, H = this.H, rng = mulberry32((def.seed * 7919 + Math.floor(Math.random() * 1e6)) >>> 0);
+    this.tiles = new Uint8Array(W * H).fill(T.LWALL);
+    this.shade = new Float32Array(W * H);
+    this.height = new Float32Array(W * H);
+    this.bid = new Int16Array(W * H).fill(-1);
+    this.buildings = []; this.landmarks = []; this.hazards = [];
+    const set = (x, y, t) => { if (x > 0 && y > 0 && x < W - 1 && y < H - 1) this.tiles[y * W + x] = t; };
+    const CELL = 16, N = Math.floor((W - 2) / CELL), grid = [];
+    const bgx = (N >> 1) - (rng() < 0.5 ? 1 : 0), bgy = (N >> 1) - (rng() < 0.5 ? 1 : 0); // 격리실 칸 (가운데 넷 중 하나)
+    for (let gy = 0; gy < N; gy++) for (let gx = 0; gx < N; gx++) {
+      const center = gx === bgx && gy === bgy;
+      const rw = center ? 13 : 7 + Math.floor(rng() * 6), rh = center ? 13 : 7 + Math.floor(rng() * 6);
+      const x0 = 1 + gx * CELL + 1 + Math.floor(rng() * (CELL - rw - 1)), y0 = 1 + gy * CELL + 1 + Math.floor(rng() * (CELL - rh - 1));
+      const r = { gx, gy, x0, y0, x1: x0 + rw - 1, y1: y0 + rh - 1, cx: x0 + (rw >> 1), cy: y0 + (rh >> 1) };
+      for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) set(x, y, T.LFLOOR);
+      grid.push(r);
+    }
+    this.rooms = grid;
+    const at = (gx, gy) => grid[gy * N + gx];
+    const corridor = (a, b) => { // L자 복도 (폭 3)
+      const horizFirst = rng() < 0.5, mx = horizFirst ? b.cx : a.cx, my = horizFirst ? a.cy : b.cy;
+      const line = (x0, y0, x1, y1) => {
+        for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) for (let k = -1; k <= 1; k++) set(x, y0 + k, T.LFLOOR);
+        for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) for (let k = -1; k <= 1; k++) set(x1 + k, y, T.LFLOOR);
+      };
+      line(a.cx, a.cy, mx, my); line(mx, my, b.cx, b.cy);
+    };
+    // 신장 트리 (무작위 DFS) + 고리
+    const seen = new Set([0]), stack = [grid[0]], edges = new Set();
+    while (stack.length) {
+      const r = stack[stack.length - 1];
+      const nb = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [r.gx + dx, r.gy + dy]).filter(([x, y]) => x >= 0 && y >= 0 && x < N && y < N && !seen.has(y * N + x));
+      if (!nb.length) { stack.pop(); continue; }
+      const [nx, ny] = nb[Math.floor(rng() * nb.length)], o = at(nx, ny);
+      seen.add(ny * N + nx); corridor(r, o); edges.add([r, o].map(q => q.gy * N + q.gx).sort().join('-')); stack.push(o);
+    }
+    for (let i = 0; i < N; i++) { // 고리: 막다른 길만 있으면 쫓길 때 답답하므로
+      const a = grid[Math.floor(rng() * grid.length)], dirs = [[1, 0], [0, 1]], [dx, dy] = dirs[Math.floor(rng() * 2)];
+      if (a.gx + dx < N && a.gy + dy < N) corridor(a, at(a.gx + dx, a.gy + dy));
+    }
+    // 실험 장비 (방 안 기둥·작업대). 길을 막지 않게 방 가장자리 한 칸 안쪽, 문 앞(복도 끝)은 피함
+    for (const r of grid) {
+      const n = Math.floor((r.x1 - r.x0) * (r.y1 - r.y0) / 22);
+      for (let i = 0; i < n; i++) {
+        const x = r.x0 + 1 + Math.floor(rng() * (r.x1 - r.x0 - 1)), y = r.y0 + 1 + Math.floor(rng() * (r.y1 - r.y0 - 1));
+        if (Math.abs(x - r.cx) < 2 && Math.abs(y - r.cy) < 2) continue;
+        let open = true;
+        for (let yy = y - 1; yy <= y + 1 && open; yy++) for (let xx = x - 1; xx <= x + 1; xx++) if (this.tiles[yy * W + xx] !== T.LFLOOR) { open = false; break; }
+        if (open) { this.tiles[y * W + x] = T.LPROP; this.height[y * W + x] = rng() < 0.5 ? 26 : 44; this.shade[y * W + x] = rng(); }
+      }
+    }
+    // 벽: 바닥에 닿은 벽만 높이를 줌 (나머지는 검은 암반)
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (this.tiles[i] !== T.LWALL) continue;
+      let edge = false;
+      for (let oy = -1; oy <= 1 && !edge; oy++) for (let ox = -1; ox <= 1; ox++) {
+        const t = this.tileAt(x + ox, y + oy);
+        if (t === T.LFLOOR || t === T.LPROP) { edge = true; break; }
+      }
+      this.height[i] = edge ? 50 : 0;
+    }
+    // 시작·탈출: 네 변 가운데에 가장 가까운 방 / 보스: 가운데 방
+    const pickNear = (tx, ty, used) => grid.filter(r => !used.includes(r)).sort((a, b) => Math.hypot(a.cx - tx, a.cy - ty) - Math.hypot(b.cx - tx, b.cy - ty))[0];
+    const used = [], c = at(bgx, bgy); used.push(c);
+    this.labBoss = c; c.boss = true;
+    this.edgePts = [];
+    for (const [tx, ty, side] of [[W >> 1, 0, 'N'], [W, H >> 1, 'E'], [W >> 1, H, 'S'], [0, H >> 1, 'W']]) {
+      const r = pickNear(tx, ty, used); used.push(r); r.exit = side;
+      this.edgePts.push({ x: r.cx * TILE + 16, y: r.cy * TILE + 16, side });
+    }
+    // 비상등: 방마다 1~2개 (붉게 깜빡임). 보스 방은 4개
+    for (const r of grid) {
+      const n = r.boss ? 4 : 1 + (rng() < 0.4 ? 1 : 0);
+      for (let i = 0; i < n; i++) this.alarms.push({ x: (r.x0 + rng() * (r.x1 - r.x0 + 1)) * TILE, y: (r.y0 + rng() * (r.y1 - r.y0 + 1)) * TILE, ph: rng() * TAU, boss: !!r.boss });
+    }
+    City.generate(def.seed);
     this.buildMinimap();
   },
 
@@ -330,6 +417,7 @@ const World = {
       [T.ROAD]: [45, 47, 52], [T.BUILDING]: [95, 92, 88], [T.RUBBLE]: [70, 64, 56], [T.CAR]: [110, 60, 40],
       [T.GRASS]: [48, 70, 40], [T.CAMP]: [60, 90, 120], [T.BARRICADE]: [140, 110, 60], [T.WALK]: [62, 62, 66],
       [T.LANDMARK]: [200, 170, 90], [T.WALL]: [120, 100, 80], [T.FLOOR]: [80, 68, 56], [T.DOOR]: [230, 200, 110], [T.PROP]: [96, 84, 70],
+      [T.LWALL]: [22, 24, 28], [T.LFLOOR]: [78, 84, 92], [T.LPROP]: [60, 66, 74],
     };
     for (let i = 0; i < this.tiles.length; i++) {
       const c3 = col[this.tiles[i]];

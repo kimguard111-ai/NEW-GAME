@@ -10,7 +10,8 @@ const ELITE_AFFIXES = {
 };
 
 // 세력: 다른 세력끼리는 플레이어가 없을 때 서로 싸움
-const FACTION = { zombie: 'infected', dog: 'infected', brute: 'infected', boss: 'infected', raider: 'human', drone: 'machine' };
+const FACTION = { zombie: 'infected', dog: 'infected', brute: 'infected', boss: 'infected', raider: 'human', drone: 'machine',
+  subject: 'infected', spitter: 'infected', sentry: 'machine' }; // v1.5 연구소: 실험체 ↔ 보안 장비
 
 const Monsters = {
   // ---------------- 엘리트 ----------------
@@ -115,6 +116,15 @@ const Monsters = {
         g.guardOf = e; g.minion = true; g.state = 'chase'; G.enemies.push(g);
       }
       floatText(e.x, e.y - 50, '아우우우!', '#ff7a5a', 18);
+    } else if (id === 'brood') { // v1.5 키메라: 탈주 실험체 호출 (최대 5)
+      e.skillT = 7; e.lastAtk = G.time;
+      const n = G.enemies.filter(o => o.guardOf === e && o.hp > 0).length;
+      for (let i = 0; i < 3 && n + i < 5; i++) {
+        const g = makeEnemy('subject', e.x + rand(-80, 80), e.y + rand(-80, 80), Math.max(1, e.level - 3));
+        if (World.circleBlocked(g.x, g.y, g.r)) continue;
+        g.guardOf = e; g.minion = true; g.state = 'chase'; G.enemies.push(g);
+      }
+      floatText(e.x, e.y - 60, '끼이이익!', '#ff5050', 18);
     } else if (id === 'fan') { // 부채꼴 사격 7발
       e.skillT = 3.5; e.lastAtk = G.time;
       const a = angleTo(e, p);
@@ -127,15 +137,30 @@ const Monsters = {
   },
 
   // ---------------- 일반 적 공격 (v0.16: 보고 피할 수 있게 예고) ----------------
-  TELE: { zombie: 0.38, dog: 0.3, raider: 0.35, drone: 0.22 },
+  TELE: { zombie: 0.38, dog: 0.3, raider: 0.35, drone: 0.22, subject: 0.26, sentry: 0.45 },
   vol(e) { return clamp(1 - dist(e, G.player) / 900, 0.08, 1); },
   // 공격 처리. 이번 프레임에 멈춰 있어야 하면(예고·도약 중) true
   attack(e, dt, d, a) {
     const p = G.player, b = this.buff(e);
+    if (e.def.lob) { // v1.5 산성 실험체: 플레이어 자리에 산성 덩어리 (바닥 원 예고 → 장판)
+      if (e.fireT <= 0 && d < e.def.range && World.lineOfSight(e, p)) {
+        e.fireT = e.def.fireCd * (e.fireMul || 1) * rand(0.85, 1.2); e.lastAtk = G.time;
+        this.strike(p.x + rand(-20, 20), p.y + rand(-20, 20), 52, 1.0, e.dmg * b, 'rgba(140,220,70,', true);
+        floatText(e.x, e.y - 40, '퉤!', '#8fd14a', 12);
+      }
+      return false;
+    }
+    if (e.burstN > 0) { // v1.5 보안 포탑: 점사
+      if ((e.burstT -= dt) <= 0) { e.burstN--; e.burstT = 0.13; spawnEnemyBullet(e, e.aimA + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg * b, '#ffd040'); SFX.play('eshot', this.vol(e)); }
+      return true;
+    }
     if (e.def.ranged) { // 조준선 → 발사 (조준 중엔 방향 고정 · 정지)
       if (e.aimT > 0) {
         e.aimT -= dt;
-        if (e.aimT <= 0) { spawnEnemyBullet(e, e.aimA + rand(-0.03, 0.03), e.def.bulletSpeed, e.dmg * b); e.lastAtk = G.time; SFX.play('eshot', this.vol(e)); }
+        if (e.aimT <= 0) {
+          spawnEnemyBullet(e, e.aimA + rand(-0.03, 0.03), e.def.bulletSpeed, e.dmg * b, e.def.burst ? '#ffd040' : undefined); e.lastAtk = G.time; SFX.play('eshot', this.vol(e));
+          if (e.def.burst) { e.burstN = e.def.burst - 1; e.burstT = 0.13; }
+        }
         return true;
       }
       if (e.fireT <= 0 && d < e.def.range && World.lineOfSight(e, p)) {
@@ -179,7 +204,7 @@ const Monsters = {
     return false;
   },
   // 경직되면 준비 중이던 공격이 끊김 (강한 무기 보상)
-  interrupt(e) { e.windT = 0; e.aimT = 0; e.pounceT = 0; e.leapT = 0; },
+  interrupt(e) { e.windT = 0; e.aimT = 0; e.pounceT = 0; e.leapT = 0; e.burstN = 0; },
 
   // ---------------- 세력 다툼 ----------------
   // 플레이어를 쫓지 않을 때 근처의 다른 세력과 싸움. 처리했으면 true
@@ -203,7 +228,7 @@ const Monsters = {
       if (d > e.def.range * 0.8) tryMoveSmart(e, a, e.speed * 0.7 * b * dt);
       if (e.fireT <= 0) {
         e.fireT = e.def.fireCd * (e.fireMul || 1) * rand(1, 1.4); e.lastAtk = G.time;
-        G.effects.push({ type: 'tracer', x: e.x, y: e.y, x2: f.x, y2: f.y, t: 0, life: 0.09, color: e.type === 'drone' ? '#9cf' : '#ff8a5a' });
+        G.effects.push({ type: 'tracer', x: e.x, y: e.y, x2: f.x, y2: f.y, t: 0, life: 0.09, color: FACTION[e.type] === 'machine' ? '#9cf' : '#ff8a5a' });
         this.hurt(f, e.dmg * 0.8 * b, e);
       }
     } else if (d > e.r + f.r + 4) tryMoveSmart(e, a, e.speed * b * dt);
@@ -215,11 +240,11 @@ const Monsters = {
     if (t.hp <= 0) return;
     t.hp -= dmg; t.hitT = 0.08;
     if (!t.foe) { t.foe = src; t.foeT = 0.6; }
-    burst(t.x, t.y, t.type === 'drone' ? '#ffc' : '#7a1010', 3, 90, 0.3);
+    burst(t.x, t.y, FACTION[t.type] === 'machine' ? '#ffc' : '#7a1010', 3, 90, 0.3);
     if (t.hp <= 0) {
       t.hp = 0;
-      burst(t.x, t.y, t.type === 'drone' ? '#aab' : '#7a0d0d', 10, 140, 0.5, 4);
-      if (t.type !== 'drone') G.decals.push({ x: t.x, y: t.y, r: t.r * 1.2, a: rand(0, TAU) });
+      burst(t.x, t.y, FACTION[t.type] === 'machine' ? '#aab' : '#7a0d0d', 10, 140, 0.5, 4);
+      if (FACTION[t.type] !== 'machine') G.decals.push({ x: t.x, y: t.y, r: t.r * 1.2, a: rand(0, TAU) });
     }
   },
 };
