@@ -98,6 +98,7 @@ function startGame(save, name) {
     G.player.pity = G.player.pity || 0;
     G.player.respecs = G.player.respecs || 0;
     G.player.found = G.player.found || [];
+    G.player.mats = G.player.mats || { scrap: 0, chip: 0 }; // v0.12 재료
     G.player.quest = Story.migrate(G.player.quest); // v0.7: 단일 임무 → 챕터
     if (!('helmet' in G.player.equip)) G.player.equip.helmet = null; // v0.6.2 헬멧 칸
     for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
@@ -413,6 +414,7 @@ function killEnemy(e) {
     dropAt('credits', { amount: 3000 + randInt(0, 2000) });
     for (let i = 0; i < 3; i++) dropAt('item', { item: randomGear(20, 2.5) });
     dropAt('item', { item: makeConsumable('medkit', 5) });
+    Workshop.gain(30, 8, '타이탄 잔해 회수');
     // 보스 소환수 정리
     for (const o of G.enemies) if (o.minion) o.hp = 0;
     return;

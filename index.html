@@ -103,8 +103,9 @@
 </div>
 
 <div id="panel-enhance" class="panel hidden">
-  <div class="panel-head">정비공 최씨 — 장비 강화 <span class="close">✕</span></div>
-  <div class="shop-hint">강화 1단계마다 무기 피해·방어구 방어력 +8% (최대 +10). 장비는 파괴되지 않습니다.</div>
+  <div class="panel-head">정비공 최씨 — 작업대 <span class="close">✕</span></div>
+  <div id="ws-tabs"><button data-ws="enhance">강화</button><button data-ws="salvage">분해 · 제작</button><button data-ws="reroll">옵션 재조정</button></div>
+  <div class="shop-hint" id="ws-hint"></div>
   <div id="enh-list"></div>
   <div id="enh-detail"></div>
 </div>
@@ -126,6 +127,7 @@
 <script src="js/assets.js"></script>
 <script src="js/render.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/workshop.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

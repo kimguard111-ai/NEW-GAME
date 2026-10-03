@@ -5,23 +5,30 @@ function rollRarity(bonus = 0) {
   return weighted(RARITIES.map((r, i) => [i, i === 0 ? Math.max(5, r.weight - bonus * 10) : r.weight * (1 + bonus * i * 0.5)]));
 }
 
-// 등급에 맞춰 추가 옵션을 굴림. 높은 등급일수록 좋은 수치가 나올 확률이 높음
-function rollAffixes(kind, key, rarity, ilvl) {
+// 장비 종류에 붙을 수 있는 추가 옵션 목록
+function affixPool(kind, key) {
   const melee = kind === 'weapon' && WEAPONS[key].melee;
-  const pool = Object.keys(AFFIXES).filter(k => {
+  return Object.keys(AFFIXES).filter(k => {
     const sl = AFFIXES[k].slot;
     if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(key)) return false; // 계열 전용 옵션
     return kind !== 'weapon' ? sl === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee); // 헬멧은 방어구 옵션
   });
-  const out = [];
+}
+// 옵션 하나의 수치. 높은 등급일수록 좋은 수치가 나올 확률이 높음
+function rollAffix(k, rarity, ilvl) {
+  const a = AFFIXES[k];
+  let t = Math.random();
+  if (rarity >= 3) t = Math.max(t, Math.random()); // 영웅·전설은 상위 수치 쪽으로
+  let v = lerp(a.min, a.max, t);
+  if (a.perLvl) v *= 1 + ilvl * a.perLvl;
+  if (a.int) v = Math.round(lerp(a.min - 0.49, a.max + 0.49, t));
+  return { k, v: a.int ? clamp(v, a.min, a.max) : a.pct ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10 };
+}
+// 등급에 맞춰 추가 옵션을 굴림
+function rollAffixes(kind, key, rarity, ilvl) {
+  const pool = affixPool(kind, key), out = [];
   for (let i = 0; i < AFFIX_COUNT[kind][rarity] && pool.length; i++) {
-    const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0], a = AFFIXES[k];
-    let t = Math.random();
-    if (rarity >= 3) t = Math.max(t, Math.random()); // 영웅·전설은 상위 수치 쪽으로
-    let v = lerp(a.min, a.max, t);
-    if (a.perLvl) v *= 1 + ilvl * a.perLvl;
-    if (a.int) v = Math.round(lerp(a.min - 0.49, a.max + 0.49, t));
-    out.push({ k, v: a.int ? clamp(v, a.min, a.max) : a.pct ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10 });
+    out.push(rollAffix(pool.splice(Math.floor(Math.random() * pool.length), 1)[0], rarity, ilvl));
   }
   return out;
 }
@@ -148,7 +155,7 @@ function itemHtml(it) {
 function newPlayer(name) {
   const c = World.campCenter();
   return {
-    name, x: c.x, y: c.y, r: 12, aim: 0, mapV: 2,
+    name, x: c.x, y: c.y, r: 12, aim: 0, mapV: 2, mats: { scrap: 0, chip: 0 },
     level: 1, exp: 0, credits: 150, statPoints: 0,
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
     hp: 1, reserve: 150,

@@ -56,6 +56,7 @@ const Bosses = {
     dropAt('item', { item: makeConsumable('medkit', 2) });
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0; // 부하 정리
     p.fieldBossKills = (p.fieldBossKills || 0) + 1;
+    Workshop.gain(10, 2, '필드 보스 잔해 회수');
     hitstop(0.15); G.shake = Math.max(G.shake, 12);
   },
 

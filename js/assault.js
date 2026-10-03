@@ -144,6 +144,7 @@ const Assault = {
     for (let i = 0; i < R.gear; i++) drop(randomGear(a.level + 1, R.bonus, i === 0 ? R.min : 0, zone));
     if (first) drop(randomGear(a.level + 1, 2, 3, zone)); // 첫 클리어: 영웅 이상 확정
     drop(makeConsumable('medkit', 2));
+    Workshop.gain(4 + 'BAS'.indexOf(rk) * 3, 1 + 'BAS'.indexOf(rk), '작전 보급'); // 재료: B 4·1 / A 7·2 / S 10·3
     const better = !rec || 'SAB'.indexOf(rk) < 'SAB'.indexOf(rec.best) || t < rec.time;
     p.assaults[s.id] = { best: rec && 'SAB'.indexOf(rec.best) < 'SAB'.indexOf(rk) ? rec.best : rk,
       time: rec ? Math.min(rec.time, t) : t, clears: (rec ? rec.clears : 0) + 1 };

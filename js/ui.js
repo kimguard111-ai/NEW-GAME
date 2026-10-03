@@ -65,7 +65,8 @@ const UI = {
     $('hp-text').textContent = `${Math.ceil(Math.max(0, p.hp))} / ${mh}`;
     $('exp-fill').style.width = (100 * p.exp / next) + '%';
     $('exp-text').textContent = `EXP ${fmt(p.exp)} / ${fmt(next)} (${(100 * p.exp / next).toFixed(1)}%)`;
-    $('hud-credits').textContent = `₵ ${fmt(p.credits)} 크레딧   ·   예비 탄약 ${fmt(p.reserve)}` + (p.statPoints ? `   ·   ★ 포인트 ${p.statPoints}` : '');
+    $('hud-credits').textContent = `₵ ${fmt(p.credits)} 크레딧   ·   예비 탄약 ${fmt(p.reserve)}` + (p.statPoints ? `   ·   ★ 포인트 ${p.statPoints}` : '')
+      + (p.mats.scrap || p.mats.chip ? `   ·   ${Workshop.matsText()}` : '');
     const buffs = [];
     if (p.buffs.rapid > 0) buffs.push(`⚡집중 사격 ${p.buffs.rapid.toFixed(1)}s`);
     if (p.buffs.adren > 0) buffs.push(`🔥아드레날린 ${p.buffs.adren.toFixed(1)}s`);
@@ -341,15 +342,17 @@ const UI = {
         [`능력치 초기화 (${cost ? fmt(cost) + '₵' : '무료'})`, () => UI.respec()], bye]);
     } else if (npc.id === 'captain') UI.captainDialog(npc);
     else if (npc.id === 'mechanic') {
-      UI.dialog(npc.name, '"총이든 조끼든 가져와. 손보면 훨씬 쓸만해지지. 다만 +7부터는 실패하면 한 단계 떨어질 수도 있어."', [
-        ['장비 강화', () => { UI.close('dialog'); UI.openEnhance(); }], bye]);
+      UI.dialog(npc.name, '"총이든 조끼든 가져와. 손보면 훨씬 쓸만해지지. 못 쓰는 건 뜯어서 부품으로 쓰고, 옵션이 마음에 안 들면 다시 손봐 주지."', [
+        ['장비 강화', () => { UI.close('dialog'); Workshop.open('enhance'); }],
+        ['분해 · 제작', () => { UI.close('dialog'); Workshop.open('salvage'); }],
+        ['옵션 재조정', () => { UI.close('dialog'); Workshop.open('reroll'); }], bye]);
     }
   },
 
   // ---------------- 강화 ----------------
   enhSel: null,
   openEnhance() {
-    const p = G.player;
+    const p = G.player; Workshop.mode = 'enhance';
     if (!UI.enhSel || !UI.enhanceList().includes(UI.enhSel)) UI.enhSel = p.equip[p.active] || p.equip.w1;
     UI.renderEnhance();
     UI.open('enhance');
@@ -360,6 +363,7 @@ const UI = {
   },
   renderEnhance() {
     const p = G.player, list = $('enh-list'), box = $('enh-detail');
+    Workshop.tabs();
     list.innerHTML = '';
     for (const it of UI.enhanceList()) {
       const slot = Object.keys(p.equip).find(k => p.equip[k] === it);
