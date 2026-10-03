@@ -1,6 +1,6 @@
 // 메인 게임 루프
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+let ctx = canvas.getContext('2d');
 let VW = 0, VH = 0;
 
 const SAVE_KEY = 'seoul2049-save-v1';
@@ -44,7 +44,7 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 // ---------------- 공용 ----------------
 function log(msg, color = '#ddd') { UI.log(msg, color); }
 function floatText(x, y, text, color = '#fff', size = 14) {
-  G.texts.push({ x: x + rand(-6, 6), y, text, color, size, t: 0, life: 0.9 });
+  G.texts.push({ x: x + rand(-6, 6), y, z: 34, text, color, size, t: 0, life: 0.9 });
 }
 function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
   for (let i = 0; i < n; i++) {
@@ -82,6 +82,7 @@ function startGame(save, name) {
     G.bossT = save.bossT || 0;
     G.player.dead = false;
     if (G.player.hp <= 0) G.player.hp = PlayerStats.maxHp(G.player);
+    if (World.circleBlocked(G.player.x, G.player.y, G.player.r)) Object.assign(G.player, World.campCenter());
     log(`${G.player.name}님, 다시 오신 것을 환영합니다.`, '#e0b23a');
   } else {
     G.player = newPlayer(name || '생존자');
@@ -177,7 +178,7 @@ function useSkill(i) {
   if (p.skillCd[i] > 0) return;
   if (s.id === 'rapid') { p.buffs.rapid = 4; floatText(p.x, p.y - 30, '집중 사격!', '#7fd'); }
   else if (s.id === 'grenade') {
-    const tx = input.mx + G.cam.x, ty = input.my + G.cam.y;
+    const { x: tx, y: ty } = Iso.toWorld(input.mx, input.my);
     const a = Math.atan2(ty - p.y, tx - p.x), d = Math.min(380, Math.hypot(tx - p.x, ty - p.y));
     G.grenades.push({ sx: p.x, sy: p.y, x: p.x, y: p.y, tx: p.x + Math.cos(a) * d, ty: p.y + Math.sin(a) * d, t: 0, dur: 0.55 });
   } else if (s.id === 'heal') {
@@ -290,7 +291,7 @@ function respawn() {
 function damageEnemy(e, dmg, crit, angle) {
   if (e.hp <= 0) return;
   dmg = Math.max(1, Math.round(dmg));
-  e.hp -= dmg; e.hitT = 0.1; e.state = 'chase';
+  e.hp -= dmg; e.hitT = e.def.boss ? 0.04 : 0.1; e.state = 'chase';
   floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : '#fff', crit ? 17 : 13);
   burst(e.x, e.y, e.type === 'drone' ? '#ffc' : '#8a1010', crit ? 8 : 4, 110, 0.35);
   if (!e.def.boss && angle !== undefined) World.move(e, Math.cos(angle) * 4, Math.sin(angle) * 4);
@@ -568,11 +569,14 @@ function update(dt) {
     if (input.keys['a'] || input.keys['arrowleft']) mx -= 1;
     if (input.keys['d'] || input.keys['arrowright']) mx += 1;
     if (mx || my) {
-      const l = Math.hypot(mx, my), sp = PlayerStats.speed(p) * dt;
-      World.move(p, mx / l * sp, my / l * sp);
+      // 화면 기준 방향 → 월드 방향 (쿼터뷰)
+      const wx = (mx + 2 * my) / 2, wy = (2 * my - mx) / 2;
+      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt;
+      World.move(p, wx / l * sp, wy / l * sp);
       p.walkT = (p.walkT || 0) + dt;
     }
-    p.aim = Math.atan2(input.my + G.cam.y - p.y, input.mx + G.cam.x - p.x);
+    const aimAt = Iso.toWorld(input.mx, input.my, 20); // 가슴 높이 조준
+    p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x);
     if (input.down) playerAttack();
     if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; finishReload(); } }
     // 캠프 안에서는 천천히 회복
@@ -593,7 +597,7 @@ function update(dt) {
 
   for (const pt of G.particles) { pt.t += dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= 0.9; pt.vy *= 0.9; }
   G.particles = G.particles.filter(pt => pt.t < pt.life);
-  for (const t of G.texts) { t.t += dt; t.y -= 32 * dt; }
+  for (const t of G.texts) { t.t += dt; t.z += 36 * dt; }
   G.texts = G.texts.filter(t => t.t < t.life);
   for (const ef of G.effects) ef.t += dt;
   G.effects = G.effects.filter(ef => ef.t < ef.life);
@@ -609,300 +613,11 @@ function update(dt) {
 
   // 카메라
   G.shake *= Math.pow(0.002, dt);
-  G.cam.x = clamp(p.x - VW / 2, 0, World.W * TILE - VW) + rand(-G.shake, G.shake);
-  G.cam.y = clamp(p.y - VH / 2, 0, World.H * TILE - VH) + rand(-G.shake, G.shake);
+  G.cam.x = (p.x - p.y) * ISO_K - VW / 2 + rand(-G.shake, G.shake);
+  G.cam.y = (p.x + p.y) * ISO_K / 2 - VH / 2 - 20 + rand(-G.shake, G.shake);
 
   G.saveT += dt;
   if (G.saveT > 20) { G.saveT = 0; saveGame(); }
-}
-
-// ---------------- 렌더링 ----------------
-const TILE_COLORS = {
-  [T.ROAD]: '#2a2c30', [T.WALK]: '#45464b', [T.RUBBLE]: '#3d3833', [T.GRASS]: '#2c3824',
-  [T.CAMP]: '#363c45', [T.CAR]: '#2a2c30', [T.BARRICADE]: '#363c45',
-};
-
-function drawTile(tx, ty, t, x, y) {
-  const h = hash2(tx, ty);
-  if (t === T.BUILDING) {
-    const s = World.shade[ty * World.W + tx];
-    const base = 70 + Math.floor(s * 40);
-    ctx.fillStyle = `rgb(${base},${base - 4},${base - 10})`;
-    ctx.fillRect(x, y, TILE, TILE);
-    const below = World.tileAt(tx, ty + 1), above = World.tileAt(tx, ty - 1);
-    if (above !== T.BUILDING) { ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(x, y, TILE, 3); }
-    if (below !== T.BUILDING) {
-      // 정면 벽 (창문)
-      ctx.fillStyle = `rgb(${base - 35},${base - 38},${base - 42})`;
-      ctx.fillRect(x, y + TILE - 12, TILE, 12);
-      ctx.fillStyle = h < 0.3 ? '#c9a24a' : '#1b1d22';
-      ctx.fillRect(x + 6, y + TILE - 9, 7, 6);
-      ctx.fillStyle = h > 0.85 ? '#c9a24a' : '#1b1d22';
-      ctx.fillRect(x + 19, y + TILE - 9, 7, 6);
-    } else if (h < 0.08) {
-      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(x + 8, y + 8, 12, 12); // 환풍구
-    }
-    if (World.tileAt(tx - 1, ty) !== T.BUILDING) { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(x, y, 2, TILE); }
-    return;
-  }
-  ctx.fillStyle = TILE_COLORS[t];
-  ctx.fillRect(x, y, TILE, TILE);
-  if (t === T.ROAD || t === T.CAR) {
-    const lx = tx % World.BLOCK, ly = ty % World.BLOCK;
-    ctx.fillStyle = '#8a7a3a';
-    if (lx === 1 && ly >= 3 && ty % 2 === 0) ctx.fillRect(x + 14, y + 4, 4, 18);
-    if (ly === 1 && lx >= 3 && tx % 2 === 0) ctx.fillRect(x + 4, y + 14, 18, 4);
-    if (h < 0.06) { ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x + h * 200, y + 10, 10, 6); } // 균열
-  } else if (t === T.WALK) {
-    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
-  } else if (t === T.RUBBLE) {
-    ctx.fillStyle = '#58524a';
-    for (let i = 0; i < 3; i++) {
-      const hh = hash2(tx * 3 + i, ty * 7 - i);
-      ctx.fillRect(x + hh * 24, y + hash2(ty + i, tx) * 24, 4 + hh * 6, 3 + hh * 4);
-    }
-  } else if (t === T.GRASS) {
-    ctx.fillStyle = '#3a4a2c';
-    if (h < 0.5) ctx.fillRect(x + h * 50, y + 8, 3, 3);
-    if (h > 0.4) ctx.fillRect(x + 6, y + h * 26, 3, 3);
-    if (h > 0.93) { ctx.fillStyle = '#4a3a28'; ctx.beginPath(); ctx.arc(x + 16, y + 16, 9, 0, TAU); ctx.fill(); } // 고목
-  } else if (t === T.CAMP) {
-    ctx.strokeStyle = 'rgba(120,150,190,0.12)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
-  }
-  if (t === T.CAR) {
-    const cols = ['#6b3a2a', '#4a5560', '#5d5a3a', '#3a4a5a'];
-    ctx.fillStyle = cols[Math.floor(h * 4)];
-    ctx.fillRect(x + 2, y + 6, TILE - 4, TILE - 12);
-    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(x + 9, y + 9, 12, TILE - 18);
-  } else if (t === T.BARRICADE) {
-    ctx.fillStyle = '#8a7048'; ctx.fillRect(x + 1, y + 4, TILE - 2, TILE - 8);
-    ctx.fillStyle = '#6e5a3a'; ctx.fillRect(x + 1, y + 15, TILE - 2, 2); ctx.fillRect(x + 15, y + 4, 2, TILE - 8);
-  }
-}
-
-function drawShadow(x, y, r) {
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.beginPath(); ctx.ellipse(x, y + r * 0.6, r, r * 0.45, 0, 0, TAU); ctx.fill();
-}
-
-function drawPlayer(p) {
-  const x = p.x - G.cam.x, y = p.y - G.cam.y;
-  drawShadow(x, y, p.r);
-  const w = curWeapon(), b = w ? WEAPONS[w.key] : null;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(p.aim);
-  if (b && b.melee) {
-    const swing = p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * b.arc : -0.6;
-    ctx.save(); ctx.rotate(swing);
-    ctx.fillStyle = w.key === 'katana' ? '#bde' : w.key === 'axe' ? '#a33' : '#888';
-    ctx.fillRect(8, -2, b.range * 0.55, 4);
-    ctx.restore();
-    if (p.swingT > 0) {
-      ctx.strokeStyle = `rgba(255,255,255,${p.swingT * 3})`; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(0, 0, b.range * 0.8, -b.arc / 2, b.arc / 2); ctx.stroke();
-    }
-  } else if (b) {
-    const len = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 16 : 24;
-    ctx.fillStyle = '#222'; ctx.fillRect(6, -3, len, 6);
-    ctx.fillStyle = '#555'; ctx.fillRect(6, -3, len, 2);
-  }
-  ctx.fillStyle = '#d9b48f'; ctx.beginPath(); ctx.arc(10, 6, 3.5, 0, TAU); ctx.arc(10, -6, 3.5, 0, TAU); ctx.fill();
-  ctx.restore();
-  ctx.fillStyle = p.hurtT > 0 ? '#fff' : '#3e5f3a';
-  ctx.beginPath(); ctx.arc(x, y, p.r, 0, TAU); ctx.fill();
-  ctx.strokeStyle = '#1a2a18'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = '#2b2b2b'; ctx.beginPath(); ctx.arc(x, y, p.r * 0.55, 0, TAU); ctx.fill(); // 헬멧
-  if (p.buffs.adren > 0) { ctx.strokeStyle = 'rgba(255,120,40,0.7)'; ctx.beginPath(); ctx.arc(x, y, p.r + 5, 0, TAU); ctx.stroke(); }
-  if (p.buffs.rapid > 0) { ctx.strokeStyle = 'rgba(120,255,220,0.7)'; ctx.beginPath(); ctx.arc(x, y, p.r + 8, 0, TAU); ctx.stroke(); }
-  ctx.lineWidth = 1;
-  ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillStyle = '#9fe08f'; ctx.fillText(p.name, x, y - p.r - 8);
-  if (p.reloadT > 0) {
-    const b2 = WEAPONS[curWeapon().key];
-    ctx.fillStyle = '#000'; ctx.fillRect(x - 18, y + p.r + 6, 36, 4);
-    ctx.fillStyle = '#ffd27a'; ctx.fillRect(x - 18, y + p.r + 6, 36 * (1 - p.reloadT / b2.reload), 4);
-  }
-}
-
-function drawEnemy(e) {
-  const x = e.x - G.cam.x, y = e.y - G.cam.y;
-  if (x < -80 || y < -80 || x > VW + 80 || y > VH + 80) return;
-  const f = e.face || 0, flash = e.hitT > 0;
-  const hover = e.def.flying ? Math.sin(G.time * 6 + e.x) * 3 - 10 : 0;
-  drawShadow(x, y, e.r * (e.def.flying ? 0.7 : 1));
-  ctx.save(); ctx.translate(x, y + hover);
-  const col = flash ? '#fff' : e.def.color;
-  switch (e.type) {
-    case 'zombie':
-      ctx.rotate(f);
-      ctx.fillStyle = flash ? '#fff' : '#4e6b38';
-      ctx.fillRect(4, -9, 14, 4); ctx.fillRect(4, 5, 14, 4);
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, e.r, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#c33'; ctx.fillRect(5, -4, 3, 3); ctx.fillRect(5, 2, 3, 3);
-      break;
-    case 'dog':
-      ctx.rotate(f);
-      ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(0, 0, e.r * 1.5, e.r * 0.8, 0, 0, TAU); ctx.fill();
-      ctx.beginPath(); ctx.arc(e.r * 1.4, 0, 6, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#ff4'; ctx.fillRect(e.r * 1.6, -3, 2, 2); ctx.fillRect(e.r * 1.6, 2, 2, 2);
-      break;
-    case 'raider':
-      ctx.rotate(f);
-      ctx.fillStyle = '#222'; ctx.fillRect(6, -2, 20, 5);
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, e.r, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#3a2a22'; ctx.beginPath(); ctx.arc(0, 0, e.r * 0.55, 0, TAU); ctx.fill();
-      break;
-    case 'brute':
-      ctx.rotate(f);
-      ctx.fillStyle = flash ? '#fff' : '#5a3a68';
-      ctx.beginPath(); ctx.arc(10, -14, 9, 0, TAU); ctx.arc(10, 14, 9, 0, TAU); ctx.fill();
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, e.r, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#d9c'; for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + 0.6; ctx.fillRect(Math.cos(a) * 12 - 2, Math.sin(a) * 12 - 2, 4, 4); }
-      break;
-    case 'drone':
-      ctx.rotate(G.time * 0.5);
-      ctx.fillStyle = col; ctx.fillRect(-9, -9, 18, 18);
-      ctx.fillStyle = 'rgba(200,220,240,0.5)';
-      for (const [ox, oy] of [[-11, -11], [11, -11], [-11, 11], [11, 11]]) { ctx.beginPath(); ctx.arc(ox, oy, 6, 0, TAU); ctx.fill(); }
-      ctx.fillStyle = e.state === 'chase' ? '#f33' : '#3f3'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, TAU); ctx.fill();
-      break;
-    case 'boss': {
-      const pulse = 1 + Math.sin(G.time * 4) * 0.05;
-      ctx.fillStyle = 'rgba(80,255,90,0.15)'; ctx.beginPath(); ctx.arc(0, 0, e.r * 1.6 * pulse, 0, TAU); ctx.fill();
-      ctx.rotate(f);
-      ctx.fillStyle = flash ? '#fff' : '#2a6a3a';
-      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; ctx.beginPath(); ctx.moveTo(Math.cos(a) * e.r * 1.35, Math.sin(a) * e.r * 1.35); ctx.lineTo(Math.cos(a + 0.25) * e.r, Math.sin(a + 0.25) * e.r); ctx.lineTo(Math.cos(a - 0.25) * e.r, Math.sin(a - 0.25) * e.r); ctx.fill(); }
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, e.r * pulse, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#eaff5a'; ctx.beginPath(); ctx.arc(14, -10, 5, 0, TAU); ctx.arc(14, 10, 5, 0, TAU); ctx.fill();
-      if (e.charge > 0.8) { ctx.strokeStyle = 'rgba(255,60,60,0.6)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(300, 0); ctx.stroke(); ctx.lineWidth = 1; }
-      break;
-    }
-  }
-  ctx.restore();
-  if (!e.def.boss) {
-    const ty = y + hover - e.r - 8;
-    ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
-    const lvDiff = e.level - G.player.level;
-    ctx.fillStyle = lvDiff >= 4 ? '#f66' : lvDiff >= 1 ? '#fc8' : lvDiff <= -4 ? '#999' : '#eee';
-    ctx.fillText(`Lv${e.level} ${e.def.name}`, x, ty - 4);
-    if (e.hp < e.maxHp) {
-      ctx.fillStyle = '#300'; ctx.fillRect(x - 16, ty, 32, 4);
-      ctx.fillStyle = '#e33'; ctx.fillRect(x - 16, ty, 32 * e.hp / e.maxHp, 4);
-    }
-  }
-}
-
-function drawNpc(n) {
-  const x = n.x - G.cam.x, y = n.y - G.cam.y;
-  drawShadow(x, y, 13);
-  ctx.fillStyle = n.color; ctx.beginPath(); ctx.arc(x, y, 13, 0, TAU); ctx.fill();
-  ctx.strokeStyle = '#111'; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
-  ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffd76a'; ctx.fillText(n.name, x, y - 22);
-  let mark = null;
-  if (n.id === 'captain') {
-    const p = G.player, q = QUESTS[p.quest.idx];
-    if (q && p.quest.active && p.quest.progress >= q.count) mark = ['?', '#ffd700'];
-    else if (q && !p.quest.active && p.level >= q.minLevel) mark = ['!', '#ffd700'];
-  } else if (n.id === 'merchant') mark = ['₵', '#aaa'];
-  else if (n.id === 'medic') mark = ['✚', '#f55'];
-  if (mark) {
-    ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = mark[1];
-    ctx.fillText(mark[0], x, y - 38 + Math.sin(G.time * 3) * 3);
-  }
-}
-
-function render() {
-  const cam = G.cam, p = G.player;
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, VW, VH);
-  const tx0 = Math.max(0, Math.floor(cam.x / TILE)), ty0 = Math.max(0, Math.floor(cam.y / TILE));
-  const tx1 = Math.min(World.W - 1, Math.ceil((cam.x + VW) / TILE)), ty1 = Math.min(World.H - 1, Math.ceil((cam.y + VH) / TILE));
-  for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
-    drawTile(tx, ty, World.tiles[ty * World.W + tx], Math.floor(tx * TILE - cam.x), Math.floor(ty * TILE - cam.y));
-  }
-  // 핏자국
-  for (const d of G.decals) {
-    ctx.fillStyle = 'rgba(90,10,10,0.45)';
-    ctx.beginPath(); ctx.ellipse(d.x - cam.x, d.y - cam.y, d.r, d.r * 0.6, d.a, 0, TAU); ctx.fill();
-  }
-  // 보스 아레나 표시
-  const bx = World.bossTile.x * TILE + 16 - cam.x, by = World.bossTile.y * TILE + 16 - cam.y;
-  ctx.strokeStyle = 'rgba(80,255,90,0.25)'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(bx, by, 7.5 * TILE, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
-
-  // 드랍
-  for (const d of G.drops) {
-    const x = d.x - cam.x, y = d.y - cam.y + Math.sin(G.time * 4 + d.x) * 2;
-    if (d.kind === 'credits') { ctx.fillStyle = '#ffd24a'; ctx.beginPath(); ctx.arc(x, y, 5, 0, TAU); ctx.fill(); ctx.strokeStyle = '#a07a10'; ctx.stroke(); }
-    else if (d.kind === 'ammo') { ctx.fillStyle = '#7a7a3a'; ctx.fillRect(x - 6, y - 4, 12, 8); ctx.fillStyle = '#cc8'; ctx.fillRect(x - 4, y - 2, 8, 2); }
-    else {
-      const c = RARITIES[d.item.rarity || 0].color;
-      ctx.fillStyle = c; ctx.globalAlpha = 0.25 + Math.sin(G.time * 5) * 0.1;
-      ctx.beginPath(); ctx.arc(x, y, 14, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
-      ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(d.item.icon, x, y + 6);
-      ctx.font = '11px sans-serif'; ctx.fillStyle = c; ctx.fillText(d.item.name, x, y - 16);
-    }
-  }
-  for (const n of G.npcs) drawNpc(n);
-  for (const e of G.enemies) drawEnemy(e);
-  if (!p.dead) drawPlayer(p);
-
-  // 투사체
-  for (const b of G.bullets) {
-    const x = b.x - cam.x, y = b.y - cam.y;
-    if (b.from === 'p') {
-      ctx.strokeStyle = b.color; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - b.vx * 0.015, y - b.vy * 0.015); ctx.stroke();
-    } else {
-      ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(x, y, b.r || 3, 0, TAU); ctx.fill();
-    }
-  }
-  ctx.lineWidth = 1;
-  for (const g of G.grenades) {
-    drawShadow(g.x - cam.x, g.y - cam.y, 4);
-    ctx.fillStyle = '#4a5a3a'; ctx.beginPath(); ctx.arc(g.x - cam.x, g.y - cam.y - g.h, 5, 0, TAU); ctx.fill();
-  }
-  for (const pt of G.particles) {
-    ctx.globalAlpha = 1 - pt.t / pt.life; ctx.fillStyle = pt.color;
-    ctx.fillRect(pt.x - cam.x - pt.size / 2, pt.y - cam.y - pt.size / 2, pt.size, pt.size);
-  }
-  ctx.globalAlpha = 1;
-  for (const ef of G.effects) {
-    const k = ef.t / ef.life, x = ef.x - cam.x, y = ef.y - cam.y;
-    if (ef.type === 'boom') {
-      ctx.fillStyle = `rgba(255,170,60,${0.6 * (1 - k)})`; ctx.beginPath(); ctx.arc(x, y, ef.r * (0.4 + k * 0.6), 0, TAU); ctx.fill();
-    } else if (ef.type === 'ring') {
-      ctx.strokeStyle = ef.color; ctx.globalAlpha = 1 - k; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.arc(x, y, ef.r * k, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1;
-    }
-  }
-
-  // 어둠 / 분위기
-  const px = p.x - cam.x, py = p.y - cam.y;
-  const grd = ctx.createRadialGradient(px, py, 140, px, py, Math.max(VW, VH) * 0.75);
-  grd.addColorStop(0, 'rgba(0,0,0,0)');
-  grd.addColorStop(1, `rgba(0,0,0,${G.darkness + 0.25})`);
-  ctx.fillStyle = grd; ctx.fillRect(0, 0, VW, VH);
-  ctx.fillStyle = `rgba(10,8,20,${G.darkness * 0.35})`; ctx.fillRect(0, 0, VW, VH);
-  const tint = ZONES[G.zone].tint;
-  if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }
-  if (p.hurtT > 0) { ctx.fillStyle = `rgba(200,0,0,${p.hurtT})`; ctx.fillRect(0, 0, VW, VH); }
-  const mh = PlayerStats.maxHp(p);
-  if (!p.dead && p.hp < mh * 0.3) {
-    const a = 0.25 + Math.sin(G.time * 6) * 0.1;
-    const g2 = ctx.createRadialGradient(VW / 2, VH / 2, VH * 0.3, VW / 2, VH / 2, VH * 0.8);
-    g2.addColorStop(0, 'rgba(120,0,0,0)'); g2.addColorStop(1, `rgba(140,0,0,${a})`);
-    ctx.fillStyle = g2; ctx.fillRect(0, 0, VW, VH);
-  }
-
-  // 떠오르는 텍스트
-  ctx.textAlign = 'center';
-  for (const t of G.texts) {
-    ctx.globalAlpha = 1 - t.t / t.life;
-    ctx.font = `bold ${t.size}px sans-serif`;
-    ctx.fillStyle = '#000'; ctx.fillText(t.text, t.x - cam.x + 1, t.y - cam.y + 1);
-    ctx.fillStyle = t.color; ctx.fillText(t.text, t.x - cam.x, t.y - cam.y);
-  }
-  ctx.globalAlpha = 1;
 }
 
 // ---------------- 루프 ----------------

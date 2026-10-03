@@ -110,19 +110,7 @@ const UI = {
     $('quest-tracker').innerHTML = qt;
   },
 
-  drawMinimap() {
-    const mm = $('minimap'), g = mm.getContext('2d'), p = G.player;
-    const span = 80, sx = p.x / TILE - span / 2, sy = p.y / TILE - span / 2, k = mm.width / span;
-    g.fillStyle = '#000'; g.fillRect(0, 0, mm.width, mm.height);
-    g.imageSmoothingEnabled = false;
-    g.drawImage(World.minimapBase, sx, sy, span, span, 0, 0, mm.width, mm.height);
-    const dot = (x, y, c, r) => { g.fillStyle = c; g.fillRect((x / TILE - sx) * k - r / 2, (y / TILE - sy) * k - r / 2, r, r); };
-    for (const n of G.npcs) dot(n.x, n.y, '#ffd76a', 4);
-    for (const e of G.enemies) dot(e.x, e.y, e.def.boss ? '#d4f' : '#f44', e.def.boss ? 8 : 3);
-    // 보스 위치 표시
-    dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.8)', 6);
-    dot(p.x, p.y, '#fff', 5);
-  },
+  drawMinimap() { drawMinimapIso($('minimap')); },
 
   // ---------------- 인벤토리 ----------------
   itemCell(it) {

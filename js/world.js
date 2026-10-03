@@ -4,7 +4,7 @@ const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE]);
 
 const World = {
   W: 160, H: 160, BLOCK: 14,
-  tiles: null, shade: null,
+  tiles: null, shade: null, height: null,
   cx: 80, cy: 80, safeR: 11,
   bossTile: { x: 22, y: 22 },
 
@@ -13,6 +13,7 @@ const World = {
     const rng = mulberry32(seed);
     this.tiles = new Uint8Array(W * H);
     this.shade = new Float32Array(W * H);
+    this.height = new Float32Array(W * H);
     const set = (x, y, t) => { if (x >= 0 && y >= 0 && x < W && y < H) this.tiles[y * W + x] = t; };
 
     // 도로와 블록
@@ -25,9 +26,10 @@ const World = {
         const kind = rng();
         const shade = rng();
         const fillB = (x0, y0, x1, y1, s) => {
+          const h = 44 + Math.floor(rng() * 6) * 24; // 2~7층
           for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
             set(ox + x, oy + y, T.BUILDING);
-            if (ox + x < W && oy + y < H) this.shade[(oy + y) * W + ox + x] = s;
+            if (ox + x < W && oy + y < H) { this.shade[(oy + y) * W + ox + x] = s; this.height[(oy + y) * W + ox + x] = h; }
           }
         };
         if (kind < 0.12) {
@@ -36,8 +38,10 @@ const World = {
         } else if (kind < 0.3) {
           // 붕괴된 건물
           for (let y = 4; y <= 12; y++) for (let x = 4; x <= 12; x++) {
+            if (ox + x >= W || oy + y >= H) continue;
             set(ox + x, oy + y, rng() < 0.22 ? T.BUILDING : T.RUBBLE);
             this.shade[(oy + y) * W + ox + x] = shade;
+            this.height[(oy + y) * W + ox + x] = 10 + rng() * 34; // 무너진 잔해 벽
           }
         } else if (kind < 0.55) {
           // 두 동 + 골목
@@ -92,6 +96,10 @@ const World = {
     // 외곽 벽
     for (let i = 0; i < W; i++) { set(i, 0, T.BUILDING); set(i, H - 1, T.BUILDING); }
     for (let i = 0; i < H; i++) { set(0, i, T.BUILDING); set(W - 1, i, T.BUILDING); }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (this.tiles[i] === T.BUILDING && !this.height[i]) this.height[i] = 60;
+    }
 
     this.buildMinimap();
   },
