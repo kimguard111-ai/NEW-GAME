@@ -170,8 +170,8 @@ const Sprites = {
       im.src = ART.dir + s.file; s.img = im;
     }
   },
-  loadAll() { // 무기 그림까지 포함
-    for (const s of Object.values(ART.weapons)) {
+  loadAll() { // 무기·헬멧 그림까지 포함
+    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets)]) {
       const im = new Image(); im.onload = () => { s.ready = true; }; im.src = ART.dir + s.file; s.img = im;
       im.onerror = () => console.warn('무기 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
     }
@@ -190,14 +190,16 @@ const Sprites = {
     const [row, n] = s.anims[anim], fps = ART.fps[anim.replace('back_', '')] || 8;
     const once = /attack|hit|death/.test(anim);
     const f = once ? Math.min(n - 1, Math.floor(t * fps)) : Math.floor(t * fps) % n;
-    const sc = (ART.height[key] || 44) / (s.cell * ART.charFill), size = s.cell * sc, cw = s.w || s.cell; // w: 칸 가로 (없으면 정사각형)
+    const sc = (ART.height[key] || ART.height[key.split('_')[0]] || 44) / (s.cell * ART.charFill), size = s.cell * sc, cw = s.w || s.cell; // w: 칸 가로 (없으면 정사각형)
     ctx.save();
     ctx.translate(sx, sy + ART.feetPad * sc);
     if (d.x < 0) ctx.scale(-1, 1); // 그림은 오른쪽을 보는 기준, 왼쪽은 좌우 반전
     if (flash && 'filter' in ctx) ctx.filter = 'brightness(2.6)';
     ctx.drawImage(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
     ctx.restore();
-    return true;
+    // 머리 위치 (가공 도구가 기록한 프레임별 값, 발 기준 칸 좌표)
+    const hd = s.heads && s.heads[anim] && s.heads[anim][f];
+    return { anim, sc, flip: d.x < 0, head: hd ? { x: hd[0], y: hd[1], w: s.headW || 20 } : null };
   },
 };
 
@@ -258,7 +260,11 @@ function drawHuman(sx, sy, o) {
   ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(sx, sy - 32 * s + bob, 5.5 * s, 0, TAU); ctx.fill();
   if (o.helmet) {
     ctx.fillStyle = o.flash ? '#fff' : o.helmet;
-    ctx.beginPath(); ctx.arc(sx, sy - 33 * s + bob, 6 * s, Math.PI, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx, sy - 33 * s + bob, 6.4 * s, Math.PI, TAU); ctx.fill();
+    ctx.fillRect(sx - 6.4 * s, sy - 33.5 * s + bob, 12.8 * s, 1.5 * s); // 챙
+  } else if (o.hair) {
+    ctx.fillStyle = o.flash ? '#fff' : o.hair;
+    ctx.beginPath(); ctx.arc(sx, sy - 33.5 * s + bob, 5.6 * s, Math.PI * 1.05, TAU * 0.98); ctx.fill();
   }
   if (o.eyes && !back) {
     ctx.fillStyle = o.eyes;
@@ -279,7 +285,19 @@ function drawPlayer(p) {
   drawShadow(sx, sy, p.r);
   const w = curWeapon(), b = w ? WEAPONS[w.key] : null;
   const moving = input.keys['w'] || input.keys['a'] || input.keys['s'] || input.keys['d'];
-  const o = { s: 1.05, body: '#3e5f3a', skin: '#d9b48f', helmet: '#2b332a', legs: '#2c3a2c', aim: p.aim, flash: p.hurtT > 0, walk: moving ? G.time : 0 };
+  // 장비 외형: 방어구 → 옷 색, 헬멧 → 머리 장비 (그림이 없을 때의 코드 그래픽)
+  const arm = p.equip.armor, hel = p.equip.helmet;
+  const LOOK = { vest: ['#3e5f3a', '#2c3a2c'], tactical: ['#6b6447', '#3e3a2a'], military: ['#3d4a5c', '#262e3a'], exo: ['#7d848c', '#4a4f55'] };
+  const look = arm ? LOOK[arm.key] : ['#5a5048', '#3a332c'];
+  const HEL = { cap: '#3b4a32', tacHelmet: '#26292c', gasmask: '#4a5a3a', exoHelm: '#9aa2aa' };
+  const o = { s: 1.05, body: look[0], skin: '#d9b48f', helmet: hel ? HEL[hel.key] : null, legs: look[1], aim: p.aim, flash: p.hurtT > 0, walk: moving ? G.time : 0,
+    eyes: hel && hel.key === 'gasmask' ? '#7fff6a' : hel && hel.key === 'exoHelm' ? '#6cf' : null, hair: '#2a2420' };
+  // 고강화(+7) 장비가 있으면 발밑에 빛
+  const maxPlus = Math.max(0, ...['w1', 'w2', 'armor', 'helmet'].map(k => (p.equip[k] && p.equip[k].plus) || 0));
+  if (maxPlus >= 7) {
+    ctx.strokeStyle = `rgba(255,215,106,${0.35 + Math.sin(G.time * 4) * 0.15 + (maxPlus - 7) * 0.08})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(sx, sy, 17, 8.5, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+  }
   if (b && b.melee) {
     o.blade = w.key === 'katana' ? '#bfe6ff' : w.key === 'axe' ? '#b33' : '#999';
     o.swing = p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * meleeReach(w).arc : -0.5;
@@ -288,11 +306,13 @@ function drawPlayer(p) {
     if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
   }
   const [anim, at] = animState(moving, p.hurtT, p.lastAtk, 'player');
-  if (Sprites.get('player')) {
-    // 몸 그림(무기 없음) + 장착 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
+  const bodyKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
+  if (Sprites.get(bodyKey)) {
+    // 몸 그림(무기·헬멧 없음) + 헬멧을 머리에, 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
     const back = Iso.dir(p.aim).y < -0.15;
     if (back && w) drawWeaponOverlay(sx, sy, w, p);
-    Sprites.draw('player', anim, at, sx, sy, p.aim, p.hurtT > 0);
+    const info = Sprites.draw(bodyKey, anim, at, sx, sy, p.aim, p.hurtT > 0);
+    if (hel && info.anim.indexOf('death') < 0) drawHelmetOverlay(sx, sy, info, hel, o.helmet);
     if (!back && w) drawWeaponOverlay(sx, sy, w, p);
   } else drawHuman(sx, sy, o);
   if (p.buffs.adren > 0 || p.buffs.rapid > 0) {
@@ -304,6 +324,22 @@ function drawPlayer(p) {
     const b2 = WEAPONS[w.key];
     ctx.fillStyle = '#000'; ctx.fillRect(sx - 18, sy + 8, 36, 4);
     ctx.fillStyle = '#ffd27a'; ctx.fillRect(sx - 18, sy + 8, 36 * (1 - p.reloadT / (p.reloadMax || b2.reload)), 4);
+  }
+}
+
+// 몸 그림의 머리 위치에 헬멧 씌우기 (헬멧 그림이 없으면 코드로 그린 반구)
+function drawHelmetOverlay(sx, sy, info, hel, color) {
+  const sc = info.sc, hd = info.head || { x: 0, y: -(ART.height.player || 44) / sc, w: 20 };
+  const hx = sx + hd.x * sc * (info.flip ? -1 : 1), hy = sy + hd.y * sc, hw = hd.w * sc * ART.helmetFit.w;
+  const art = ART.helmets[hel.key];
+  if (art && art.ready) {
+    const h = art.img.height * hw / art.img.width;
+    ctx.save(); ctx.translate(hx, hy - hw * ART.helmetFit.up); if (info.flip) ctx.scale(-1, 1);
+    ctx.drawImage(art.img, -hw / 2, 0, hw, h);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = color || '#333';
+    ctx.beginPath(); ctx.ellipse(hx, hy + hw * 0.32, hw / 2, hw * 0.42, 0, Math.PI, TAU); ctx.fill();
   }
 }
 

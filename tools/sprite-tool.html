@@ -45,9 +45,18 @@
       <h2>2. 설정</h2>
       <label>에셋 이름 (게임 내 키)</label>
       <select id="key">
-        <option>player</option><option>zombie</option><option>dog</option><option>raider</option>
+        <optgroup label="플레이어 몸 (무기·헬멧 없이)">
+          <option>player</option><option>player_vest</option><option>player_tactical</option><option>player_military</option><option>player_exo</option>
+        </optgroup>
+        <optgroup label="적 · NPC">
+        <option>zombie</option><option>dog</option><option>raider</option>
         <option>brute</option><option>drone</option><option>boss</option>
         <option>merchant</option><option>captain</option><option>medic</option><option>mechanic</option>
+        </optgroup>
+        <optgroup label="헬멧 (1장)">
+          <option value="h_cap">h_cap (방탄모)</option><option value="h_tacHelmet">h_tacHelmet (전술 헬멧)</option>
+          <option value="h_gasmask">h_gasmask (방독면 헬멧)</option><option value="h_exoHelm">h_exoHelm (외골격 헬멧)</option>
+        </optgroup>
         <optgroup label="플레이어 무기 (옆모습 1장)">
           <option value="w_pipe">w_pipe (쇠파이프)</option><option value="w_pistol">w_pistol (권총)</option><option value="w_axe">w_axe (소방 도끼)</option>
           <option value="w_smg">w_smg (기관단총)</option><option value="w_shotgun">w_shotgun (산탄총)</option><option value="w_rifle">w_rifle (돌격소총)</option>
@@ -211,6 +220,16 @@ function detectGrid(d, w, h) {
   }
   return out;
 }
+// 머리 폭: 덩어리 위쪽 12% 구간에서 가장 넓은 가로 길이 (자세·위아래 흔들림에 영향 없음, Gemini 크기 오차에는 비례)
+function headWidth(d, w, b) {
+  let best = 1;
+  for (let y = b.y0; y < b.y0 + Math.max(2, (b.y1 - b.y0) * 0.12); y++) {
+    let a = -1, e = -1;
+    for (let x = b.x0; x < b.x1; x++) if (d[(y * w + x) * 4 + 3] > 60) { if (a < 0) a = x; e = x; }
+    if (e - a > best) best = e - a;
+  }
+  return best;
+}
 const median = a => { const s = [...a].sort((p, q) => p - q); return s[s.length >> 1] || 1; };
 
 // 발의 가로 중심: 덩어리 아래쪽 12% 픽셀의 평균 x (무기를 내밀어도 흔들리지 않음)
@@ -237,16 +256,17 @@ function processLandmark() {
   const w = x1 - x0 + 1, h = y1 - y0 + 1, sc = Math.min(1, 1024 / w);
   const out = $('out'); out.width = Math.round(w * sc); out.height = Math.round(h * sc);
   out.getContext('2d').drawImage(src, x0, y0, w, h, 0, 0, out.width, out.height);
-  result = { landmark: true, weapon: $('key').value.startsWith('w_') };
+  result = { landmark: true, weapon: $('key').value.startsWith('w_'), helmet: $('key').value.startsWith('h_') };
   $('anims').innerHTML = '';
-  $('info').innerHTML = `<span class="ok">${result.weapon ? '무기' : '랜드마크'} 모드 · 배경색 rgb(${key.join(',')}) 제거 · ${out.width}×${out.height}px</span><br>`
-    + (result.weapon ? '<span class="muted" style="font-size:12px">총구(날)가 오른쪽을 향해야 합니다. 게임이 플레이어 손에 붙여 조준 방향으로 돌립니다.</span>'
+  $('info').innerHTML = `<span class="ok">${result.weapon ? '무기' : result.helmet ? '헬멧' : '랜드마크'} 모드 · 배경색 rgb(${key.join(',')}) 제거 · ${out.width}×${out.height}px</span><br>`
+    + (result.helmet ? '<span class="muted" style="font-size:12px">오른쪽을 보는 헬멧. 게임이 몸 그림의 프레임별 머리 위치에 씌웁니다.</span>'
+      : result.weapon ? '<span class="muted" style="font-size:12px">총구(날)가 오른쪽을 향해야 합니다. 게임이 플레이어 손에 붙여 조준 방향으로 돌립니다.</span>'
       : '<span class="muted" style="font-size:12px">게임은 이 그림의 가로 폭을 건물 발판 폭에 맞추고, 그림 맨 아래를 건물의 앞쪽 꼭짓점에 맞춥니다.</span>');
   showManifest();
 }
 
 function process() {
-  if (LANDMARK_KEYS.includes($('key').value) || $('key').value.startsWith('w_')) return processLandmark();
+  if (LANDMARK_KEYS.includes($('key').value) || /^[wh]_/.test($('key').value)) return processLandmark();
   // 이미지마다: 배경 제거 → 행/프레임 감지. 행들은 파일 순서대로 이어 붙임
   const parts = [], keys = [];
   const mode = $('mode').value;
@@ -277,11 +297,11 @@ function process() {
   const flip = !$('facingRight').checked;
   let clipped = 0;
   rows.forEach(({ items: row, pt }, r) => {
-   // 행 안의 크기 흔들림 보정: 행 중간 키와 ±15% 이내로 다른 프레임은 같은 키로 맞춤 (자세가 크게 다른 프레임은 그대로)
-   const rowH = median(row.map(b => b.y1 - b.y0));
+   // 행 안의 크기 흔들림 보정: 머리 폭을 행 중간값에 맞춤 (±15% 이내만). 키가 아니라 머리 폭을 쓰므로 걷기의 위아래 흔들림은 유지됨
+   const hws = row.map(b => headWidth(pt.data, pt.w, b)), rowHW = median(hws);
    row.forEach((b, c) => {
     const fx = feetX(pt.data, pt.w, b);
-    const ratio = rowH / (b.y1 - b.y0);
+    const ratio = rowHW / hws[c];
     let s = pt.scale * (Math.abs(ratio - 1) < 0.15 ? ratio : 1);
     const hTop = (b.y1 - b.y0) * s;
     if (hTop > cell - FEET_PAD - 2) { s = (cell - FEET_PAD - 2) / (b.y1 - b.y0); clipped++; } // 너무 큰 프레임은 칸에 맞춤
@@ -294,6 +314,25 @@ function process() {
    });
   });
   result = { cell, cellW, rows: rows.map(r => r.items.length) };
+  // 플레이어 몸: 프레임마다 머리 꼭대기 위치와 머리 폭을 기록 (게임이 헬멧을 씌울 때 사용)
+  if ($('key').value.startsWith('player')) {
+    const od = og.getImageData(0, 0, out.width, out.height).data, ws = [];
+    result.heads = rows.map((row, r) => row.items.map((_, c) => {
+      const x0 = c * cellW, y0 = r * cell;
+      let top = -1;
+      for (let y = 0; y < cell && top < 0; y++) for (let x = 0; x < cellW; x++) if (od[((y0 + y) * out.width + x0 + x) * 4 + 3] > 100) { top = y; break; }
+      if (top < 0) return [0, -cell * CHAR_FILL];
+      let best = 0, cx = cellW / 2;
+      for (let y = top; y < Math.min(cell, top + cell * 0.1); y++) {
+        let a = -1, b = -1;
+        for (let x = 0; x < cellW; x++) if (od[((y0 + y) * out.width + x0 + x) * 4 + 3] > 100) { if (a < 0) a = x; b = x; }
+        if (b - a > best) { best = b - a; cx = (a + b) / 2; }
+      }
+      ws.push(best);
+      return [Math.round(cx - cellW / 2), Math.round(top - (cell - FEET_PAD))];
+    }));
+    result.headW = median(ws);
+  } else { result.heads = null; }
   $('info').innerHTML = `<span class="ok">이미지 ${imgs.length}장 · 배경색 rgb(${key.join(',')}) 제거 · ${rows.length}개 행, 프레임 ${result.rows.join('/')}개 감지</span>`
     + (clipped ? `<br><span class="warn">${clipped}개 프레임이 칸보다 커서 축소됨 (칸 크기를 키우면 해결)</span>` : '')
     + (rows.some(r => r.items.length === 1) && rows.length > 3 ? '<br><span class="warn">프레임이 1개뿐인 행이 있습니다. 격자 모드를 시도해 보세요.</span>' : '');
@@ -313,10 +352,13 @@ function process() {
 }
 
 function showManifest() {
+  if (result.helmet) { const k = $('key').value; $('manifest').textContent = `// js/assets.js 의 helmets 안에 붙여넣기\n${k.slice(2)}: { file: '${k}.png' },`; return; }
   if (result.weapon) { const k = $('key').value; $('manifest').textContent = `// js/assets.js 의 weapons 안에 붙여넣기\n${k.slice(2)}: { file: '${k}.png' },`; return; }
   if (result.landmark) { $('manifest').textContent = `// js/assets.js 의 landmarks 안에 붙여넣기\n${$('key').value}: { file: '${$('key').value}.png' },`; return; }
   const anims = result.names.map((n, i) => `${n}: [${i}, ${result.rows[i]}]`).filter((_, i) => result.names[i]).join(', ');
-  $('manifest').textContent = `${$('key').value}: { file: '${$('key').value}.png', cell: ${result.cell}, w: ${result.cellW}, anims: { ${anims} } },`;
+  let heads = '';
+  if (result.heads) heads = `, headW: ${result.headW}, heads: { ${result.names.map((n, i) => n ? `${n}: ${JSON.stringify(result.heads[i])}` : '').filter(Boolean).join(', ')} }`;
+  $('manifest').textContent = `${$('key').value}: { file: '${$('key').value}.png', cell: ${result.cell}, w: ${result.cellW}, anims: { ${anims} }${heads} },`;
 }
 
 // 미리보기 애니메이션

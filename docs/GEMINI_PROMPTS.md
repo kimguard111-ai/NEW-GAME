@@ -7,7 +7,8 @@
 
 | 순서 | 에셋 | 이유 |
 |---|---|---|
-| 1 | 플레이어 (몸) + 무기 9종 | 항상 화면 중앙. 아트 방향의 기준이 됨. **몸에는 무기를 그리지 않음** (아래 2-0 참고) |
+| 1 | 플레이어 몸(방탄 조끼) + 무기 9종 + 헬멧 4종 | 항상 화면 중앙. 아트 방향의 기준이 됨. **몸에는 무기·헬멧을 그리지 않음** (아래 2-0 참고) |
+| 1-2 | 플레이어 몸 나머지 방어구 3벌 | 전술 조끼·군용 강화복·외골격 슈트. 장착하면 외형이 바뀌는 성장 체감 |
 | 2 | 감염자 | 가장 많이 보이는 적 |
 | 3 | 약탈자 · 변이견 | 초중반 주력 적 |
 | 4 | 랜드마크 4종 | 지역의 얼굴 (이번 v0.6에서 그림 자리 생김) |
@@ -30,12 +31,18 @@ isometric 3/4 top-down view (camera about 35 degrees above).
 
 ## 2. 캐릭터
 
-### 2-0. 플레이어는 몸과 무기를 따로 만든다
+### 2-0. 플레이어는 몸 · 무기 · 헬멧을 따로 만든다
 
-플레이어는 무기를 9종 중에서 바꿔 들기 때문에, **몸 그림에 무기를 그리면 권총을 들어도 소총이 보입니다.**
-그래서 몸은 **빈손으로 양손을 가슴 앞에 든 자세**로 만들고, 무기는 옆모습 한 장씩 따로 만듭니다(아래 2-4).
-게임이 장착한 무기 그림을 손 위치에 붙이고 조준 방향으로 돌리며, 반동과 휘두르기도 직접 처리합니다.
-무기 그림이 아직 없으면 코드로 그린 총·칼이 대신 표시됩니다.
+플레이어는 장비를 바꾸기 때문에 그림을 셋으로 나눕니다.
+
+| 부분 | 만드는 법 | 게임이 하는 일 |
+|---|---|---|
+| **몸** | 방어구 4종마다 한 벌씩. **빈손 + 맨머리** | 장착한 방어구의 몸 그림을 사용 (없으면 기본 `player`) |
+| **무기** | 9종, 옆모습 1장씩 (2-4) | 손 위치에 붙여 조준 방향으로 회전, 반동·휘두르기 |
+| **헬멧** | 4종, 1장씩 (2-5) | 가공 도구가 기록한 **프레임별 머리 위치**에 씌움 |
+
+몸에 갑옷을 입히는 건 팔다리가 프레임마다 움직여서 따로 겹칠 수 없으므로 방어구마다 몸을 한 벌씩 그립니다.
+머리는 프레임마다 모양이 거의 같아서 헬멧은 한 장으로 씌울 수 있습니다. 그림이 없는 부분은 코드 그래픽이 대신합니다.
 
 적(약탈자 등)과 NPC는 무기를 바꾸지 않으므로 무기를 그림에 포함해도 됩니다.
 
@@ -45,15 +52,26 @@ isometric 3/4 top-down view (camera about 35 degrees above).
 
 **플레이어 (player)**
 ```
-Character design of a lone survivor soldier: dark messy hair, dark tactical jacket with armor plates,
-cargo pants, combat boots, a large backpack. EMPTY HANDS, no weapon, no gun:
-both arms bent and raised forward at chest height as if holding an invisible rifle (a weapon will be added separately).
+Character design of a lone survivor soldier: short dark hair, BARE HEAD (no helmet, no hat, no hood),
+wearing [a worn olive bulletproof vest over a dark jacket], cargo pants, combat boots, a small backpack.
+EMPTY HANDS, no weapon, no gun: both arms bent and raised forward at chest height as if holding an invisible rifle
+(a weapon and a helmet will be added separately).
 Full body, standing ready pose, character facing right.
 Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
 isometric 3/4 top-down view (camera about 35 degrees above).
 Solid flat #FF00FF magenta background filling the entire image. No shadow, no ground, no text, no border.
 Do not use pink or magenta colors on the character.
 ```
+
+`[ ]` 부분을 바꿔 방어구별 몸 4벌을 만듭니다. 두 번째 벌부터는 **첫 번째 마스터 이미지를 첨부**하고
+`Same person as the attached character (same face, same hair, same body), now wearing [ ... ].`로 시작하세요.
+
+| 도구 이름 | `[ ]` 에 넣을 방어구 |
+|---|---|
+| player_vest | `a worn olive bulletproof vest over a dark jacket` (기본 `player`로 등록해도 됨) |
+| player_tactical | `a tan tactical plate carrier vest with many pouches and knee pads` |
+| player_military | `dark blue-gray military combat armor with shoulder pads and armored gloves` |
+| player_exo | `a bulky metallic powered exoskeleton suit with hydraulic joints over the limbs` |
 
 **감염자 (zombie)**
 ```
@@ -146,7 +164,7 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders, no muzzle 
 
 | 캐릭터 | idle (4) | walk (6) | attack (4) | hit (2) | death (5) |
 |---|---|---|---|---|---|
-| player | `an idle breathing animation, empty hands raised forward at chest height, no weapon` | `a walk cycle with empty hands raised forward at chest height, no weapon` | — (생략: 사격·휘두르기는 게임이 무기 그림으로 표현) | `getting hit, flinching backward, no weapon` | `a death animation, falling down and lying on the ground, no weapon` |
+| player (방어구 4벌 모두) | `an idle breathing animation, bare head, empty hands raised forward at chest height, no weapon` | `a walk cycle, bare head, empty hands raised forward at chest height, no weapon` | — (생략: 사격·휘두르기는 게임이 무기 그림으로 표현) | `getting hit, flinching backward, bare head, no weapon` | `a death animation, falling down and lying on the ground, no weapon` |
 | zombie | `an idle swaying animation` | `a slow shambling walk cycle` | `a claw attack lunging forward` | `getting hit, head snapping back` | `a death animation, collapsing and lying on the ground` |
 | dog | `an idle growling animation` | `a running cycle` | `a biting attack lunging forward` | `getting hit, recoiling` | `a death animation, falling on its side` |
 | raider | `an idle animation holding the pistol` | `a walk cycle holding the pistol` | `firing the pistol with recoil` | `getting hit, flinching backward` | `a death animation, falling down and lying on the ground` |
@@ -191,6 +209,27 @@ Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, 
 | w_lmg | `A light machine gun with a bipod and an ammo belt box.` |
 
 > 화면에서는 길이 15~40px로 작게 보이므로 **굵고 단순한 실루엣**이 좋습니다. 게임이 세로를 1.7배 과장해서 그립니다.
+
+### 2-5. 헬멧 4종 (1장씩)
+
+가공 도구에서 `h_` 로 시작하는 이름을 고르면 헬멧 모드가 됩니다. 결과 코드는 `js/assets.js`의 **`helmets`** 안에 붙여넣으세요.
+게임이 몸 그림의 프레임별 머리 위치에 씌우고, 왼쪽을 볼 때는 좌우 반전합니다. 사망 동작 중에는 표시하지 않습니다.
+
+공통 문장 (설명 뒤에 붙이기):
+```
+Single helmet only (no head, no face, no person), isometric 3/4 view, facing right like it is worn by a character looking right.
+Chunky readable shape. Detailed dark pixel art, gritty post-apocalyptic style.
+Solid flat #FF00FF magenta background. No text, no shadow, no border.
+```
+
+| 도구 이름 | 앞에 붙일 설명 |
+|---|---|
+| h_cap | `A simple olive military ballistic helmet.` |
+| h_tacHelmet | `A black tactical helmet with side rails and a mounted flashlight.` |
+| h_gasmask | `A full-face gas mask helmet with two round green-glowing lenses and a filter canister.` |
+| h_exoHelm | `A sleek metallic exoskeleton helmet with a glowing blue visor slit.` |
+
+> 헬멧 크기·높이가 머리에 잘 안 맞으면 `js/assets.js`의 `helmetFit` 값(w: 폭 배율, up: 위로 올리는 정도)을 조절하세요.
 
 ---
 
@@ -268,3 +307,5 @@ Solid flat #FF00FF magenta background. No text, no border, no shadow, no hands.
 | 바닥 타일 (도로·보도·풀밭) | 쿼터뷰 타일은 이어 붙였을 때 경계가 맞아야 하는데, 이미지 생성은 이 정밀도가 잘 안 나옵니다. 지금의 코드 바닥을 유지하고 나중에 방법을 따로 정합니다 |
 | 일반 건물 | 맵의 건물은 높이·크기가 제각각이라 그림 한 장으로 맞추기 어렵습니다. 랜드마크로 지역 분위기를 먼저 잡는 편이 효과가 큽니다 |
 | 무기를 든 플레이어 그림 | 무기를 바꿔도 그림이 그대로라 어색합니다. 몸(빈손) + 무기 그림 따로 (2-0) |
+| 헬멧을 쓴 플레이어 그림 | 헬멧을 바꿔도 그대로입니다. 몸은 맨머리, 헬멧은 따로 (2-5) |
+| 장갑·가방 등 다른 부위 | 부위가 늘수록 조합이 폭발합니다. 외형이 바뀌는 장비는 방어구·헬멧·무기까지 |

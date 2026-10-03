@@ -77,7 +77,8 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 
 | 키 (도구에서 선택) | 대상 | 화면 키(px) | 비고 |
 |---|---|---|---|
-| player | 플레이어 | 44 | **무기 없이 빈손**(양손을 가슴 앞에). 무기는 `w_` 그림을 게임이 손에 붙임 |
+| player / player_vest·tactical·military·exo | 플레이어 몸 | 44 | **빈손 + 맨머리**. 방어구마다 한 벌 (없으면 `player` 사용). 가공 시 프레임별 머리 위치가 자동 기록됨 |
+| h_cap 등 4종 | 헬멧 | 머리 폭에 맞춤 | 1장. `js/assets.js`의 `helmets`에 등록, 게임이 머리 위치에 씌움 |
 | w_pistol 등 9종 | 플레이어 무기 | 15~40 (길이) | 옆모습 1장, 총구 오른쪽. `js/assets.js`의 `weapons`에 등록 |
 | zombie | 감염자 | 44 | |
 | dog | 변이견 | 26 | 네발 짐승. 오른쪽을 보는 옆모습 |

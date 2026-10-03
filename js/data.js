@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.6.1';
+const GAME_VERSION = 'v0.6.2';
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -74,13 +74,21 @@ const ENHANCE = {
 };
 
 // 등급별 추가 옵션 개수
-const AFFIX_COUNT = { weapon: [0, 1, 2, 3, 3], armor: [0, 1, 2, 3, 4] };
+const AFFIX_COUNT = { weapon: [0, 1, 2, 3, 3], armor: [0, 1, 2, 3, 4], helmet: [0, 1, 2, 3, 4] };
 
 const ARMORS = {
   vest:     { name: '방탄 조끼',     icon: '🦺', def: 8, lvl: 1, price: 120 },
   tactical: { name: '전술 조끼',     icon: '🦺', def: 16, lvl: 5, price: 420 },
   military: { name: '군용 강화복',   icon: '🛡️', def: 28, lvl: 10, price: 950 },
   exo:      { name: '외골격 슈트',   icon: '🤖', def: 45, lvl: 16, price: 2000 },
+};
+
+// 헬멧 (v0.6.2). radRes: 방사능 피해 감소율
+const HELMETS = {
+  cap:       { name: '방탄모',       icon: '⛑️', def: 4,  lvl: 1,  price: 80 },
+  tacHelmet: { name: '전술 헬멧',    icon: '⛑️', def: 9,  lvl: 6,  price: 320 },
+  gasmask:   { name: '방독면 헬멧',  icon: '😷', def: 12, lvl: 12, price: 800, radRes: 0.7 },
+  exoHelm:   { name: '외골격 헬멧',  icon: '🪖', def: 20, lvl: 16, price: 1600 },
 };
 
 const CONSUMABLES = {
@@ -107,11 +115,11 @@ const ZONES = [
   { name: '명동 잔해', maxDist: 34, lvl: [1, 4], dark: 0.32, tint: null,
     spawns: [['zombie', 70], ['dog', 30]],
     desc: '감염자 무리가 몰려다닌다', packs: { zombie: [2, 4] },
-    gear: ['pistol', 'smg', 'pipe', 'vest'], gearText: '권총·기관단총·쇠파이프' },
+    gear: ['pistol', 'smg', 'pipe', 'vest', 'cap'], gearText: '권총·기관단총·쇠파이프' },
   { name: '종로 폐허', maxDist: 54, lvl: [5, 9], dark: 0.42, tint: null,
     spawns: [['zombie', 35], ['dog', 25], ['raider', 40]],
     desc: '약탈자들이 무리 지어 매복한다', packs: { raider: [2, 3], dog: [2, 3] },
-    gear: ['shotgun', 'axe', 'tactical'], gearText: '산탄총·소방 도끼·전술 조끼' },
+    gear: ['shotgun', 'axe', 'tactical', 'tacHelmet'], gearText: '산탄총·소방 도끼·전술 조끼·전술 헬멧' },
   { name: '용산 군사구역', maxDist: 72, lvl: [10, 15], dark: 0.52, tint: 'rgba(40,20,10,0.12)',
     spawns: [['raider', 35], ['brute', 25], ['drone', 25], ['dog', 15]],
     desc: '경비 드론 편대가 순찰한다', packs: { drone: [2, 3] },
@@ -119,7 +127,7 @@ const ZONES = [
   { name: '여의도 방사능 지대', maxDist: 999, lvl: [16, 20], dark: 0.6, tint: 'rgba(40,120,30,0.12)',
     spawns: [['brute', 30], ['drone', 30], ['raider', 20], ['zombie', 20]],
     desc: '방사능 웅덩이 — 들어가면 체력이 깎인다', packs: { zombie: [3, 5] },
-    gear: ['katana', 'lmg', 'sniper', 'exo'], gearText: '고주파 블레이드·기관총·외골격 슈트' },
+    gear: ['katana', 'lmg', 'sniper', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },
 ];
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수. 처음 가까이 가면 발견 보상

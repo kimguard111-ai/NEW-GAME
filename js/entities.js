@@ -11,7 +11,7 @@ function rollAffixes(kind, key, rarity, ilvl) {
   const pool = Object.keys(AFFIXES).filter(k => {
     const sl = AFFIXES[k].slot;
     if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(key)) return false; // 계열 전용 옵션
-    return kind === 'armor' ? sl === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee);
+    return kind !== 'weapon' ? sl === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee); // 헬멧은 방어구 옵션
   });
   const out = [];
   for (let i = 0; i < AFFIX_COUNT[kind][rarity] && pool.length; i++) {
@@ -56,6 +56,20 @@ function makeArmor(key, ilvl, rarity) {
   };
 }
 
+function makeHelmet(key, ilvl, rarity) {
+  const b = HELMETS[key], r = RARITIES[rarity];
+  const affixes = rollAffixes('helmet', key, rarity, ilvl);
+  return {
+    id: nextItemId++, kind: 'helmet', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
+    name: (rarity > 0 ? r.name + ' ' : '') + b.name, icon: b.icon,
+    def: Math.round(b.def * r.mul * (1 + (ilvl - 1) * 0.06)),
+    affixes, isNew: true,
+    value: Math.round(b.price * r.mul * (1 + ilvl * 0.15) * (1 + affixes.length * 0.15)),
+  };
+}
+const GEAR_DEFS = k => WEAPONS[k] || ARMORS[k] || HELMETS[k];
+function makeGear(k, level, r) { return WEAPONS[k] ? makeWeapon(k, level, r) : ARMORS[k] ? makeArmor(k, level, r) : makeHelmet(k, level, r); }
+
 // 구버전(v0.1) 세이브의 아이템을 현재 구조로 보정
 function normalizeItem(it) {
   if (!it || it.kind === 'cons') return it;
@@ -74,13 +88,14 @@ function makeConsumable(key, count = 1) {
 function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
   const r = Math.max(minRarity, rollRarity(rarityBonus));
   if (bias && Math.random() < 0.5) {
-    const keys = bias.filter(k => (WEAPONS[k] || ARMORS[k]).lvl <= level + 2);
-    if (keys.length) { const k = pick(keys); return WEAPONS[k] ? makeWeapon(k, level, r) : makeArmor(k, level, r); }
+    const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2);
+    if (keys.length) return makeGear(pick(keys), level, r);
   }
   if (Math.random() < 0.7) {
     const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2);
     return makeWeapon(pick(keys), level, r);
   }
+  if (Math.random() < 0.4) return makeHelmet(pick(Object.keys(HELMETS).filter(k => HELMETS[k].lvl <= level + 2)), level, r);
   const keys = Object.keys(ARMORS).filter(k => ARMORS[k].lvl <= level + 2);
   return makeArmor(pick(keys), level, r);
 }
@@ -97,6 +112,7 @@ function enhanceRate(it) { return Math.min(1, ENHANCE.rates[it.plus] + (it.fails
 function itemReqLevel(it) {
   if (it.kind === 'weapon') return WEAPONS[it.key].lvl;
   if (it.kind === 'armor') return ARMORS[it.key].lvl;
+  if (it.kind === 'helmet') return HELMETS[it.key].lvl;
   return 1;
 }
 
@@ -109,6 +125,7 @@ function itemDesc(it) {
     return s + ` · 요구 Lv${b.lvl}`;
   }
   if (it.kind === 'armor') return `방어력 ${armorDef(it)} · 요구 Lv${ARMORS[it.key].lvl}`;
+  if (it.kind === 'helmet') return `방어력 ${armorDef(it)}${HELMETS[it.key].radRes ? ` · 방사능 피해 -${HELMETS[it.key].radRes * 100}%` : ''} · 요구 Lv${HELMETS[it.key].lvl}`;
   return CONSUMABLES[it.key].desc;
 }
 
@@ -135,7 +152,7 @@ function newPlayer(name) {
     level: 1, exp: 0, credits: 150, statPoints: 0,
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
     hp: 1, reserve: 150,
-    equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: makeArmor('vest', 1, 0) },
+    equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: makeArmor('vest', 1, 0), helmet: null },
     active: 'w1',
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
     quest: { idx: 0, active: false, progress: 0 },
@@ -149,8 +166,7 @@ function newPlayer(name) {
 // 장착 장비의 옵션 합계. 무기 옵션은 들고 있는 무기만, 방어구 옵션은 항상 적용
 function gearBonus(p, k, w = p.equip[p.active]) {
   let v = 0;
-  const arm = p.equip.armor;
-  if (arm && arm.affixes) for (const a of arm.affixes) if (a.k === k) v += a.v;
+  for (const arm of [p.equip.armor, p.equip.helmet]) if (arm && arm.affixes) for (const a of arm.affixes) if (a.k === k) v += a.v;
   if (w && w.affixes) for (const a of w.affixes) if (a.k === k) v += a.v;
   return v;
 }
@@ -163,7 +179,7 @@ function hasLegend(p, id) { const w = p.equip[p.active]; return !!(w && w.legend
 //  민첩: 이동·공격속도 +0.8%, 치명타 +0.8% → 기동형
 const PlayerStats = {
   maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp'))),
-  def: p => armorDef(p.equip.armor) + Math.max(0, p.stats.str - 5),
+  def: p => armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5),
   dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 80); },
   gunMul: p => 1 + (p.stats.dex - 5) * 0.04,
   meleeMul: p => 1 + (p.stats.str - 5) * 0.06,
@@ -230,12 +246,13 @@ function weaponDps(p, w) {
   return dps;
 }
 
-// 방어구 가치: 버틸 수 있는 실질 체력 (체력 옵션과 방어력 합산)
-function armorEhp(p, arm) {
+// 방어구·헬멧 가치: 버틸 수 있는 실질 체력. it 을 그 칸에 장착했다고 가정 (null/생략 = 현재 장비)
+function armorEhp(p, it) {
   const base = (100 + p.stats.vit * 15 + p.level * 10);
+  const arm = it && it.kind === 'armor' ? it : p.equip.armor, hel = it && it.kind === 'helmet' ? it : p.equip.helmet;
   let hp = 0;
-  if (arm) for (const a of arm.affixes || []) if (a.k === 'hp') hp += a.v;
-  const def = armorDef(arm) + Math.max(0, p.stats.str - 5);
+  for (const g of [arm, hel]) if (g) for (const a of g.affixes || []) if (a.k === 'hp') hp += a.v;
+  const def = armorDef(arm) + armorDef(hel) + Math.max(0, p.stats.str - 5);
   return base * (1 + hp) / (1 - def / (def + 80));
 }
 
@@ -250,7 +267,10 @@ function isUpgrade(p, it) {
     const best = same.length ? Math.max(...same.map(w => weaponDps(p, w))) : 0;
     return weaponDps(p, it) > best * 1.02;
   }
-  if (it.kind === 'armor') return armorEhp(p, it) > armorEhp(p, p.equip.armor) * 1.02 || (!!p.equip.armor && it.affixes.length > p.equip.armor.affixes.length && armorDef(it) >= armorDef(p.equip.armor));
+  if (it.kind === 'armor' || it.kind === 'helmet') {
+    const cur = p.equip[it.kind];
+    return armorEhp(p, it) > armorEhp(p) * 1.02 || (!!cur && it.affixes.length > cur.affixes.length && armorDef(it) >= armorDef(cur));
+  }
   return false;
 }
 

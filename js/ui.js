@@ -173,9 +173,9 @@ const UI = {
         }
       }
       cmp += '</div>';
-    } else if (it.kind === 'armor' && !equippedSlot) {
-      const cur = p.equip.armor;
-      cmp = `<div class="cmp">방어력 ${cur ? diffSpan(armorDef(cur), armorDef(it)) : '+' + armorDef(it)} · 버티는 체력 ${diffSpan(armorEhp(p, cur), armorEhp(p, it))}`;
+    } else if ((it.kind === 'armor' || it.kind === 'helmet') && !equippedSlot) {
+      const cur = p.equip[it.kind];
+      cmp = `<div class="cmp">방어력 ${cur ? diffSpan(armorDef(cur), armorDef(it)) : '+' + armorDef(it)} · 버티는 체력 ${diffSpan(armorEhp(p), armorEhp(p, it))}`;
       if (cur && cur.affixes.length) cmp += `<br><span class="muted">장착 중 옵션: ${cur.affixes.map(affixText).join(', ')}</span>`;
       cmp += '</div>';
     }
@@ -190,6 +190,7 @@ const UI = {
     }
     if (it.kind === 'weapon') { add('주무기로 장착', () => UI.equip(it, 'w1')); add('보조무기로 장착', () => UI.equip(it, 'w2')); }
     if (it.kind === 'armor') add('장착', () => UI.equip(it, 'armor'));
+    if (it.kind === 'helmet') add('장착', () => UI.equip(it, 'helmet'));
     if (it.kind === 'cons') add('사용', () => useItem(it));
     if (UI.shopOpen) add(`판매 (${fmt(sellPrice)}₵)`, () => UI.sell(it, sellPrice));
     add('버리기', () => { if (confirm(`${itemName(it)}을(를) 버릴까요?`)) { removeItem(it); UI.selected = null; UI.refreshInventory(); } });
@@ -334,7 +335,7 @@ const UI = {
   },
   enhanceList() {
     const p = G.player;
-    return [p.equip.w1, p.equip.w2, p.equip.armor, ...p.inventory.filter(i => i.kind !== 'cons')].filter(Boolean);
+    return [p.equip.w1, p.equip.w2, p.equip.armor, p.equip.helmet, ...p.inventory.filter(i => i.kind !== 'cons')].filter(Boolean);
   },
   renderEnhance() {
     const p = G.player, list = $('enh-list'), box = $('enh-detail');
@@ -443,6 +444,7 @@ const UI = {
       const rr = p.level >= 12 ? 2 : p.level >= 6 ? 1 : 0;
       for (const k of Object.keys(WEAPONS)) if (WEAPONS[k].lvl <= p.level + 2) stock.push(makeWeapon(k, p.level, rr));
       for (const k of Object.keys(ARMORS)) if (ARMORS[k].lvl <= p.level + 2) stock.push(makeArmor(k, p.level, rr));
+      for (const k of Object.keys(HELMETS)) if (HELMETS[k].lvl <= p.level + 2) stock.push(makeHelmet(k, p.level, rr));
       G.shopStock = stock;
     }
     UI.shopOpen = true;

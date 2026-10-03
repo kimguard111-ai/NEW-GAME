@@ -88,6 +88,7 @@ function startGame(save, name) {
     G.player.pity = G.player.pity || 0;
     G.player.respecs = G.player.respecs || 0;
     G.player.found = G.player.found || [];
+    if (!('helmet' in G.player.equip)) G.player.equip.helmet = null; // v0.6.2 헬멧 칸
     for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
     G.bossT = save.bossT || 0;
     G.player.dead = false;
@@ -596,7 +597,8 @@ function updateRadiation(dt) {
   p.radT -= dt;
   if (p.radT > 0) return;
   p.radT = 0.5;
-  const d = Math.max(1, Math.round(PlayerStats.maxHp(p) * 0.015));
+  const hel = p.equip.helmet, res = hel ? HELMETS[hel.key].radRes || 0 : 0; // 방독면
+  const d = Math.max(1, Math.round(PlayerStats.maxHp(p) * 0.015 * (1 - res)));
   p.hp -= d;
   floatText(p.x, p.y - 20, `☢ -${d}`, '#7fff6a', 13);
   if (p.hp <= 0) playerDie();

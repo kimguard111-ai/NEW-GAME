@@ -8,6 +8,7 @@ const ART = {
   feetPad: 4,     // 가공 도구와 같은 값 (칸 바닥 ~ 발)
   fps: { idle: 6, walk: 10, attack: 16, hit: 12, death: 10 },
   // 화면에 표시할 대기 자세 키 (px)
+  // player_vest 등 방어구별 몸 그림은 player 키를 따름
   height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44 },
   // 플레이어 무기 그림 (옆모습 1장, 총구/날이 오른쪽). 플레이어 몸 그림은 무기 없이 만들고 이 그림을 손에 붙임
   // 없으면 코드로 그린 총·칼을 사용
@@ -19,6 +20,12 @@ const ART = {
   weaponGrip: { pipe: 0.15, pistol: 0.3, axe: 0.15, smg: 0.35, shotgun: 0.3, rifle: 0.32, katana: 0.12, sniper: 0.3, lmg: 0.35 },
   handY: 0.5,      // 손 높이 (플레이어 키 대비)
   weaponThick: 1.7, // 무기 그림 세로 과장 배율 (작은 화면에서 총이 실처럼 가늘어 보이지 않게)
+
+  // 헬멧 그림 (1장, 오른쪽을 보는 3/4 시점). 몸 그림의 프레임별 머리 위치(heads)에 씌움
+  helmets: {
+    // gasmask: { file: 'h_gasmask.png' },
+  },
+  helmetFit: { w: 1.35, up: 0.18 }, // 헬멧 폭 = 머리 폭 × w, 머리 꼭대기보다 (헬멧 폭 × up) 만큼 위에서 시작
 
   // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
   landmarks: {
