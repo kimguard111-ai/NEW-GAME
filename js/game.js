@@ -122,7 +122,7 @@ function startGame(save, name) {
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
-  const P = G.player; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
+  const P = G.player; P.stam = 100; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
   Bounty.refresh(); // v0.14 일일 의뢰
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
@@ -135,10 +135,13 @@ function startGame(save, name) {
 
 // ---------------- 플레이어 행동 ----------------
 // 구르기 (v0.16): 0.28초 무적 돌진, 1초 쿨타임. 이동 중이면 그 방향, 아니면 조준 방향
-const ROLL = { dur: 0.28, speed: 540, cd: 1.0 };
+// v1.1: 쿨타임 대신 스태미나 50 소모 (최대 100 → 연속 2번), 초당 40 회복
+const ROLL = { dur: 0.28, speed: 540, cd: 0.35, cost: 50, regen: 40 };
 function dodge() {
   const p = G.player;
   if (p.dead || p.rollT > 0 || (p.rollCd || 0) > 0) return;
+  if (p.stam < ROLL.cost) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, '기력 부족', '#7ab8ff', 12); } return; }
+  p.stam -= ROLL.cost; p.stamT = 0.5;
   let a = p.aim;
   const m = moveInput();
   if (m) a = Math.atan2(m.wy, m.wx);
@@ -827,6 +830,7 @@ function update(dt) {
     else if (p.hp < mh) p.hp = Math.min(mh, p.hp + PlayerStats.regen(p) * dt); // 체력 스탯·옵션 재생
   }
   p.rollCd = (p.rollCd || 0) - dt;
+  if ((p.stamT = (p.stamT || 0) - dt) <= 0) p.stam = Math.min(100, p.stam + ROLL.regen * dt); // 스태미나 회복
   p.atkT -= dt; p.hurtT -= dt; p.swingT -= dt; p.recoilT = (p.recoilT || 0) - dt; G.noAmmoT -= dt;
   for (let i = 0; i < 4; i++) p.skillCd[i] = Math.max(0, p.skillCd[i] - dt);
   p.buffs.rapid = Math.max(0, p.buffs.rapid - dt);

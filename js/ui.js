@@ -96,13 +96,17 @@ const UI = {
     if (UI.hudT > 0) return;
     UI.hudT = 0.08;
     const p = G.player, mh = PlayerStats.maxHp(p), next = PlayerStats.expNext(p.level);
-    $('hud-name').textContent = `Lv${p.level} ${p.name}`;
+    $('hud-name').textContent = p.name;
+    $('hud-lv').textContent = `Lv.${p.level}`;
+    $('st-fill').style.width = clamp(p.stam, 0, 100) + '%'; $('st-text').textContent = `${Math.floor(p.stam)} / 100`;
+    if ((UI.portT = (UI.portT || 0) - 0.08) <= 0) { UI.portT = 0.4; drawPlayerInto($('portrait'), 3.6, 210, 0.75); } // 초상화 (상반신)
+    $('mm-label').textContent = ZONES[G.zone].name.split(' ')[0];
     $('hp-fill').style.width = clamp(100 * p.hp / mh, 0, 100) + '%';
     $('hp-text').textContent = `${Math.ceil(Math.max(0, p.hp))} / ${mh}`;
     $('exp-fill').style.width = (100 * p.exp / next) + '%';
     $('exp-text').textContent = p.level >= MAX_LEVEL ? `최대 레벨 (Lv${MAX_LEVEL})` : `EXP ${fmt(p.exp)} / ${fmt(next)} (${(100 * p.exp / next).toFixed(1)}%)`;
-    $('hud-credits').textContent = `₵ ${fmt(p.credits)} 크레딧   ·   예비 탄약 ${fmt(p.reserve)}` + (p.statPoints ? `   ·   ★ 포인트 ${p.statPoints}` : '')
-      + (p.mats.scrap || p.mats.chip ? `   ·   ${Workshop.matsText()}` : '');
+    $('hud-credits').innerHTML = `<span class="cr">₵ ${fmt(p.credits)}</span>` + (p.statPoints ? ` <span class="pt">★ ${p.statPoints}</span>` : '')
+      + (p.mats.scrap || p.mats.chip ? ` <span class="mt">🔩${p.mats.scrap} 💾${p.mats.chip}</span>` : '');
     const buffs = [];
     if (p.buffs.rapid > 0) buffs.push(`⚡집중 사격 ${p.buffs.rapid.toFixed(1)}s`);
     if (p.buffs.adren > 0) buffs.push(`🔥아드레날린 ${p.buffs.adren.toFixed(1)}s`);
@@ -115,16 +119,17 @@ const UI = {
     const w = curWeapon();
     if (w) {
       const b = WEAPONS[w.key];
-      $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${w.icon} ${itemName(w)}</span> <span class="muted">[Q]</span>`;
-      $('weapon-ammo').textContent = b.melee ? '근접 무기' : p.reloadT > 0 ? '재장전 중...' : `${w.loaded} / ${magSize(w)}${b.infinite ? '  ∞' : ''}`;
+      $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${itemName(w)}</span>`;
+      $('weapon-ammo').innerHTML = b.melee ? '<small>근접</small>' : p.reloadT > 0 ? '<small>재장전…</small>' : `${w.loaded} <small>/ ${b.infinite ? '∞' : fmt(p.reserve)}</small>`;
+      if (UI.iconFor !== w || UI.iconPlus !== w.plus) { UI.iconFor = w; UI.iconPlus = w.plus; drawWeaponIcon($('weapon-icon'), w); }
       $('weapon-role').textContent = `${b.role} · DPS ${Math.round(weaponDps(p, w))}`;
-    } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; $('weapon-role').textContent = ''; }
+    } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; $('weapon-role').textContent = ''; drawWeaponIcon($('weapon-icon'), null); UI.iconFor = null; }
 
     SKILLS.forEach((s, i) => {
       const el = $('cd' + i);
       if (el) el.style.height = (100 * p.skillCd[i] / s.cd) + '%';
     });
-    if ($('cdroll')) $('cdroll').style.height = (100 * Math.max(0, p.rollCd || 0) / ROLL.cd) + '%';
+    if ($('cdroll')) $('cdroll').style.height = (p.stam < ROLL.cost ? 100 * (ROLL.cost - p.stam) / ROLL.cost : 0) + '%'; // 스태미나 부족
     const live = G.combo >= 3 && G.time - G.comboT < 3; // 연속 처치 표시
     $('combo').classList.toggle('hidden', !live);
     if (live) { $('combo-n').textContent = `x${G.combo}`; $('combo-bar').style.width = (100 * (1 - (G.time - G.comboT) / 3)) + '%'; $('combo').style.color = G.combo >= 25 ? '#ffa53a' : G.combo >= 10 ? '#c77dff' : '#ffd76a'; }
@@ -189,6 +194,14 @@ const UI = {
       el.className = el.className.replace(/ ?bc\d/g, '') + (it ? ' bc' + it.rarity : '');
       el.querySelector('div').innerHTML = it ? `${it.icon} <span class="r${it.rarity}">${itemName(it)}</span>` + (it.affixes && it.affixes.length ? `<br><span class="affix">◆ 옵션 ${it.affixes.length}개${it.legend ? ' ★' : ''}</span>` : '') : '<span class="muted">비어 있음</span>';
     });
+    if (UI.isOpen('inventory')) { // 장비창 인물 · 요약
+      drawPlayerInto($('doll'), 5.2, 290, 0.75);
+      const w = p.equip[p.active];
+      $('doll-stats').innerHTML = `<b>Lv.${p.level}</b> ${p.name}<br><span class="muted">체력</span> ${Math.ceil(p.hp)} / ${PlayerStats.maxHp(p)}`
+        + `<br><span class="muted">방어</span> ${PlayerStats.def(p)} (-${Math.round(PlayerStats.dmgReduce(p) * 100)}%)<br><span class="muted">DPS</span> ${w ? Math.round(weaponDps(p, w)) : 0}`
+        + `<br><span class="muted">₵</span> ${fmt(p.credits)} · 🔩${p.mats.scrap} 💾${p.mats.chip}`;
+      $('bag-count').textContent = `${p.inventory.length} / 24`;
+    }
     const grid = $('inv-grid');
     grid.innerHTML = '';
     for (let i = 0; i < 24; i++) {

@@ -13,28 +13,26 @@
 <canvas id="game"></canvas>
 <div id="rotate">📱 화면을 가로로 돌려 주세요</div>
 
-<!-- 타이틀 화면 -->
+<!-- 타이틀 화면 (v1.1: 코드로 그린 서울 야경 · ART.title 키아트가 있으면 그 그림) -->
 <div id="title-screen" class="overlay">
-  <div class="title-box">
-    <h1>SEOUL 2049</h1>
-    <h2>폐허의 도시</h2>
+  <canvas id="title-bg"></canvas>
+  <div class="title-box title-main">
+    <h1 class="logo">SEOUL <span>2049</span></h1>
+    <h2>무너진 서울, 살아남은 자들의 이야기</h2>
     <div id="version-label"></div>
-    <p class="lore">대붕괴 이후 20년. 서울은 감염자와 변이체, 약탈자들의 도시가 되었다.<br>
-    시청역 지하 캠프의 생존자로서 폐허를 개척하고, 방사능 지대의 군주 '타이탄'을 쓰러뜨려라.</p>
     <input id="name-input" maxlength="10" placeholder="생존자 이름" value="">
     <div class="title-buttons">
       <button id="btn-new">새 게임</button>
       <button id="btn-continue">이어하기</button>
     </div>
+    <div class="title-tags"><span>🛡 생존</span><span>🧭 탐험</span><span>⚔ 전투</span><span>📈 성장</span></div>
     <div class="controls">
-      <b>조작법</b><br>
-      <span class="desk">WASD 이동 · 마우스 조준 · 좌클릭 공격(누르고 있으면 연사) · <b>Space 구르기(무적)</b><br>
-      R 재장전 · Q 무기 교체 · 1~4 스킬 · 5 구급상자 · E 상호작용<br>
-      I 인벤토리 · C 능력치 · J 임무 · O 설정 · ESC 창 닫기 · 마우스 휠 화면 확대/축소</span>
-      <span class="mobile">왼손: 화면 왼쪽을 끌어 이동 · 오른손: 화면 오른쪽을 끌어 조준·사격<br>
-      오른쪽 버튼 💨 구르기 · E 상호작용 · R 재장전 · Q 무기 교체 · ＋/－ 확대 · 아래 칸을 눌러 스킬</span>
+      <span class="desk">WASD 이동 · 마우스 조준·사격 · <b>Space 구르기</b> · R 재장전 · Q 무기 교체 · 1~4 스킬 · E 상호작용<br>
+      I 가방 · C 능력치 · J 미션 · O 설정 · ESC 일시정지 · 휠 확대</span>
+      <span class="mobile">왼쪽을 끌어 이동 · 오른쪽을 끌어 조준·사격 · 💨 구르기 · E 상호작용 · 아래 칸 스킬</span>
     </div>
   </div>
+  <div class="title-quote">다시, 서울을 걷다.<br><small>그리고… 살아남다.</small></div>
 </div>
 
 <!-- 사망 화면 -->
@@ -73,22 +71,28 @@
   </div>
 </div>
 
-<!-- HUD -->
+<!-- HUD (v1.1 재구성) -->
 <div id="hud" class="hidden">
   <div id="hud-top-left">
-    <div id="hud-name"></div>
-    <div class="bar"><div id="hp-fill" class="fill hp"></div><span id="hp-text"></span></div>
-    <div class="bar small"><div id="exp-fill" class="fill exp"></div><span id="exp-text"></span></div>
-    <div id="hud-credits"></div>
-    <div id="hud-buffs"></div>
+    <div id="portrait-box"><canvas id="portrait" width="128" height="128"></canvas><div id="hud-lv"></div></div>
+    <div class="hud-bars">
+      <div id="hud-name"></div>
+      <div class="bar hpbar"><div id="hp-fill" class="fill hp"></div><span id="hp-text"></span></div>
+      <div class="bar stbar"><div id="st-fill" class="fill st"></div><span id="st-text"></span></div>
+      <div class="bar small"><div id="exp-fill" class="fill exp"></div><span id="exp-text"></span></div>
+      <div id="hud-credits"></div>
+      <div id="hud-buffs"></div>
+    </div>
   </div>
   <div id="hud-zone"></div>
   <div id="boss-bar" class="hidden">
     <div id="boss-name"></div>
     <div class="bar boss"><div id="boss-fill" class="fill bosshp"></div></div>
   </div>
-  <canvas id="minimap" width="160" height="160"></canvas>
+  <div id="mm-wrap"><canvas id="minimap" width="200" height="200"></canvas><div id="mm-label"></div></div>
+  <div id="quest-tracker"></div>
   <div id="hud-weapon">
+    <canvas id="weapon-icon" width="240" height="80"></canvas>
     <div id="weapon-name"></div>
     <div id="weapon-ammo"></div>
     <div id="weapon-role"></div>
@@ -98,28 +102,34 @@
   <div id="interact-hint" class="hidden"></div>
   <div id="tip" class="hidden"></div>
   <div id="toast" class="hidden"><div id="toast-title"></div><div id="toast-sub"></div></div>
-  <div id="quest-tracker"></div>
   <div id="combo" class="hidden"><span id="combo-n"></span><small>연속 처치</small><div id="combo-bar"></div></div>
   <div id="menu-buttons">
-    <button data-panel="inventory">인벤토리 (I)</button>
-    <button data-panel="stats">능력치 (C)</button>
-    <button data-panel="quest">임무 (J)</button>
-    <button data-panel="settings">설정 (O)</button>
-    <button id="btn-pause">⏸ (ESC)</button>
+    <button data-panel="inventory"><span class="ic">🎒</span>가방<i>I</i></button>
+    <button data-panel="quest"><span class="ic">📜</span>미션<i>J</i></button>
+    <button data-panel="stats"><span class="ic">📊</span>능력치<i>C</i></button>
+    <button data-panel="settings"><span class="ic">⚙️</span>설정<i>O</i></button>
+    <button id="btn-pause"><span class="ic">⏸</span>정지<i>ESC</i></button>
   </div>
 </div>
 
 <!-- 패널들 -->
 <div id="panel-inventory" class="panel hidden">
-  <div class="panel-head">인벤토리 <span class="close">✕</span></div>
-  <div class="equip-row">
-    <div class="equip-slot" data-slot="w1"><label>주무기</label><div></div></div>
-    <div class="equip-slot" data-slot="w2"><label>보조무기</label><div></div></div>
-    <div class="equip-slot" data-slot="armor"><label>방어구</label><div></div></div>
-    <div class="equip-slot" data-slot="helmet"><label>헬멧</label><div></div></div>
+  <div class="panel-head">장비 · 가방 <span class="close">✕</span></div>
+  <div class="inv-body">
+    <div class="doll">
+      <div class="equip-slot" data-slot="helmet" style="grid-area:hel"><label>헬멧</label><div></div></div>
+      <div class="equip-slot" data-slot="armor" style="grid-area:arm"><label>방어구</label><div></div></div>
+      <canvas id="doll" width="240" height="300" style="grid-area:fig"></canvas>
+      <div class="equip-slot" data-slot="w1" style="grid-area:w1"><label>주무기</label><div></div></div>
+      <div class="equip-slot" data-slot="w2" style="grid-area:w2"><label>보조무기</label><div></div></div>
+      <div id="doll-stats" style="grid-area:st"></div>
+    </div>
+    <div class="bag">
+      <div class="bag-head">가방 <span id="bag-count"></span></div>
+      <div id="inv-grid"></div>
+      <div id="item-detail"></div>
+    </div>
   </div>
-  <div id="inv-grid"></div>
-  <div id="item-detail"></div>
 </div>
 
 <div id="panel-stats" class="panel hidden">
@@ -176,6 +186,7 @@
 <script src="js/endgame.js"></script>
 <script src="js/tips.js"></script>
 <script src="js/touch.js"></script>
+<script src="js/title.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

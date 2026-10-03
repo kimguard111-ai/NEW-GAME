@@ -4,6 +4,7 @@
 // 등록되지 않았거나 파일을 못 읽으면 기존 도형 그래픽을 그대로 사용합니다.
 const ART = {
   dir: 'assets/',
+  title: null, // 타이틀 키아트 (예: 'title.png'). 없으면 코드로 그린 서울 야경
   charFill: 0.78, // 가공 도구와 같은 값 (대기 자세 키 / 칸 높이)
   feetPad: 4,     // 가공 도구와 같은 값 (칸 바닥 ~ 발)
   fps: { idle: 6, walk: 10, attack: 16, hit: 12, death: 10 },

@@ -352,7 +352,7 @@ function drawPlayer(p) {
   drawPlayerBody(p);
   ctx.globalAlpha = 1;
 }
-function drawPlayerBody(p) {
+function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름표·장전바 없이)
   const sx = Iso.sx(p.x, p.y), sy = Iso.sy(p.x, p.y);
   drawShadow(sx, sy, p.r);
   const w = curWeapon(), b = w ? WEAPONS[w.key] : null;
@@ -391,12 +391,57 @@ function drawPlayerBody(p) {
     ctx.strokeStyle = p.buffs.adren > 0 ? 'rgba(255,120,40,0.7)' : 'rgba(120,255,220,0.7)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(sx, sy, 20, 10, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
   }
+  if (ui) return;
   nameTag(sx, sy - 48, p.name, '#9fe08f', '12px sans-serif');
   if (p.reloadT > 0) {
     const b2 = WEAPONS[w.key];
     ctx.fillStyle = '#000'; ctx.fillRect(sx - 18, sy + 8, 36, 4);
     ctx.fillStyle = '#ffd27a'; ctx.fillRect(sx - 18, sy + 8, 36 * (1 - p.reloadT / (p.reloadMax || b2.reload)), 4);
   }
+}
+
+// HUD 초상화 · 장비창 인물 (v1.1): 플레이어를 작은 캔버스에 그림 (발 위치 footY, 배율 sc)
+function drawPlayerInto(cv, sc, footY, aim = 0.6) {
+  const g = cv.getContext('2d'), p = G.player, saved = ctx, cam = { x: G.cam.x, y: G.cam.y }, a0 = p.aim, k0 = input.keys;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
+  ctx = g; g.setTransform(sc, 0, 0, sc, 0, 0);
+  G.cam.x = (p.x - p.y) * ISO_K - cv.width / sc / 2; G.cam.y = (p.x + p.y) * ISO_K / 2 - footY / sc;
+  p.aim = aim; input.keys = {};
+  try { drawPlayerBody(p, true); } finally { ctx = saved; G.cam.x = cam.x; G.cam.y = cam.y; p.aim = a0; input.keys = k0; }
+}
+
+// 무기 아이콘 (옆모습): 무기 그림이 있으면 그 그림, 없으면 코드로 그린 실루엣
+function drawWeaponIcon(cv, w) {
+  const g = cv.getContext('2d'), W = cv.width, H = cv.height;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
+  if (!w) return;
+  const art = ART.weapons[w.key];
+  if (art && art.ready) {
+    const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height], sc = Math.min(W * 0.9 / rw, H * 0.9 / rh);
+    g.drawImage(art.img, rx, ry, rw, rh, (W - rw * sc) / 2, (H - rh * sc) / 2, rw * sc, rh * sc); return;
+  }
+  // 실루엣: [몸통 길이, 총열, 개머리, 탄창, 조준경, 손잡이] 비율
+  const S = { pistol: [0.32, 0.12, 0, 0.18, 0, 1], smg: [0.45, 0.15, 0.12, 0.22, 0, 1], rifle: [0.5, 0.25, 0.2, 0.2, 0, 1], lmg: [0.55, 0.28, 0.2, 0.15, 0, 1],
+    shotgun: [0.5, 0.32, 0.22, 0, 0, 1], sniper: [0.48, 0.38, 0.22, 0.12, 1, 1] }[w.key];
+  const cy = H * 0.42, col = RARITIES[w.rarity || 0].color, dark = '#5d636d', mid = '#8a919b';
+  g.save(); g.shadowColor = col; g.shadowBlur = 6;
+  if (!S) { // 근접: 손잡이 + 날/머리
+    const L = W * 0.85, x0 = (W - L) / 2;
+    g.fillStyle = w.key === 'katana' ? '#2a2a30' : '#5a3a22'; g.fillRect(x0, cy - 3, L * 0.35, 7);
+    g.fillStyle = w.key === 'katana' ? '#bfe6ff' : w.key === 'axe' ? '#b33' : '#8a8a8a';
+    if (w.key === 'axe') { g.fillRect(x0 + L * 0.35, cy - 3, L * 0.45, 6); g.beginPath(); g.moveTo(x0 + L * 0.72, cy - 22); g.lineTo(x0 + L * 0.95, cy - 18); g.lineTo(x0 + L * 0.95, cy + 20); g.lineTo(x0 + L * 0.72, cy + 14); g.fill(); }
+    else g.fillRect(x0 + L * 0.35, cy - (w.key === 'katana' ? 3 : 4), L * 0.62, w.key === 'katana' ? 5 : 8);
+    g.restore(); return;
+  }
+  const [body, barrel, stock, mag, scope] = S, L = W * 0.88, x0 = (W - L) / 2 + L * stock;
+  g.fillStyle = dark; g.fillRect(x0, cy - 8, L * body, 14);                                   // 몸통
+  g.fillStyle = mid; g.fillRect(x0 + L * body, cy - 5, L * barrel, 5);                         // 총열
+  if (stock) { g.fillStyle = dark; g.beginPath(); g.moveTo(x0, cy - 6); g.lineTo(x0 - L * stock, cy - 2); g.lineTo(x0 - L * stock, cy + 12); g.lineTo(x0, cy + 6); g.fill(); }
+  g.fillStyle = dark; g.fillRect(x0 + L * body * 0.18, cy + 6, 8, 14);                          // 손잡이
+  if (mag) { g.fillStyle = mid; g.fillRect(x0 + L * body * 0.42, cy + 6, 10, H * mag); }        // 탄창
+  if (scope) { g.fillStyle = '#111'; g.fillRect(x0 + L * body * 0.3, cy - 16, L * body * 0.45, 7); }
+  if (w.key === 'lmg') { g.fillStyle = '#5a5030'; g.fillRect(x0 + L * body * 0.35, cy + 6, 20, 14); } // 탄통
+  g.restore();
 }
 
 // 몸 그림의 머리 위치에 헬멧 씌우기 (헬멧 그림이 없으면 코드로 그린 반구)
