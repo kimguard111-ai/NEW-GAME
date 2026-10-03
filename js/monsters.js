@@ -1,0 +1,145 @@
+// 엘리트 몬스터 · 네임드 고유 패턴 · 세력 다툼 (v0.8)
+
+// 엘리트 접두어. types 가 있으면 그 적에게만 붙음
+const ELITE_AFFIXES = {
+  berserk:   { name: '광폭한',   color: '#ff5a3a', desc: '빠르고 공격이 잦음' },
+  armored:   { name: '중장갑',   color: '#9fb2c8', desc: '매우 단단하고 밀리지 않음' },
+  volatile:  { name: '폭발하는', color: '#ffb040', desc: '죽으면 잠시 뒤 폭발' },
+  splitter:  { name: '분열하는', color: '#7fff6a', desc: '죽으면 둘로 나뉨', types: ['zombie', 'dog', 'brute'] },
+  commander: { name: '지휘관',   color: '#ffd76a', desc: '주변 적의 속도·공격력 +30%' },
+};
+
+// 세력: 다른 세력끼리는 플레이어가 없을 때 서로 싸움
+const FACTION = { zombie: 'infected', dog: 'infected', brute: 'infected', boss: 'infected', raider: 'human', drone: 'machine' };
+
+const Monsters = {
+  // ---------------- 엘리트 ----------------
+  eliteChance(zone) { return 0.035 + zone * 0.012; }, // 명동 약 5% ~ 여의도 약 8%
+  rollAffix(type) {
+    const keys = Object.keys(ELITE_AFFIXES).filter(k => !ELITE_AFFIXES[k].types || ELITE_AFFIXES[k].types.includes(type));
+    return pick(keys);
+  },
+  makeElite(e, affix) {
+    e.affix = affix; e.expMul = 4; e.scale = 1.2; e.r = Math.round(e.r * 1.15);
+    let hpMul = 3;
+    e.weight = e.def.weight * 2;
+    if (affix === 'armored') { hpMul = 6; e.weight = e.def.weight * 6; }
+    if (affix === 'berserk') { e.speed *= 1.45; e.atkMul = 0.6; e.fireMul = 0.6; }
+    e.hp = e.maxHp = Math.round(e.maxHp * hpMul);
+    e.dmg *= 1.3;
+    return e;
+  },
+  // 엘리트 사망 효과
+  onDeath(e) {
+    if (e.affix === 'volatile') {
+      this.strike(e.x, e.y, 95, 0.8, e.dmg * 2.2, 'rgba(255,170,60,');
+      floatText(e.x, e.y - 30, '폭발한다!', '#ffb040', 15);
+    }
+    if (e.affix === 'splitter') {
+      for (let i = 0; i < 2; i++) {
+        const m = makeEnemy(e.type, e.x + rand(-20, 20), e.y + rand(-20, 20), Math.max(1, e.level - 1));
+        if (World.circleBlocked(m.x, m.y, m.r)) { m.x = e.x; m.y = e.y; }
+        m.hp = m.maxHp = Math.round(m.maxHp * 0.6); m.scale = 0.85; m.state = 'chase';
+        G.enemies.push(m);
+      }
+      floatText(e.x, e.y - 30, '분열!', '#7fff6a', 15);
+    }
+  },
+  // 지휘관 주변 적 강화 (buffT 동안 속도·공격력 +30%)
+  auras() {
+    for (const c of G.enemies) if (c.affix === 'commander' && c.hp > 0)
+      for (const o of G.enemies) if (o !== c && o.hp > 0 && !o.def.boss && dist(o, c) < 230) o.buffT = 0.6;
+  },
+  buff(e) { return e.buffT > 0 ? 1.3 : 1; },
+
+  // ---------------- 예고 공격 (바닥 원 → 지연 폭발) / 장판 ----------------
+  strike(x, y, r, delay, dmg, color, pool = false) { G.strikes.push({ x, y, r, t: 0, delay, dmg, color, pool }); },
+  updateHazards(dt) {
+    const p = G.player;
+    for (const s of G.strikes) {
+      s.t += dt;
+      if (s.t < s.delay) continue;
+      s.done = true;
+      if (!p.dead && Math.hypot(p.x - s.x, p.y - s.y) < s.r + p.r) damagePlayer(s.dmg);
+      G.effects.push({ type: 'boom', x: s.x, y: s.y, t: 0, life: 0.35, r: s.r });
+      burst(s.x, s.y, s.pool ? '#8fd14a' : '#ffb040', 16, 200, 0.4, 4);
+      G.shake = Math.max(G.shake, 5);
+      if (s.pool) G.pools.push({ x: s.x, y: s.y, r: s.r * 0.9, t: 0, life: 4, dps: s.dmg * 0.5 });
+    }
+    G.strikes = G.strikes.filter(s => !s.done);
+    let inPool = null;
+    for (const pl of G.pools) { pl.t += dt; if (Math.hypot(p.x - pl.x, p.y - pl.y) < pl.r) inPool = pl; }
+    G.pools = G.pools.filter(pl => pl.t < pl.life);
+    p.poolT = (p.poolT || 0) - dt;
+    if (inPool && !p.dead && p.poolT <= 0) { p.poolT = 0.5; damagePlayer(inPool.dps * 0.5); }
+  },
+
+  // ---------------- 네임드 고유 패턴 ----------------
+  updateNamed(e, dt) {
+    const p = G.player;
+    e.skillT = (e.skillT ?? 3) - dt;
+    if (e.skillT > 0) return;
+    if (e.elite === 'glutton') { // 산성 토사물: 플레이어 주변 3곳에 장판
+      e.skillT = 5.5; e.lastAtk = G.time;
+      for (let i = 0; i < 3; i++) this.strike(p.x + rand(-70, 70), p.y + rand(-70, 70), 55, 0.9, e.dmg * 0.6, 'rgba(140,220,70,', true);
+      floatText(e.x, e.y - 50, '우웨엑!', '#8fd14a', 18);
+    } else if (e.elite === 'panther') { // 호위병 호출 (최대 4)
+      e.skillT = 11; e.lastAtk = G.time;
+      const guards = G.enemies.filter(o => o.guardOf === e && o.hp > 0).length;
+      for (let i = 0; i < 2 && guards + i < 4; i++) {
+        const g = makeEnemy('raider', e.x + rand(-60, 60), e.y + rand(-60, 60), Math.max(1, e.level - 2));
+        if (World.circleBlocked(g.x, g.y, g.r)) continue;
+        g.guardOf = e; g.minion = true; g.state = 'chase';
+        G.enemies.push(g);
+      }
+      floatText(e.x, e.y - 40, '얘들아, 쳐라!', '#ff7a5a', 16);
+    } else if (e.elite === 'argos') { // 미사일 포격: 플레이어 위치 3곳 예고 후 폭발
+      e.skillT = 6; e.lastAtk = G.time;
+      this.strike(p.x, p.y, 70, 1.1, e.dmg * 2.2, 'rgba(255,60,60,');
+      for (let i = 0; i < 2; i++) this.strike(p.x + rand(-110, 110), p.y + rand(-110, 110), 70, 1.1 + i * 0.25, e.dmg * 2.2, 'rgba(255,60,60,');
+      floatText(e.x, e.y - 50, '표적 지정', '#ff6060', 16);
+    }
+  },
+
+  // ---------------- 세력 다툼 ----------------
+  // 플레이어를 쫓지 않을 때 근처의 다른 세력과 싸움. 처리했으면 true
+  infight(e, dt) {
+    if (e.def.boss || e.elite || e.minion) return false;
+    e.foeT = (e.foeT || 0) - dt;
+    if (e.foeT <= 0) {
+      e.foeT = 0.6; e.foe = null;
+      let bd = e.def.ranged ? e.def.range : 240;
+      for (const o of G.enemies) {
+        if (o === e || o.hp <= 0 || o.def.boss || o.elite || FACTION[o.type] === FACTION[e.type]) continue;
+        const d = dist(e, o);
+        if (d < bd && World.lineOfSight(e, o)) { bd = d; e.foe = o; }
+      }
+    }
+    const f = e.foe;
+    if (!f || f.hp <= 0) return false;
+    const d = dist(e, f), a = angleTo(e, f), b = this.buff(e);
+    e.face = a;
+    if (e.def.ranged) {
+      if (d > e.def.range * 0.8) tryMoveSmart(e, a, e.speed * 0.7 * b * dt);
+      if (e.fireT <= 0) {
+        e.fireT = e.def.fireCd * (e.fireMul || 1) * rand(1, 1.4); e.lastAtk = G.time;
+        G.effects.push({ type: 'tracer', x: e.x, y: e.y, x2: f.x, y2: f.y, t: 0, life: 0.09, color: e.type === 'drone' ? '#9cf' : '#ff8a5a' });
+        this.hurt(f, e.dmg * 0.8 * b, e);
+      }
+    } else if (d > e.r + f.r + 4) tryMoveSmart(e, a, e.speed * b * dt);
+    else if (e.atkT <= 0) { e.atkT = e.def.atkCd * (e.atkMul || 1); e.lastAtk = G.time; this.hurt(f, e.dmg * b, e); }
+    return true;
+  },
+  // 몬스터끼리의 피해 (플레이어 경험치·드랍 없음)
+  hurt(t, dmg, src) {
+    if (t.hp <= 0) return;
+    t.hp -= dmg; t.hitT = 0.08;
+    if (!t.foe) { t.foe = src; t.foeT = 0.6; }
+    burst(t.x, t.y, t.type === 'drone' ? '#ffc' : '#7a1010', 3, 90, 0.3);
+    if (t.hp <= 0) {
+      t.hp = 0;
+      burst(t.x, t.y, t.type === 'drone' ? '#aab' : '#7a0d0d', 10, 140, 0.5, 4);
+      if (t.type !== 'drone') G.decals.push({ x: t.x, y: t.y, r: t.r * 1.2, a: rand(0, TAU) });
+    }
+  },
+};

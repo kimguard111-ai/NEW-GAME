@@ -1,4 +1,4 @@
-# SEOUL 2049 : 폐허의 도시 (v0.7)
+# SEOUL 2049 : 폐허의 도시 (v0.8)
 
 이터널시티에서 영감을 받은 **포스트 아포칼립스 서울 배경의 2.5D 쿼터뷰 액션 RPG**입니다.
 빌드 과정 없이 브라우저에서 `index.html`을 열기만 하면 실행됩니다.
@@ -52,6 +52,7 @@ js/entities.js  아이템 생성, 플레이어 능력치, 적 생성
 js/ui.js        HUD, 인벤토리, 상점, 대화, 미니맵
 js/game.js      게임 루프, 전투, AI, 저장
 js/quests.js    메인 퀘스트(챕터)·네임드 적
+js/monsters.js  엘리트 접두어·네임드 패턴·세력 다툼
 ```
 
 캐릭터·랜드마크 그림은 Gemini로 만들어 교체할 수 있습니다: `docs/ART_GUIDE.md`, 프롬프트 모음 `docs/GEMINI_PROMPTS.md` 참고 (가공 도구: `tools/sprite-tool.html`).

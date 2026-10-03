@@ -383,7 +383,13 @@ function drawEnemy(e) {
   const flash = e.hitT > 0, f = e.face || 0;
   const walk = e.state === 'chase' || e.wandering ? G.time + e.x * 0.01 : 0;
   let topY = sy - 44;
-  const k = e.scale || 1; // 네임드: 크게
+  if (e.affix) { // 엘리트 오라
+    const c = ELITE_AFFIXES[e.affix].color;
+    ctx.strokeStyle = c; ctx.globalAlpha = 0.55 + Math.sin(G.time * 5 + e.x) * 0.25; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.5, e.r * 0.75, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1;
+    if (e.affix === 'commander') { ctx.strokeStyle = 'rgba(255,215,106,0.18)'; ctx.beginPath(); ctx.ellipse(sx, sy, 230 * ISO_K, 115 * ISO_K, 0, 0, TAU); ctx.stroke(); }
+  }
+  const k = e.scale || 1; // 네임드·엘리트: 크게
   if (k !== 1) { ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k); ctx.translate(-sx, -sy); }
   if (Sprites.get(e.type)) {
     const hz = e.def.flying ? (34 + Math.sin(G.time * 5 + e.x) * 4) * ISO_K : 0;
@@ -445,6 +451,11 @@ function drawEnemy(e) {
   if (k !== 1) { ctx.restore(); topY = sy - (sy - topY) * k; }
   if (e.elite) {
     nameTag(sx, topY - 2, `★ ${ELITES[e.elite].name}`, '#ffa53a', 'bold 12px sans-serif');
+  } else if (e.affix) {
+    const A = ELITE_AFFIXES[e.affix];
+    nameTag(sx, topY - 4, `◆ Lv${e.level} ${A.name} ${e.def.name}`, A.color, 'bold 11px sans-serif');
+    ctx.fillStyle = '#300'; ctx.fillRect(sx - 20, topY + 1, 40, 4);
+    ctx.fillStyle = A.color; ctx.fillRect(sx - 20, topY + 1, 40 * e.hp / e.maxHp, 4);
   } else if (!e.def.boss) {
     const lvDiff = e.level - G.player.level;
     nameTag(sx, topY, `Lv${e.level} ${e.def.name}`, lvDiff >= 4 ? '#f66' : lvDiff >= 1 ? '#fc8' : lvDiff <= -4 ? '#999' : '#eee');
@@ -565,6 +576,17 @@ function render() {
     g.addColorStop(0, `rgba(120,255,80,${0.55 * pul})`); g.addColorStop(0.7, `rgba(60,200,40,${0.35 * pul})`); g.addColorStop(1, 'rgba(40,120,20,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, TAU); ctx.fill();
   }
+  for (const pl of G.pools) { // 산성 장판
+    const a = Math.min(1, (pl.life - pl.t) / 0.6);
+    ctx.fillStyle = `rgba(120,200,60,${0.4 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = `rgba(170,255,90,${0.6 * a})`; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
+  }
+  for (const s of G.strikes) { // 예고 원: 테두리 + 안쪽이 차오름
+    const k = Math.min(1, s.t / s.delay);
+    ctx.strokeStyle = s.color + (0.5 + Math.sin(G.time * 20) * 0.2) + ')'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = s.color + '0.3)'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * k, 0, TAU); ctx.fill();
+  }
   const bx = World.bossTile.x * TILE + 16, by = World.bossTile.y * TILE + 16;
   ctx.strokeStyle = 'rgba(80,255,90,0.3)'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.arc(bx, by, 7.5 * TILE, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
@@ -641,6 +663,11 @@ function render() {
     }
   }
   ctx.lineWidth = 1;
+  for (const ef of G.effects) if (ef.type === 'tracer') {
+    ctx.strokeStyle = ef.color; ctx.globalAlpha = 1 - ef.t / ef.life; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y, 22)); ctx.lineTo(Iso.sx(ef.x2, ef.y2), Iso.sy(ef.x2, ef.y2, 18)); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.lineWidth = 1;
+  }
   for (const ef of G.effects) if (ef.type === 'zap') { // 연쇄 타격 번개
     ctx.strokeStyle = `rgba(150,220,255,${1 - ef.t / ef.life})`; ctx.lineWidth = 3;
     const ax = Iso.sx(ef.x, ef.y), ay = Iso.sy(ef.x, ef.y, 20), bx = Iso.sx(ef.x2, ef.y2), by = Iso.sy(ef.x2, ef.y2, 20);
@@ -665,6 +692,7 @@ function render() {
   addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
   for (const ef of G.effects) if (ef.type === 'boom') addLight(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y), ef.r * 2.4 * (1 - ef.t / ef.life), 1, 'rgba(255,150,50,A)');
   for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(120,255,100,A)' : 'rgba(255,90,60,A)');
+  for (const s of G.strikes) addLight(Iso.sx(s.x, s.y), Iso.sy(s.x, s.y), s.r * 1.8, 0.5 + 0.4 * s.t / s.delay, s.pool ? 'rgba(140,230,70,A)' : 'rgba(255,90,50,A)');
   for (const h of World.hazards) addLight(Iso.sx(h.x, h.y), Iso.sy(h.x, h.y), h.r * 2.6, 0.75, 'rgba(110,255,80,A)');
   for (const l of World.landmarks) {
     const lc = { cathedral: 'rgba(255,190,120,A)', bosingak: 'rgba(255,90,60,A)', base: 'rgba(230,240,255,A)', tower63: 'rgba(255,210,100,A)' }[l.id];

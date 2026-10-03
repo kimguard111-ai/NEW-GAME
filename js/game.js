@@ -8,7 +8,7 @@ const MAP_SEED = 2049;
 
 const G = {
   player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [],
-  npcs: [], corpses: [], elite: null, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
+  npcs: [], corpses: [], elite: null, strikes: [], pools: [], cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
 };
@@ -103,7 +103,7 @@ function startGame(save, name) {
     log('생존자 대장 한씨(오른쪽 위)에게 말을 걸어 임무를 받으세요. [E]', '#8cf');
   }
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
-  G.boss = null; G.elite = null;
+  G.boss = null; G.elite = null; G.strikes = []; G.pools = [];
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -323,7 +323,7 @@ function respawn() {
   p.x = c.x; p.y = c.y; p.dead = false; p.hp = PlayerStats.maxHp(p); p.reloadT = 0; p.hurtT = 0;
   p.buffs.rapid = 0; p.buffs.adren = 0;
   G.enemies = G.enemies.filter(e => e.def.boss || dist(e, p) > 900);
-  G.bullets = [];
+  G.bullets = []; G.strikes = []; G.pools = [];
   document.getElementById('death-screen').classList.add('hidden');
 }
 
@@ -372,7 +372,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
 function killEnemy(e) {
   const p = G.player;
   // 보스 소환수는 경험치 20%, 드랍 없음 (보스 옆 무한 파밍 방지)
-  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1));
+  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1)); // 엘리트 4배
   gainExp(exp);
   floatText(e.x, e.y - 10, `+${fmt(exp)} EXP`, '#e0c040', 12);
   p.totalKills++;
@@ -409,6 +409,11 @@ function killEnemy(e) {
     dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) });
     dropAt('credits', { amount: e.level * 40 });
     hitstop(0.12); G.shake = Math.max(G.shake, 10);
+  }
+  if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
+    Monsters.onDeath(e);
+    dropAt('credits', { amount: e.level * 12 });
+    if (Math.random() < 0.6) dropAt('item', { item: randomGear(e.level, 0.8, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
   }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
@@ -472,14 +477,17 @@ function updateBoss(e, dt, d) {
 
 function updateEnemies(dt) {
   const p = G.player, pSafe = World.inSafe(p.x, p.y);
+  Monsters.auras();
   for (const e of G.enemies) {
     if (e.hp <= 0) continue;
-    e.atkT -= dt; e.fireT -= dt; e.hitT -= dt;
+    e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt;
     const d = dist(e, p);
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); continue; } // 경직: 이동·공격 불가
     if (!p.dead && !pSafe && d < e.def.aggro) e.state = 'chase';
     else if (e.state === 'chase' && (p.dead || pSafe || d > e.def.aggro * 1.7)) e.state = 'idle';
     if (e.def.boss) updateBoss(e, dt, d);
+    if (e.elite && e.state === 'chase') Monsters.updateNamed(e, dt);
+    if (e.affix && e.state === 'chase' && !e.announced) { e.announced = true; log(`⚠ 엘리트: ${ELITE_AFFIXES[e.affix].name} ${e.def.name} (${ELITE_AFFIXES[e.affix].desc})`, ELITE_AFFIXES[e.affix].color); }
 
     if (e.charge > 0) {
       // 보스 돌진 (0.5초 예고 후 질주)
@@ -494,23 +502,23 @@ function updateEnemies(dt) {
     if (e.state === 'chase') {
       const a = angleTo(e, p);
       e.face = a;
-      let moveA = a, spd = e.speed;
+      let moveA = a, spd = e.speed * Monsters.buff(e);
       if (e.def.ranged) {
         const los = World.lineOfSight(e, p);
         if (los && d < e.def.range * 0.55) moveA = a + Math.PI;
         else if (los && d < e.def.range * 0.9) { moveA = a + e.sideDir * Math.PI / 2; spd *= 0.6; }
         if (los && d < e.def.range && e.fireT <= 0) {
           e.fireT = e.def.fireCd * (e.fireMul || 1) * rand(0.8, 1.25);
-          spawnEnemyBullet(e, a + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg); e.lastAtk = G.time;
+          spawnEnemyBullet(e, a + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg * Monsters.buff(e)); e.lastAtk = G.time;
         }
         if (Math.random() < dt * 0.4) e.sideDir *= -1;
       }
       if (d > e.r + p.r + 2) tryMoveSmart(e, moveA, spd * dt);
       if (!e.def.ranged && d < e.r + p.r + 8 && e.atkT <= 0) {
-        e.atkT = e.def.atkCd; e.lastAtk = G.time;
-        damagePlayer(e.dmg, e.x, e.y);
+        e.atkT = e.def.atkCd * (e.atkMul || 1); e.lastAtk = G.time;
+        damagePlayer(e.dmg * Monsters.buff(e), e.x, e.y);
       }
-    } else {
+    } else if (!Monsters.infight(e, dt)) { // 플레이어가 없으면 다른 세력과 싸움, 아니면 배회
       e.wanderT -= dt;
       if (e.wanderT <= 0) { e.wanderT = rand(1.5, 4); e.wanderA = rand(0, TAU); e.wandering = Math.random() < 0.6; }
       if (e.wandering) { tryMoveSmart(e, e.wanderA, e.speed * 0.35 * dt); e.face = e.wanderA; }
@@ -555,6 +563,7 @@ function spawnEnemies(dt) {
     const t = clamp((World.distTiles(x, y) - prev) / span, 0, 1);
     const lvl = clamp(Math.round(lerp(zone.lvl[0], zone.lvl[1], t) + rand(-1, 1)), zone.lvl[0], zone.lvl[1]);
     const type = weighted(zone.spawns), e = makeEnemy(type, x, y, lvl);
+    if (Math.random() < Monsters.eliteChance(zi)) Monsters.makeElite(e, Monsters.rollAffix(type)); // v0.8 엘리트
     G.enemies.push(e);
     // 지역 특성: 무리 지어 출몰
     const pk = zone.packs && zone.packs[type];
@@ -724,6 +733,7 @@ function update(dt) {
   updateEnemies(dt);
   updateBullets(dt);
   updateGrenades(dt);
+  Monsters.updateHazards(dt);
   updateDrops(dt);
 
   for (const pt of G.particles) { pt.t += dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= 0.9; pt.vy *= 0.9; if (pt.vz) pt.z += pt.vz * dt; }
