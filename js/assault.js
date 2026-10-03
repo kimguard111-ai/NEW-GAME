@@ -17,6 +17,9 @@ const ASSAULTS = {
     boss: { name: '방사능 변이체 「군체」', base: 'brute', hpMul: 9, dmgMul: 1.3, scale: 1.6, patterns: ['glutton', 'argos'], affix: 'commander' } },
 };
 const ASSAULT_R = 13 * TILE; // 봉쇄 구역 반지름
+// 위협 등급 (v0.14 엔드게임): 등급마다 적 레벨 +3 · 체력 +30% · 보상 증가. 등급 N을 깨면 N+1 개방
+const TIER_MAX = 5;
+const tierLvl = t => 3 * (t - 1), tierHp = t => 1 + 0.3 * (t - 1);
 const RANKS = { S: { gear: 2, bonus: 1.5, min: 2, mul: 1.5, color: '#ffd76a' }, A: { gear: 1, bonus: 1.0, min: 1, mul: 1.2, color: '#c77dff' }, B: { gear: 1, bonus: 0.5, min: 0, mul: 1, color: '#9fd' } };
 
 const Assault = {
@@ -31,16 +34,25 @@ const Assault = {
   },
   hint(l) {
     const a = ASSAULTS[l.id], rec = G.player.assaults[l.id];
-    return `[E] 어설트: ${a.name} (권장 Lv${a.minLevel}+${rec ? ` · 최고 ${rec.best} ${rec.time}초` : ' · 첫 클리어 보너스'})`;
+    return `[E] 어설트: ${a.name} (권장 Lv${a.minLevel}+${rec ? ` · 최고 ${rec.best} ${rec.time}초 · 위협 ${rec.tier || 1}단계 클리어` : ' · 첫 클리어 보너스'})`;
+  },
+  // 위협 등급 선택 (한 번이라도 깬 어설트)
+  choose(l) {
+    const p = G.player, a = ASSAULTS[l.id], rec = p.assaults[l.id];
+    if (!rec) return this.start(l, 1);
+    const top = Math.min(TIER_MAX, (rec.tier || 1) + 1), btns = [];
+    for (let t = 1; t <= top; t++) btns.push([`위협 ${t} (적 Lv${a.level + tierLvl(t)})`, () => { UI.close('dialog'); this.start(l, t); }]);
+    btns.push(['취소', () => UI.close('dialog')]);
+    UI.dialog(a.name, `위협 등급이 높을수록 적 레벨 +3 · 체력 +30%씩, 보상(장비 등급·전자 부품·경험치)도 커집니다.<br><span class="muted">위협 N을 클리어하면 N+1이 열립니다. (최대 ${TIER_MAX})</span>`, btns);
   },
 
-  start(l) {
+  start(l, tier = 1) {
     const p = G.player, a = ASSAULTS[l.id];
     if (p.level < a.minLevel - 2) { log(`${a.name}: Lv${a.minLevel - 2} 이상부터 도전할 수 있습니다.`, '#f88'); return; }
     // 봉쇄 구역 안 일반 적은 철수 (이후 일반 스폰 중지)
     G.enemies = G.enemies.filter(e => e.def.boss || dist(e, l) > 1400);
-    G.assault = { id: l.id, l, wave: -1, phase: 'ready', t: 0, wait: 3, boss: null };
-    UI.toast(`어설트 — ${a.name}`, `웨이브 ${a.waves.length}개 + 거점 보스 · 제한 시간 ${a.limit}초 · 봉쇄선 밖으로 나갈 수 없음`);
+    G.assault = { id: l.id, l, wave: -1, phase: 'ready', t: 0, wait: 3, boss: null, tier };
+    UI.toast(`어설트 — ${a.name}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `웨이브 ${a.waves.length}개 + 거점 보스 · 제한 시간 ${a.limit}초 · 봉쇄선 밖으로 나갈 수 없음`);
     log(`어설트 개시: ${a.name}. 3초 후 첫 웨이브!`, '#ff9a5a');
     G.effects.push({ type: 'ring', x: l.x, y: l.y, t: 0, life: 1, color: '#ff6a4a', r: ASSAULT_R });
   },
@@ -72,7 +84,7 @@ const Assault = {
     }
     if (s.phase === 'ready' && (s.wait -= dt) <= 0) {
       s.wave++; s.phase = 'fight';
-      if (s.wave < a.waves.length) this.spawnWave(a.waves[s.wave], a.level);
+      if (s.wave < a.waves.length) this.spawnWave(a.waves[s.wave], a.level + tierLvl(s.tier));
       else this.spawnBoss(a);
     }
   },
@@ -85,7 +97,10 @@ const Assault = {
     }
     return null;
   },
-  add(e) { e.assault = true; e.state = 'chase'; G.enemies.push(e); return e; },
+  add(e) {
+    const k = tierHp(G.assault.tier);
+    e.assault = true; e.state = 'chase'; e.hp = e.maxHp = Math.round(e.maxHp * k); G.enemies.push(e); return e;
+  },
 
   // 웨이브는 큐에 넣고 0.5초 간격으로 봉쇄선 가장자리에서 투입 (엘리트는 마지막에)
   spawnWave(w, lvl) {
@@ -120,7 +135,7 @@ const Assault = {
 
   spawnBoss(a) {
     const b = a.boss, at = this.spot(ASSAULT_R * 0.35, ASSAULT_R * 0.7, ENEMIES[b.base].r * b.scale + 4) || { x: G.assault.l.x, y: G.assault.l.y + G.assault.l.size * TILE };
-    const e = makeEnemy(b.base, at.x, at.y, a.level + 1);
+    const e = makeEnemy(b.base, at.x, at.y, a.level + 1 + tierLvl(G.assault.tier));
     e.bossName = b.name; e.patterns = b.patterns; e.scale = b.scale; e.expMul = 6;
     e.hp = e.maxHp = Math.round(e.maxHp * b.hpMul); e.dmg *= b.dmgMul;
     e.r = Math.round(e.r * b.scale); e.fireMul = b.fireMul || 1; e.weight = e.def.weight * 5;
@@ -131,25 +146,29 @@ const Assault = {
     G.shake = Math.max(G.shake, 10);
   },
 
-  rank(t, a) { return t <= a.par ? 'S' : t <= a.par * 1.4 ? 'A' : 'B'; },
+  par(a, tier = 1) { return Math.round(a.par * (1 + 0.1 * (tier - 1))); }, // 높은 위협은 S 기준 시간 완화
+  rank(t, a, tier = 1) { const par = this.par(a, tier); return t <= par ? 'S' : t <= par * 1.4 ? 'A' : 'B'; },
 
   clear() {
     const s = G.assault, p = G.player, a = ASSAULTS[s.id], l = s.l;
-    const t = Math.round(s.t), rk = this.rank(t, a), R = RANKS[rk];
-    const rec = p.assaults[s.id], first = !rec;
-    const exp = Math.round(a.level * a.level * 18 * R.mul), credits = Math.round(a.level * 70 * R.mul);
+    const tier = s.tier || 1, t = Math.round(s.t), rk = this.rank(t, a, tier), R = RANKS[rk];
+    const rec = p.assaults[s.id], first = !rec, lvl = a.level + tierLvl(tier), tm = 1 + 0.5 * (tier - 1);
+    const exp = Math.round(lvl * lvl * 18 * R.mul * tm), credits = Math.round(lvl * 70 * R.mul * tm);
     gainExp(exp); p.credits += credits;
     const zone = ZONES[l.zone].gear;
     const drop = it => G.drops.push({ x: p.x + rand(-40, 40), y: p.y + rand(-40, 40), kind: 'item', t: 0, item: it });
-    for (let i = 0; i < R.gear; i++) drop(randomGear(a.level + 1, R.bonus, i === 0 ? R.min : 0, zone));
+    // 위협 3+: 첫 장비 희귀 이상 · 위협 5: 영웅 이상, 위협마다 장비 등급 보너스
+    for (let i = 0; i < R.gear + (tier >= 4 ? 1 : 0); i++) drop(randomGear(lvl + 1, R.bonus + 0.4 * (tier - 1), i === 0 ? Math.max(R.min, tier >= 5 ? 3 : tier >= 3 ? 2 : 0) : 0, zone));
     if (first) drop(randomGear(a.level + 1, 2, 3, zone)); // 첫 클리어: 영웅 이상 확정
+    if (tier > 1 && tier > ((rec && rec.tier) || 1)) drop(randomGear(lvl + 1, 2, 3, zone)); // 새 위협 등급 첫 클리어: 영웅 이상
     drop(makeConsumable('medkit', 2));
-    Workshop.gain(4 + 'BAS'.indexOf(rk) * 3, 1 + 'BAS'.indexOf(rk), '작전 보급'); // 재료: B 4·1 / A 7·2 / S 10·3
+    Workshop.gain(4 + 'BAS'.indexOf(rk) * 3 + 2 * (tier - 1), 1 + 'BAS'.indexOf(rk) + (tier - 1), '작전 보급'); // 재료: 등급·위협 비례
     const better = !rec || 'SAB'.indexOf(rk) < 'SAB'.indexOf(rec.best) || t < rec.time;
     p.assaults[s.id] = { best: rec && 'SAB'.indexOf(rec.best) < 'SAB'.indexOf(rk) ? rec.best : rk,
-      time: rec ? Math.min(rec.time, t) : t, clears: (rec ? rec.clears : 0) + 1 };
-    UI.toast(`어설트 완료 — 등급 ${rk}`, `${t}초 (S ≤ ${a.par}초) · EXP +${fmt(exp)} · +${fmt(credits)}₵${first ? ' · 첫 클리어 보너스!' : ''}`);
-    log(`어설트 완료: ${a.name} 등급 ${rk} (${t}초)${better && rec ? ' — 기록 갱신!' : ''}`, R.color);
+      time: rec ? Math.min(rec.time, t) : t, clears: (rec ? rec.clears : 0) + 1, tier: Math.max(tier, (rec && rec.tier) || 1) };
+    Bounty.on('assault', tier);
+    UI.toast(`어설트 완료 — 등급 ${rk}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `${t}초 (S ≤ ${this.par(a, tier)}초) · EXP +${fmt(exp)} · +${fmt(credits)}₵${first ? ' · 첫 클리어 보너스!' : ''}`);
+    log(`어설트 완료: ${a.name} 위협 ${tier} 등급 ${rk} (${t}초)${better && rec ? ' — 기록 갱신!' : ''}`, R.color);
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 1.2, color: R.color, r: 160 });
     burst(p.x, p.y, R.color, 40, 220, 0.9, 4);
     G.assault = null;
@@ -169,8 +188,8 @@ const Assault = {
     const s = G.assault, a = ASSAULTS[s.id];
     const left = G.enemies.filter(e => e.assault && e.hp > 0).length, rem = Math.max(0, Math.ceil(a.limit - s.t));
     const stage = s.wave >= a.waves.length ? '거점 보스' : s.wave < 0 ? '준비' : `웨이브 ${s.wave + 1} / ${a.waves.length}`;
-    return `<b style="color:#ff9a5a">⚔ ${a.name}</b><br>${stage}${s.phase === 'fight' ? ` · 남은 적 <b>${left}</b>` : ''}`
-      + `<br><span class="muted">${Math.floor(s.t)}초 · 예상 등급 ${this.rank(s.t, a)} · 남은 시간 ${rem}초</span>`;
+    return `<b style="color:#ff9a5a">⚔ ${a.name}${s.tier > 1 ? ` · 위협 ${s.tier}` : ''}</b><br>${stage}${s.phase === 'fight' ? ` · 남은 적 <b>${left}</b>` : ''}`
+      + `<br><span class="muted">${Math.floor(s.t)}초 · 예상 등급 ${this.rank(s.t, a, s.tier)} · 남은 시간 ${rem}초</span>`;
   },
 
   panelHtml(p) {
@@ -178,7 +197,7 @@ const Assault = {
     for (const l of World.landmarks) {
       const a = ASSAULTS[l.id], rec = p.assaults[l.id];
       if (!a) continue;
-      const state = !p.found.includes(l.id) ? `🔒 ${l.name} 발견 필요` : rec ? `<b style="color:${RANKS[rec.best].color}">${rec.best}</b> 최고 ${rec.time}초 · ${rec.clears}회` : '미도전 · 첫 클리어 시 영웅 장비';
+      const state = !p.found.includes(l.id) ? `🔒 ${l.name} 발견 필요` : rec ? `<b style="color:${RANKS[rec.best].color}">${rec.best}</b> 최고 ${rec.time}초 · ${rec.clears}회 · 위협 ${rec.tier || 1}/${TIER_MAX}` : '미도전 · 첫 클리어 시 영웅 장비';
       h += `<div class="step-row">${a.name} <span class="muted">Lv${a.minLevel}+</span> — ${state}</div>`;
     }
     return h;

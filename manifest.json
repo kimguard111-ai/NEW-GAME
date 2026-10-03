@@ -1,0 +1,9 @@
+{
+  "name": "SEOUL 2049 : 폐허의 도시",
+  "short_name": "SEOUL 2049",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0b0c0e",
+  "theme_color": "#0b0c0e"
+}

@@ -59,5 +59,6 @@ const Interiors = {
     floatText(c.x, c.y - 30, '보급 상자', '#e0c070', 14);
     burst(c.x, c.y, '#c9a24a', 10, 100, 0.4);
     log(`${b.name}의 보급 상자를 열었다.`, '#c9b27a');
+    Bounty.on('crate');
   },
 };

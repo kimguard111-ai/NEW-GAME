@@ -15,14 +15,15 @@ const G = {
 const input = { keys: {}, mx: 0, my: 0, down: false };
 
 function resize() {
-  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-  VW = canvas.width / ZOOM; VH = canvas.height / ZOOM; // 확대 전 기준 화면 크기
+  canvas.width = Math.round(window.innerWidth * RES); canvas.height = Math.round(window.innerHeight * RES);
+  canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+  VW = window.innerWidth / ZOOM; VH = window.innerHeight / ZOOM; // 확대 전 기준 화면 크기
 }
 window.addEventListener('resize', resize);
 resize();
 // 마우스 휠: 카메라 확대 1.0 ~ 1.8
 function setZoom(z) {
-  ZOOM = clamp(Math.round(z * 10) / 10, 1, 1.8);
+  ZOOM = clamp(Math.round(z * 10) / 10, ZOOM_MIN, 1.8);
   try { localStorage.setItem('seoul2049-zoom', ZOOM); } catch (e) { /* 저장 불가 */ }
   GroundCache.map.clear(); resize();
 }
@@ -117,6 +118,7 @@ function startGame(save, name) {
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
+  Bounty.refresh(); // v0.14 일일 의뢰
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -286,7 +288,7 @@ function interact() {
   const crate = Interiors.nearCrate();
   if (crate) { Interiors.openCrate(crate); return; }
   const l = Assault.available();
-  if (l) Assault.start(l);
+  if (l) Assault.choose(l);
 }
 function nearestNpc() {
   const p = G.player;
@@ -406,6 +408,7 @@ function killEnemy(e) {
   if (e.def.boss) hitstop(0.3);
   // 퀘스트
   Story.onKill(e);
+  Bounty.onKill(e); // v0.14 일일 의뢰
   // 드랍
   const dropAt = (kind, extra) => G.drops.push({ x: e.x + rand(-14, 14), y: e.y + rand(-14, 14), kind, t: 0, ...extra });
   if (e.def.boss) {
@@ -735,13 +738,16 @@ function update(dt) {
     if (input.keys['s'] || input.keys['arrowdown']) my += 1;
     if (input.keys['a'] || input.keys['arrowleft']) mx -= 1;
     if (input.keys['d'] || input.keys['arrowright']) mx += 1;
+    let amt = 1;
+    if (Touch.move) { mx = Touch.move.x; my = Touch.move.y; amt = Math.min(1, Touch.move.mag); } // 모바일 왼쪽 조이스틱
     if (mx || my) {
       // 화면 기준 방향 → 월드 방향 (쿼터뷰)
       const wx = (mx + 2 * my) / 2, wy = (2 * my - mx) / 2;
-      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt;
+      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt;
       World.move(p, wx / l * sp, wy / l * sp);
       p.walkT = (p.walkT || 0) + dt;
     }
+    if (IS_TOUCH) Touch.aimUpdate(p); // 모바일 오른쪽 조이스틱 → 조준점·사격
     const aimAt = Iso.toWorld(input.mx, input.my, 20); // 가슴 높이 조준
     p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x);
     if (input.down) playerAttack();
@@ -794,7 +800,7 @@ function update(dt) {
   G.cam.y = (p.x + p.y) * ISO_K / 2 - VH / 2 - 20 + rand(-G.shake, G.shake);
 
   G.saveT += dt;
-  if (G.saveT > 20) { G.saveT = 0; saveGame(); }
+  if (G.saveT > 20) { G.saveT = 0; Bounty.refresh(); saveGame(); } // 자정이 지나면 의뢰 갱신
 }
 
 // ---------------- 루프 ----------------

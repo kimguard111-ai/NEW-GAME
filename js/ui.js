@@ -106,7 +106,7 @@ const UI = {
     else $('interact-hint').classList.add('hidden');
 
     // 임무 추적 (챕터)
-    $('quest-tracker').innerHTML = G.assault ? Assault.trackerHtml() : UI.trackerHtml(p);
+    $('quest-tracker').innerHTML = G.assault ? Assault.trackerHtml() : UI.trackerHtml(p) + Bounty.trackerLine();
   },
 
   trackerHtml(p) {
@@ -312,7 +312,7 @@ const UI = {
       });
     });
     if (Story.done(p)) h += '<hr style="border-color:#333">모든 장을 완료했습니다. 당신은 서울의 영웅입니다!<br><span class="muted">타이탄은 4분마다 부활합니다.</span>';
-    h += Assault.panelHtml(p);
+    h += Bounty.panelHtml() + Assault.panelHtml(p);
     $('quest-body').innerHTML = h;
   },
 
@@ -395,6 +395,7 @@ const UI = {
     const p = G.player, cost = enhanceCost(it);
     if (p.credits < cost || it.plus >= ENHANCE.max) return;
     p.credits -= cost;
+    Bounty.on('enhance');
     if (Math.random() < enhanceRate(it)) {
       it.plus++; it.fails = 0;
       log(`강화 성공! ${itemName(it)}`, '#ffd76a');

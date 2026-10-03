@@ -2,8 +2,12 @@
 // 월드 좌표 (x, y, 높이 z) → 화면: sx = (x - y)·K, sy = (x + y)·K/2 - z·K
 const ISO_K = 0.9;
 // 카메라 확대 (v0.11): 월드 전체를 ZOOM 배로 그림. VW·VH 는 확대 전 기준의 가상 화면 크기
-let ZOOM = 1.4;
-try { ZOOM = clamp(+localStorage.getItem('seoul2049-zoom') || 1.4, 1, 1.8); } catch (e) { /* 저장 불가 */ }
+// 모바일은 화면이 작아 기본값을 화면 높이에 맞춤 (가로 390px 폰 ≈ 0.7)
+const ZOOM_MIN = IS_TOUCH ? 0.6 : 1;
+// 고해상도 화면(폰) 선명하게: 캔버스를 기기 픽셀 비율로 그림 (모바일 성능을 위해 최대 1.5배, PC는 기존과 같은 1배)
+const RES = IS_TOUCH ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
+let ZOOM = IS_TOUCH ? clamp(Math.round(Math.min(window.innerWidth, window.innerHeight) / 560 * 10) / 10, 0.6, 1.4) : 1.4;
+try { const z = +localStorage.getItem('seoul2049-zoom'); if (z) ZOOM = clamp(z, ZOOM_MIN, 1.8); } catch (e) { /* 저장 불가 */ }
 
 const Iso = {
   sx: (x, y) => (x - y) * ISO_K - G.cam.x,
@@ -19,8 +23,8 @@ const Iso = {
     return { x: dx / l, y: dy / l };
   },
   // 바닥 그리기용 변환 (월드 좌표 그대로 그리면 투영됨)
-  groundTransform() { const z = ZOOM; ctx.setTransform(ISO_K * z, ISO_K / 2 * z, -ISO_K * z, ISO_K / 2 * z, -G.cam.x * z, -G.cam.y * z); },
-  reset() { ctx.setTransform(ZOOM, 0, 0, ZOOM, 0, 0); },
+  groundTransform() { const z = ZOOM * RES; ctx.setTransform(ISO_K * z, ISO_K / 2 * z, -ISO_K * z, ISO_K / 2 * z, -G.cam.x * z, -G.cam.y * z); },
+  reset() { ctx.setTransform(ZOOM * RES, 0, 0, ZOOM * RES, 0, 0); },
 };
 
 const TILE_COLORS = {
@@ -78,7 +82,7 @@ const GroundCache = {
     if (c) { this.map.delete(key); this.map.set(key, c); return c; }
     const CH = this.CH, x0 = cx * CH * TILE, y0 = cy * CH * TILE, span = CH * TILE;
     const left = Math.floor((x0 - y0 - span) * ISO_K) - 2, top = Math.floor((x0 + y0) * ISO_K / 2) - 2;
-    const cv = document.createElement('canvas'), z = ZOOM;
+    const cv = document.createElement('canvas'), z = ZOOM * RES;
     cv.width = Math.ceil((2 * span * ISO_K + 4) * z); cv.height = Math.ceil((span * ISO_K + 4) * z);
     const g = cv.getContext('2d');
     const saved = ctx; ctx = g;
@@ -95,7 +99,7 @@ const GroundCache = {
     return c;
   },
   draw(tx0, ty0, tx1, ty1) {
-    const CH = this.CH, ox = Math.round(G.cam.x * ZOOM) / ZOOM, oy = Math.round(G.cam.y * ZOOM) / ZOOM;
+    const Z = ZOOM * RES, CH = this.CH, ox = Math.round(G.cam.x * Z) / Z, oy = Math.round(G.cam.y * Z) / Z;
     for (let cy = Math.floor(ty0 / CH); cy <= Math.floor(ty1 / CH); cy++)
       for (let cx = Math.floor(tx0 / CH); cx <= Math.floor(tx1 / CH); cx++) {
         const x0 = cx * CH * TILE, y0 = cy * CH * TILE, span = CH * TILE;

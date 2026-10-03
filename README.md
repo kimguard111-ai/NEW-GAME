@@ -1,4 +1,4 @@
-# SEOUL 2049 : 폐허의 도시 (v0.13)
+# SEOUL 2049 : 폐허의 도시 (v0.14)
 
 이터널시티에서 영감을 받은 **포스트 아포칼립스 서울 배경의 2.5D 쿼터뷰 액션 RPG**입니다.
 빌드 과정 없이 브라우저에서 `index.html`을 열기만 하면 실행됩니다.
@@ -57,8 +57,17 @@ js/assault.js   어설트(랜드마크 거점 탈환전)
 js/bosses.js    지역 필드 보스·타이탄 페이즈
 js/workshop.js  정비공 작업대 (분해·제작·옵션 재조정)
 js/interiors.js 건물 내부 (실내 적·보급 상자)
+js/endgame.js   일일 의뢰 (엔드게임 반복 목표)
+js/touch.js     모바일 터치 조작 (가상 조이스틱·버튼)
 ```
 
 캐릭터·랜드마크 그림은 Gemini로 만들어 교체할 수 있습니다: `docs/ART_GUIDE.md`, 프롬프트 모음 `docs/GEMINI_PROMPTS.md` 참고 (가공 도구: `tools/sprite-tool.html`).
 
 밸런스 수치는 대부분 `js/data.js`에서 바로 수정할 수 있습니다. 버전별 변경 내용은 `CHANGELOG.md`를 참고하세요.
+
+## 모바일에서 실행 (v0.14)
+1. GitHub 저장소 **Settings → Pages → Build and deployment**에서 Source를 *Deploy from a branch*, 브랜치를 게임 브랜치(`/ (root)`)로 저장
+2. 1~2분 뒤 `https://kimguard111-ai.github.io/NEW-GAME/` 를 폰 브라우저로 열기 (가로 화면)
+3. 브라우저 메뉴의 **홈 화면에 추가**를 하면 앱처럼 전체 화면으로 실행
+
+조작: 화면 왼쪽을 끌어 이동 · 오른쪽을 끌어 조준·사격(가까운 적에 자동 보정) · 오른쪽 버튼 E/R/Q/확대 · 아래 스킬 칸 터치

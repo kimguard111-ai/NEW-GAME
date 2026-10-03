@@ -208,3 +208,52 @@ b.up { color: #6f6; }
 .step-row { margin-left: 18px; font-size: 13px; color: #aaa; }
 .step-row.cur { color: #fff; }
 .step-text { margin: 2px 0 6px 30px; font-size: 12px; color: #c9b27a; line-height: 1.5; }
+
+/* v0.14 모바일 (터치) */
+body.touch canvas#game { touch-action: none; }
+html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+.stick { position: fixed; width: 112px; height: 112px; margin: -56px 0 0 -56px; border-radius: 50%; z-index: 15; pointer-events: none;
+  border: 2px solid rgba(255,255,255,.25); background: rgba(255,255,255,.06); }
+.stick.R { border-color: rgba(255,120,80,.35); }
+.stick .knob { position: absolute; left: 34px; top: 34px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.3); }
+.stick.R .knob { background: rgba(255,120,80,.45); }
+#touch-buttons { display: none; }
+body.touch #touch-buttons { display: grid; grid-template-columns: 40px 40px; gap: 6px; justify-items: center; position: absolute; right: 8px; bottom: 58px; pointer-events: auto; }
+#touch-buttons button:not(.small) { grid-column: 1 / 3; }
+#touch-buttons button { width: 48px; height: 48px; border-radius: 50%; font-size: 18px; font-weight: bold; padding: 0; background: rgba(30,34,40,.75); }
+#touch-buttons button.big { width: 58px; height: 58px; border-color: #e0b23a; color: #e0b23a; font-size: 22px; }
+#touch-buttons button.small { width: 38px; height: 38px; font-size: 16px; align-self: center; }
+body.touch #hotbar, body.touch .hot { pointer-events: auto; }
+body.touch .hot { width: 46px; height: 46px; font-size: 9px; padding-top: 3px; }
+body.touch .hot .icon { font-size: 17px; }
+body.touch #hotbar { bottom: 6px; gap: 4px; }
+body.touch #hud-top-left { width: 210px; padding: 4px 6px; font-size: 11px; left: 6px; top: 6px; }
+body.touch #hud-credits { font-size: 10px; }
+body.touch .bar { height: 14px; } body.touch .bar span { font-size: 10px; line-height: 13px; }
+body.touch #minimap { width: 110px; height: 110px; right: 6px; top: 6px; }
+body.touch #quest-tracker { top: 92px; left: 6px; right: auto; width: 210px; font-size: 10px; padding: 4px 6px; }
+body.touch #hud-zone { font-size: 11px; top: 6px; padding: 2px 8px; max-width: 46vw; }
+body.touch .zone-sub { display: none; }
+body.touch #hud-weapon { right: 70px; bottom: 6px; min-width: 0; padding: 4px 8px; }
+body.touch #weapon-ammo { font-size: 15px; } body.touch #weapon-role { display: none; } body.touch #weapon-name { font-size: 11px; }
+body.touch #log { width: 40vw; max-height: 70px; font-size: 10px; left: 6px; bottom: 6px; }
+body.touch #menu-buttons { top: 6px; bottom: auto; right: 122px; flex-direction: column; }
+body.touch #menu-buttons button { font-size: 10px; padding: 3px 6px; }
+body.touch #interact-hint { bottom: 64px; font-size: 12px; }
+body.touch #boss-bar { top: 34px; width: 60vw; }
+body.touch #toast { top: 64px; padding: 6px 40px; } body.touch #toast-title { font-size: 16px; } body.touch #toast-sub { font-size: 11px; }
+body.touch .panel { left: 2vw !important; right: auto !important; top: 3vh !important; bottom: auto !important; transform: none !important;
+  width: 96vw !important; max-height: 94vh; overflow-y: auto; min-width: 0; font-size: 12px; }
+body.touch #panel-shop.panel, body.touch #panel-enhance.panel { width: 50vw !important; }
+body.touch #panel-inventory.panel { left: 51vw !important; width: 47vw !important; }
+body.touch #inv-grid { grid-template-columns: repeat(6, 1fr); }
+body.touch .inv-cell { height: 44px; }
+body.touch .panel-head .close { font-size: 20px; padding: 0 6px; }
+body.touch .title-box { padding: 10px; } body.touch .title-box h1 { font-size: 36px; } body.touch .lore { font-size: 12px; }
+body.touch .controls .desk { display: none; }
+.controls .mobile { display: none; } body.touch .controls .mobile { display: inline; }
+#rotate { display: none; }
+@media (orientation: portrait) {
+  body.touch #rotate { display: flex; position: fixed; inset: 0; z-index: 100; background: #0b0c0e; color: #e0b23a;
+    align-items: center; justify-content: center; text-align: center; font-size: 18px; padding: 20px; }
+}

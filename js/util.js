@@ -33,3 +33,5 @@ function weighted(list) {
   for (const [v, w] of list) { if ((r -= w) < 0) return v; }
   return list[list.length - 1][0];
 }
+// 터치 기기 (v0.14 모바일): 손가락이 주 입력이면 가상 조이스틱 UI 사용
+const IS_TOUCH = typeof window !== 'undefined' && (window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window && navigator.maxTouchPoints > 0));
