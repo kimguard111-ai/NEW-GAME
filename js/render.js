@@ -449,8 +449,8 @@ function drawEnemy(e) {
     }
   }
   if (k !== 1) { ctx.restore(); topY = sy - (sy - topY) * k; }
-  if (e.elite) {
-    nameTag(sx, topY - 2, `★ ${ELITES[e.elite].name}`, '#ffa53a', 'bold 12px sans-serif');
+  if (e.elite || e.bossName) {
+    nameTag(sx, topY - 2, `★ ${e.bossName || ELITES[e.elite].name}`, '#ffa53a', 'bold 12px sans-serif');
   } else if (e.affix) {
     const A = ELITE_AFFIXES[e.affix];
     nameTag(sx, topY - 4, `◆ Lv${e.level} ${A.name} ${e.def.name}`, A.color, 'bold 11px sans-serif');
@@ -586,6 +586,11 @@ function render() {
     ctx.strokeStyle = s.color + (0.5 + Math.sin(G.time * 20) * 0.2) + ')'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
     ctx.fillStyle = s.color + '0.3)'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * k, 0, TAU); ctx.fill();
+  }
+  if (G.assault) { // 어설트 봉쇄선
+    const l = G.assault.l;
+    ctx.strokeStyle = `rgba(255,90,60,${0.45 + Math.sin(G.time * 5) * 0.2})`; ctx.lineWidth = 4; ctx.setLineDash([18, 12]);
+    ctx.beginPath(); ctx.arc(l.x, l.y, ASSAULT_R, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
   }
   const bx = World.bossTile.x * TILE + 16, by = World.bossTile.y * TILE + 16;
   ctx.strokeStyle = 'rgba(80,255,90,0.3)'; ctx.lineWidth = 3;

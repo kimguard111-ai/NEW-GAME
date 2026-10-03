@@ -79,11 +79,13 @@ const Monsters = {
     const p = G.player;
     e.skillT = (e.skillT ?? 3) - dt;
     if (e.skillT > 0) return;
-    if (e.elite === 'glutton') { // 산성 토사물: 플레이어 주변 3곳에 장판
+    // 어설트 보스는 patterns 를 번갈아 사용
+    const id = e.patterns ? e.patterns[e.patIdx = ((e.patIdx ?? -1) + 1) % e.patterns.length] : e.elite;
+    if (id === 'glutton') { // 산성 토사물: 플레이어 주변 3곳에 장판
       e.skillT = 5.5; e.lastAtk = G.time;
       for (let i = 0; i < 3; i++) this.strike(p.x + rand(-70, 70), p.y + rand(-70, 70), 55, 0.9, e.dmg * 0.6, 'rgba(140,220,70,', true);
       floatText(e.x, e.y - 50, '우웨엑!', '#8fd14a', 18);
-    } else if (e.elite === 'panther') { // 호위병 호출 (최대 4)
+    } else if (id === 'panther') { // 호위병 호출 (최대 4)
       e.skillT = 11; e.lastAtk = G.time;
       const guards = G.enemies.filter(o => o.guardOf === e && o.hp > 0).length;
       for (let i = 0; i < 2 && guards + i < 4; i++) {
@@ -93,7 +95,7 @@ const Monsters = {
         G.enemies.push(g);
       }
       floatText(e.x, e.y - 40, '얘들아, 쳐라!', '#ff7a5a', 16);
-    } else if (e.elite === 'argos') { // 미사일 포격: 플레이어 위치 3곳 예고 후 폭발
+    } else if (id === 'argos') { // 미사일 포격: 플레이어 위치 3곳 예고 후 폭발
       e.skillT = 6; e.lastAtk = G.time;
       this.strike(p.x, p.y, 70, 1.1, e.dmg * 2.2, 'rgba(255,60,60,');
       for (let i = 0; i < 2; i++) this.strike(p.x + rand(-110, 110), p.y + rand(-110, 110), 70, 1.1 + i * 0.25, e.dmg * 2.2, 'rgba(255,60,60,');
@@ -104,7 +106,7 @@ const Monsters = {
   // ---------------- 세력 다툼 ----------------
   // 플레이어를 쫓지 않을 때 근처의 다른 세력과 싸움. 처리했으면 true
   infight(e, dt) {
-    if (e.def.boss || e.elite || e.minion) return false;
+    if (e.def.boss || e.elite || e.minion || e.assault) return false;
     e.foeT = (e.foeT || 0) - dt;
     if (e.foeT <= 0) {
       e.foeT = 0.6; e.foe = null;

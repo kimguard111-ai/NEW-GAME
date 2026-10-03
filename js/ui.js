@@ -91,19 +91,20 @@ const UI = {
     if ($('medcnt')) $('medcnt').textContent = med ? med.count : 0;
 
     // 보스 바
-    const boss = (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 900) ? G.boss : G.elite; // 보스 또는 네임드
+    const boss = (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 900) ? G.boss : (G.assault && G.assault.boss) || G.elite; // 보스 · 어설트 보스 · 네임드
     if (boss && boss.hp > 0 && dist(boss, p) < 900) {
       $('boss-bar').classList.remove('hidden');
-      $('boss-name').textContent = `Lv${boss.level} ${boss.elite ? ELITES[boss.elite].name : boss.def.name}  ${fmt(boss.hp)} / ${fmt(boss.maxHp)}`;
+      $('boss-name').textContent = `Lv${boss.level} ${boss.bossName || (boss.elite ? ELITES[boss.elite].name : boss.def.name)}  ${fmt(boss.hp)} / ${fmt(boss.maxHp)}`;
       $('boss-fill').style.width = (100 * boss.hp / boss.maxHp) + '%';
     } else $('boss-bar').classList.add('hidden');
 
     const npc = !p.dead && nearestNpc();
-    if (npc) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = `[E] ${npc.name}와(과) 대화`; }
+    const asl = !npc && Assault.available();
+    if (npc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : Assault.hint(asl); }
     else $('interact-hint').classList.add('hidden');
 
     // 임무 추적 (챕터)
-    $('quest-tracker').innerHTML = UI.trackerHtml(p);
+    $('quest-tracker').innerHTML = G.assault ? Assault.trackerHtml() : UI.trackerHtml(p);
   },
 
   trackerHtml(p) {
@@ -309,6 +310,7 @@ const UI = {
       });
     });
     if (Story.done(p)) h += '<hr style="border-color:#333">모든 장을 완료했습니다. 당신은 서울의 영웅입니다!<br><span class="muted">타이탄은 4분마다 부활합니다.</span>';
+    h += Assault.panelHtml(p);
     $('quest-body').innerHTML = h;
   },
 

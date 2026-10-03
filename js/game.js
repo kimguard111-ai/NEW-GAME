@@ -8,7 +8,7 @@ const MAP_SEED = 2049;
 
 const G = {
   player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [],
-  npcs: [], corpses: [], elite: null, strikes: [], pools: [], cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
+  npcs: [], corpses: [], elite: null, strikes: [], pools: [], assault: null, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
 };
@@ -103,7 +103,8 @@ function startGame(save, name) {
     log('생존자 대장 한씨(오른쪽 위)에게 말을 걸어 임무를 받으세요. [E]', '#8cf');
   }
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
-  G.boss = null; G.elite = null; G.strikes = []; G.pools = [];
+  G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null;
+  G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -269,7 +270,9 @@ function removeItem(it) {
 
 function interact() {
   const npc = nearestNpc();
-  if (npc) UI.openNpc(npc);
+  if (npc) { UI.openNpc(npc); return; }
+  const l = Assault.available();
+  if (l) Assault.start(l);
 }
 function nearestNpc() {
   const p = G.player;
@@ -339,7 +342,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   const wt = e.weight ?? e.def.weight; // 네임드는 잘 밀리지 않음
   if (wt > 0 && angle !== undefined) {
     const k = (hit.knock || 3) / wt;
-    if (e.def.flying) { e.x += Math.cos(angle) * k; e.y += Math.sin(angle) * k; }
+    if (e.def.flying) { const nx = e.x + Math.cos(angle) * k, ny = e.y + Math.sin(angle) * k; if (!World.solidAt(nx, ny)) { e.x = nx; e.y = ny; } }
     else World.move(e, Math.cos(angle) * k, Math.sin(angle) * k);
     if (hit.stagger) e.stunT = Math.max(e.stunT, hit.stagger / wt);
   }
@@ -434,12 +437,15 @@ function spawnEnemyBullet(e, a, speed, dmg, color = '#ff6a4a', r = 3) {
 }
 
 function tryMoveSmart(e, a, step) {
-  if (e.def.flying) {
-    const nx = e.x + Math.cos(a) * step, ny = e.y + Math.sin(a) * step;
-    if (!World.inSafe(nx, ny) && nx > TILE && ny > TILE && nx < (World.W - 1) * TILE && ny < (World.H - 1) * TILE) { e.x = nx; e.y = ny; }
+  const tries = [0, e.sideDir * Math.PI / 4, e.sideDir * Math.PI / 2, -e.sideDir * Math.PI / 4, -e.sideDir * Math.PI / 2];
+  if (e.def.flying) { // 드론: 낮은 장애물은 넘지만 건물 위에는 머물지 않음 (건물 위에서 맞지 않고 쏘는 문제)
+    for (const off of tries) {
+      const nx = e.x + Math.cos(a + off) * step, ny = e.y + Math.sin(a + off) * step;
+      if (!World.inSafe(nx, ny) && !World.solidAt(nx, ny)) { e.x = nx; e.y = ny; return; }
+    }
+    e.sideDir *= -1;
     return;
   }
-  const tries = [0, e.sideDir * Math.PI / 4, e.sideDir * Math.PI / 2, -e.sideDir * Math.PI / 4, -e.sideDir * Math.PI / 2];
   for (const off of tries) {
     const aa = a + off, dx = Math.cos(aa) * step, dy = Math.sin(aa) * step;
     if (World.inSafe(e.x + dx, e.y + dy)) continue;
@@ -485,8 +491,9 @@ function updateEnemies(dt) {
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); continue; } // 경직: 이동·공격 불가
     if (!p.dead && !pSafe && d < e.def.aggro) e.state = 'chase';
     else if (e.state === 'chase' && (p.dead || pSafe || d > e.def.aggro * 1.7)) e.state = 'idle';
+    if (e.assault && !p.dead) e.state = 'chase'; // 어설트 적은 항상 추격
     if (e.def.boss) updateBoss(e, dt, d);
-    if (e.elite && e.state === 'chase') Monsters.updateNamed(e, dt);
+    if ((e.elite || e.patterns) && e.state === 'chase') Monsters.updateNamed(e, dt);
     if (e.affix && e.state === 'chase' && !e.announced) { e.announced = true; log(`⚠ 엘리트: ${ELITE_AFFIXES[e.affix].name} ${e.def.name} (${ELITE_AFFIXES[e.affix].desc})`, ELITE_AFFIXES[e.affix].color); }
 
     if (e.charge > 0) {
@@ -541,7 +548,7 @@ function updateEnemies(dt) {
 function spawnEnemies(dt) {
   const p = G.player;
   G.spawnT -= dt;
-  if (G.spawnT > 0) return;
+  if (G.spawnT > 0 || G.assault) return; // 어설트 중에는 일반 스폰 없음
   G.spawnT = 0.35;
   // 먼 적 정리
   G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || dist(e, p) < 1800 || e.state === 'chase');
@@ -598,6 +605,7 @@ function updateLandmarks() {
     floatText(p.x, p.y - 44, `★ ${l.name} 발견`, '#ffd76a', 18);
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 1, color: '#ffd76a', r: 120 });
     gainExp(l.exp);
+    if (ASSAULTS[l.id]) log(`  이곳에서 [E]로 어설트 「${ASSAULTS[l.id].name}」를 시작할 수 있습니다.`, '#ff9a5a');
     saveGame();
   }
 }
@@ -731,6 +739,7 @@ function update(dt) {
   spawnEnemies(dt);
   updateBossSpawn(dt);
   updateEnemies(dt);
+  Assault.update(dt);
   updateBullets(dt);
   updateGrenades(dt);
   Monsters.updateHazards(dt);

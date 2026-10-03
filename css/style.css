@@ -58,7 +58,7 @@ button:disabled { opacity: .4; cursor: default; }
   position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
   font-size: 15px; background: rgba(0,0,0,.55); padding: 4px 14px; border-radius: 3px; border: 1px solid #333;
 }
-#boss-bar { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 420px; text-align: center; }
+#boss-bar { position: absolute; top: 66px; left: 50%; transform: translateX(-50%); width: 420px; text-align: center; }
 #boss-name { color: #e7a0ff; font-weight: bold; text-shadow: 1px 1px 2px #000; }
 .bar.boss { height: 14px; }
 
