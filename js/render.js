@@ -383,6 +383,8 @@ function drawEnemy(e) {
   const flash = e.hitT > 0, f = e.face || 0;
   const walk = e.state === 'chase' || e.wandering ? G.time + e.x * 0.01 : 0;
   let topY = sy - 44;
+  const k = e.scale || 1; // 네임드: 크게
+  if (k !== 1) { ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k); ctx.translate(-sx, -sy); }
   if (Sprites.get(e.type)) {
     const hz = e.def.flying ? (34 + Math.sin(G.time * 5 + e.x) * 4) * ISO_K : 0;
     drawShadow(sx, sy, e.r * (e.def.flying ? 0.8 : 1));
@@ -440,7 +442,10 @@ function drawEnemy(e) {
       break;
     }
   }
-  if (!e.def.boss) {
+  if (k !== 1) { ctx.restore(); topY = sy - (sy - topY) * k; }
+  if (e.elite) {
+    nameTag(sx, topY - 2, `★ ${ELITES[e.elite].name}`, '#ffa53a', 'bold 12px sans-serif');
+  } else if (!e.def.boss) {
     const lvDiff = e.level - G.player.level;
     nameTag(sx, topY, `Lv${e.level} ${e.def.name}`, lvDiff >= 4 ? '#f66' : lvDiff >= 1 ? '#fc8' : lvDiff <= -4 ? '#999' : '#eee');
     if (e.hp < e.maxHp) {
@@ -464,9 +469,8 @@ function drawNpc(n) {
   nameTag(sx, sy - 50, n.name, '#ffd76a', 'bold 12px sans-serif');
   let mark = null;
   if (n.id === 'captain') {
-    const p = G.player, q = QUESTS[p.quest.idx];
-    if (q && p.quest.active && p.quest.progress >= q.count) mark = ['?', '#ffd700'];
-    else if (q && !p.quest.active && p.level >= q.minLevel) mark = ['!', '#ffd700'];
+    const p = G.player, c = Story.chapter(p);
+    if (c && !p.quest.active && p.level >= c.minLevel) mark = ['!', '#ffd700']; // 새 장 시작 가능
   } else if (n.id === 'merchant') mark = ['₵', '#bbb'];
   else if (n.id === 'medic') mark = ['✚', '#f55'];
   else if (n.id === 'mechanic') mark = ['⚙', '#ddd'];
@@ -680,6 +684,18 @@ function render() {
     ctx.fillStyle = g2; ctx.fillRect(0, 0, VW, VH);
   }
 
+  // 목표 방향 화살표 + 거리
+  const tg = !p.dead && Story.target(p);
+  if (tg && dist(p, tg) > 260) {
+    const dx = Iso.sx(tg.x, tg.y) - psx, dy = Iso.sy(tg.x, tg.y) - (psy - 6), l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l;
+    const ax = psx + ux * 54, ay = psy - 6 + uy * 40, bob = Math.sin(G.time * 5) * 3;
+    ctx.save(); ctx.translate(ax + ux * bob, ay + uy * bob); ctx.rotate(Math.atan2(uy, ux));
+    ctx.fillStyle = '#ffd76a'; ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(-6, -7); ctx.lineTo(-2, 0); ctx.lineTo(-6, 7); ctx.closePath(); ctx.stroke(); ctx.fill();
+    ctx.restore(); ctx.lineWidth = 1;
+    nameTag(ax + ux * 22, ay + uy * 16 + 4, `${Math.round(dist(p, tg) / TILE * 2)}m`, '#ffd76a', 'bold 11px sans-serif');
+  }
+
   // 5) 떠오르는 텍스트
   ctx.textAlign = 'center';
   for (const t of G.texts) {
@@ -789,6 +805,8 @@ function drawMinimapIso(mm) {
   dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.85)', 5);
   for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);
   for (const l of World.landmarks) dot(l.x, l.y, p.found.includes(l.id) ? '#ffd76a' : '#888', 5);
+  const tg = Story.target(p); // 현재 목표 (깜빡임)
+  if (tg && Math.sin(G.time * 6) > -0.3) { g.strokeStyle = '#ffd76a'; g.lineWidth = 0.8; g.beginPath(); g.arc(tg.x / TILE, tg.y / TILE, 4, 0, TAU); g.stroke(); }
   dot(p.x, p.y, '#fff', 4);
   g.setTransform(1, 0, 0, 1, 0, 0);
 }

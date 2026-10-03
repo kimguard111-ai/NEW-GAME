@@ -155,7 +155,7 @@ function newPlayer(name) {
     equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: null, helmet: null }, // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
     active: 'w1',
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
-    quest: { idx: 0, active: false, progress: 0 },
+    quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0 },
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,

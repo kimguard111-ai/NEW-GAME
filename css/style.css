@@ -190,3 +190,16 @@ b.up { color: #6f6; }
 #hud-zone { text-align: center; }
 .zone-sub { font-size: 11px; color: #c9b27a; margin-top: 2px; }
 .zone-rad { font-size: 12px; color: #7fff6a; font-weight: bold; margin-top: 2px; }
+
+/* v0.7 챕터 */
+#toast { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); text-align: center;
+  background: linear-gradient(90deg, rgba(0,0,0,0), rgba(20,16,8,0.85) 20%, rgba(20,16,8,0.85) 80%, rgba(0,0,0,0));
+  padding: 10px 80px; animation: toastIn 0.4s ease-out; }
+#toast-title { font-size: 22px; font-weight: bold; color: #e0b23a; text-shadow: 0 0 10px rgba(224,178,58,0.5); }
+#toast-sub { font-size: 14px; color: #ddd; margin-top: 2px; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.ch-row { margin-top: 4px; }
+.ch-row.cur b { color: #e0b23a; }
+.step-row { margin-left: 18px; font-size: 13px; color: #aaa; }
+.step-row.cur { color: #fff; }
+.step-text { margin: 2px 0 6px 30px; font-size: 12px; color: #c9b27a; line-height: 1.5; }

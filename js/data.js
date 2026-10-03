@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.6.5';
+const GAME_VERSION = 'v0.7';
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -146,23 +146,4 @@ const SKILLS = [
   { id: 'adren',   name: '아드레날린', icon: '🔥', lvl: 10, cd: 40, stat: 'str' },
 ];
 
-const QUESTS = [
-  { title: '첫 번째 사냥', target: 'zombie', count: 8, minLevel: 1,
-    text: '캠프 바깥 명동 잔해에 감염자들이 몰려들고 있다. 8마리만 정리해 주게.',
-    reward: { exp: 90, credits: 150, items: [['medkit', 2]], equip: 'vest' } }, // 첫 방어구
-  { title: '굶주린 사냥개', target: 'dog', count: 8, minLevel: 2,
-    text: '변이견 무리가 보급조를 습격했어. 놈들을 8마리 처치해 주게.',
-    reward: { exp: 220, credits: 300, items: [['ammo', 3]] } },
-  { title: '약탈자 소탕', target: 'raider', count: 10, minLevel: 5,
-    text: '종로 쪽 약탈자들이 우리 물자를 노리고 있다. 본때를 보여주게.',
-    reward: { exp: 900, credits: 700, gear: 2 } },
-  { title: '거인의 발소리', target: 'brute', count: 6, minLevel: 10,
-    text: '용산에서 변이 거한이 목격됐다. 놈들이 캠프까지 오기 전에 막아야 해.',
-    reward: { exp: 3500, credits: 1500, gear: 2 } },
-  { title: '기계의 눈', target: 'drone', count: 12, minLevel: 12,
-    text: '옛 군의 경비 드론들이 아직도 작동 중이다. 12기를 격추해 주게.',
-    reward: { exp: 6000, credits: 2500, gear: 3 } },
-  { title: '방사능 지대의 왕', target: 'boss', count: 1, minLevel: 16,
-    text: '여의도 방사능 지대의 군주 타이탄... 놈만 쓰러뜨리면 서울에 희망이 생긴다.',
-    reward: { exp: 20000, credits: 10000, gear: 4 } },
-];
+// 임무는 js/quests.js (v0.7 챕터 구조)

@@ -91,10 +91,10 @@ const UI = {
     if ($('medcnt')) $('medcnt').textContent = med ? med.count : 0;
 
     // 보스 바
-    const boss = G.boss;
+    const boss = (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 900) ? G.boss : G.elite; // 보스 또는 네임드
     if (boss && boss.hp > 0 && dist(boss, p) < 900) {
       $('boss-bar').classList.remove('hidden');
-      $('boss-name').textContent = `Lv${boss.level} ${boss.def.name}  ${fmt(boss.hp)} / ${fmt(boss.maxHp)}`;
+      $('boss-name').textContent = `Lv${boss.level} ${boss.elite ? ELITES[boss.elite].name : boss.def.name}  ${fmt(boss.hp)} / ${fmt(boss.maxHp)}`;
       $('boss-fill').style.width = (100 * boss.hp / boss.maxHp) + '%';
     } else $('boss-bar').classList.add('hidden');
 
@@ -102,14 +102,25 @@ const UI = {
     if (npc) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = `[E] ${npc.name}와(과) 대화`; }
     else $('interact-hint').classList.add('hidden');
 
-    // 임무 추적
-    const q = QUESTS[p.quest.idx];
-    let qt = '';
-    if (q && p.quest.active) {
-      qt = `<b>${q.title}</b><br>${ENEMIES[q.target].name} 처치 ${p.quest.progress} / ${q.count}`;
-      if (p.quest.progress >= q.count) qt += '<br><span style="color:#8cf">완료! 한씨에게 보고</span>';
-    } else if (q && p.level >= q.minLevel) qt = '<b>새 임무</b><br>캠프의 한씨에게 말을 거세요';
-    $('quest-tracker').innerHTML = qt;
+    // 임무 추적 (챕터)
+    $('quest-tracker').innerHTML = UI.trackerHtml(p);
+  },
+
+  trackerHtml(p) {
+    const c = Story.chapter(p);
+    if (!c) return '<b>모든 장 완료</b><br>타이탄은 4분마다 부활합니다';
+    if (!p.quest.active) return p.level >= c.minLevel ? `<b>${c.title}</b><br>캠프의 한씨에게 말을 거세요` : `<b>다음: ${c.title}</b><br>Lv${c.minLevel} 이상`;
+    const st = c.steps[p.quest.step], tg = Story.target(p);
+    let h = `<b>${c.title} (${p.quest.step + 1}/${c.steps.length})</b><br>${Story.objective(st)}`;
+    if (st.type === 'kill' || st.type === 'collect') h += ` <b>${p.quest.progress} / ${st.count}</b>`;
+    if (tg) h += `<br><span class="muted">▶ ${Math.round(dist(p, tg) / TILE * 2)}m</span>`;
+    return h;
+  },
+
+  toast(title, sub) {
+    $('toast-title').textContent = title; $('toast-sub').textContent = sub || '';
+    const el = $('toast'); el.classList.remove('hidden'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    clearTimeout(UI.toastT); UI.toastT = setTimeout(() => el.classList.add('hidden'), 3500);
   },
 
   drawMinimap() { drawMinimapIso($('minimap')); },
@@ -281,16 +292,23 @@ const UI = {
   // ---------------- 임무 ----------------
   refreshQuest() {
     if (!G.player) return;
-    const p = G.player, q = QUESTS[p.quest.idx];
+    const p = G.player;
     let h = '';
-    if (!q) h = '모든 임무를 완료했습니다. 당신은 서울의 영웅입니다!<br><span class="muted">타이탄은 4분마다 부활합니다.</span>';
-    else if (p.quest.active) {
-      h = `<b style="color:#e0b23a">${q.title}</b><br>${q.text}<br><br>목표: ${ENEMIES[q.target].name} 처치 <b>${p.quest.progress} / ${q.count}</b>`;
-      h += `<br><span class="muted">보상: EXP ${fmt(q.reward.exp)}, ${fmt(q.reward.credits)}₵${q.reward.equip ? ', ' + GEAR_DEFS(q.reward.equip).name : q.reward.gear ? ', 장비' : ''}</span>`;
-    } else {
-      h = `진행 중인 임무가 없습니다.<br><span class="muted">다음 임무: ${q.title} (Lv${q.minLevel} 이상) — 캠프의 생존자 대장 한씨에게 받으세요.</span>`;
-    }
-    h += `<hr style="border-color:#333"><span class="muted">진행도: ${Math.min(p.quest.idx, QUESTS.length)} / ${QUESTS.length} 임무 완료</span>`;
+    CHAPTERS.forEach((c, i) => {
+      const state = i < p.quest.ch ? '✓' : i === p.quest.ch ? (p.quest.active ? '▶' : p.level >= c.minLevel ? '!' : '🔒') : '🔒';
+      h += `<div class="ch-row${i === p.quest.ch ? ' cur' : ''}">${state} <b>${c.title}</b> <span class="muted">Lv${c.minLevel}+</span></div>`;
+      if (i !== p.quest.ch) return;
+      if (!p.quest.active) { h += `<div class="muted" style="margin-left:18px">${p.level >= c.minLevel ? '캠프의 생존자 대장 한씨에게 말을 걸어 시작하세요.' : `Lv${c.minLevel}이 되면 시작할 수 있습니다.`}</div>`; return; }
+      c.steps.forEach((st, j) => {
+        const mark = j < p.quest.step ? '✓' : j === p.quest.step ? '▶' : '·';
+        h += `<div class="step-row${j === p.quest.step ? ' cur' : ''}">${mark} ${Story.objective(st)}${j === p.quest.step && (st.type === 'kill' || st.type === 'collect') ? ` <b>${p.quest.progress} / ${st.count}</b>` : ''}</div>`;
+        if (j === p.quest.step) {
+          const r = st.reward;
+          h += `<div class="step-text">${st.text}<br><span class="muted">보상: EXP ${fmt(r.exp)}, ${fmt(r.credits)}₵${r.equip ? ', ' + GEAR_DEFS(r.equip).name : r.gear ? ', 장비' : ''}</span></div>`;
+        }
+      });
+    });
+    if (Story.done(p)) h += '<hr style="border-color:#333">모든 장을 완료했습니다. 당신은 서울의 영웅입니다!<br><span class="muted">타이탄은 4분마다 부활합니다.</span>';
     $('quest-body').innerHTML = h;
   },
 
@@ -402,42 +420,19 @@ const UI = {
   },
 
   captainDialog(npc) {
-    const p = G.player, q = QUESTS[p.quest.idx], bye = ['닫기', () => UI.close('dialog')];
-    if (!q) {
+    const p = G.player, c = Story.chapter(p), bye = ['닫기', () => UI.close('dialog')];
+    if (!c) {
       UI.dialog(npc.name, '"자네 덕분에 서울에 다시 사람이 살 수 있게 됐어. 고맙네, 영웅."', [bye]);
     } else if (p.quest.active) {
-      if (p.quest.progress >= q.count) {
-        UI.dialog(npc.name, `"훌륭해! '${q.title}' 임무를 완수했군. 약속한 보상이네."`, [['보상 받기', () => UI.completeQuest()]]);
-      } else {
-        UI.dialog(npc.name, `"${q.text}"<br><br><span class="muted">진행: ${ENEMIES[q.target].name} ${p.quest.progress} / ${q.count}</span>`, [bye]);
-      }
-    } else if (p.level < q.minLevel) {
-      UI.dialog(npc.name, `"아직은 자네에게 맡길 일이 없어. 좀 더 강해져서 오게."<br><span class="muted">다음 임무 요구 레벨: Lv${q.minLevel}</span>`, [bye]);
+      const st = c.steps[p.quest.step];
+      UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${st.text}"<br><span class="muted">끝나면 무전으로 연락하지. 캠프로 돌아올 필요 없네.</span>`, [bye]);
+    } else if (p.level < c.minLevel) {
+      UI.dialog(npc.name, `"아직은 위험해. 좀 더 강해져서 오게."<br><span class="muted">${c.title} — Lv${c.minLevel} 이상</span>`, [bye]);
     } else {
-      UI.dialog(npc.name, `<b style="color:#e0b23a">[${q.title}]</b><br>"${q.text}"<br><br><span class="muted">보상: EXP ${fmt(q.reward.exp)}, ${fmt(q.reward.credits)}₵${q.reward.equip ? ', ' + GEAR_DEFS(q.reward.equip).name : q.reward.gear ? ', 장비 아이템' : ''}</span>`, [
-        ['수락', () => { p.quest.active = true; p.quest.progress = 0; log(`임무 수락: ${q.title}`, '#8cf'); UI.close('dialog'); UI.refreshQuest(); saveGame(); }],
-        ['거절', () => UI.close('dialog')]]);
+      UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${c.intro}"<br><br><span class="muted">${c.steps.map((st, i) => `${i + 1}. ${Story.objective(st)}`).join('<br>')}</span>`, [
+        ['수락', () => { UI.close('dialog'); Story.start(p); }],
+        ['나중에', () => UI.close('dialog')]]);
     }
-  },
-
-  completeQuest() {
-    const p = G.player, q = QUESTS[p.quest.idx], r = q.reward;
-    p.credits += r.credits;
-    log(`임무 완료 보상: EXP ${fmt(r.exp)}, ${fmt(r.credits)}₵`, '#8cf');
-    if (r.items) for (const [k, n] of r.items) addItem(makeConsumable(k, n));
-    if (r.equip) { // 정해진 장비 보상 (첫 임무: 방탄 조끼)
-      const it = makeGear(r.equip, Math.max(p.level, 1), 0);
-      if (!addItem(it)) G.drops.push({ x: p.x, y: p.y + 20, kind: 'item', item: it, t: 0 });
-      log(`보상 장비: ${it.name} — 인벤토리(I)에서 장착하세요`, '#8cf');
-    }
-    if (r.gear) {
-      const it = randomGear(Math.max(p.level, q.minLevel), r.gear);
-      if (!addItem(it)) G.drops.push({ x: p.x, y: p.y + 20, kind: 'item', item: it, t: 0 });
-      log(`보상 장비: ${itemName(it)}`, RARITIES[it.rarity].color);
-    }
-    p.quest.idx++; p.quest.active = false; p.quest.progress = 0;
-    gainExp(r.exp);
-    UI.close('dialog'); UI.refreshQuest(); saveGame();
   },
 
   // ---------------- 상점 ----------------

@@ -8,7 +8,7 @@ const MAP_SEED = 2049;
 
 const G = {
   player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [],
-  npcs: [], corpses: [], cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
+  npcs: [], corpses: [], elite: null, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
 };
@@ -88,6 +88,7 @@ function startGame(save, name) {
     G.player.pity = G.player.pity || 0;
     G.player.respecs = G.player.respecs || 0;
     G.player.found = G.player.found || [];
+    G.player.quest = Story.migrate(G.player.quest); // v0.7: 단일 임무 → 챕터
     if (!('helmet' in G.player.equip)) G.player.equip.helmet = null; // v0.6.2 헬멧 칸
     for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
     G.bossT = save.bossT || 0;
@@ -102,7 +103,7 @@ function startGame(save, name) {
     log('생존자 대장 한씨(오른쪽 위)에게 말을 걸어 임무를 받으세요. [E]', '#8cf');
   }
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
-  G.boss = null;
+  G.boss = null; G.elite = null;
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -335,7 +336,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   dmg = Math.max(1, Math.round(dmg));
   e.hp -= dmg; e.hitT = e.def.boss ? 0.05 : 0.1; e.state = 'chase';
   // 넉백·경직은 적의 무게에 반비례 (보스는 무시)
-  const wt = e.def.weight;
+  const wt = e.weight ?? e.def.weight; // 네임드는 잘 밀리지 않음
   if (wt > 0 && angle !== undefined) {
     const k = (hit.knock || 3) / wt;
     if (e.def.flying) { e.x += Math.cos(angle) * k; e.y += Math.sin(angle) * k; }
@@ -386,12 +387,7 @@ function killEnemy(e) {
   if (e.type === 'brute') hitstop(0.06);
   if (e.def.boss) hitstop(0.3);
   // 퀘스트
-  const q = QUESTS[p.quest.idx];
-  if (p.quest.active && q && q.target === e.type && p.quest.progress < q.count) {
-    p.quest.progress++;
-    if (p.quest.progress >= q.count) log(`임무 완료: ${q.title} — 한씨에게 보고하세요.`, '#8cf');
-    UI.refreshQuest();
-  }
+  Story.onKill(e);
   // 드랍
   const dropAt = (kind, extra) => G.drops.push({ x: e.x + rand(-14, 14), y: e.y + rand(-14, 14), kind, t: 0, ...extra });
   if (e.def.boss) {
@@ -407,6 +403,13 @@ function killEnemy(e) {
     return;
   }
   if (e.minion) return;
+  if (e.elite) { // 네임드: 장비 확정 + 크레딧
+    G.elite = null;
+    log(`${ELITES[e.elite].name} 처치!`, '#ffa53a');
+    dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) });
+    dropAt('credits', { amount: e.level * 40 });
+    hitstop(0.12); G.shake = Math.max(G.shake, 10);
+  }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
@@ -497,7 +500,7 @@ function updateEnemies(dt) {
         if (los && d < e.def.range * 0.55) moveA = a + Math.PI;
         else if (los && d < e.def.range * 0.9) { moveA = a + e.sideDir * Math.PI / 2; spd *= 0.6; }
         if (los && d < e.def.range && e.fireT <= 0) {
-          e.fireT = e.def.fireCd * rand(0.8, 1.25);
+          e.fireT = e.def.fireCd * (e.fireMul || 1) * rand(0.8, 1.25);
           spawnEnemyBullet(e, a + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg); e.lastAtk = G.time;
         }
         if (Math.random() < dt * 0.4) e.sideDir *= -1;
@@ -533,7 +536,8 @@ function spawnEnemies(dt) {
   if (G.spawnT > 0) return;
   G.spawnT = 0.35;
   // 먼 적 정리
-  G.enemies = G.enemies.filter(e => e.def.boss || e.minion || dist(e, p) < 1800 || e.state === 'chase');
+  G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || dist(e, p) < 1800 || e.state === 'chase');
+  if (G.elite && G.elite.hp <= 0) G.elite = null;
   const z = World.zoneIndex(p.x, p.y);
   const near = G.enemies.filter(e => !e.def.boss && dist(e, p) < 1300).length;
   const target = z === 0 ? 8 : 14 + z * 3;
@@ -544,6 +548,7 @@ function spawnEnemies(dt) {
     if (World.circleBlocked(x, y, 22) || World.inSafe(x, y)) continue;
     const zi = World.zoneIndex(x, y);
     if (zi === 0) continue;
+    if (zi > z && Math.random() < 0.7) continue; // 지역 경계 너머(더 위험한 지역) 스폰은 덜 나오게
     const zone = ZONES[zi];
     // 캠프에서 멀어질수록 레벨 상승
     const prev = ZONES[zi - 1].maxDist, span = Math.min(zone.maxDist, 110) - prev;
@@ -730,6 +735,7 @@ function update(dt) {
   G.effects = G.effects.filter(ef => ef.t < ef.life);
 
   if (!p.dead) { updateLandmarks(); updateRadiation(dt); }
+  Story.update();
 
   // 지역 변경
   const z = World.zoneIndex(p.x, p.y);
