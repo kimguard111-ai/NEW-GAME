@@ -55,8 +55,8 @@ const UI = {
     if (name === 'shop') { UI.shopOpen = false; UI.refreshInventory(); }
   },
   toggle(name) { UI.isOpen(name) ? UI.close(name) : UI.open(name); },
-  anyOpen() { return ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings'].some(n => UI.isOpen(n)); },
-  closeAll() { ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings'].forEach(n => UI.close(n)); },
+  anyOpen() { return ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings', 'stash'].some(n => UI.isOpen(n)); },
+  closeAll() { ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings', 'stash'].forEach(n => UI.close(n)); },
   refreshAll() { UI.refreshInventory(); UI.refreshStats(); UI.refreshQuest(); },
 
   log(msg, color) {
@@ -129,6 +129,8 @@ const UI = {
       const el = $('cd' + i);
       if (el) el.style.height = (100 * p.skillCd[i] / s.cd) + '%';
     });
+    $('extract-bar').classList.toggle('hidden', !(G.extractT > 0)); // 탈출 진행
+    if (G.extractT > 0) $('extract-fill').style.width = (100 * G.extractT / EXTRACT_TIME) + '%';
     if ($('cdroll')) $('cdroll').style.height = (p.stam < ROLL.cost ? 100 * (ROLL.cost - p.stam) / ROLL.cost : 0) + '%'; // 스태미나 부족
     const live = G.combo >= 3 && G.time - G.comboT < 3; // 연속 처치 표시
     $('combo').classList.toggle('hidden', !live);
@@ -151,15 +153,16 @@ const UI = {
     else $('interact-hint').classList.add('hidden');
 
     // 임무 추적 (챕터)
-    $('quest-tracker').innerHTML = G.assault ? Assault.trackerHtml() : UI.trackerHtml(p) + Bounty.trackerLine();
+    $('quest-tracker').innerHTML = G.assault ? Assault.trackerHtml() : UI.trackerHtml(p) + Raid.trackerLine() + Bounty.trackerLine();
   },
 
   trackerHtml(p) {
     const c = Story.chapter(p);
     if (!c) return '<b>모든 장 완료</b><br>타이탄은 4분마다 부활합니다';
-    if (!p.quest.active) return p.level >= c.minLevel ? `<b>${c.title}</b><br>캠프의 한씨에게 말을 거세요` : `<b>다음: ${c.title}</b><br>Lv${c.minLevel} 이상`;
-    const st = c.steps[p.quest.step], tg = Story.target(p);
+    if (!p.quest.active) return p.level >= c.minLevel ? `<b>${c.title}</b><br>한씨에게 말을 걸거나, 「${MAPS[MAP_ORDER[p.quest.ch]].name}」에 출격하면 시작` : `<b>다음: ${c.title}</b><br>Lv${c.minLevel} 이상`;
+    const st = c.steps[p.quest.step], tg = Story.target(p), mapId = MAP_ORDER[p.quest.ch];
     let h = `<b>${c.title} (${p.quest.step + 1}/${c.steps.length})</b><br>${Story.objective(st)}`;
+    if (mapId && World.map !== mapId) h += `<br><span style="color:#8cf">🗺 ${World.map === 'camp' ? '작전 장교 윤씨에게서' : '탈출 후 캠프에서'} 「${MAPS[mapId].name}」 출격</span>`;
     if (st.type === 'kill' || st.type === 'collect') h += ` <b>${p.quest.progress} / ${st.count}</b>`;
     if (tg) h += `<br><span class="muted">▶ ${Math.round(dist(p, tg) / TILE * 2)}m</span>`;
     return h;
@@ -429,6 +432,8 @@ const UI = {
         ['치료받기 (무료)', () => { p.hp = mh; log('의무병이 상처를 치료해 주었다.', '#6f6'); UI.close('dialog'); }],
         [`능력치 초기화 (${cost ? fmt(cost) + '₵' : '무료'})`, () => UI.respec()], bye]);
     } else if (npc.id === 'captain') UI.captainDialog(npc);
+    else if (npc.id === 'deploy') Raid.openMap();
+    else if (npc.id === 'stash') { UI.closeAll(); Stash.open(); }
     else if (npc.id === 'mechanic') {
       UI.dialog(npc.name, '"총이든 조끼든 가져와. 손보면 훨씬 쓸만해지지. 못 쓰는 건 뜯어서 부품으로 쓰고, 옵션이 마음에 안 들면 다시 손봐 주지."', [
         ['장비 강화', () => { UI.close('dialog'); Workshop.open('enhance'); }],

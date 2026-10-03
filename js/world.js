@@ -17,14 +17,18 @@ const FLOOR_H = 36; // 한 층 높이 (v0.13: 24 → 36, 실제 스케일에 가
 const SHOP_NAMES = ['편의점', '약국', '은행', '카페', '병원', '마트', 'PC방', '파출소', '분식집', '전자상가', '서점', '세탁소'];
 
 const World = {
-  W: 128, H: 128, BLOCK: 18, ROADW: 4, // v0.11 맵 128 · v0.13 블록 14 → 18 (4차선 도로, 큰 건물)
+  W: 72, H: 72, BLOCK: 18, ROADW: 4, // v0.13 블록 18 (4차선 도로, 큰 건물) · v1.3 맵마다 크기 다름 (MAPS)
   tiles: null, shade: null, height: null,
-  cx: 64, cy: 64, safeR: 11,
-  bossTile: { x: 18, y: 18 },
+  cx: 20, cy: 20, safeR: 11,
+  map: 'camp', def: null, edgePts: [],
+  bossTile: null,
   landmarks: [], hazards: [], buildings: [], bid: null,
 
-  generate(seed) {
-    const W = this.W, H = this.H, B = this.BLOCK;
+  generate(mapId) {
+    const def = MAPS[mapId];
+    this.map = mapId; this.def = def; this.W = this.H = def.size; this.cx = this.cy = Math.floor(def.size / 2);
+    this.bossTile = def.boss ? { x: 18, y: 18 } : null;
+    const seed = def.seed, W = this.W, H = this.H, B = this.BLOCK;
     const rng = mulberry32(seed);
     this.tiles = new Uint8Array(W * H);
     this.shade = new Float32Array(W * H);
@@ -44,7 +48,7 @@ const World = {
         const kind = rng();
         const shade = rng();
         // 도심(종로·용산)일수록 고층: 기본 3~6층, 도심 블록 일부는 8~12층
-        const bz = this.zoneIndex((ox + B / 2) * TILE, (oy + B / 2) * TILE);
+        const bz = def.zone;
         const fillB = (x0, y0, x1, y1, s) => {
           const tall = (bz === 2 || bz === 3) && rng() < 0.3;
           const h = FLOOR_H * (tall ? 8 + Math.floor(rng() * 5) : 3 + Math.floor(rng() * 4));
@@ -91,36 +95,29 @@ const World = {
       }
     }
 
-    // 생존자 캠프
-    for (let y = this.cy - 13; y <= this.cy + 13; y++) for (let x = this.cx - 13; x <= this.cx + 13; x++) {
-      const d = Math.hypot(x - this.cx, y - this.cy);
-      if (d < this.safeR) set(x, y, T.CAMP);
-      else if (d < this.safeR + 1.2) {
-        // 바리케이드 (네 방향 출입구)
-        const gate = Math.abs(x - this.cx) <= 1 || Math.abs(y - this.cy) <= 1;
-        set(x, y, gate ? T.CAMP : T.BARRICADE);
-      } else if (d < this.safeR + 3) {
-        if (this.tiles[y * W + x] === T.BUILDING || this.tiles[y * W + x] === T.CAR) set(x, y, T.RUBBLE);
-      }
-    }
-    // 출입구에서 이어지는 길 확보
-    for (let i = this.safeR; i < this.safeR + 8; i++) {
-      for (let k = -1; k <= 1; k++) {
-        for (const [x, y] of [[this.cx + i, this.cy + k], [this.cx - i, this.cy + k], [this.cx + k, this.cy + i], [this.cx + k, this.cy - i]]) {
-          if (SOLID.has(this.tiles[y * W + x])) set(x, y, T.RUBBLE);
-        }
+    // 생존자 캠프 (거점 맵에만): 바리케이드로 둘러싼 광장, 바깥은 폐허 풍경
+    if (mapId === 'camp') {
+      for (let y = this.cy - 13; y <= this.cy + 13; y++) for (let x = this.cx - 13; x <= this.cx + 13; x++) {
+        const d = Math.hypot(x - this.cx, y - this.cy);
+        if (d < this.safeR) set(x, y, T.CAMP);
+        else if (d < this.safeR + 1.2) set(x, y, T.BARRICADE);
+        else if (d < this.safeR + 3 && (this.tiles[y * W + x] === T.BUILDING || this.tiles[y * W + x] === T.CAR)) set(x, y, T.RUBBLE);
       }
     }
 
-    // 보스 아레나
+    // 보스 아레나 (여의도)
     const bt = this.bossTile;
-    for (let y = bt.y - 8; y <= bt.y + 8; y++) for (let x = bt.x - 8; x <= bt.x + 8; x++) {
+    if (bt) for (let y = bt.y - 8; y <= bt.y + 8; y++) for (let x = bt.x - 8; x <= bt.x + 8; x++) {
       const d = Math.hypot(x - bt.x, y - bt.y);
       if (d < 8) set(x, y, d < 2 ? T.GRASS : T.RUBBLE);
     }
 
     // 랜드마크: 자리와 주변 2칸을 비우고 발판을 고체 타일로
-    this.landmarks = LANDMARKS.map(l => ({ ...l, x: (l.tx + l.size / 2) * TILE, y: (l.ty + l.size / 2) * TILE }));
+    // 맵의 랜드마크 하나를 맵 가운데에
+    this.landmarks = LANDMARKS.filter(l => l.id === def.landmark).map(l => {
+      const tx = Math.floor(W / 2 - l.size / 2), ty = Math.floor(H / 2 - l.size / 2);
+      return { ...l, tx, ty, x: (tx + l.size / 2) * TILE, y: (ty + l.size / 2) * TILE };
+    });
     for (const l of this.landmarks) {
       for (let y = l.ty - 2; y < l.ty + l.size + 2; y++) for (let x = l.tx - 2; x < l.tx + l.size + 2; x++) {
         const inside = x >= l.tx && y >= l.ty && x < l.tx + l.size && y < l.ty + l.size;
@@ -131,11 +128,12 @@ const World = {
     // 여의도 방사능 웅덩이 (지나갈 수 있는 바닥 위)
     this.hazards = [];
     const hr = mulberry32(seed + 77);
-    for (let tries = 0; tries < 4000 && this.hazards.length < 18; tries++) {
+    for (let tries = 0; tries < 4000 && def.hazards && this.hazards.length < 16; tries++) {
       const tx = 2 + Math.floor(hr() * (W - 4)), ty = 2 + Math.floor(hr() * (H - 4));
       const px = tx * TILE + 16, py = ty * TILE + 16;
-      if (this.zoneIndex(px, py) !== 4 || SOLID.has(this.tiles[ty * W + tx]) || this.bid[ty * W + tx] >= 0) continue;
-      if (Math.hypot(tx - this.bossTile.x, ty - this.bossTile.y) < 9) continue;
+      if (SOLID.has(this.tiles[ty * W + tx]) || this.bid[ty * W + tx] >= 0) continue;
+      if (bt && Math.hypot(tx - bt.x, ty - bt.y) < 9) continue;
+      if (Math.hypot(tx - W / 2, ty - H / 2) < 8) continue; // 랜드마크 앞은 비움
       if (this.hazards.some(h => Math.hypot(h.x - px, h.y - py) < 260)) continue;
       this.hazards.push({ x: px, y: py, r: 40 + hr() * 40 });
     }
@@ -144,32 +142,39 @@ const World = {
     for (let i = 0; i < W; i++) { set(i, 0, T.BUILDING); set(i, H - 1, T.BUILDING); }
     for (let i = 0; i < H; i++) { set(0, i, T.BUILDING); set(W - 1, i, T.BUILDING); }
     this.validateShops();
-    // 지역마다 상가 최소 3곳: 훼손되지 않은 큰 단독 건물을 상가로 바꿈
+    // 출격 맵마다 상가 최소 3곳: 랜드마크·보스 아레나와 겹치지 않는 부지를 상가로
     const r2 = mulberry32(seed + 5);
-    for (let z = 1; z < ZONES.length; z++) {
-      let have = this.buildings.filter(b => this.zoneIndex(b.cx, b.cy) === z).length;
-      for (const [x0, y0, x1, y1, sh] of bigLots) {
-        if (have >= 3) break;
-        if (this.zoneIndex((x0 + x1) / 2 * TILE, (y0 + y1) / 2 * TILE) !== z) continue;
-        // 캠프·랜드마크·보스 아레나·기존 상가와 겹치지 않는 부지만
-        let ok = x1 < W - 1 && y1 < H - 1 && Math.hypot((x0 + x1) / 2 - this.bossTile.x, (y0 + y1) / 2 - this.bossTile.y) > 16;
-        for (const l of this.landmarks) if (x0 <= l.tx + l.size + 2 && x1 >= l.tx - 2 && y0 <= l.ty + l.size + 2 && y1 >= l.ty - 2) ok = false;
-        for (let y = y0; y <= y1 && ok; y++) for (let x = x0; x <= x1; x++) {
-          const t = this.tiles[y * W + x];
-          const dc = this.distTiles(x * TILE, y * TILE), gate = Math.abs(x - this.cx) <= 2 || Math.abs(y - this.cy) <= 2; // 캠프 출입로
-          if (this.bid[y * W + x] >= 0 || t === T.CAMP || t === T.BARRICADE || dc < this.safeR + 3.5 || (gate && dc < this.safeR + 9)) { ok = false; break; }
-        }
-        if (!ok) continue;
-        this.makeShop(x0, y0, x1, y1, sh, r2); have++;
-      }
+    let have = this.buildings.length;
+    for (const [x0, y0, x1, y1, sh] of bigLots) {
+      if (mapId === 'camp' || have >= 3) break;
+      let ok = x1 < W - 1 && y1 < H - 1 && (!bt || Math.hypot((x0 + x1) / 2 - bt.x, (y0 + y1) / 2 - bt.y) > 16);
+      for (const l of this.landmarks) if (x0 <= l.tx + l.size + 2 && x1 >= l.tx - 2 && y0 <= l.ty + l.size + 2 && y1 >= l.ty - 2) ok = false;
+      for (let y = y0; y <= y1 && ok; y++) for (let x = x0; x <= x1; x++) if (this.bid[y * W + x] >= 0) { ok = false; break; }
+      if (!ok) continue;
+      this.makeShop(x0, y0, x1, y1, sh, r2); have++;
     }
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const i = y * W + x;
       if (this.tiles[i] === T.BUILDING && !this.height[i]) this.height[i] = 60;
     }
+    this.makeEdgePoints();
     City.generate(seed); // v1.2 간판·거리 소품·버스
 
     this.buildMinimap();
+  },
+
+  // 맵 네 변의 가운데 근처 길 (출격 시작점 하나 + 나머지는 탈출 지점). 주변 막힌 칸을 치움
+  makeEdgePoints() {
+    const W = this.W, H = this.H;
+    this.edgePts = [];
+    if (this.map === 'camp') return;
+    for (const [tx, ty, side] of [[W >> 1, 3, 'N'], [W - 4, H >> 1, 'E'], [W >> 1, H - 4, 'S'], [3, H >> 1, 'W']]) {
+      for (let y = ty - 1; y <= ty + 1; y++) for (let x = tx - 1; x <= tx + 1; x++) {
+        const i = y * W + x;
+        if (SOLID.has(this.tiles[i]) || this.bid[i] >= 0) { this.tiles[i] = T.ROAD; this.bid[i] = -1; }
+      }
+      this.edgePts.push({ x: tx * TILE + 16, y: ty * TILE + 16, side });
+    }
   },
 
   // 들어갈 수 있는 건물: 외벽(WALL) + 실내(FLOOR) + 출입문(DOOR, 남쪽 또는 동쪽 2칸) + 칸막이 벽
@@ -312,12 +317,8 @@ const World = {
   },
 
   distTiles(px, py) { return Math.hypot(px / TILE - this.cx, py / TILE - this.cy); },
-  zoneIndex(px, py) {
-    const d = this.distTiles(px, py);
-    for (let i = 0; i < ZONES.length; i++) if (d < ZONES[i].maxDist) return i;
-    return ZONES.length - 1;
-  },
-  inSafe(px, py) { return this.distTiles(px, py) < this.safeR + 1.5; },
+  zoneIndex() { return this.def ? this.def.zone : 0; }, // v1.3: 맵 하나 = 지역 하나
+  inSafe(px, py) { return this.map === 'camp' && this.distTiles(px, py) < this.safeR + 1.5; },
   campCenter() { return { x: this.cx * TILE + TILE / 2, y: this.cy * TILE + TILE / 2 }; },
 
   buildMinimap() {
@@ -335,11 +336,6 @@ const World = {
       img.data[i * 4] = c3[0]; img.data[i * 4 + 1] = c3[1]; img.data[i * 4 + 2] = c3[2]; img.data[i * 4 + 3] = 255;
     }
     g.putImageData(img, 0, 0);
-    // 지역 경계
-    g.strokeStyle = 'rgba(224,178,58,0.35)';
-    for (let i = 1; i < ZONES.length - 1; i++) {
-      g.beginPath(); g.arc(this.cx, this.cy, ZONES[i].maxDist, 0, TAU); g.stroke();
-    }
     this.minimapBase = c;
   },
 };

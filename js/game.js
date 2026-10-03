@@ -85,15 +85,21 @@ function loadSave() {
 }
 
 // ---------------- 시작 ----------------
-function startGame(save, name) {
-  World.generate(MAP_SEED);
+// 캠프 NPC (v1.3: 작전 장교 = 출격 지도, 창고 관리인 = 창고)
+function setupCampNpcs() {
   const c = World.campCenter();
   G.npcs = [
     { id: 'merchant', name: '암시장 상인 박씨', x: c.x - 120, y: c.y - 70, color: '#c9a227' },
     { id: 'captain', name: '생존자 대장 한씨', x: c.x + 120, y: c.y - 70, color: '#4f7fbf' },
     { id: 'medic', name: '의무병 이씨', x: c.x, y: c.y + 110, color: '#e8e8e8' },
     { id: 'mechanic', name: '정비공 최씨', x: c.x - 140, y: c.y + 60, color: '#888' },
+    { id: 'deploy', name: '작전 장교 윤씨', x: c.x + 150, y: c.y + 70, color: '#6a8a5a' },
+    { id: 'stash', name: '창고 관리인 정씨', x: c.x, y: c.y - 140, color: '#8a6a4a' },
   ];
+}
+function startGame(save, name) {
+  World.generate('camp'); // v1.3: 항상 캠프(거점)에서 시작
+  setupCampNpcs();
   if (save) {
     G.player = Object.assign(newPlayer(save.p.name), save.p);
     nextItemId = save.nextItemId || 1000;
@@ -110,8 +116,12 @@ function startGame(save, name) {
     G.bossT = save.bossT || 0;
     G.player.dead = false;
     if (G.player.hp <= 0) G.player.hp = PlayerStats.maxHp(G.player);
-    if (G.player.mapV !== 3) { Object.assign(G.player, World.campCenter()); G.player.mapV = 3; } // 맵 구조가 바뀌면(v0.11 축소 · v0.13 큰 건물) 캠프에서 시작
-    if (World.circleBlocked(G.player.x, G.player.y, G.player.r)) Object.assign(G.player, World.campCenter());
+    Object.assign(G.player, World.campCenter()); G.player.mapV = 4; // v1.3: 불러오면 항상 캠프
+    G.player.stash = G.player.stash || [];
+    if (G.player.raid) { // 출격 중에 껐다면: 주운 것은 확정하고 캠프로 (브라우저가 꺼져도 잃지 않게)
+      for (const it of Raid.allItems()) delete it.raid;
+      G.player.raid = null; log('지난 출격에서 무사히 돌아왔다. 가져온 물건은 확정되었다.', '#8cf');
+    }
     log(`${G.player.name}님, 다시 오신 것을 환영합니다.`, '#e0b23a');
   } else {
     G.player = newPlayer(name || '생존자');
@@ -122,6 +132,7 @@ function startGame(save, name) {
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
+  G.exits = []; G.extractT = 0;
   const P = G.player; P.stam = 100; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
   Bounty.refresh(); // v0.14 일일 의뢰
   G.running = true;
@@ -383,16 +394,17 @@ function damagePlayer(dmg, srcX, srcY) {
 function playerDie() {
   const p = G.player;
   p.hp = 0; p.dead = true; input.down = false; p.deaths++;
-  const lost = Math.floor(p.credits * 0.1);
-  p.credits -= lost;
   burst(p.x, p.y, '#a00', 30, 160, 0.8, 4);
-  log(`사망했습니다. ${fmt(lost)} 크레딧을 잃었습니다.`, '#f55');
+  const msg = Raid.onDeath() || '캠프로 돌아갑니다.'; // v1.3: 이번 출격에서 주운 것만 잃음
+  log(`사망했습니다. ${msg}`, '#f55');
+  document.querySelector('#death-screen p').textContent = msg;
   UI.closeAll();
   document.getElementById('death-screen').classList.remove('hidden');
   saveGame();
 }
 
 function respawn() {
+  if (World.map !== 'camp') { Raid.toCamp(); document.getElementById('death-screen').classList.add('hidden'); saveGame(); return; } // 출격 맵에서 죽으면 캠프로
   const p = G.player, c = World.campCenter();
   p.x = c.x; p.y = c.y; p.dead = false; p.hp = PlayerStats.maxHp(p); p.reloadT = 0; p.hurtT = 0;
   p.buffs.rapid = 0; p.buffs.adren = 0;
@@ -638,7 +650,7 @@ function updateEnemies(dt) {
 function spawnEnemies(dt) {
   const p = G.player;
   G.spawnT -= dt;
-  if (G.spawnT > 0 || G.assault) return; // 어설트 중에는 일반 스폰 없음
+  if (G.spawnT > 0 || G.assault || World.map === 'camp') return; // 어설트 중·캠프에는 일반 스폰 없음
   G.spawnT = 0.35;
   // 먼 적 정리
   G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || e.fieldBoss || dist(e, p) < 1800 || e.state === 'chase');
@@ -651,13 +663,10 @@ function spawnEnemies(dt) {
     const a = rand(0, TAU), r = rand(560, 950);
     const x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
     if (World.circleBlocked(x, y, 22) || World.inSafe(x, y) || World.buildingAt(x, y)) continue; // 실내 적은 입장 시 따로
-    const zi = World.zoneIndex(x, y);
-    if (zi === 0) continue;
-    if (zi > z && Math.random() < 0.7) continue; // 지역 경계 너머(더 위험한 지역) 스폰은 덜 나오게
-    const zone = ZONES[zi];
-    // 캠프에서 멀어질수록 레벨 상승
-    const prev = ZONES[zi - 1].maxDist, span = Math.min(zone.maxDist, 86) - prev;
-    const t = clamp((World.distTiles(x, y) - prev) / span, 0, 1);
+    if (G.exits && G.exits.some(q => Math.hypot(q.x - x, q.y - y) < 260)) continue; // 탈출 지점 바로 앞은 비움
+    const zi = z, zone = ZONES[zi];
+    // 맵 가운데(랜드마크)에 가까울수록 레벨 상승
+    const t = clamp(1 - Math.hypot(x / TILE - World.cx, y / TILE - World.cy) / (World.W * 0.55), 0, 1);
     const lvl = clamp(Math.round(lerp(zone.lvl[0], zone.lvl[1], t) + rand(-1, 1)), zone.lvl[0], zone.lvl[1]);
     const type = weighted(zone.spawns), e = makeEnemy(type, x, y, lvl);
     if (Math.random() < Monsters.eliteChance(zi)) Monsters.makeElite(e, Monsters.rollAffix(type)); // v0.8 엘리트
@@ -675,6 +684,7 @@ function spawnEnemies(dt) {
 function updateBossSpawn(dt) {
   const p = G.player;
   if (G.bossT > 0) G.bossT -= dt;
+  if (!World.bossTile) return; // 타이탄은 여의도에만
   const bx = World.bossTile.x * TILE + TILE / 2, by = World.bossTile.y * TILE + TILE / 2;
   if (!G.boss && G.bossT <= 0 && Math.hypot(p.x - bx, p.y - by) < 1000) {
     G.boss = makeEnemy('boss', bx, by, 20);
@@ -781,6 +791,8 @@ function updateDrops(dt) {
       const a = angleTo(d, p); d.x += Math.cos(a) * 260 * dt; d.y += Math.sin(a) * 260 * dt;
     }
     if (dd < 24) {
+      if (d.kind === 'credits' && p.raid) p.raid.credits += d.amount; // 탈출해야 확정
+      if (d.kind === 'item' && p.raid && d.item.kind !== 'cons' && !d.item.raid) d.item.raid = true;
       if (d.kind === 'credits') { p.credits += d.amount; floatText(p.x, p.y - 26, `+${d.amount}₵`, '#ffd76a', 12); d.gone = true; SFX.play('coin'); }
       else if (d.kind === 'ammo') { p.reserve += d.amount; floatText(p.x, p.y - 26, `탄약 +${d.amount}`, '#cc8', 12); d.gone = true; SFX.play('ammo'); }
       else if (d.kind === 'item') {
@@ -839,6 +851,7 @@ function update(dt) {
   spawnEnemies(dt);
   updateBossSpawn(dt);
   Interiors.update();
+  Raid.update(dt);
   Nav.update(dt);
   updateEnemies(dt);
   Assault.update(dt);

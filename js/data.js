@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.2';
+const GAME_VERSION = 'v1.3';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -130,6 +130,17 @@ const ZONES = [
     desc: '방사능 웅덩이 — 들어가면 체력이 깎인다', packs: { zombie: [3, 5] },
     gear: ['katana', 'lmg', 'sniper', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },
 ];
+
+// v1.3 맵 (출격·탈출): 캠프(거점)에서 맵을 골라 출격하고, 맵 가장자리 탈출 지점으로 귀환
+// chapter: 이야기가 이 장에 도달하면 해금 · landmark: 맵 가운데 랜드마크 · boss/hazards: 타이탄 아레나·방사능 웅덩이
+const MAPS = {
+  camp:       { name: '시청역 생존자 캠프', zone: 0, size: 40, seed: 2049 },
+  myeongdong: { name: '명동 잔해', zone: 1, size: 72, seed: 1101, landmark: 'cathedral', chapter: 0 },
+  jongno:     { name: '종로 폐허', zone: 2, size: 90, seed: 1202, landmark: 'bosingak', chapter: 1 },
+  yongsan:    { name: '용산 군사구역', zone: 3, size: 90, seed: 1303, landmark: 'base', chapter: 2 },
+  yeouido:    { name: '여의도 방사능 지대', zone: 4, size: 108, seed: 1404, landmark: 'tower63', chapter: 3, boss: true, hazards: true },
+};
+const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido'];
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상
 const LANDMARKS = [

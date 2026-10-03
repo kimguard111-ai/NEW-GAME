@@ -155,7 +155,7 @@ function itemHtml(it) {
 function newPlayer(name) {
   const c = World.campCenter();
   return {
-    name, x: c.x, y: c.y, r: 12, aim: 0, mapV: 3, mats: { scrap: 0, chip: 0 },
+    name, x: c.x, y: c.y, r: 12, aim: 0, mapV: 4, mats: { scrap: 0, chip: 0 }, stash: [], raid: null,
     level: 1, exp: 0, credits: 150, statPoints: 0,
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
     hp: 1, reserve: 150,

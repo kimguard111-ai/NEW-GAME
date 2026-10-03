@@ -9,6 +9,7 @@ const BOUNTIES = {
   assault:   { text: () => '어설트 1회 클리어', n: [1, 1], minLv: 3 },
   hardAssault: { text: () => '위협 3 이상 어설트 클리어', n: [1, 1], minLv: 12 },
   enhance:   { text: n => `장비 강화 ${n}회 시도`, n: [3, 5], minLv: 1 },
+  extract:   { text: n => `출격 후 탈출 ${n}회 성공`, n: [1, 2], minLv: 1 },
   titan:     { text: () => '방사능 군주 타이탄 처치', n: [1, 1], minLv: 18 },
 };
 

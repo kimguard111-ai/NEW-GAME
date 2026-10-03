@@ -711,9 +711,17 @@ function render() {
     ctx.strokeStyle = `rgba(255,90,60,${0.45 + Math.sin(G.time * 5) * 0.2})`; ctx.lineWidth = 4; ctx.setLineDash([18, 12]);
     ctx.beginPath(); ctx.arc(l.x, l.y, ASSAULT_R, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
   }
-  const bx = World.bossTile.x * TILE + 16, by = World.bossTile.y * TILE + 16;
-  ctx.strokeStyle = 'rgba(80,255,90,0.3)'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(bx, by, 7.5 * TILE, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+  if (World.bossTile) {
+    const bx = World.bossTile.x * TILE + 16, by = World.bossTile.y * TILE + 16;
+    ctx.strokeStyle = 'rgba(80,255,90,0.3)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(bx, by, 7.5 * TILE, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+  }
+  for (const e of G.exits || []) { // v1.3 탈출 지점: 초록 원 + 맥박
+    const k = (G.time * 0.8) % 1;
+    ctx.strokeStyle = 'rgba(110,240,130,0.7)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = `rgba(110,240,130,${0.6 * (1 - k)})`; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R * k, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(110,240,130,0.12)'; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.fill();
+  }
   // 근접 공격 궤적
   const w = curWeapon();
   if (w && WEAPONS[w.key].melee && p.swingT > 0 && !p.dead) {
@@ -843,7 +851,8 @@ function render() {
   if (!p.dead) addLight(psx, psy, Math.max(VW, VH) * 0.62, 0.97);
   if (p.recoilT > 0) addLight(psx + Math.cos(p.aim) * 20, psy - 6, 150, 0.9, 'rgba(255,200,110,A)');
   const cc = World.campCenter();
-  addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
+  if (World.map === 'camp') addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
+  for (const e of G.exits || []) addLight(Iso.sx(e.x, e.y), Iso.sy(e.x, e.y), 160, 0.9, 'rgba(110,240,130,A)'); // 탈출 지점
   for (const ef of G.effects) if (ef.type === 'boom') addLight(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y), ef.r * 2.4 * (1 - ef.t / ef.life), 1, 'rgba(255,150,50,A)');
   for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(120,255,100,A)' : 'rgba(255,90,60,A)');
   for (const s of G.strikes) addLight(Iso.sx(s.x, s.y), Iso.sy(s.x, s.y), s.r * 1.8, 0.5 + 0.4 * s.t / s.delay, s.pool ? 'rgba(140,230,70,A)' : 'rgba(255,90,50,A)');
@@ -1037,7 +1046,8 @@ function drawMinimapIso(mm) {
   for (const n of G.npcs) dot(n.x, n.y, '#ffd76a', 3);
   for (const e of G.enemies) dot(e.x, e.y, e.def.boss ? '#d4f' : '#f44', e.def.boss ? 6 : 2.5);
   if (G.fieldBoss && Math.sin(G.time * 8) > -0.3) dot(G.fieldBoss.x, G.fieldBoss.y, '#ff3020', 8); // 필드 보스 깜빡임
-  dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.85)', 5);
+  if (World.bossTile) dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.85)', 5);
+  if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
   for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);
   for (const l of World.landmarks) dot(l.x, l.y, p.found.includes(l.id) ? '#ffd76a' : '#888', 5);
   const tg = Story.target(p); // 현재 목표 (깜빡임)

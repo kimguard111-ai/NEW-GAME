@@ -88,8 +88,8 @@ const Story = {
     const st = this.step(p);
     if (!st) return null;
     const lmId = st.type === 'reach' ? st.landmark : st.type === 'hunt' ? ELITES[st.elite].at : null;
-    if (lmId) { const l = World.landmarks.find(x => x.id === lmId); return { x: l.x, y: l.y }; }
-    if (st.type === 'kill' && st.target === 'boss') return { x: World.bossTile.x * TILE, y: World.bossTile.y * TILE };
+    if (lmId) { const l = World.landmarks.find(x => x.id === lmId); return l ? { x: l.x, y: l.y } : null; } // 다른 맵이면 없음
+    if (st.type === 'kill' && st.target === 'boss') return World.bossTile ? { x: World.bossTile.x * TILE, y: World.bossTile.y * TILE } : null;
     return null;
   },
 
@@ -116,16 +116,16 @@ const Story = {
   update() {
     const p = G.player, c0 = this.chapter(p);
     // v1.0: 다음 장은 레벨이 되면 무전으로 바로 시작 (캠프 왕복 없음)
-    if (c0 && !p.quest.active && p.level >= c0.minLevel && !p.dead && !World.inSafe(p.x, p.y) && G.time - (this.autoT || -99) > 5) { this.autoT = G.time; this.start(p); }
+    if (c0 && !p.quest.active && p.level >= c0.minLevel && !p.dead && World.map === MAP_ORDER[p.quest.ch] && G.time - (this.autoT || -99) > 5) { this.autoT = G.time; this.start(p); }
     const st = this.step(p);
     if (!st || p.dead) return;
     if (st.type === 'reach') {
       const l = World.landmarks.find(x => x.id === st.landmark);
-      if (dist(p, l) < l.size * TILE / 2 + 170) p.quest.progress = 1;
+      if (l && dist(p, l) < l.size * TILE / 2 + 170) p.quest.progress = 1;
     }
     if (st.type === 'hunt' && !G.elite && p.quest.progress < 1) { // 처치 후 다시 생기지 않게
       const def = ELITES[st.elite], l = World.landmarks.find(x => x.id === def.at);
-      if (dist(p, l) < 950) this.spawnElite(st.elite, l);
+      if (l && dist(p, l) < 950) this.spawnElite(st.elite, l);
     }
     if (p.quest.progress >= this.count(st)) this.completeStep();
   },

@@ -377,3 +377,13 @@ body.touch .doll { grid-template-columns: 80px 100px 80px; } body.touch #doll { 
 .title-quote small { font-size: 18px; color: #bbb; }
 body.touch .logo { font-size: 44px !important; } body.touch .title-main h2 { font-size: 12px; margin: 4px 0 8px; }
 body.touch .title-quote { display: none; } body.touch .title-tags { display: none; }
+
+/* v1.3 출격 · 창고 */
+#panel-stash { left: 50%; top: 70px; transform: translateX(-50%); width: 820px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.stash-body { display: flex; gap: 14px; padding: 0 12px 12px; }
+.stash-body > div { flex: 1; }
+.stash-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.map-row { margin: 4px 0; } .map-row.locked { opacity: .5; }
+#extract-bar { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); width: 260px; text-align: center; color: #7fe08a; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+#extract-bar .bar { height: 10px; } #extract-fill { background: linear-gradient(#7fe08a, #2a8a3a); height: 100%; }
+body.touch #panel-stash.panel { width: 96vw !important; } body.touch .stash-body { flex-direction: column; }

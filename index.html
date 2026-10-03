@@ -101,6 +101,7 @@
   <div id="log"></div>
   <div id="interact-hint" class="hidden"></div>
   <div id="tip" class="hidden"></div>
+  <div id="extract-bar" class="hidden">탈출 중…<div class="bar"><div id="extract-fill"></div></div></div>
   <div id="toast" class="hidden"><div id="toast-title"></div><div id="toast-sub"></div></div>
   <div id="combo" class="hidden"><span id="combo-n"></span><small>연속 처치</small><div id="combo-bar"></div></div>
   <div id="menu-buttons">
@@ -129,6 +130,15 @@
       <div id="inv-grid"></div>
       <div id="item-detail"></div>
     </div>
+  </div>
+</div>
+
+<div id="panel-stash" class="panel hidden">
+  <div class="panel-head">창고 관리인 정씨 — 창고 <span class="close">✕</span></div>
+  <div class="shop-hint">눌러서 옮깁니다. 창고에 둔 물건은 출격해서 죽어도 안전합니다.</div>
+  <div class="stash-body">
+    <div><div class="bag-head">가방 <span id="stash-bag-n"></span></div><div id="stash-bag" class="stash-grid"></div></div>
+    <div><div class="bag-head">창고 <span id="stash-n"></span></div><div id="stash-grid" class="stash-grid"></div></div>
   </div>
 </div>
 
@@ -178,6 +188,7 @@
 <script src="js/quests.js"></script>
 <script src="js/monsters.js"></script>
 <script src="js/assault.js"></script>
+<script src="js/raid.js"></script>
 <script src="js/bosses.js"></script>
 <script src="js/assets.js"></script>
 <script src="js/render.js"></script>
