@@ -342,3 +342,44 @@ const World = {
     this.minimapBase = c;
   },
 };
+
+// 길찾기 (v0.16): 플레이어 칸에서 퍼져 나가는 거리 지도. 시야가 막힌 적은 숫자가 줄어드는 쪽으로 이동 → 건물을 돌아서 옴
+const Nav = {
+  dist: null, q: null, t: 0, ptx: -1, pty: -1, MAX: 48,
+  update(dt) {
+    const W = World.W, H = World.H, p = G.player;
+    if (!this.dist || this.dist.length !== W * H) { this.dist = new Int16Array(W * H); this.q = new Int32Array(W * H); }
+    this.t -= dt;
+    const tx = Math.floor(p.x / TILE), ty = Math.floor(p.y / TILE);
+    if (this.t > 0 && tx === this.ptx && ty === this.pty) return;
+    this.t = 0.4; this.ptx = tx; this.pty = ty;
+    const d = this.dist, q = this.q; d.fill(-1);
+    let h = 0, n = 0; d[ty * W + tx] = 0; q[n++] = ty * W + tx;
+    while (h < n) {
+      const i = q[h++], x = i % W, y = (i - x) / W, nd = d[i] + 1;
+      if (nd > this.MAX) continue;
+      if (x > 0 && d[i - 1] < 0 && !SOLID.has(World.tiles[i - 1])) { d[i - 1] = nd; q[n++] = i - 1; }
+      if (x < W - 1 && d[i + 1] < 0 && !SOLID.has(World.tiles[i + 1])) { d[i + 1] = nd; q[n++] = i + 1; }
+      if (y > 0 && d[i - W] < 0 && !SOLID.has(World.tiles[i - W])) { d[i - W] = nd; q[n++] = i - W; }
+      if (y < H - 1 && d[i + W] < 0 && !SOLID.has(World.tiles[i + W])) { d[i + W] = nd; q[n++] = i + W; }
+    }
+  },
+  // 적이 가야 할 방향(각도). 길이 없으면 null
+  dir(e) {
+    if (!this.dist) return null;
+    const W = World.W, tx = Math.floor(e.x / TILE), ty = Math.floor(e.y / TILE), d = this.dist;
+    const here = d[ty * W + tx];
+    let best = here >= 0 ? here : 9999, bx = 0, by = 0;
+    for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+      if (!ox && !oy) continue;
+      const nx = tx + ox, ny = ty + oy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= World.H) continue;
+      const v = d[ny * W + nx];
+      if (v < 0 || v >= best) continue;
+      if (ox && oy && (SOLID.has(World.tiles[ty * W + nx]) || SOLID.has(World.tiles[ny * W + tx]))) continue; // 모서리 끼임 방지
+      best = v; bx = ox; by = oy;
+    }
+    if (!bx && !by) return null;
+    return Math.atan2((ty + by + 0.5) * TILE - e.y, (tx + bx + 0.5) * TILE - e.x);
+  },
+};

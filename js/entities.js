@@ -195,14 +195,14 @@ const PlayerStats = {
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {
     const w = p.equip[p.active];
-    return 165 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1);
+    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
   rateMul: (p, w) => (p.buffs.rapid > 0 ? 0.5 : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)),
   reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)),
   regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + gearBonus(p, 'regen'),
   expMul: p => 1 + gearBonus(p, 'exp'),
-  expNext: lvl => Math.floor(45 * Math.pow(lvl, 1.65)),
+  expNext: lvl => Math.floor(45 * Math.pow(lvl, 1.65)), // v0.16: 처치 템포가 2배 이상 빨라져 곡선은 유지
 };
 
 // 스킬 수치: 각 스킬은 연동 능력치 하나를 따라 강해짐

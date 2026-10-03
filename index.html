@@ -28,11 +28,11 @@
     </div>
     <div class="controls">
       <b>조작법</b><br>
-      <span class="desk">WASD 이동 · 마우스 조준 · 좌클릭 공격(누르고 있으면 연사)<br>
+      <span class="desk">WASD 이동 · 마우스 조준 · 좌클릭 공격(누르고 있으면 연사) · <b>Space 구르기(무적)</b><br>
       R 재장전 · Q 무기 교체 · 1~4 스킬 · 5 구급상자 · E 상호작용<br>
       I 인벤토리 · C 능력치 · J 임무 · O 설정 · ESC 창 닫기 · 마우스 휠 화면 확대/축소</span>
       <span class="mobile">왼손: 화면 왼쪽을 끌어 이동 · 오른손: 화면 오른쪽을 끌어 조준·사격<br>
-      오른쪽 버튼 E 상호작용 · R 재장전 · Q 무기 교체 · ＋/－ 확대 · 아래 칸을 눌러 스킬</span>
+      오른쪽 버튼 💨 구르기 · E 상호작용 · R 재장전 · Q 무기 교체 · ＋/－ 확대 · 아래 칸을 눌러 스킬</span>
     </div>
   </div>
 </div>
@@ -71,6 +71,7 @@
   <div id="interact-hint" class="hidden"></div>
   <div id="toast" class="hidden"><div id="toast-title"></div><div id="toast-sub"></div></div>
   <div id="quest-tracker"></div>
+  <div id="combo" class="hidden"><span id="combo-n"></span><small>연속 처치</small><div id="combo-bar"></div></div>
   <div id="menu-buttons">
     <button data-panel="inventory">인벤토리 (I)</button>
     <button data-panel="stats">능력치 (C)</button>
@@ -130,6 +131,7 @@
 
 <script src="js/util.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/sfx.js"></script>
 <script src="js/data.js"></script>
 <script src="js/world.js"></script>
 <script src="js/entities.js"></script>

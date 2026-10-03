@@ -345,6 +345,14 @@ function nameTag(sx, y, text, color, font = '11px sans-serif') {
 }
 
 function drawPlayer(p) {
+  if (p.rollT > 0) { // 구르기: 잔상 + 반투명 (무적 표시)
+    ctx.globalAlpha = 0.25; drawShadow(Iso.sx(p.x - Math.cos(p.rollA) * 30, p.y - Math.sin(p.rollA) * 30) + 0, Iso.sy(p.x - Math.cos(p.rollA) * 30, p.y - Math.sin(p.rollA) * 30), p.r * 1.2);
+    ctx.globalAlpha = 0.55;
+  }
+  drawPlayerBody(p);
+  ctx.globalAlpha = 1;
+}
+function drawPlayerBody(p) {
   const sx = Iso.sx(p.x, p.y), sy = Iso.sy(p.x, p.y);
   drawShadow(sx, sy, p.r);
   const w = curWeapon(), b = w ? WEAPONS[w.key] : null;
@@ -676,6 +684,12 @@ function render() {
       ctx.beginPath(); ctx.arc(ef.x, ef.y, ef.r * k, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1;
     }
   }
+  for (const e of G.enemies) { // v0.16 일반 적 예고: 변이견 도약선 · 원거리 조준선
+    if (e.pounceT > 0) {
+      ctx.strokeStyle = `rgba(255,80,60,${0.3 + (0.45 - e.pounceT)})`; ctx.lineWidth = e.r * 1.4;
+      ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + Math.cos(e.leapA) * 180, e.y + Math.sin(e.leapA) * 180); ctx.stroke(); ctx.lineWidth = 1;
+    }
+  }
   for (const e of G.enemies) if (e.charge > 0.8) { // 돌진 예고선 (타이탄 · 필드 보스)
     ctx.strokeStyle = 'rgba(255,60,60,0.5)'; ctx.lineWidth = e.r * 1.6;
     ctx.beginPath(); ctx.moveTo(e.x, e.y);
@@ -722,6 +736,25 @@ function render() {
   }
 
   drawShopSigns();
+
+  // v0.16 공격 예고: 조준선(원거리) · 붉은 ! (근접)
+  for (const e of G.enemies) {
+    if (e.hp <= 0) continue;
+    if (e.aimT > 0) {
+      const k = 1 - e.aimT / (Monsters.TELE[e.type] || 0.3), len = Math.min(e.def.range, 600);
+      ctx.strokeStyle = `rgba(255,40,40,${0.25 + k * 0.6})`; ctx.lineWidth = 1 + k * 1.5;
+      ctx.beginPath(); ctx.moveTo(Iso.sx(e.x, e.y), Iso.sy(e.x, e.y, 22));
+      ctx.lineTo(Iso.sx(e.x + Math.cos(e.aimA) * len, e.y + Math.sin(e.aimA) * len), Iso.sy(e.x + Math.cos(e.aimA) * len, e.y + Math.sin(e.aimA) * len, 22)); ctx.stroke(); ctx.lineWidth = 1;
+    }
+    if (e.windT > 0) {
+      const k = 1 - e.windT / (e.windMax || 0.3), sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y);
+      ctx.strokeStyle = `rgba(255,60,40,${0.4 + k * 0.5})`; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(sx, sy, (e.r + 16) * (1.4 - k * 0.4), (e.r + 16) * (0.7 - k * 0.2), 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+      ctx.fillStyle = '#ff4030'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('!', sx, sy - (ART.height[e.type] || 44) * (e.scale || 1) - 10);
+    }
+  }
+  drawDropBeams();
 
   // 3) 투사체 / 파티클 (위에 그림)
   for (const b of G.bullets) {
@@ -777,6 +810,12 @@ function render() {
   const tint = ZONES[G.zone].tint;
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(200,0,0,${p.hurtT})`; ctx.fillRect(0, 0, VW, VH); }
+  if (!p.dead && p.hp < PlayerStats.maxHp(p) * 0.3) { // 저체력: 붉은 테두리가 맥박처럼
+    const k = 0.25 + Math.max(0, Math.sin(G.time * 6)) * 0.25;
+    const g3 = ctx.createRadialGradient(VW / 2, VH / 2, VH * 0.35, VW / 2, VH / 2, VH * 0.85);
+    g3.addColorStop(0, 'rgba(160,0,0,0)'); g3.addColorStop(1, `rgba(160,0,0,${k})`);
+    ctx.fillStyle = g3; ctx.fillRect(0, 0, VW, VH);
+  }
   const mh = PlayerStats.maxHp(p);
   if (!p.dead && p.hp < mh * 0.3) {
     const a = 0.25 + Math.sin(G.time * 6) * 0.1;
@@ -867,6 +906,18 @@ function drawLandmark(l) {
   ctx.restore();
   ctx.globalAlpha = 1;
   if (G.player.found.includes(l.id)) nameTag(Iso.sx(l.x, l.y), Iso.sy(l.x, l.y) + l.size * 9, '★ ' + l.name, '#ffd76a', 'bold 12px sans-serif');
+}
+
+// 희귀 이상 장비 빛기둥 (v0.16): 멀리서도 보이게
+function drawDropBeams() {
+  for (const d of G.drops) {
+    if (d.kind !== 'item' || d.item.kind === 'cons' || (d.item.rarity || 0) < 2) continue;
+    const r = d.item.rarity, sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y), h = 60 + r * 30, pul = 0.7 + Math.sin(G.time * 4 + d.x) * 0.3;
+    const g = ctx.createLinearGradient(0, sy, 0, sy - h);
+    const c = RARITIES[r].color;
+    g.addColorStop(0, c + 'cc'); g.addColorStop(1, c + '00');
+    ctx.globalAlpha = pul; ctx.fillStyle = g; ctx.fillRect(sx - 3 - r, sy - h, 6 + r * 2, h); ctx.globalAlpha = 1;
+  }
 }
 
 // 보급 상자 (건물 안)

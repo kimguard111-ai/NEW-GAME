@@ -53,7 +53,10 @@ const Monsters = {
   buff(e) { return e.buffT > 0 ? 1.3 : 1; },
 
   // ---------------- 예고 공격 (바닥 원 → 지연 폭발) / 장판 ----------------
-  strike(x, y, r, delay, dmg, color, pool = false) { G.strikes.push({ x, y, r, t: 0, delay, dmg, color, pool }); },
+  strike(x, y, r, delay, dmg, color, pool = false) {
+    G.strikes.push({ x, y, r, t: 0, delay, dmg, color, pool });
+    if (Math.hypot(x - G.player.x, y - G.player.y) < r + 200) SFX.play('warn', 0.7);
+  },
   updateHazards(dt) {
     const p = G.player;
     for (const s of G.strikes) {
@@ -62,6 +65,7 @@ const Monsters = {
       s.done = true;
       if (!p.dead && Math.hypot(p.x - s.x, p.y - s.y) < s.r + p.r) damagePlayer(s.dmg);
       G.effects.push({ type: 'boom', x: s.x, y: s.y, t: 0, life: 0.35, r: s.r });
+      SFX.play('boom', clamp(1 - Math.hypot(p.x - s.x, p.y - s.y) / 900, 0.1, 0.6));
       burst(s.x, s.y, s.pool ? '#8fd14a' : '#ffb040', 16, 200, 0.4, 4);
       G.shake = Math.max(G.shake, 5);
       if (s.pool) G.pools.push({ x: s.x, y: s.y, r: s.r * 0.9, t: 0, life: 4, dps: s.dmg * 0.5 });
@@ -121,6 +125,61 @@ const Monsters = {
       floatText(e.x, e.y - 50, '쿵!', '#ffb040', 18);
     }
   },
+
+  // ---------------- 일반 적 공격 (v0.16: 보고 피할 수 있게 예고) ----------------
+  TELE: { zombie: 0.38, dog: 0.3, raider: 0.35, drone: 0.22 },
+  vol(e) { return clamp(1 - dist(e, G.player) / 900, 0.08, 1); },
+  // 공격 처리. 이번 프레임에 멈춰 있어야 하면(예고·도약 중) true
+  attack(e, dt, d, a) {
+    const p = G.player, b = this.buff(e);
+    if (e.def.ranged) { // 조준선 → 발사 (조준 중엔 방향 고정 · 정지)
+      if (e.aimT > 0) {
+        e.aimT -= dt;
+        if (e.aimT <= 0) { spawnEnemyBullet(e, e.aimA + rand(-0.03, 0.03), e.def.bulletSpeed, e.dmg * b); e.lastAtk = G.time; SFX.play('eshot', this.vol(e)); }
+        return true;
+      }
+      if (e.fireT <= 0 && d < e.def.range && World.lineOfSight(e, p)) {
+        e.fireT = e.def.fireCd * (e.fireMul || 1) * rand(0.8, 1.25);
+        e.aimT = this.TELE[e.type] || 0.3; e.aimA = a;
+      }
+      return false;
+    }
+    if (e.type === 'dog') { // 웅크림 0.45초(예고선) → 도약
+      if (e.leapT > 0) {
+        e.leapT -= dt; tryMoveSmart(e, e.leapA, 560 * dt);
+        if (!e.leapHit && dist(e, p) < e.r + p.r + 6) { e.leapHit = true; e.lastAtk = G.time; damagePlayer(e.dmg * 1.5 * b, e.x, e.y); }
+        return true;
+      }
+      if (e.pounceT > 0) { e.pounceT -= dt; if (e.pounceT <= 0) { e.leapT = 0.32; e.leapHit = false; } return true; }
+      e.pounceCd = (e.pounceCd ?? rand(1, 3)) - dt;
+      if (e.pounceCd <= 0 && d > 80 && d < 230 && World.lineOfSight(e, p)) {
+        e.pounceCd = rand(3, 5); e.pounceT = 0.45; e.leapA = a; SFX.play('growl', this.vol(e)); return true;
+      }
+    }
+    if (e.type === 'brute') { // 내려찍기: 앞쪽 원 예고
+      if (e.slamT > 0) { e.slamT -= dt; return true; }
+      if (d < e.r + p.r + 40 && e.atkT <= 0) {
+        e.atkT = e.def.atkCd * (e.atkMul || 1) * 1.4; e.lastAtk = G.time; e.slamT = 0.6;
+        this.strike(e.x + Math.cos(a) * 30, e.y + Math.sin(a) * 30, 75, 0.6, e.dmg * 1.3 * b, 'rgba(255,150,50,');
+        return true;
+      }
+      return false;
+    }
+    // 근접(감염자·기타): 팔을 드는 예고 → 그때도 붙어 있으면 맞음
+    if (e.windT > 0) {
+      e.windT -= dt;
+      if (e.windT <= 0) {
+        e.lastAtk = G.time;
+        if (dist(e, p) < e.r + p.r + 16) damagePlayer(e.dmg * b, e.x, e.y);
+        else if (dist(e, p) < 120) floatText(p.x, p.y - 30, '빗나감', '#aaa', 11);
+      }
+      return true;
+    }
+    if (d < e.r + p.r + 8 && e.atkT <= 0) { e.atkT = e.def.atkCd * (e.atkMul || 1); e.windT = e.windMax = this.TELE[e.type] || 0.3; return true; }
+    return false;
+  },
+  // 경직되면 준비 중이던 공격이 끊김 (강한 무기 보상)
+  interrupt(e) { e.windT = 0; e.aimT = 0; e.pounceT = 0; e.leapT = 0; },
 
   // ---------------- 세력 다툼 ----------------
   // 플레이어를 쫓지 않을 때 근처의 다른 세력과 싸움. 처리했으면 true

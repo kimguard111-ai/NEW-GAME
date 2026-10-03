@@ -53,6 +53,10 @@ const UI = {
     m.className = 'hot'; m.title = '구급상자 사용';
     m.innerHTML = `<span class="key">5</span><div class="icon">💊</div>구급상자<span class="cnt" id="medcnt"></span>`;
     hb.appendChild(m);
+    const r = document.createElement('div'); // v0.16 구르기
+    r.className = 'hot'; r.title = '구르기: 짧은 무적 돌진 (적 공격 예고를 보고 피하기)';
+    r.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'SPC'}</span><div class="icon">💨</div>구르기<div class="cd" id="cdroll"></div>`;
+    hb.appendChild(r);
   },
 
   updateHUD(dt) {
@@ -89,6 +93,10 @@ const UI = {
       const el = $('cd' + i);
       if (el) el.style.height = (100 * p.skillCd[i] / s.cd) + '%';
     });
+    if ($('cdroll')) $('cdroll').style.height = (100 * Math.max(0, p.rollCd || 0) / ROLL.cd) + '%';
+    const live = G.combo >= 3 && G.time - G.comboT < 3; // 연속 처치 표시
+    $('combo').classList.toggle('hidden', !live);
+    if (live) { $('combo-n').textContent = `x${G.combo}`; $('combo-bar').style.width = (100 * (1 - (G.time - G.comboT) / 3)) + '%'; $('combo').style.color = G.combo >= 25 ? '#ffa53a' : G.combo >= 10 ? '#c77dff' : '#ffd76a'; }
     const med = p.inventory.find(i => i && i.key === 'medkit');
     if ($('medcnt')) $('medcnt').textContent = med ? med.count : 0;
 
@@ -299,9 +307,12 @@ const UI = {
     $('settings-body').innerHTML = opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
       + opt('shake', '화면 흔들림', '타격·폭발 시 화면 흔들림')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
+      + opt('sound', '효과음', '총소리·타격·획득 소리')
+      + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
       + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="1.8" step="0.1" value="${ZOOM}"></div>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
-    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); }; });
+    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); }; });
+    $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
     $('zoom-range').oninput = e => { setZoom(+e.target.value); $('zoom-val').textContent = ZOOM.toFixed(1) + '배'; };
   },
 

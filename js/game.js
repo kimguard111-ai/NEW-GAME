@@ -38,6 +38,7 @@ window.addEventListener('keydown', e => {
   if (k === 'r') startReload();
   else if (k === 'q') swapWeapon();
   else if (k === 'e') interact();
+  else if (k === ' ') { e.preventDefault(); dodge(); }
   else if (k === 'i') UI.toggle('inventory');
   else if (k === 'c') UI.toggle('stats');
   else if (k === 'j') UI.toggle('quest');
@@ -114,7 +115,7 @@ function startGame(save, name) {
     G.player = newPlayer(name || '생존자');
     G.player.hp = PlayerStats.maxHp(G.player);
     log('대붕괴 20년 후, 서울. 시청역 생존자 캠프에서 눈을 떴다.', '#e0b23a');
-    log('생존자 대장 한씨(오른쪽 위)에게 말을 걸어 임무를 받으세요. [E]', '#8cf');
+    G.autoStory = true; // v0.16: 1장을 바로 시작 (캠프 대화 없이)
   }
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
@@ -125,10 +126,35 @@ function startGame(save, name) {
   document.getElementById('hud').classList.remove('hidden');
   UI.buildHotbar();
   UI.refreshAll();
+  if (G.autoStory) { G.autoStory = false; Story.start(G.player); log('조작: WASD 이동 · 마우스 조준·사격 · Space 구르기(무적) · R 재장전 · 1~4 스킬', '#8cf'); }
   saveGame();
 }
 
 // ---------------- 플레이어 행동 ----------------
+// 구르기 (v0.16): 0.28초 무적 돌진, 1초 쿨타임. 이동 중이면 그 방향, 아니면 조준 방향
+const ROLL = { dur: 0.28, speed: 540, cd: 1.0 };
+function dodge() {
+  const p = G.player;
+  if (p.dead || p.rollT > 0 || (p.rollCd || 0) > 0) return;
+  let a = p.aim;
+  const m = moveInput();
+  if (m) a = Math.atan2(m.wy, m.wx);
+  p.rollT = ROLL.dur; p.rollCd = ROLL.cd; p.rollA = a;
+  SFX.play('dodge'); burst(p.x, p.y, '#8a8070', 6, 80, 0.3, 3);
+}
+// 현재 이동 입력 (월드 방향, 정규화 안 됨). 없으면 null
+function moveInput() {
+  let mx = 0, my = 0, amt = 1;
+  if (input.keys['w'] || input.keys['arrowup']) my -= 1;
+  if (input.keys['s'] || input.keys['arrowdown']) my += 1;
+  if (input.keys['a'] || input.keys['arrowleft']) mx -= 1;
+  if (input.keys['d'] || input.keys['arrowright']) mx += 1;
+  if (Touch.move) { mx = Touch.move.x; my = Touch.move.y; amt = Math.min(1, Touch.move.mag); } // 모바일 왼쪽 조이스틱
+  if (!mx && !my) return null;
+  // 화면 기준 방향 → 월드 방향 (쿼터뷰)
+  return { wx: (mx + 2 * my) / 2, wy: (2 * my - mx) / 2, amt };
+}
+
 function swapWeapon() {
   const p = G.player, other = p.active === 'w1' ? 'w2' : 'w1';
   if (!p.equip[other]) { log('교체할 무기가 없습니다.', '#aaa'); return; }
@@ -143,10 +169,11 @@ function startReload() {
   const b = WEAPONS[w.key];
   if (b.melee || p.reloadT > 0 || w.loaded >= magSize(w)) return;
   if (p.reserve <= 0 && !b.infinite) {
-    if (G.noAmmoT <= 0) { log('예비 탄약이 없습니다! 상점에서 구매하거나 근접 무기로 교체(Q)하세요.', '#f88'); G.noAmmoT = 2; }
+    if (G.noAmmoT <= 0) { log('예비 탄약이 없습니다! 상점에서 구매하거나 근접 무기로 교체(Q)하세요.', '#f88'); G.noAmmoT = 2; SFX.play('empty'); }
     return;
   }
   p.reloadT = p.reloadMax = b.reload * PlayerStats.reloadMul(p);
+  SFX.play('reload');
 }
 
 function finishReload() {
@@ -169,6 +196,7 @@ function playerAttack() {
   const b = WEAPONS[w.key];
   p.atkT = b.rate * PlayerStats.rateMul(p);
   p.lastAtk = G.time; // 공격 애니메이션용
+  SFX.play(b.melee ? 'swing' : { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[w.key] || 'pistol');
   const critMul = PlayerStats.critMul(p, w), cc = PlayerStats.crit(p, w);
   if (b.melee) {
     const reach = meleeReach(w);
@@ -195,6 +223,16 @@ function playerAttack() {
     return;
   }
   if (w.loaded <= 0) { p.atkT = 0; startReload(); return; }
+  // 총소리 (v0.16): 근처의 배회하던 적이 소리를 듣고 몰려옴 (근접 무기는 조용함)
+  if (G.time - (G.noiseT || -9) > 0.5) {
+    G.noiseT = G.time;
+    const ln = w.key === 'sniper' ? 750 : 550;
+    for (const e of G.enemies) {
+      if (e.state === 'chase' || e.hp <= 0 || e.minion || dist(e, p) > ln) continue;
+      const nd = Nav.dist && Nav.dist[Math.floor(e.y / TILE) * World.W + Math.floor(e.x / TILE)];
+      if (e.def.flying || nd >= 0) { e.state = 'chase'; e.heard = true; }
+    }
+  }
   if (!(w.legend === 'thrift' && Math.random() < 0.35)) w.loaded--;
   const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false);
   const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w);
@@ -223,6 +261,7 @@ function explode(x, y, dmg, r, opts = {}) {
     if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e)) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true });
   }
   G.effects.push({ type: 'boom', x, y, t: 0, life: 0.4, r });
+  SFX.play('boom', opts.small ? 0.4 : 1);
   burst(x, y, '#ffb040', opts.small ? 12 : 30, opts.small ? 160 : 260, 0.5, 4);
   if (!opts.small) burst(x, y, '#555', 20, 120, 0.9, 6);
   G.shake = Math.max(G.shake, opts.small ? 4 : 12);
@@ -232,6 +271,7 @@ function useSkill(i) {
   const p = G.player, s = SKILLS[i];
   if (p.level < s.lvl) { log(`${s.name}: Lv${s.lvl}에 습득합니다.`, '#aaa'); return; }
   if (p.skillCd[i] > 0) return;
+  SFX.play(s.id === 'heal' ? 'heal' : 'skill');
   if (s.id === 'rapid') { p.buffs.rapid = SkillCalc.rapidDur(p); floatText(p.x, p.y - 30, '집중 사격!', '#7fd'); }
   else if (s.id === 'grenade') {
     const { x: tx, y: ty } = Iso.toWorld(input.mx, input.my);
@@ -307,6 +347,7 @@ function gainExp(n) {
     p.statPoints += 3;
     p.hp = PlayerStats.maxHp(p);
     log(`레벨 업! Lv${p.level} — 능력치 포인트 +3 (C)`, '#ffd76a');
+    SFX.play('levelup');
     const sk = SKILLS.find(s => s.lvl === p.level);
     if (sk) log(`새 스킬 습득: ${sk.name} [${SKILLS.indexOf(sk) + 1}]`, '#7fd');
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.8, color: '#ffd76a', r: 80 });
@@ -319,6 +360,11 @@ function gainExp(n) {
 function damagePlayer(dmg, srcX, srcY) {
   const p = G.player;
   if (p.dead || World.inSafe(p.x, p.y)) return;
+  if (p.rollT > 0) { // 구르기 무적
+    if (G.time - (p.dodgeTxt || 0) > 0.4) { p.dodgeTxt = G.time; floatText(p.x, p.y - 30, '회피!', '#9fe0ff', 14); }
+    return;
+  }
+  SFX.play('ehit');
   const d = Math.max(1, Math.round(dmg * (1 - PlayerStats.dmgReduce(p))));
   p.hp -= d; p.hurtT = 0.15;
   floatText(p.x, p.y - 20, '-' + d, '#ff5050', 14);
@@ -365,6 +411,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
     if (hit.stagger) e.stunT = Math.max(e.stunT, hit.stagger / wt);
   }
   const big = dmg >= e.maxHp * 0.25 || crit;
+  SFX.play(crit ? 'crit' : e.type === 'drone' ? 'metal' : 'hit', 0.8);
   if (Settings.dmgNum) floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : e.def.boss ? '#ffb0ff' : '#fff', crit ? 18 : big ? 15 : 13);
   burst(e.x, e.y, e.type === 'drone' ? '#ffc' : '#8a1010', crit ? 9 : 4, crit ? 150 : 110, 0.35);
   if (crit) burst(e.x, e.y, '#fff3a0', 5, 180, 0.15, 2);
@@ -393,7 +440,15 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
 function killEnemy(e) {
   const p = G.player;
   // 보스 소환수는 경험치 20%, 드랍 없음 (보스 옆 무한 파밍 방지)
-  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1)); // 엘리트 4배
+  // 연속 처치 콤보 (v0.16): 3초 안에 이어 잡으면 경험치 +5%씩 (최대 +50%)
+  if (!e.minion) {
+    G.combo = G.time - (G.comboT || -9) < 3 ? (G.combo || 0) + 1 : 1; G.comboT = G.time;
+    if (G.combo >= 3) SFX.play('combo', G.combo);
+    if (G.combo === 10 || G.combo === 25 || G.combo === 50) { UI.toast(`${G.combo} 연속 처치!`, `보너스 +${G.combo * p.level}₵`); p.credits += G.combo * p.level; }
+  }
+  const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
+  SFX.play(e.def.boss || e.fieldBoss || e.elite ? 'roar' : 'kill', e.def.boss ? 1 : 0.8);
+  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul); // 엘리트 4배
   gainExp(exp);
   floatText(e.x, e.y - 10, `+${fmt(exp)} EXP`, '#e0c040', 12);
   p.totalKills++;
@@ -512,10 +567,10 @@ function updateEnemies(dt) {
     if (e.hp <= 0) continue;
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt;
     const d = dist(e, p);
-    if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); continue; } // 경직: 이동·공격 불가
+    if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); Monsters.interrupt(e); continue; } // 경직: 이동·공격 불가, 준비 중인 공격 끊김
     const same = Interiors.sameSpace(e); // 건물 안팎이 다르면 쫓지 않음 (벽 너머 길찾기 없음)
     if (!p.dead && !pSafe && same && d < e.def.aggro) e.state = 'chase';
-    else if (e.state === 'chase' && (p.dead || pSafe || !same || d > e.def.aggro * 1.7)) e.state = 'idle';
+    else if (e.state === 'chase' && (p.dead || pSafe || d > e.def.aggro * (e.heard ? 2.6 : 1.7) || (!same && Nav.dist && Nav.dist[Math.floor(e.y / TILE) * World.W + Math.floor(e.x / TILE)] < 0))) e.state = 'idle'; // 길이 없을 때만 포기
     if (e.assault && !p.dead) e.state = 'chase'; // 어설트 적은 항상 추격
     if (e.def.boss) updateBoss(e, dt, d);
     if ((e.elite || e.patterns) && e.state === 'chase') Monsters.updateNamed(e, dt);
@@ -535,18 +590,19 @@ function updateEnemies(dt) {
       const a = angleTo(e, p);
       e.face = a;
       let moveA = a, spd = e.speed * Monsters.buff(e);
+      const hold = !e.def.boss && Monsters.attack(e, dt, d, a); // v0.16 예고 공격 (예고·도약 중엔 정지)
+      // 시야가 막혔으면 길찾기 지도를 따라 건물을 돌아서 접근 (드론은 날아서 직선)
+      const seen = e.def.flying || d < 70 || World.lineOfSight(e, p);
+      if (!seen) { const na = Nav.dir(e); if (na !== null) moveA = na; }
       if (e.def.ranged) {
         const los = World.lineOfSight(e, p);
         if (los && d < e.def.range * 0.55) moveA = a + Math.PI;
         else if (los && d < e.def.range * 0.9) { moveA = a + e.sideDir * Math.PI / 2; spd *= 0.6; }
-        if (los && d < e.def.range && e.fireT <= 0) {
-          e.fireT = e.def.fireCd * (e.fireMul || 1) * rand(0.8, 1.25);
-          spawnEnemyBullet(e, a + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg * Monsters.buff(e)); e.lastAtk = G.time;
-        }
+        else if (!los && !e.def.flying) { const na = Nav.dir(e); if (na !== null) moveA = na; }
         if (Math.random() < dt * 0.4) e.sideDir *= -1;
       }
-      if (d > e.r + p.r + 2) tryMoveSmart(e, moveA, spd * dt);
-      if (!e.def.ranged && d < e.r + p.r + 8 && e.atkT <= 0) {
+      if (!hold && d > e.r + p.r + 2) tryMoveSmart(e, moveA, spd * dt);
+      if (e.def.boss && d < e.r + p.r + 8 && e.atkT <= 0) {
         e.atkT = e.def.atkCd * (e.atkMul || 1); e.lastAtk = G.time;
         damagePlayer(e.dmg * Monsters.buff(e), e.x, e.y);
       }
@@ -580,7 +636,7 @@ function spawnEnemies(dt) {
   if (G.elite && G.elite.hp <= 0) G.elite = null;
   const z = World.zoneIndex(p.x, p.y);
   const near = G.enemies.filter(e => !e.def.boss && dist(e, p) < 1300).length;
-  const target = z === 0 ? 8 : 14 + z * 3;
+  const target = z === 0 ? 8 : 18 + z * 4; // v0.16 밀도 상향 (14+z·3 → 18+z·4)
   if (near >= target) return;
   for (let tries = 0; tries < 6; tries++) {
     const a = rand(0, TAU), r = rand(560, 950);
@@ -704,6 +760,11 @@ function updateGrenades(dt) {
 function updateDrops(dt) {
   const p = G.player;
   for (const d of G.drops) {
+    if (!d.seen) { // 희귀 이상 장비가 떨어지는 순간: 소리 + 글자 (빛기둥은 render)
+      d.seen = true;
+      const r = d.kind === 'item' && d.item.kind !== 'cons' ? d.item.rarity || 0 : 0;
+      if (r >= 2) { SFX.play('item', r); floatText(d.x, d.y - 40, `${RARITIES[r].name}!`, RARITIES[r].color, 14 + r * 2); }
+    }
     d.t += dt;
     if (p.dead) continue;
     const dd = dist(p, d);
@@ -711,11 +772,12 @@ function updateDrops(dt) {
       const a = angleTo(d, p); d.x += Math.cos(a) * 260 * dt; d.y += Math.sin(a) * 260 * dt;
     }
     if (dd < 24) {
-      if (d.kind === 'credits') { p.credits += d.amount; floatText(p.x, p.y - 26, `+${d.amount}₵`, '#ffd76a', 12); d.gone = true; }
-      else if (d.kind === 'ammo') { p.reserve += d.amount; floatText(p.x, p.y - 26, `탄약 +${d.amount}`, '#cc8', 12); d.gone = true; }
+      if (d.kind === 'credits') { p.credits += d.amount; floatText(p.x, p.y - 26, `+${d.amount}₵`, '#ffd76a', 12); d.gone = true; SFX.play('coin'); }
+      else if (d.kind === 'ammo') { p.reserve += d.amount; floatText(p.x, p.y - 26, `탄약 +${d.amount}`, '#cc8', 12); d.gone = true; SFX.play('ammo'); }
       else if (d.kind === 'item') {
         if (addItem(d.item)) {
           const r = d.item.rarity || 0, up = isUpgrade(p, d.item);
+          SFX.play('item', Math.min(4, r));
           log(`획득: ${itemName(d.item)}${d.item.count > 1 ? ' x' + d.item.count : ''}${up ? '  ▲ 장착 장비보다 좋음!' : ''}`, RARITIES[r].color);
           if (r >= 2) {
             floatText(p.x, p.y - 30, `${RARITIES[r].name} 장비!`, RARITIES[r].color, 16 + r * 2);
@@ -735,16 +797,13 @@ function update(dt) {
   G.time += dt;
   const p = G.player;
   if (!p.dead) {
-    let mx = 0, my = 0;
-    if (input.keys['w'] || input.keys['arrowup']) my -= 1;
-    if (input.keys['s'] || input.keys['arrowdown']) my += 1;
-    if (input.keys['a'] || input.keys['arrowleft']) mx -= 1;
-    if (input.keys['d'] || input.keys['arrowright']) mx += 1;
-    let amt = 1;
-    if (Touch.move) { mx = Touch.move.x; my = Touch.move.y; amt = Math.min(1, Touch.move.mag); } // 모바일 왼쪽 조이스틱
-    if (mx || my) {
-      // 화면 기준 방향 → 월드 방향 (쿼터뷰)
-      const wx = (mx + 2 * my) / 2, wy = (2 * my - mx) / 2;
+    const mv = moveInput();
+    if (p.rollT > 0) { // 구르는 중: 정해진 방향으로 빠르게
+      p.rollT -= dt;
+      World.move(p, Math.cos(p.rollA) * ROLL.speed * dt, Math.sin(p.rollA) * ROLL.speed * dt);
+      if (Math.random() < 0.5) G.particles.push({ x: p.x, y: p.y, vx: 0, vy: 0, t: 0, life: 0.35, color: 'rgba(150,140,120,0.6)', size: 6, z: 4 });
+    } else if (mv) {
+      const { wx, wy, amt } = mv;
       const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt;
       World.move(p, wx / l * sp, wy / l * sp);
       p.walkT = (p.walkT || 0) + dt;
@@ -752,13 +811,14 @@ function update(dt) {
     if (IS_TOUCH) Touch.aimUpdate(p); // 모바일 오른쪽 조이스틱 → 조준점·사격
     const aimAt = Iso.toWorld(input.mx, input.my, 20); // 가슴 높이 조준
     p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x);
-    if (input.down) playerAttack();
+    if (input.down && !(p.rollT > 0)) playerAttack();
     if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; finishReload(); } }
     // 캠프 안에서는 천천히 회복
     const mh = PlayerStats.maxHp(p);
     if (World.inSafe(p.x, p.y) && p.hp < mh) p.hp = Math.min(mh, p.hp + mh * 0.08 * dt);
     else if (p.hp < mh) p.hp = Math.min(mh, p.hp + PlayerStats.regen(p) * dt); // 체력 스탯·옵션 재생
   }
+  p.rollCd = (p.rollCd || 0) - dt;
   p.atkT -= dt; p.hurtT -= dt; p.swingT -= dt; p.recoilT = (p.recoilT || 0) - dt; G.noAmmoT -= dt;
   for (let i = 0; i < 4; i++) p.skillCd[i] = Math.max(0, p.skillCd[i] - dt);
   p.buffs.rapid = Math.max(0, p.buffs.rapid - dt);
@@ -767,6 +827,7 @@ function update(dt) {
   spawnEnemies(dt);
   updateBossSpawn(dt);
   Interiors.update();
+  Nav.update(dt);
   updateEnemies(dt);
   Assault.update(dt);
   Bosses.updateField(dt);

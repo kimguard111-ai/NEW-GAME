@@ -157,6 +157,7 @@ const Story = {
 
   completeStep() {
     const p = G.player, c = this.chapter(p), st = c.steps[p.quest.step];
+    SFX.play('quest');
     radio(`좋아, "${this.objective(st)}" 확인했네. 보상을 보내지.`);
     this.grant(st.reward, c.minLevel);
     p.quest.step++; p.quest.progress = 0;

@@ -32,6 +32,7 @@ const Touch = {
     btn('Q', () => swapWeapon());
     btn('R', () => startReload());
     btn('E', () => interact(), 'big');
+    btn('💨', () => dodge(), 'big roll'); // v0.16 구르기
     document.getElementById('hud').appendChild(bar);
     // 스킬 칸 터치
     document.getElementById('hotbar').addEventListener('touchstart', e => {
@@ -39,7 +40,7 @@ const Touch = {
       if (!hot) return;
       e.preventDefault();
       const i = [...hot.parentNode.children].indexOf(hot);
-      if (i < SKILLS.length) useSkill(i); else quickMedkit();
+      if (i < SKILLS.length) useSkill(i); else if (i === SKILLS.length) quickMedkit(); else dodge();
     }, opts);
     // 시작 시 전체 화면 + 가로 고정 시도 (지원하는 브라우저만)
     for (const id of ['btn-new', 'btn-continue', 'btn-respawn']) document.getElementById(id).addEventListener('click', () => this.fullscreen());
