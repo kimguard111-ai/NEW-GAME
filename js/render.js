@@ -233,7 +233,7 @@ function drawPlayer(p) {
   const o = { s: 1.05, body: '#3e5f3a', skin: '#d9b48f', helmet: '#2b332a', legs: '#2c3a2c', aim: p.aim, flash: p.hurtT > 0, walk: moving ? G.time : 0 };
   if (b && b.melee) {
     o.blade = w.key === 'katana' ? '#bfe6ff' : w.key === 'axe' ? '#b33' : '#999';
-    o.swing = p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * b.arc : -0.5;
+    o.swing = p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * meleeReach(w).arc : -0.5;
   } else if (b) {
     o.gun = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 12 : w.key === 'lmg' ? 26 : w.key === 'shotgun' ? 22 : w.key === 'smg' ? 15 : 20;
     if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
@@ -382,7 +382,8 @@ function render() {
   if (w && WEAPONS[w.key].melee && p.swingT > 0 && !p.dead) {
     const b = WEAPONS[w.key];
     ctx.strokeStyle = `rgba(255,255,255,${p.swingT * 3})`; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(p.x, p.y, b.range * 0.85, p.aim - b.arc / 2, p.aim + b.arc / 2); ctx.stroke(); ctx.lineWidth = 1;
+    const rc = meleeReach(w);
+    ctx.beginPath(); ctx.arc(p.x, p.y, rc.range * 0.85, p.aim - rc.arc / 2, p.aim + rc.arc / 2); ctx.stroke(); ctx.lineWidth = 1;
   }
   for (const ef of G.effects) {
     const k = ef.t / ef.life;
@@ -437,6 +438,13 @@ function render() {
     }
   }
   ctx.lineWidth = 1;
+  for (const ef of G.effects) if (ef.type === 'zap') { // 연쇄 타격 번개
+    ctx.strokeStyle = `rgba(150,220,255,${1 - ef.t / ef.life})`; ctx.lineWidth = 3;
+    const ax = Iso.sx(ef.x, ef.y), ay = Iso.sy(ef.x, ef.y, 20), bx = Iso.sx(ef.x2, ef.y2), by = Iso.sy(ef.x2, ef.y2, 20);
+    ctx.beginPath(); ctx.moveTo(ax, ay);
+    for (let k = 1; k < 4; k++) ctx.lineTo(lerp(ax, bx, k / 4) + rand(-6, 6), lerp(ay, by, k / 4) + rand(-6, 6));
+    ctx.lineTo(bx, by); ctx.stroke(); ctx.lineWidth = 1;
+  }
   for (const g of G.grenades) {
     drawShadow(Iso.sx(g.x, g.y), Iso.sy(g.x, g.y), 4);
     ctx.fillStyle = '#4a5a3a'; ctx.beginPath(); ctx.arc(Iso.sx(g.x, g.y), Iso.sy(g.x, g.y, 6 + g.h * 1.5), 4, 0, TAU); ctx.fill();

@@ -10,6 +10,7 @@ function rollAffixes(kind, key, rarity, ilvl) {
   const melee = kind === 'weapon' && WEAPONS[key].melee;
   const pool = Object.keys(AFFIXES).filter(k => {
     const sl = AFFIXES[k].slot;
+    if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(key)) return false; // 계열 전용 옵션
     return kind === 'armor' ? sl === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee);
   });
   const out = [];
@@ -19,7 +20,8 @@ function rollAffixes(kind, key, rarity, ilvl) {
     if (rarity >= 3) t = Math.max(t, Math.random()); // 영웅·전설은 상위 수치 쪽으로
     let v = lerp(a.min, a.max, t);
     if (a.perLvl) v *= 1 + ilvl * a.perLvl;
-    out.push({ k, v: a.pct ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10 });
+    if (a.int) v = Math.round(lerp(a.min - 0.49, a.max + 0.49, t));
+    out.push({ k, v: a.int ? clamp(v, a.min, a.max) : a.pct ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10 });
   }
   return out;
 }
@@ -199,6 +201,10 @@ function skillDesc(s, p) {
 // 능력치 초기화 비용 (첫 1회 무료)
 function respecCost(p) { return p.respecs ? p.level * 80 : 0; }
 
+// 계열 전용 옵션이 반영된 무기 수치
+function pelletCount(w) { return (WEAPONS[w.key].pellets || 1) + gearBonus(G.player, 'pellets', w); }
+function meleeReach(w) { const b = WEAPONS[w.key], r = gearBonus(G.player, 'reach', w); return { range: b.range * (1 + r), arc: b.arc * (1 + r) }; }
+
 function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w))); }
 function weaponDmg(w) { return w.dmg * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }
 
@@ -209,7 +215,7 @@ function weaponDps(p, w) {
   const mul = (b.melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * plusMul(w) * (1 + gearBonus(p, 'dmg', w));
   const cc = Math.min(1, PlayerStats.crit(p, w));
   const interval = b.rate * (p.buffs.rapid > 0 ? 2 : 1) * PlayerStats.rateMul(p, w);
-  let dps = w.dmg * (b.pellets || 1) * mul * (1 + cc * (PlayerStats.critMul(p, w) - 1)) / interval;
+  let dps = w.dmg * ((b.pellets || 1) + gearBonus(p, 'pellets', w)) * mul * (1 + cc * (PlayerStats.critMul(p, w) - 1)) / interval;
   if (!b.melee) {
     const mag = Math.round(b.mag * (1 + gearBonus(p, 'mag', w)));
     const rl = b.reload / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w));

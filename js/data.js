@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.5';
+const GAME_VERSION = 'v0.5.1';
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -45,6 +45,11 @@ const AFFIXES = {
   critDmg: { name: '치명타 피해', slot: 'weapon', min: 0.15, max: 0.40, pct: true },
   mag:     { name: '탄창 용량',   slot: 'gun',    min: 0.15, max: 0.40, pct: true },
   reload:  { name: '재장전 속도', slot: 'gun',    min: 0.10, max: 0.25, pct: true },
+  // 무기 계열 전용 (v0.4 장비 2.0 마무리): weapons 에 적힌 무기에만 붙음
+  pellets: { name: '산탄 펠릿',   slot: 'weapon', min: 1, max: 3, int: true, unit: '발', weapons: ['shotgun'] },
+  pierce:  { name: '관통',        slot: 'weapon', min: 1, max: 2, int: true, unit: '명', weapons: ['sniper'] },
+  reach:   { name: '공격 범위',   slot: 'weapon', min: 0.10, max: 0.25, pct: true, weapons: ['pipe', 'axe', 'katana'] },
+  accuracy:{ name: '정확도',      slot: 'weapon', min: 0.15, max: 0.35, pct: true, weapons: ['pistol', 'smg', 'rifle', 'lmg'] },
   hp:      { name: '최대 체력',   slot: 'armor',  min: 0.05, max: 0.15, pct: true },
   move:    { name: '이동 속도',   slot: 'armor',  min: 0.03, max: 0.08, pct: true },
   regen:   { name: '체력 재생',   slot: 'armor',  min: 1, max: 3, perLvl: 0.15, unit: '/초' },
@@ -57,6 +62,8 @@ const LEGENDARY = {
   leech:   { name: '흡혈',      desc: '입힌 피해의 4%만큼 체력 회복' },
   execute: { name: '처형자',    desc: '체력 30% 이하의 적에게 피해 +60%' },
   thrift:  { name: '보급 장인', desc: '35% 확률로 탄약을 소모하지 않음', gun: true },
+  quickload: { name: '속사 장전', desc: '적을 처치하면 탄창이 즉시 가득 참', gun: true },
+  chain:   { name: '연쇄 타격', desc: '치명타가 근처 적 1명에게 50% 피해로 튐' },
 };
 
 // 장비 강화 (v0.5). rates[현재 단계] = 성공 확률

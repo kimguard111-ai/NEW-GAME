@@ -151,6 +151,7 @@ function playerAttack() {
   p.atkT = b.rate * PlayerStats.rateMul(p);
   const critMul = PlayerStats.critMul(p, w), cc = PlayerStats.crit(p, w);
   if (b.melee) {
+    const reach = meleeReach(w);
     p.swingT = 0.18;
     World.move(p, Math.cos(p.aim) * 6, Math.sin(p.aim) * 6); // 휘두르며 살짝 전진
     const dmg = weaponDmg(w) * playerDamageMul(true);
@@ -158,9 +159,9 @@ function playerAttack() {
     for (const e of G.enemies) {
       if (e.hp <= 0) continue;
       const d = dist(p, e);
-      if (d > b.range + e.r) continue;
+      if (d > reach.range + e.r) continue;
       const da = Math.abs(((angleTo(p, e) - p.aim + Math.PI * 3) % TAU) - Math.PI);
-      if (da > b.arc / 2 && d > e.r + p.r + 4) continue;
+      if (da > reach.arc / 2 && d > e.r + p.r + 4) continue;
       if (!World.lineOfSight(p, e)) continue; // 벽 너머 타격 방지
       const crit = Math.random() < cc;
       anyCrit = anyCrit || crit;
@@ -175,16 +176,17 @@ function playerAttack() {
   }
   if (w.loaded <= 0) { p.atkT = 0; startReload(); return; }
   if (!(w.legend === 'thrift' && Math.random() < 0.35)) w.loaded--;
-  const pellets = b.pellets || 1, dmg = weaponDmg(w) * playerDamageMul(false);
+  const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false);
+  const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w);
   const mx = p.x + Math.cos(p.aim) * 22, my = p.y + Math.sin(p.aim) * 22;
   const life = b.range / b.speed;
   for (let i = 0; i < pellets; i++) {
-    const a = p.aim + rand(-b.spread, b.spread);
+    const a = p.aim + rand(-spread, spread);
     const s = b.speed * rand(0.95, 1.05);
     const crit = Math.random() < cc;
     G.bullets.push({
       x: mx, y: my, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, falloff: b.falloff,
-      dmg: dmg * (crit ? critMul : 1), crit, pierce: b.pierce || 0, hit: [], w,
+      dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w,
       color: crit ? '#ffef7a' : w.legend === 'boom' ? '#ff8a3a' : '#ffd27a',
     });
   }
@@ -345,8 +347,22 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (w && !hit.noProc) {
     if (w.legend === 'leech') p.hp = Math.min(PlayerStats.maxHp(p), p.hp + dmg * 0.04);
     if (w.legend === 'boom' && Math.random() < 0.2) explode(e.x, e.y, dmg * 0.6, 55, { small: true, knock: 10, stagger: 0.15 });
+    if (w.legend === 'chain' && crit) {
+      let t = null, bd = 170;
+      for (const o of G.enemies) { const dd = dist(o, e); if (o !== e && o.hp > 0 && dd < bd && World.lineOfSight(e, o)) { bd = dd; t = o; } }
+      if (t) {
+        G.effects.push({ type: 'zap', x: e.x, y: e.y, x2: t.x, y2: t.y, t: 0, life: 0.18 });
+        damageEnemy(t, dmg * 0.5, false, angleTo(e, t), { knock: 4, noProc: true, w });
+      }
+    }
   }
-  if (e.hp <= 0) killEnemy(e);
+  if (e.hp <= 0) {
+    killEnemy(e);
+    if (w && w.legend === 'quickload' && w === curWeapon() && !hit.noProc) {
+      w.loaded = magSize(w); p.reloadT = 0;
+      floatText(p.x, p.y - 34, '장전!', '#ffd27a', 13);
+    }
+  }
 }
 
 function killEnemy(e) {
