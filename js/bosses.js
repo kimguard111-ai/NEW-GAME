@@ -5,6 +5,8 @@ const FIELD_BOSSES = {
   1: { name: '거대 변이견 「붉은 이빨」', art: 'redfang', base: 'dog', level: 5, hpMul: 70, dmgMul: 1.6, scale: 1.9, patterns: ['dash', 'howl', 'dash', 'quake'] },
   2: { name: '약탈단장 「독사」', art: 'viper', base: 'raider', level: 10, hpMul: 24, dmgMul: 1.4, scale: 1.4, fireMul: 0.5, patterns: ['fan', 'dash', 'panther'] },
   3: { name: '실험체 「골리앗」', art: 'goliath', base: 'brute', level: 16, hpMul: 20, dmgMul: 1.3, scale: 1.6, patterns: ['quake', 'dash', 'glutton', 'quake'] },
+  6: { name: '블랙선 저격수 「매」', art: 'hawk', base: 'merc', level: 23, hpMul: 18, dmgMul: 1.4, scale: 1.3, fireMul: 0.6, patterns: ['fan', 'argos', 'dash'] }, // v1.6
+  7: { name: '은신 포식자 「그림자」', art: 'shade', base: 'stalker', level: 28, hpMul: 20, dmgMul: 1.3, scale: 1.5, patterns: ['dash', 'howl', 'dash', 'quake'] },
 };
 const FIELD_BOSS_CD = 360; // 처치 후 다음 출현까지 (초)
 // v1.5 지하 연구소 격리실 보스 (출격마다 한 번)

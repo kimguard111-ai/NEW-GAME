@@ -1,7 +1,8 @@
 // 맵 생성 및 지형 쿼리
 const T = { ROAD: 0, BUILDING: 1, RUBBLE: 2, CAR: 3, GRASS: 4, CAMP: 5, BARRICADE: 6, WALK: 7, LANDMARK: 8,
   WALL: 9, FLOOR: 10, DOOR: 11, PROP: 12, // v0.13 들어갈 수 있는 건물: 외벽·실내 바닥·출입문 · v0.15 실내 소품
-  LWALL: 13, LFLOOR: 14, LPROP: 15 }; // v1.5 연구소 벽·바닥·실험 장비
+  LWALL: 13, LFLOOR: 14, LPROP: 15, // v1.5 연구소 벽·바닥·실험 장비
+  WATER: 16 }; // v1.6 얕은 물 (석촌호수): 지나갈 수 있지만 느려짐, 총알은 통과
 const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE, T.LANDMARK, T.WALL, T.PROP, T.LWALL, T.LPROP]);
 const SHOP_TILES = new Set([T.WALL, T.FLOOR, T.DOOR, T.PROP]);
 // 상가 종류별 실내 소품: style = 배치 방식, h = 높이, c = [윗면, 남쪽면, 동쪽면]
@@ -54,8 +55,8 @@ const World = {
         // 도심(종로·용산)일수록 고층: 기본 3~6층, 도심 블록 일부는 8~12층
         const bz = def.zone;
         const fillB = (x0, y0, x1, y1, s) => {
-          const tall = (bz === 2 || bz === 3) && rng() < 0.3;
-          const h = FLOOR_H * (tall ? 8 + Math.floor(rng() * 5) : 3 + Math.floor(rng() * 4));
+          const tall = def.tall ? rng() < def.tall[0] : (bz === 2 || bz === 3) && rng() < 0.3; // v1.6 강남: 유리 고층 빌딩 숲
+          const h = FLOOR_H * (tall ? (def.tall ? def.tall[1] + Math.floor(rng() * def.tall[2]) : 8 + Math.floor(rng() * 5)) : 3 + Math.floor(rng() * 4));
           for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
             set(ox + x, oy + y, T.BUILDING);
             if (ox + x < W && oy + y < H) { this.shade[(oy + y) * W + ox + x] = s; this.height[(oy + y) * W + ox + x] = h; }
@@ -106,6 +107,16 @@ const World = {
         if (d < this.safeR) set(x, y, T.CAMP);
         else if (d < this.safeR + 1.2) set(x, y, T.BARRICADE);
         else if (d < this.safeR + 3 && (this.tiles[y * W + x] === T.BUILDING || this.tiles[y * W + x] === T.CAR)) set(x, y, T.RUBBLE);
+      }
+    }
+
+    // v1.6 석촌호수 (잠실): 맵 남동쪽 타원 호수 + 물가 산책로. 걸쳐진 상가는 validateShops 가 잔해로 바꿈
+    if (def.lake) {
+      const lx = W * 0.7, ly = H * 0.68, rx = 11, ry = 8;
+      for (let y = Math.floor(ly - ry - 3); y <= ly + ry + 3; y++) for (let x = Math.floor(lx - rx - 3); x <= lx + rx + 3; x++) {
+        const d = Math.hypot((x - lx) / rx, (y - ly) / ry);
+        if (d < 1) { set(x, y, T.WATER); if (x >= 0 && y >= 0 && x < W && y < H) this.height[y * W + x] = 0; }
+        else if (d < 1.28) set(x, y, T.WALK);
       }
     }
 
@@ -405,6 +416,7 @@ const World = {
 
   distTiles(px, py) { return Math.hypot(px / TILE - this.cx, py / TILE - this.cy); },
   zoneIndex() { return this.def ? this.def.zone : 0; }, // v1.3: 맵 하나 = 지역 하나
+  slow(px, py) { return this.tileAt(Math.floor(px / TILE), Math.floor(py / TILE)) === T.WATER ? 0.6 : 1; }, // v1.6 물속 이동 배율
   inSafe(px, py) { return this.map === 'camp' && this.distTiles(px, py) < this.safeR + 1.5; },
   campCenter() { return { x: this.cx * TILE + TILE / 2, y: this.cy * TILE + TILE / 2 }; },
 
@@ -417,7 +429,7 @@ const World = {
       [T.ROAD]: [45, 47, 52], [T.BUILDING]: [95, 92, 88], [T.RUBBLE]: [70, 64, 56], [T.CAR]: [110, 60, 40],
       [T.GRASS]: [48, 70, 40], [T.CAMP]: [60, 90, 120], [T.BARRICADE]: [140, 110, 60], [T.WALK]: [62, 62, 66],
       [T.LANDMARK]: [200, 170, 90], [T.WALL]: [120, 100, 80], [T.FLOOR]: [80, 68, 56], [T.DOOR]: [230, 200, 110], [T.PROP]: [96, 84, 70],
-      [T.LWALL]: [22, 24, 28], [T.LFLOOR]: [78, 84, 92], [T.LPROP]: [60, 66, 74],
+      [T.LWALL]: [22, 24, 28], [T.LFLOOR]: [78, 84, 92], [T.LPROP]: [60, 66, 74], [T.WATER]: [40, 80, 110],
     };
     for (let i = 0; i < this.tiles.length; i++) {
       const c3 = col[this.tiles[i]];

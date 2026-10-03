@@ -15,6 +15,9 @@ const TIPS = {
   fieldboss: () => '필드 보스는 미니맵의 붉은 깜빡임을 따라가세요. 희귀 이상 장비 확정!',
   deploy:    () => '캠프의 작전 장교 윤씨(출격 지도)에게서 맵을 골라 출격하세요. 창고 관리인에게 맡긴 물건은 안전합니다.',
   lab:       () => '지하 연구소는 어둡고 시야가 좁습니다. 총을 쏘면 섬광이 주변을 비춥니다. 보안 포탑은 움직이지 않으니 벽 뒤로 돌아가고, 초록 원(산성)은 굴러서 피하세요.',
+  shield:    () => '방패 돌격병은 정면 피해를 80% 막습니다. 천천히 돌아서니 구르기로 옆·뒤를 잡거나, 수류탄·폭발로 공격하세요. 경직 중엔 방패가 내려갑니다.',
+  cloak:     () => '은신 변이체는 가까이 오거나 맞기 전엔 공기가 일렁이는 윤곽만 보입니다. 보랏빛 눈과 일렁임을 찾고, 도약 예고선이 보이면 구르세요.',
+  water:     () => '얕은 물에서는 사람도 적도 느려집니다. 쫓길 땐 물을 피하고, 근접형 적을 물가로 끌어들이세요.',
   extract:   () => '이번 출격에서 주운 장비·크레딧은 맵 끝의 초록 ◎ 탈출 지점에 5초 머물러야 확정됩니다. 죽으면 그것만 잃어요.',
 };
 
@@ -40,6 +43,9 @@ const Tips = {
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
     if (World.map === 'camp' && p.level >= 1) { this.show('deploy'); if (World.map === 'camp') return; }
     if (p.raid && p.raid.t > 4) this.show('extract');
+    if (G.enemies.some(e => e.type === 'shield' && near(e, 450))) return this.show('shield');
+    if (G.enemies.some(e => e.type === 'stalker' && near(e, 400))) return this.show('cloak');
+    if (World.slow(p.x, p.y) < 1) return this.show('water');
     if (World.def && World.def.lab && p.raid && p.raid.t > 12 && !p.tips.includes('lab')) return this.show('lab');
     if (G.enemies.some(e => near(e, 400) && (e.windT > 0 || e.pounceT > 0 || e.aimT > 0)) || G.strikes.some(s => Math.hypot(s.x - p.x, s.y - p.y) < 300)) return this.show('telegraph');
     if (G.enemies.filter(e => e.heard && near(e, 600)).length >= 2) return this.show('noise');

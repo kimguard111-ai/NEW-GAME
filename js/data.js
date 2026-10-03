@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.5.1';
+const GAME_VERSION = 'v1.6';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -112,6 +112,11 @@ const ENEMIES = {
              ranged: true, lob: true, range: 340, fireCd: 2.6 },
   sentry:  { name: '보안 포탑', hp: 160, dmg: 8, speed: 0, r: 14, exp: 38, weight: 99, color: '#9aa4b0', atkCd: 1.0, aggro: 520,
              ranged: true, range: 480, fireCd: 1.5, burst: 3, bulletSpeed: 520, turret: true },
+  // v1.6 강남 · 잠실
+  merc:    { name: '블랙선 용병', hp: 110, dmg: 11, speed: 96, r: 12, exp: 40, weight: 1.1, color: '#2a2e36', atkCd: 1.0, aggro: 500,
+             ranged: true, range: 420, fireCd: 1.9, burst: 3, bulletSpeed: 560, nade: true },  // 3점사 · 가끔 수류탄
+  shield:  { name: '방패 돌격병', hp: 200, dmg: 20, speed: 78, r: 14, exp: 48, weight: 2.2, color: '#3a3e46', atkCd: 1.3, aggro: 460, shield: true }, // 정면 피해 80% 감소 · 느리게 돌아섬
+  stalker: { name: '은신 변이체', hp: 120, dmg: 21, speed: 150, r: 12, exp: 46, weight: 0.9, color: '#4a3a5a', atkCd: 0.9, aggro: 420, pounce: true, cloak: true }, // 가까이 오거나 맞기 전엔 거의 안 보임
   boss:   { name: '방사능 군주 타이탄', hp: 90000, dmg: 130, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
 };
 
@@ -140,6 +145,15 @@ const ZONES = [
     spawns: [['subject', 40], ['spitter', 25], ['sentry', 15], ['drone', 20]],
     desc: '어둠 속 실험체 · 보안 포탑 · 최종 실험체 「키메라」', packs: { subject: [2, 4] },
     gear: ['katana', 'sniper', 'lmg', 'exo', 'exoHelm'], gearText: '고주파 블레이드·저격소총·기관총·외골격 장비' },
+  // v1.6
+  { name: '강남 업무지구', maxDist: 999, lvl: [20, 25], dark: 0.55, tint: 'rgba(30,20,70,0.10)',
+    spawns: [['merc', 35], ['shield', 20], ['drone', 20], ['raider', 15], ['brute', 10]],
+    desc: '민간 군사 회사 「블랙선」의 구역 — 방패병은 뒤나 폭발로', packs: { merc: [2, 3] },
+    gear: ['rifle', 'sniper', 'lmg', 'military', 'exo', 'tacHelmet', 'exoHelm'], gearText: '돌격소총·저격소총·기관총·강화복·외골격' },
+  { name: '잠실 변이 지대', maxDist: 999, lvl: [25, 30], dark: 0.62, tint: 'rgba(60,10,60,0.10)',
+    spawns: [['stalker', 30], ['brute', 25], ['zombie', 20], ['dog', 15], ['spitter', 10]],
+    desc: '보이지 않는 포식자 · 석촌호수 물가는 발이 느려진다', packs: { zombie: [3, 5] },
+    gear: ['katana', 'lmg', 'sniper', 'exo', 'exoHelm', 'gasmask'], gearText: '고주파 블레이드·기관총·저격소총·외골격·방독면' },
 ];
 
 // v1.3 맵 (출격·탈출): 캠프(거점)에서 맵을 골라 출격하고, 맵 가장자리 탈출 지점으로 귀환
@@ -150,9 +164,12 @@ const MAPS = {
   jongno:     { name: '종로 폐허', zone: 2, size: 90, seed: 1202, landmark: 'bosingak', chapter: 1 },
   yongsan:    { name: '용산 군사구역', zone: 3, size: 90, seed: 1303, landmark: 'base', chapter: 2 },
   yeouido:    { name: '여의도 방사능 지대', zone: 4, size: 108, seed: 1404, landmark: 'tower63', chapter: 3, boss: true, hazards: true },
+  gangnam:    { name: '강남 업무지구', zone: 6, size: 108, seed: 1606, landmark: 'coex', chapter: 4, tall: [0.55, 9, 9] }, // v1.6 유리 고층 빌딩 숲
+  jamsil:     { name: '잠실 변이 지대', zone: 7, size: 108, seed: 1707, landmark: 'lotte', chapter: 5, lake: true },      // v1.6 석촌호수 (얕은 물)
   lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, chapter: 4, lab: true, lock: '제4장 완료 후 해금' }, // v1.5 실내 던전 (출격마다 구조가 바뀜)
 };
-const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'lab'];
+const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'lab', 'gangnam', 'jamsil']; // 출격 지도 표시 순서
+const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil'];      // v1.6 장 번호 → 그 장의 맵
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상
 const LANDMARKS = [
@@ -160,6 +177,8 @@ const LANDMARKS = [
   { id: 'bosingak', name: '보신각', zone: 2, tx: 38, ty: 86, size: 6, base: 4, exp: 600, credits: 600 },
   { id: 'base', name: '버려진 용산 기지', zone: 3, tx: 98, ty: 92, size: 8, base: 5, exp: 2500, credits: 1500 },
   { id: 'tower63', name: '63빌딩 잔해', zone: 4, tx: 5, ty: 23, size: 7, base: 4, exp: 6000, credits: 3000 },
+  { id: 'coex', name: '무너진 코엑스', zone: 6, tx: 0, ty: 0, size: 8, base: 5, exp: 9000, credits: 4000 },
+  { id: 'lotte', name: '롯데월드타워 잔해', zone: 7, tx: 0, ty: 0, size: 7, base: 4, exp: 14000, credits: 6000 },
 ];
 
 const SKILLS = [

@@ -6,6 +6,8 @@ const SIGN_TEXT = {
   2: ['호프', '치킨', '노래방', '금은방', '한의원', '포차', '당구장', '부동산'],
   3: ['전자', 'PC방', '게임', '모텔', '수리', '24시', '전자상가', '중고'],
   4: ['증권', '은행', '오피스', '방송국', '빌딩', '보험', '병원', '연구소'],
+  6: ['강남역', '성형외과', '피부과', '오피스텔', '카페', '라운지', '클럽', '어학원', '타워', '블랙선'], // v1.6 강남
+  7: ['잠실', '마트', '놀이공원', '야구장', '호수공원', '치킨', '노래방', '아파트'],            // v1.6 잠실
 };
 const NEON = ['#ff3b5c', '#3bd6ff', '#ff4fd8', '#5dff6a', '#ffd23b', '#ff8a2a'];
 
@@ -49,7 +51,7 @@ const City = {
       const h = hash2(x * 13 + 1, y * 17 + 3), zone = Math.max(1, World.zoneIndex(x * TILE, y * TILE));
       const sOpen = at(x, y + 1) === T.WALK || at(x, y + 1) === T.ROAD, eOpen = at(x + 1, y) === T.WALK || at(x + 1, y) === T.ROAD;
       if ((!sOpen && !eOpen) || h > 0.2) continue;
-      const words = SIGN_TEXT[zone], text = words[Math.floor(h * 997) % words.length];
+      const words = SIGN_TEXT[zone] || SIGN_TEXT[4], text = words[Math.floor(h * 997) % words.length];
       this.signs.set(y * W + x, { face: sOpen && (!eOpen || h < 0.1) ? 's' : 'e', text, color: NEON[Math.floor(h * 331) % NEON.length],
         vert: text.length >= 3 && h < 0.08, z: 30 + Math.floor(h * 1000) % 3 * 14, flick: h < 0.03 });
     }

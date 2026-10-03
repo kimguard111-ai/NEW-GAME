@@ -31,7 +31,7 @@ const TILE_COLORS = {
   [T.ROAD]: '#2a2c30', [T.WALK]: '#45464b', [T.RUBBLE]: '#3d3833', [T.GRASS]: '#2c3824',
   [T.CAMP]: '#363c45', [T.CAR]: '#2a2c30', [T.BARRICADE]: '#363c45', [T.BUILDING]: '#1d1d20', [T.LANDMARK]: '#3a3833',
   [T.WALL]: '#2a2420', [T.FLOOR]: '#4a4038', [T.DOOR]: '#4a4038', [T.PROP]: '#4a4038',
-  [T.LWALL]: '#060709', [T.LFLOOR]: '#3a3f46', [T.LPROP]: '#3a3f46',
+  [T.LWALL]: '#060709', [T.LFLOOR]: '#3a3f46', [T.LPROP]: '#3a3f46', [T.WATER]: '#16303e',
 };
 
 // ---------------- 바닥 ----------------
@@ -71,6 +71,15 @@ function drawGroundTile(tx, ty, t) {
     if (t === T.DOOR) { ctx.fillStyle = '#5a5048'; ctx.fillRect(x, y, TILE, TILE); }
   } else if (t === T.CAMP) {
     ctx.strokeStyle = 'rgba(120,150,190,0.14)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+  } else if (t === T.WATER) { // v1.6 석촌호수: 잔물결 · 떠다니는 잔해
+    ctx.strokeStyle = 'rgba(120,180,210,0.18)'; ctx.lineWidth = 1.5;
+    for (let i = 0; i < 2; i++) { const yy = y + 8 + i * 14 + h * 6; ctx.beginPath(); ctx.moveTo(x + 4 + h * 8, yy); ctx.quadraticCurveTo(x + 14, yy - 3, x + 24 - h * 6, yy); ctx.stroke(); }
+    ctx.lineWidth = 1;
+    if (h < 0.05) { ctx.fillStyle = '#3a3428'; ctx.fillRect(x + 8, y + 10, 10, 5); }
+    const d = (dx, dy) => World.tileAt(tx + dx, ty + dy) !== T.WATER; // 물가 테두리
+    ctx.fillStyle = 'rgba(160,150,120,0.35)';
+    if (d(0, -1)) ctx.fillRect(x, y, TILE, 3); if (d(0, 1)) ctx.fillRect(x, y + TILE - 3, TILE, 3);
+    if (d(-1, 0)) ctx.fillRect(x, y, 3, TILE); if (d(1, 0)) ctx.fillRect(x + TILE - 3, y, 3, TILE);
   } else if (t === T.LFLOOR || t === T.LPROP) { // v1.5 연구소 바닥: 금속 패널 · 배수 격자 · 얼룩
     ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
     ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(x + 2, y + 2, TILE - 4, 2);
@@ -146,7 +155,7 @@ function drawWindows(ax, ay, bx, by, z0, h, seed, side) {
     if (fz < z0) continue;
     for (let k = 0; k < 2; k++) {
       const u0 = 0.18 + k * 0.42, u1 = u0 + 0.24;
-      const lit = hash2(seed * 31 + k + side * 7, fz) < 0.12;
+      const lit = hash2(seed * 31 + k + side * 7, fz) < (World.def && World.def.tall ? 0.22 : 0.12); // 강남은 불 켜진 창이 많음
       const ax0 = lerp(ax, bx, u0), ay0 = lerp(ay, by, u0), ax1 = lerp(ax, bx, u1), ay1 = lerp(ay, by, u1);
       poly([Iso.sx(ax0, ay0), Iso.sy(ax0, ay0, fz), Iso.sx(ax1, ay1), Iso.sy(ax1, ay1, fz),
         Iso.sx(ax1, ay1), Iso.sy(ax1, ay1, fz + 17), Iso.sx(ax0, ay0), Iso.sy(ax0, ay0, fz + 17)], lit ? '#c9a24a' : '#16181c');
@@ -174,9 +183,9 @@ function drawSolidTile(o) {
   if (t === T.BUILDING) {
     const s = World.shade[ty * World.W + tx], ht = World.height[ty * World.W + tx] || 60;
     const b = 72 + Math.floor(s * 38);
-    const ruin = ht < 44;
-    const top = ruin ? `rgb(${b - 8},${b - 14},${b - 20})` : `rgb(${b},${b - 3},${b - 8})`;
-    const south = `rgb(${b - 34},${b - 37},${b - 42})`, east = `rgb(${b - 20},${b - 23},${b - 28})`;
+    const ruin = ht < 44, glass = World.def && World.def.tall && ht > FLOOR_H * 8; // v1.6 강남 유리 고층 빌딩: 푸른 유리 외벽
+    const top = ruin ? `rgb(${b - 8},${b - 14},${b - 20})` : glass ? `rgb(${b - 22},${b - 10},${b + 6})` : `rgb(${b},${b - 3},${b - 8})`;
+    const south = glass ? `rgb(${b - 52},${b - 40},${b - 22})` : `rgb(${b - 34},${b - 37},${b - 42})`, east = glass ? `rgb(${b - 40},${b - 28},${b - 10})` : `rgb(${b - 20},${b - 23},${b - 28})`;
     drawBox(x0, y0, x1, y1, ht, top, south, east, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), ruin ? 0 : tx * 977 + ty);
     if (!ruin) City.drawSign(tx, ty); // v1.2 한글 네온 간판
     if (!ruin && h < 0.04) { // 옥상 환풍기
@@ -515,11 +524,23 @@ function drawWeaponOverlay(sx, sy, w, p) {
   ctx.restore();
 }
 
+// v1.6 은신 변이체: 가까이(150px) 오거나, 맞았거나(2.5초), 공격 준비·경직 중이면 보임
+function enemyCloaked(e) {
+  return e.def.cloak && !e.bossName && !e.elite && !e.affix && !(e.revealT > 0) && e.stunT <= 0 && !(e.pounceT > 0) && !(e.leapT > 0) && !(e.windT > 0)
+    && dist(e, G.player) > 150;
+}
 function drawEnemy(e) {
   const sx = Iso.sx(e.x, e.y) + (e.stunT > 0 ? Math.sin(G.time * 70) * 2 : 0), sy = Iso.sy(e.x, e.y); // 경직 중 흔들림
   if (sx < -120 || sy < -160 || sx > VW + 120 || sy > VH + 80) return;
   const flash = e.hitT > 0, f = e.face || 0;
   const walk = e.state === 'chase' || e.wandering ? G.time + e.x * 0.01 : 0;
+  if (enemyCloaked(e)) { // v1.6 은신: 공기가 일렁이는 윤곽 + 희미한 눈빛만
+    const wob = Math.sin(G.time * 9 + e.x) * 2;
+    ctx.strokeStyle = 'rgba(210,170,255,0.28)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(sx + wob * 0.5, sy - 22, 8 + wob, 21, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = `rgba(230,80,255,${0.35 + Math.sin(G.time * 5 + e.y) * 0.2})`; ctx.fillRect(sx - 4, sy - 38, 2, 2); ctx.fillRect(sx + 2, sy - 38, 2, 2);
+    return;
+  }
   let topY = sy - 44;
   if (e.affix) { // 엘리트 오라
     const c = ELITE_AFFIXES[e.affix].color;
@@ -549,7 +570,8 @@ function drawEnemy(e) {
       break;
     case 'brute':
       drawShadow(sx, sy, e.r);
-      if (e.labBoss) drawHuman(sx, sy, { s: 1.7, body: '#7a2a2a', skin: '#d8c0b0', legs: '#3a1a1a', aim: f, claws: true, flash, walk: walk * 0.5, eyes: '#40ff70' }); // 키메라: 벗겨진 피부 · 초록 눈
+      if (e.elite === 'babel') drawHuman(sx, sy, { s: 1.7, body: '#2a1a3a', skin: '#7a4a9a', legs: '#1a0e24', aim: f, claws: true, flash, walk: walk * 0.5, eyes: '#ff50ff' }); // v1.6 바벨
+      else if (e.labBoss) drawHuman(sx, sy, { s: 1.7, body: '#7a2a2a', skin: '#d8c0b0', legs: '#3a1a1a', aim: f, claws: true, flash, walk: walk * 0.5, eyes: '#40ff70' }); // 키메라: 벗겨진 피부 · 초록 눈
       else drawHuman(sx, sy, { s: 1.7, body: '#6a4578', skin: '#9a72a8', legs: '#3a2840', aim: f, claws: true, flash, walk: walk * 0.5, eyes: '#ff0' });
       topY = sy - 70;
       break;
@@ -579,6 +601,29 @@ function drawEnemy(e) {
       topY = y - 18;
       break;
     }
+    case 'merc': // v1.6 블랙선 용병: 검은 전술복 · 노란 견장 · 소총
+      drawShadow(sx, sy, e.r);
+      drawHuman(sx, sy, { s: 1.05, body: '#24272e', skin: '#b08a6a', helmet: '#1a1c20', legs: '#1c1e22', aim: f, gun: 24, flash, walk });
+      ctx.fillStyle = '#d4a640'; ctx.fillRect(sx - 9, sy - 34, 4, 3);
+      break;
+    case 'shield': { // v1.6 방패 돌격병: 몸 앞에 큰 방패 (방패가 향한 쪽 = 정면)
+      drawShadow(sx, sy, e.r);
+      const d = Iso.dir(f), front = d.y > -0.2; // 방패가 화면 앞쪽이면 몸 위에 그림
+      const shieldDraw = () => {
+        const cx = sx + d.x * 14, cy = sy - 20 + d.y * 7, w = 13, perpX = -d.y, perpY = d.x * 0.5;
+        poly([cx - perpX * w, cy - perpY * w - 16, cx + perpX * w, cy + perpY * w - 16, cx + perpX * w, cy + perpY * w + 14, cx - perpX * w, cy - perpY * w + 14], flash ? '#fff' : e.stunT > 0 ? '#6a6e74' : '#4a5260');
+        ctx.strokeStyle = '#c9a24a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx - perpX * w * 0.7, cy - perpY * w * 0.7 - 6); ctx.lineTo(cx + perpX * w * 0.7, cy + perpY * w * 0.7 - 6); ctx.stroke(); ctx.lineWidth = 1;
+      };
+      if (!front) shieldDraw();
+      drawHuman(sx, sy, { s: 1.12, body: '#3a3e46', skin: '#b08a6a', helmet: '#24272e', legs: '#24272e', aim: f, flash, walk: walk * 0.6 });
+      if (front) shieldDraw();
+      topY = sy - 54;
+      break;
+    }
+    case 'stalker': // v1.6 은신 변이체: 가늘고 긴 팔다리, 보라빛 피부
+      drawShadow(sx, sy, e.r * 0.8);
+      drawHuman(sx, sy + 2, { s: 1.08, body: '#3a2a4a', skin: '#6a5a7a', legs: '#2a1e34', aim: f, claws: true, flash, walk: walk * 1.1, eyes: '#e050ff' });
+      break;
     case 'subject': // v1.5 탈주 실험체: 창백한 피부, 구속복 조각, 긴 발톱
       drawShadow(sx, sy, e.r);
       drawHuman(sx, sy + 2, { s: 1.02, body: '#d8d4c8', skin: '#c8b8b0', legs: '#4a4644', aim: f, claws: true, flash, walk: walk * 0.9, eyes: '#ff3030' });
@@ -920,7 +965,7 @@ function render() {
   for (const s of G.strikes) addLight(Iso.sx(s.x, s.y), Iso.sy(s.x, s.y), s.r * 1.8, 0.5 + 0.4 * s.t / s.delay, s.pool ? 'rgba(140,230,70,A)' : 'rgba(255,90,50,A)');
   for (const h of World.hazards) addLight(Iso.sx(h.x, h.y), Iso.sy(h.x, h.y), h.r * 2.6, 0.75, 'rgba(110,255,80,A)');
   for (const l of World.landmarks) {
-    const lc = { cathedral: 'rgba(255,190,120,A)', bosingak: 'rgba(255,90,60,A)', base: 'rgba(230,240,255,A)', tower63: 'rgba(255,210,100,A)' }[l.id];
+    const lc = { cathedral: 'rgba(255,190,120,A)', bosingak: 'rgba(255,90,60,A)', base: 'rgba(230,240,255,A)', tower63: 'rgba(255,210,100,A)', coex: 'rgba(255,80,140,A)', lotte: 'rgba(200,120,255,A)' }[l.id];
     addLight(Iso.sx(l.x, l.y), Iso.sy(l.x, l.y, 20), l.size * 70, 0.8, lc);
   }
   if (G.boss) addLight(Iso.sx(G.boss.x, G.boss.y), Iso.sy(G.boss.x, G.boss.y), 230, 0.7, 'rgba(90,255,100,A)');
@@ -1019,6 +1064,22 @@ function drawLandmark(l) {
     drawBox(x0 + 100, y0 + 104, x0 + 130, y0 + 128, 32, '#525d36', '#343c22', '#434c2c', 20, 20, 0);
     ctx.strokeStyle = '#2f361c'; ctx.lineWidth = 5;
     ctx.beginPath(); ctx.moveTo(Iso.sx(x0 + 115, y0 + 116), Iso.sy(x0 + 115, y0 + 116, 28)); ctx.lineTo(Iso.sx(x0 + 115, y0 + 170), Iso.sy(x0 + 115, y0 + 170, 28)); ctx.stroke(); ctx.lineWidth = 1;
+  } else if (l.id === 'coex') { // v1.6 무너진 코엑스: 넓은 저층 몰 + 유리 아트리움 + 꺼진 대형 전광판
+    boxWin(x0 + 6, y0 + 6, x1 - 6, y1 - 6, 52, '#5a6470', '#363e48', '#46505c', 1717);
+    drawBox(x0 + 40, y0 + 40, x1 - 40, y1 - 40, 84, 'rgba(120,170,220,0.55)', 'rgba(70,110,150,0.6)', 'rgba(90,140,190,0.6)', 52, 52, 0);
+    drawBox(x0 + 10, y1 - 30, x0 + 64, y1 - 20, 130, '#1a1c22', '#0e1014', '#14161a', 52, 52, 0);
+    const k = Math.sin(G.time * 7) > 0.6; // 깜빡이는 전광판
+    const S = Iso.sx, Y = Iso.sy;
+    poly([S(x0 + 12, y1 - 20), Y(x0 + 12, y1 - 20, 76), S(x0 + 62, y1 - 20), Y(x0 + 62, y1 - 20, 76), S(x0 + 62, y1 - 20), Y(x0 + 62, y1 - 20, 126), S(x0 + 12, y1 - 20), Y(x0 + 12, y1 - 20, 126)], k ? '#ff3a6a' : '#3a1a2a');
+    drawBox(x1 - 50, y0 + 10, x1 - 14, y0 + 40, 64, '#4a4048', '#2e282e', '#3a343a', 52, 52, 0); // 무너진 잔해
+  } else if (l.id === 'lotte') { // v1.6 롯데월드타워 잔해: 가늘어지는 초고층 (꼭대기 부러짐) + 붉은 신호등
+    boxWin(x0 + 8, y0 + 8, x1 - 8, y1 - 8, 220, '#8a96a8', '#4e5868', '#6a7688', 5555);
+    boxWin(x0 + 18, y0 + 18, x1 - 18, y1 - 18, 420, '#9aa6b8', '#56606e', '#76829a', 777, 220);
+    boxWin(x0 + 30, y0 + 30, x1 - 34, y1 - 30, 560, '#a8b4c4', '#5e6878', '#7e8aa0', 0, 420);
+    const tx = Iso.sx(x0 + 60, y0 + 60), ty = Iso.sy(x0 + 60, y0 + 60, 590), on = Math.sin(G.time * 3) > 0;
+    ctx.strokeStyle = '#3a3e46'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(tx, ty + 24); ctx.lineTo(tx + 6, ty - 10); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = on ? '#ff3030' : '#4a1010'; ctx.beginPath(); ctx.arc(tx + 6, ty - 12, 4, 0, TAU); ctx.fill();
+    if (on && Settings.light) addLight(tx + 6, ty - 12, 160, 0.8, 'rgba(255,40,40,A)');
   } else if (l.id === 'tower63') {
     boxWin(x0 + 6, y0 + 6, x1 - 6, y1 - 6, 330, '#b8902a', '#7a5c16', '#9c7a20', 6363);
     boxWin(x0 + 22, y0 + 14, x1 - 34, y1 - 30, 372, '#c49a30', '#806018', '#a68226', 0, 330);
@@ -1106,7 +1167,7 @@ function drawMinimapIso(mm) {
   g.drawImage(World.minimapBase, 0, 0);
   const dot = (x, y, c, r) => { g.fillStyle = c; g.fillRect(x / TILE - r / 2, y / TILE - r / 2, r, r); };
   for (const n of G.npcs) dot(n.x, n.y, '#ffd76a', 3);
-  for (const e of G.enemies) dot(e.x, e.y, e.def.boss ? '#d4f' : '#f44', e.def.boss ? 6 : 2.5);
+  for (const e of G.enemies) if (!enemyCloaked(e)) dot(e.x, e.y, e.def.boss ? '#d4f' : '#f44', e.def.boss ? 6 : 2.5); // 은신 중이면 미니맵에도 없음
   if (G.fieldBoss && Math.sin(G.time * 8) > -0.3) dot(G.fieldBoss.x, G.fieldBoss.y, '#ff3020', 8); // 필드 보스 깜빡임
   if (World.bossTile) dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.85)', 5);
   const lb = World.labBoss; // v1.5 격리실 (키메라를 잡기 전까지 붉은 테두리)

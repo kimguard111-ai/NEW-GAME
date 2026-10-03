@@ -16,6 +16,13 @@ const ASSAULTS = {
     waves: [{ zombie: 8, brute: 2 }, { drone: 4, raider: 3, zombie: 4 }, { brute: 3, drone: 3, zombie: 4, elites: 3 }],
     boss: { name: '방사능 변이체 「군체」', art: 'colony', base: 'brute', hpMul: 9, dmgMul: 1.3, scale: 1.6, patterns: ['glutton', 'argos'], affix: 'commander' } },
 };
+// v1.6 강남 · 잠실
+ASSAULTS.coex = { name: '코엑스 탈환전', level: 24, minLevel: 21, par: 85, limit: 300,
+  waves: [{ merc: 4, shield: 2 }, { merc: 4, drone: 3, shield: 2 }, { merc: 4, shield: 3, drone: 2, elites: 2 }],
+  boss: { name: '블랙선 중화기병 「모루」', art: 'anvil', base: 'shield', hpMul: 10, dmgMul: 1.3, scale: 1.4, patterns: ['quake', 'dash', 'fan'] } };
+ASSAULTS.lotte = { name: '롯데타워 정화 작전', level: 29, minLevel: 26, par: 90, limit: 300,
+  waves: [{ stalker: 4, zombie: 6 }, { stalker: 4, brute: 2, spitter: 3 }, { stalker: 5, brute: 3, zombie: 4, elites: 3 }],
+  boss: { name: '포식 변이체 「여왕」', art: 'queen', base: 'brute', hpMul: 10, dmgMul: 1.35, scale: 1.7, patterns: ['glutton', 'brood', 'quake'] } };
 const ASSAULT_R = 13 * TILE; // 봉쇄 구역 반지름
 // 위협 등급 (v0.14 엔드게임): 등급마다 적 레벨 +3 · 체력 +30% · 보상 증가. 등급 N을 깨면 N+1 개방
 const TIER_MAX = 5;

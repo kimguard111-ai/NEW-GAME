@@ -11,7 +11,7 @@ const ELITE_AFFIXES = {
 
 // 세력: 다른 세력끼리는 플레이어가 없을 때 서로 싸움
 const FACTION = { zombie: 'infected', dog: 'infected', brute: 'infected', boss: 'infected', raider: 'human', drone: 'machine',
-  subject: 'infected', spitter: 'infected', sentry: 'machine' }; // v1.5 연구소: 실험체 ↔ 보안 장비
+  subject: 'infected', spitter: 'infected', sentry: 'machine', merc: 'human', shield: 'human', stalker: 'infected' }; // v1.5 연구소: 실험체 ↔ 보안 장비
 
 const Monsters = {
   // ---------------- 엘리트 ----------------
@@ -116,6 +116,38 @@ const Monsters = {
         g.guardOf = e; g.minion = true; g.state = 'chase'; G.enemies.push(g);
       }
       floatText(e.x, e.y - 50, '아우우우!', '#ff7a5a', 18);
+    } else if (id === 'raven') { // v1.6 레이븐: 폭격 요청(플레이어 쪽으로 이어지는 원 5개) ↔ 용병 호출 (최대 3)
+      e.skillT = 6.5; e.lastAtk = G.time;
+      if ((e.ravenN = (e.ravenN || 0) + 1) % 2) {
+        const a = angleTo(e, p), d0 = dist(e, p);
+        for (let i = 0; i < 5; i++) { const r = d0 - 120 + i * 70; this.strike(e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, 65, 0.9 + i * 0.18, e.dmg * 2, 'rgba(255,60,60,'); }
+        floatText(e.x, e.y - 50, '폭격 좌표 전송!', '#ff6060', 16);
+      } else {
+        const n = G.enemies.filter(o => o.guardOf === e && o.hp > 0).length;
+        for (let i = 0; i < 2 && n + i < 3; i++) {
+          const g = makeEnemy(i ? 'shield' : 'merc', e.x + rand(-60, 60), e.y + rand(-60, 60), Math.max(1, e.level - 2));
+          if (World.circleBlocked(g.x, g.y, g.r)) continue;
+          g.guardOf = e; g.minion = true; g.state = 'chase'; G.enemies.push(g);
+        }
+        floatText(e.x, e.y - 50, '엄호해!', '#ffb040', 16);
+      }
+    } else if (id === 'babel') { // v1.6 바벨: 은신 변이체 호출 → 거대 내려찍기 → 산성 비 순환
+      e.skillT = 5; e.lastAtk = G.time;
+      const k = (e.babelN = (e.babelN || 0) + 1) % 3;
+      if (k === 1) {
+        const n = G.enemies.filter(o => o.guardOf === e && o.hp > 0).length;
+        for (let i = 0; i < 3 && n + i < 4; i++) {
+          const g = makeEnemy('stalker', e.x + rand(-90, 90), e.y + rand(-90, 90), Math.max(1, e.level - 3));
+          if (World.circleBlocked(g.x, g.y, g.r)) continue;
+          g.guardOf = e; g.minion = true; g.state = 'chase'; G.enemies.push(g);
+        }
+        floatText(e.x, e.y - 70, '그어어어...', '#e050ff', 18);
+      } else if (k === 2) {
+        this.strike(e.x, e.y, 200, 1.3, e.dmg * 2, 'rgba(230,80,255,');
+        floatText(e.x, e.y - 70, '쿵!!', '#e050ff', 20);
+      } else {
+        for (let i = 0; i < 6; i++) this.strike(p.x + (i ? rand(-150, 150) : 0), p.y + (i ? rand(-150, 150) : 0), 58, 1.0 + i * 0.12, e.dmg * 0.8, 'rgba(140,220,70,', true);
+      }
     } else if (id === 'brood') { // v1.5 키메라: 탈주 실험체 호출 (최대 5)
       e.skillT = 7; e.lastAtk = G.time;
       const n = G.enemies.filter(o => o.guardOf === e && o.hp > 0).length;
@@ -137,7 +169,7 @@ const Monsters = {
   },
 
   // ---------------- 일반 적 공격 (v0.16: 보고 피할 수 있게 예고) ----------------
-  TELE: { zombie: 0.38, dog: 0.3, raider: 0.35, drone: 0.22, subject: 0.26, sentry: 0.45 },
+  TELE: { zombie: 0.38, dog: 0.3, raider: 0.35, drone: 0.22, subject: 0.26, sentry: 0.45, merc: 0.38, shield: 0.45, stalker: 0.32 },
   vol(e) { return clamp(1 - dist(e, G.player) / 900, 0.08, 1); },
   // 공격 처리. 이번 프레임에 멈춰 있어야 하면(예고·도약 중) true
   attack(e, dt, d, a) {
@@ -154,6 +186,15 @@ const Monsters = {
       if ((e.burstT -= dt) <= 0) { e.burstN--; e.burstT = 0.13; spawnEnemyBullet(e, e.aimA + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg * b, '#ffd040'); SFX.play('eshot', this.vol(e)); }
       return true;
     }
+    if (e.def.nade && !(e.aimT > 0) && !(e.burstN > 0)) { // v1.6 용병 수류탄: 플레이어 자리에 주황 원 → 1.2초 뒤 폭발 (구르거나 벗어나기)
+      e.nadeT = (e.nadeT ?? rand(3, 6)) - dt;
+      if (e.nadeT <= 0 && d > 140 && d < 380 && World.lineOfSight(e, p)) {
+        e.nadeT = rand(7, 10) * (e.fireMul || 1); e.lastAtk = G.time;
+        this.strike(p.x + rand(-15, 15), p.y + rand(-15, 15), 72, 1.2, e.dmg * 2.4 * b, 'rgba(255,150,50,');
+        floatText(e.x, e.y - 40, '수류탄!', '#ffb040', 13);
+        return true;
+      }
+    }
     if (e.def.ranged) { // 조준선 → 발사 (조준 중엔 방향 고정 · 정지)
       if (e.aimT > 0) {
         e.aimT -= dt;
@@ -169,7 +210,7 @@ const Monsters = {
       }
       return false;
     }
-    if (e.type === 'dog') { // 웅크림 0.45초(예고선) → 도약
+    if (e.type === 'dog' || e.def.pounce) { // 웅크림 0.45초(예고선) → 도약 (v1.6 은신 변이체도)
       if (e.leapT > 0) {
         e.leapT -= dt; tryMoveSmart(e, e.leapA, 560 * dt);
         if (!e.leapHit && dist(e, p) < e.r + p.r + 6) { e.leapHit = true; e.lastAtk = G.time; damagePlayer(e.dmg * 1.5 * b, e.x, e.y); }

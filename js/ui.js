@@ -16,7 +16,7 @@ const Pause = {
   ending() {
     const p = G.player, best = Object.values(p.assaults).reduce((a, r) => Math.max(a, r.tier || 1), 0);
     G.paused = true; input.down = false;
-    $('ending-stats').innerHTML = `<p>${Pause.statsHtml()}<br>필드 보스 ${p.fieldBossKills || 0} · 어설트 최고 위협 ${best || '-'} · 타이탄 처치 ${p.bossKills}</p>`;
+    $('ending-stats').innerHTML = `<p>${Pause.statsHtml()}<br>필드 보스 ${p.fieldBossKills || 0} · 어설트 최고 위협 ${best || '-'} · 타이탄 처치 ${p.bossKills} · 키메라 처치 ${p.labKills || 0}</p>`;
     $('ending-screen').classList.remove('hidden');
     SFX.play('levelup');
   },
@@ -163,8 +163,8 @@ const UI = {
   trackerHtml(p) {
     const c = Story.chapter(p);
     if (!c) return `<b>모든 장 완료</b><br>${p.labKills ? `키메라 처치 ${p.labKills}회 · 지하 연구소는 출격마다 구조가 바뀝니다` : `<span style="color:#ff8a8a">${ICON('map')} 지하 연구소 해금 — 격리실의 「키메라」를 처치하라</span>`}`;
-    if (!p.quest.active) return p.level >= c.minLevel ? `<b>${c.title}</b><br>한씨에게 말을 걸거나, 「${MAPS[MAP_ORDER[p.quest.ch]].name}」에 출격하면 시작` : `<b>다음: ${c.title}</b><br>Lv${c.minLevel} 이상`;
-    const st = c.steps[p.quest.step], tg = Story.target(p), mapId = MAP_ORDER[p.quest.ch];
+    if (!p.quest.active) return p.level >= c.minLevel ? `<b>${c.title}</b><br>한씨에게 말을 걸거나, 「${MAPS[CHAPTER_MAP[p.quest.ch]].name}」에 출격하면 시작` : `<b>다음: ${c.title}</b><br>Lv${c.minLevel} 이상`;
+    const st = c.steps[p.quest.step], tg = Story.target(p), mapId = CHAPTER_MAP[p.quest.ch];
     let h = `<b>${c.title} (${p.quest.step + 1}/${c.steps.length})</b><br>${Story.objective(st)}`;
     if (mapId && World.map !== mapId) h += `<br><span style="color:#8cf">${ICON('map')} ${World.map === 'camp' ? '작전 장교 윤씨에게서' : '탈출 후 캠프에서'} 「${MAPS[mapId].name}」 출격</span>`;
     if (st.type === 'kill' || st.type === 'collect') h += ` <b>${p.quest.progress} / ${st.count}</b>`;

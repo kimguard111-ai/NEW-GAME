@@ -7,6 +7,8 @@ const ELITES = {
   glutton: { name: '거대 감염체 「먹보」', base: 'zombie', level: 5, at: 'cathedral', hpMul: 9, dmgMul: 1.6, scale: 1.45, speedMul: 0.85 },
   panther: { name: '약탈자 두목 「흑표」', base: 'raider', level: 10, at: 'bosingak', hpMul: 8, dmgMul: 1.4, scale: 1.25, fireMul: 0.45 },
   argos:   { name: '자율 전투 드론 「아르고스」', base: 'drone', level: 15, at: 'base', hpMul: 9, dmgMul: 1.3, scale: 1.7, fireMul: 0.4 },
+  raven:   { name: '블랙선 용병대장 「레이븐」', base: 'merc', level: 25, at: 'coex', hpMul: 12, dmgMul: 1.3, scale: 1.3, fireMul: 0.5 }, // v1.6
+  babel:   { name: '변이 군주 「바벨」', base: 'brute', level: 30, at: 'lotte', hpMul: 16, dmgMul: 1.4, scale: 1.8, speedMul: 1.15 },
 };
 
 const CHAPTERS = [
@@ -49,7 +51,7 @@ const CHAPTERS = [
     ] },
   { title: '제4장 · 방사능 지대', minLevel: 15,
     intro: '여의도는 방사능 웅덩이투성이야. 방독면 헬멧 없이는 오래 못 버티니 꼭 챙기게. 그리고... 타이탄을 끝내 주게.',
-    outro: '해냈군. 타이탄이 쓰러졌어. 그런데 놈이 지키던 여의도 지하에서 연구소 입구가 나왔다네. 이 모든 걸 만든 곳이야. 윤씨에게 지도를 받아 두게.',
+    outro: '해냈군. 타이탄이 쓰러졌어. 그런데 여의도 지하에서 연구소 입구가 나왔고, 거기 기록에 강남의 「블랙선」이라는 이름이 있었네. 아직 끝이 아니야.',
     steps: [
       { type: 'reach', landmark: 'tower63', text: '여의도의 63빌딩 잔해로 가라. (방독면 헬멧 권장)',
         reward: { exp: 5000, credits: 2000 } },
@@ -57,6 +59,33 @@ const CHAPTERS = [
         reward: { exp: 8000, credits: 3000 } },
       { type: 'kill', target: 'boss', count: 1, text: '방사능 군주 타이탄을 처치하라.',
         reward: { exp: 20000, credits: 10000, gear: 4 } },
+    ] },
+  // v1.6 강남 · 잠실
+  { title: '제5장 · 강남의 그림자', minLevel: 20,
+    intro: '연구소 기록에 나온 민간 군사 회사 「블랙선」이 강남을 틀어쥐고 있네. 놈들이 실험체를 실어 나르고 있었어. 방패병은 정면으로 상대하지 말고 뒤로 돌거나 수류탄을 쓰게.',
+    outro: '레이븐의 단말기에 잠실 좌표가 찍혀 있었네. 롯데타워 꼭대기에서 신호가 나와. 모든 변이의 근원이 거기 있어.',
+    steps: [
+      { type: 'kill', target: 'merc', count: 12, text: '강남 업무지구의 블랙선 용병을 처치하라.',
+        reward: { exp: 9000, credits: 4000, items: [['medkit', 3]] } },
+      { type: 'collect', from: 'merc', item: '블랙선 반출 기록', count: 6, chance: 0.4, text: '용병에게서 실험체 반출 기록을 회수하라.',
+        reward: { exp: 12000, credits: 5000 } },
+      { type: 'reach', landmark: 'coex', text: '블랙선 본부가 있는 무너진 코엑스로 가라.',
+        reward: { exp: 8000, credits: 3000 } },
+      { type: 'hunt', elite: 'raven', text: '블랙선 용병대장 「레이븐」을 처치하라.',
+        reward: { exp: 25000, credits: 12000, gear: 3 } },
+    ] },
+  { title: '제6장 · 바벨의 탑', minLevel: 25,
+    intro: '잠실은 변이체 소굴이야. 눈에 안 보이는 놈들도 있다더군. 공기가 일렁이면 바로 구르게. 석촌호수 물가에선 발이 느려지니 조심하고.',
+    outro: '바벨이 쓰러졌다. 탑의 신호도 끊겼어. 이제 정말로 끝이야... 서울은 다시 우리 것이네.',
+    steps: [
+      { type: 'kill', target: 'stalker', count: 10, text: '잠실의 은신 변이체를 처치하라. (일렁임을 보라)',
+        reward: { exp: 15000, credits: 6000 } },
+      { type: 'collect', from: 'brute', zone: 7, item: '변이 핵', count: 6, chance: 0.45, text: '잠실의 변이 거한에게서 변이 핵을 채취하라.',
+        reward: { exp: 20000, credits: 8000 } },
+      { type: 'reach', landmark: 'lotte', text: '신호가 나오는 롯데월드타워 잔해로 가라.',
+        reward: { exp: 12000, credits: 5000 } },
+      { type: 'hunt', elite: 'babel', text: '모든 변이의 근원, 변이 군주 「바벨」을 처치하라.',
+        reward: { exp: 40000, credits: 20000, gear: 4 } },
     ] },
 ];
 
@@ -116,7 +145,7 @@ const Story = {
   update() {
     const p = G.player, c0 = this.chapter(p);
     // v1.0: 다음 장은 레벨이 되면 무전으로 바로 시작 (캠프 왕복 없음)
-    if (c0 && !p.quest.active && p.level >= c0.minLevel && !p.dead && World.map === MAP_ORDER[p.quest.ch] && G.time - (this.autoT || -99) > 5) { this.autoT = G.time; this.start(p); }
+    if (c0 && !p.quest.active && p.level >= c0.minLevel && !p.dead && World.map === CHAPTER_MAP[p.quest.ch] && G.time - (this.autoT || -99) > 5) { this.autoT = G.time; this.start(p); }
     const st = this.step(p);
     if (!st || p.dead) return;
     if (st.type === 'reach') {
@@ -168,7 +197,7 @@ const Story = {
       radio(c.outro);
       UI.toast(`${c.title} 완료!`, CHAPTERS[p.quest.ch + 1] ? `다음 장: Lv${CHAPTERS[p.quest.ch + 1].minLevel} 이상 · 캠프의 한씨` : '모든 장을 완료했습니다');
       p.quest.ch++; p.quest.step = 0; p.quest.active = false;
-      if (!CHAPTERS[p.quest.ch] && !p.ended) { p.ended = true; setTimeout(() => Pause.ending(), 2500); } // v1.0 엔딩
+      if (!CHAPTERS[p.quest.ch] && !p.finalEnd) { p.ended = p.finalEnd = true; setTimeout(() => Pause.ending(), 2500); } // v1.0 엔딩 · v1.6 제6장 뒤로 (4장에서 본 사람도 다시 봄)
     } else {
       const next = c.steps[p.quest.step];
       radio(next.text);

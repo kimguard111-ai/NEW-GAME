@@ -275,7 +275,7 @@ function playerAttack() {
 function explode(x, y, dmg, r, opts = {}) {
   for (const e of G.enemies) {
     const d = Math.hypot(e.x - x, e.y - y);
-    if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e)) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true });
+    if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e)) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true, blast: true });
   }
   G.effects.push({ type: 'boom', x, y, t: 0, life: 0.4, r });
   SFX.play('boom', opts.small ? 0.4 : 1);
@@ -424,6 +424,16 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   const p = G.player, w = hit.w;
   if (w && w.legend === 'execute' && e.hp < e.maxHp * 0.3) dmg *= 1.6;
   dmg = Math.max(1, Math.round(dmg));
+  // v1.6 방패병: 정면(방패가 향한 쪽)에서 맞으면 80% 감소. 폭발·경직 중·뒤/옆은 그대로
+  if (e.def.shield && !hit.blast && angle !== undefined && e.stunT <= 0 && Math.abs(angDiff(angle, (e.face || 0) + Math.PI)) < 1.05) {
+    dmg = Math.max(1, Math.round(dmg * 0.2));
+    if (Math.random() < 0.3) floatText(e.x, e.y - e.r - 6, '막힘', '#9fb2c8', 12);
+    SFX.play('metal', 0.6); burst(e.x + Math.cos(angle + Math.PI) * 12, e.y + Math.sin(angle + Math.PI) * 12, '#ffe0a0', 3, 120, 0.15, 2);
+    e.hp -= dmg; e.hitT = 0.05; e.state = 'chase';
+    if (e.hp <= 0) killEnemy(e);
+    return;
+  }
+  if (e.def.cloak) e.revealT = 2.5; // 맞으면 잠시 드러남
   e.hp -= dmg; e.hitT = e.def.boss ? 0.05 : 0.1; e.state = 'chase';
   // 넉백·경직은 적의 무게에 반비례 (보스는 무시)
   const wt = e.weight ?? e.def.weight; // 네임드는 잘 밀리지 않음
@@ -549,6 +559,7 @@ function tryMoveSmart(e, a, step) {
     e.sideDir *= -1;
     return;
   }
+  step *= World.slow(e.x, e.y); // v1.6 물속은 느림
   for (const off of tries) {
     const aa = a + off, dx = Math.cos(aa) * step, dy = Math.sin(aa) * step;
     if (World.inSafe(e.x + dx, e.y + dy)) continue;
@@ -591,7 +602,7 @@ function updateEnemies(dt) {
   Monsters.auras();
   for (const e of G.enemies) {
     if (e.hp <= 0) continue;
-    e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt;
+    e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt; e.revealT = (e.revealT || 0) - dt;
     const d = dist(e, p);
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); Monsters.interrupt(e); continue; } // 경직: 이동·공격 불가, 준비 중인 공격 끊김
     const same = Interiors.sameSpace(e); // 건물 안팎이 다르면 쫓지 않음 (벽 너머 길찾기 없음)
@@ -614,7 +625,8 @@ function updateEnemies(dt) {
 
     if (e.state === 'chase') {
       const a = angleTo(e, p);
-      e.face = a;
+      if (e.def.shield && !e.bossName) { const df = angDiff(a, e.face || 0), tr = 2.2 * dt; e.face = (e.face || 0) + clamp(df, -tr, tr); } // v1.6 방패병은 천천히 돌아섬 → 구르기로 뒤를 잡을 수 있음
+      else e.face = a;
       let moveA = a, spd = e.speed * Monsters.buff(e);
       const hold = !e.def.boss && Monsters.attack(e, dt, d, a); // v0.16 예고 공격 (예고·도약 중엔 정지)
       // 시야가 막혔으면 길찾기 지도를 따라 건물을 돌아서 접근 (드론은 날아서 직선)
@@ -832,7 +844,7 @@ function update(dt) {
       if (Math.random() < 0.5) G.particles.push({ x: p.x, y: p.y, vx: 0, vy: 0, t: 0, life: 0.35, color: 'rgba(150,140,120,0.6)', size: 6, z: 4 });
     } else if (mv) {
       const { wx, wy, amt } = mv;
-      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt;
+      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt * World.slow(p.x, p.y); // v1.6 물속은 느림
       World.move(p, wx / l * sp, wy / l * sp);
       p.walkT = (p.walkT || 0) + dt;
     }
