@@ -84,6 +84,7 @@ function startGame(save, name) {
     // v0.1 → v0.2: 아이템에 옵션 필드 추가 (기존 장비는 옵션 없음으로 유지)
     for (const k of Object.keys(G.player.equip)) normalizeItem(G.player.equip[k]);
     G.player.inventory.forEach(normalizeItem);
+    G.player.pity = G.player.pity || 0;
     for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
     G.bossT = save.bossT || 0;
     G.player.dead = false;
@@ -195,7 +196,7 @@ function playerAttack() {
 function explode(x, y, dmg, r, opts = {}) {
   for (const e of G.enemies) {
     const d = Math.hypot(e.x - x, e.y - y);
-    if (e.hp > 0 && d < r + e.r) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true });
+    if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e)) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true });
   }
   G.effects.push({ type: 'boom', x, y, t: 0, life: 0.4, r });
   burst(x, y, '#ffb040', opts.small ? 12 : 30, opts.small ? 160 : 260, 0.5, 4);
@@ -348,7 +349,8 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
 
 function killEnemy(e) {
   const p = G.player;
-  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p));
+  // 보스 소환수는 경험치 20%, 드랍 없음 (보스 옆 무한 파밍 방지)
+  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1));
   gainExp(exp);
   floatText(e.x, e.y - 10, `+${fmt(exp)} EXP`, '#e0c040', 12);
   p.totalKills++;
@@ -379,13 +381,18 @@ function killEnemy(e) {
     for (const o of G.enemies) if (o.minion) o.hp = 0;
     return;
   }
+  if (e.minion) return;
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
   const gearChance = e.type === 'brute' ? 0.2 : 0.09;
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
-  if (Math.random() < gearChance) dropAt('item', { item: randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0)) });
+  if (Math.random() < gearChance) {
+    const it = randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0);
+    p.pity = it.rarity >= 3 ? 0 : p.pity + 1;
+    dropAt('item', { item: it });
+  }
 }
 
 function spawnEnemyBullet(e, a, speed, dmg, color = '#ff6a4a', r = 3) {

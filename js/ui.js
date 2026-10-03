@@ -256,6 +256,7 @@ const UI = {
       <div class="stat-row"><span>이동 속도</span><span>${PlayerStats.speed(p).toFixed(0)}</span></div>
       <div class="stat-row"><span>체력 재생</span><span>${PlayerStats.regen(p).toFixed(1)}/초</span></div>
       ${gearBonus(p, 'exp') ? `<div class="stat-row"><span>경험치 획득</span><span>+${pc(gearBonus(p, 'exp'))}</span></div>` : ''}
+      <div class="stat-row" title="몬스터 장비 드랍이 ${PITY_DROPS}번 연속 영웅 미만이면 다음은 영웅 이상 확정"><span>영웅 장비 확정까지</span><span class="r3">${Math.max(0, PITY_DROPS - (p.pity || 0))}개</span></div>
       <div class="stat-row"><span>처치 수</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div>`;
     $('stats-body').innerHTML = h;
     $('stats-body').querySelectorAll('button[data-stat]').forEach(b => {

@@ -68,8 +68,8 @@ function makeConsumable(key, count = 1) {
 }
 
 // 레벨에 맞는 랜덤 장비
-function randomGear(level, rarityBonus = 0) {
-  const r = rollRarity(rarityBonus);
+function randomGear(level, rarityBonus = 0, minRarity = 0) {
+  const r = Math.max(minRarity, rollRarity(rarityBonus));
   if (Math.random() < 0.7) {
     const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2);
     return makeWeapon(pick(keys), level, r);
@@ -126,7 +126,7 @@ function newPlayer(name) {
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0 },
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
-    bossKills: 0, totalKills: 0,
+    bossKills: 0, totalKills: 0, pity: 0,
   };
 }
 
@@ -198,8 +198,11 @@ function armorEhp(p, arm) {
 // 현재 장착 장비보다 좋은지 (인벤토리 ▲ 표시)
 function isUpgrade(p, it) {
   if (it.kind === 'weapon') {
+    // 같은 무기를 장착 중이면 그것과만 비교 (역할이 다른 무기끼리 DPS만으로 ▲ 표시하지 않도록)
+    const equipped = ['w1', 'w2'].map(s => p.equip[s]).filter(Boolean);
+    const sameKey = equipped.filter(w => w.key === it.key);
     const melee = WEAPONS[it.key].melee;
-    const same = ['w1', 'w2'].map(s => p.equip[s]).filter(w => w && WEAPONS[w.key].melee === melee);
+    const same = sameKey.length ? sameKey : equipped.filter(w => WEAPONS[w.key].melee === melee);
     const best = same.length ? Math.max(...same.map(w => weaponDps(p, w))) : 0;
     return weaponDps(p, it) > best * 1.02;
   }

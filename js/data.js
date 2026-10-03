@@ -1,15 +1,17 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.2';
+const GAME_VERSION = 'v0.2.1';
 
 const RARITIES = [
-  { name: '일반', mul: 1.0, color: '#dddddd', weight: 58 },
+  { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
   { name: '고급', mul: 1.15, color: '#6fdc6f', weight: 27 },
   { name: '희귀', mul: 1.35, color: '#5aa8ff', weight: 11 },
-  { name: '영웅', mul: 1.6, color: '#c77dff', weight: 3.4 },
-  { name: '전설', mul: 2.0, color: '#ffa53a', weight: 0.6 },
+  { name: '영웅', mul: 1.6, color: '#c77dff', weight: 4.5 },
+  { name: '전설', mul: 2.0, color: '#ffa53a', weight: 1.0 },
 ];
+// 천장: 몬스터 장비 드랍이 이 횟수만큼 영웅 미만이면 다음 드랍은 영웅 이상 확정
+const PITY_DROPS = 50;
 
 // 무기 기본 정보
 // range: 사거리(px) · knock: 넉백 · stagger: 경직(초) · move: 장착 시 이동속도 배율
