@@ -185,3 +185,8 @@ button:disabled { opacity: .4; cursor: default; }
 #enh-detail .btns { margin-top: 6px; }
 .plus { color: #ffd76a; font-weight: bold; }
 b.up { color: #6f6; }
+
+/* v0.6 지역 */
+#hud-zone { text-align: center; }
+.zone-sub { font-size: 11px; color: #c9b27a; margin-top: 2px; }
+.zone-rad { font-size: 12px; color: #7fff6a; font-weight: bold; margin-top: 2px; }

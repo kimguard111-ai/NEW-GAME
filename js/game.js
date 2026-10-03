@@ -87,6 +87,7 @@ function startGame(save, name) {
     G.player.inventory.forEach(normalizeItem);
     G.player.pity = G.player.pity || 0;
     G.player.respecs = G.player.respecs || 0;
+    G.player.found = G.player.found || [];
     for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
     G.bossT = save.bossT || 0;
     G.player.dead = false;
@@ -412,7 +413,7 @@ function killEnemy(e) {
   const gearChance = e.type === 'brute' ? 0.2 : 0.09;
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
   if (Math.random() < gearChance) {
-    const it = randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0);
+    const it = randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
     p.pity = it.rarity >= 3 ? 0 : p.pity + 1;
     dropAt('item', { item: it });
   }
@@ -547,8 +548,14 @@ function spawnEnemies(dt) {
     const prev = ZONES[zi - 1].maxDist, span = Math.min(zone.maxDist, 110) - prev;
     const t = clamp((World.distTiles(x, y) - prev) / span, 0, 1);
     const lvl = clamp(Math.round(lerp(zone.lvl[0], zone.lvl[1], t) + rand(-1, 1)), zone.lvl[0], zone.lvl[1]);
-    const e = makeEnemy(weighted(zone.spawns), x, y, lvl);
+    const type = weighted(zone.spawns), e = makeEnemy(type, x, y, lvl);
     G.enemies.push(e);
+    // 지역 특성: 무리 지어 출몰
+    const pk = zone.packs && zone.packs[type];
+    if (pk) for (let i = 1, n = randInt(pk[0], pk[1]); i < n; i++) {
+      const ox = x + rand(-70, 70), oy = y + rand(-70, 70);
+      if (!World.circleBlocked(ox, oy, e.r) && !World.inSafe(ox, oy)) G.enemies.push(makeEnemy(type, ox, oy, lvl));
+    }
     return;
   }
 }
@@ -563,6 +570,36 @@ function updateBossSpawn(dt) {
     log('대지가 흔들린다... 방사능 군주 타이탄이 모습을 드러냈다!', '#c7f');
   }
   if (G.boss && G.boss.hp <= 0) G.boss = null;
+}
+
+// ---------------- 지역: 랜드마크 발견 / 방사능 ----------------
+function updateLandmarks() {
+  const p = G.player;
+  for (const l of World.landmarks) {
+    if (p.found.includes(l.id) || dist(p, l) > l.size * TILE / 2 + 170) continue;
+    p.found.push(l.id);
+    p.credits += l.credits;
+    log(`랜드마크 발견: ${l.name}! (EXP +${fmt(l.exp)}, +${fmt(l.credits)}₵)`, '#ffd76a');
+    floatText(p.x, p.y - 44, `★ ${l.name} 발견`, '#ffd76a', 18);
+    G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 1, color: '#ffd76a', r: 120 });
+    gainExp(l.exp);
+    saveGame();
+  }
+}
+
+// 방사능 웅덩이 안에 있으면 0.5초마다 최대 체력의 1.5% 피해 (방어력 무시)
+function updateRadiation(dt) {
+  const p = G.player;
+  const inside = World.hazards.some(h => Math.hypot(p.x - h.x, p.y - h.y) < h.r);
+  p.inRad = inside;
+  if (!inside) { p.radT = 0; return; }
+  p.radT -= dt;
+  if (p.radT > 0) return;
+  p.radT = 0.5;
+  const d = Math.max(1, Math.round(PlayerStats.maxHp(p) * 0.015));
+  p.hp -= d;
+  floatText(p.x, p.y - 20, `☢ -${d}`, '#7fff6a', 13);
+  if (p.hp <= 0) playerDie();
 }
 
 // ---------------- 투사체 / 수류탄 / 드랍 ----------------
@@ -690,12 +727,15 @@ function update(dt) {
   for (const ef of G.effects) ef.t += dt;
   G.effects = G.effects.filter(ef => ef.t < ef.life);
 
+  if (!p.dead) { updateLandmarks(); updateRadiation(dt); }
+
   // 지역 변경
   const z = World.zoneIndex(p.x, p.y);
   if (z !== G.zone) {
     G.zone = z;
     const zn = ZONES[z];
     log(z === 0 ? `${zn.name} — 안전 지대` : `${zn.name} 진입 (권장 Lv${zn.lvl[0]}~${zn.lvl[1]})`, z === 0 ? '#8f8' : '#fc8');
+    if (zn.desc) log(`  ${zn.desc} · 특산: ${zn.gearText}`, '#c9b27a');
   }
   G.darkness = lerp(G.darkness, ZONES[z].dark, dt * 1.5);
 

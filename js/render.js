@@ -22,7 +22,7 @@ const Iso = {
 
 const TILE_COLORS = {
   [T.ROAD]: '#2a2c30', [T.WALK]: '#45464b', [T.RUBBLE]: '#3d3833', [T.GRASS]: '#2c3824',
-  [T.CAMP]: '#363c45', [T.CAR]: '#2a2c30', [T.BARRICADE]: '#363c45', [T.BUILDING]: '#1d1d20',
+  [T.CAMP]: '#363c45', [T.CAR]: '#2a2c30', [T.BARRICADE]: '#363c45', [T.BUILDING]: '#1d1d20', [T.LANDMARK]: '#3a3833',
 };
 
 // ---------------- 바닥 ----------------
@@ -163,7 +163,7 @@ function drawSolidTile(o) {
 // ---------------- 스프라이트 (js/assets.js 에 등록된 그림) ----------------
 const Sprites = {
   load() {
-    for (const s of Object.values(ART.sprites)) {
+    for (const s of [...Object.values(ART.sprites), ...Object.values(ART.landmarks)]) {
       const im = new Image();
       im.onload = () => { s.ready = true; };
       im.onerror = () => console.warn('에셋을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
@@ -463,7 +463,7 @@ function render() {
   const solids = [];
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
     const t = World.tiles[ty * World.W + tx];
-    if (!SOLID.has(t)) continue;
+    if (!SOLID.has(t) || t === T.LANDMARK) continue;
     const tall = t === T.BUILDING ? World.height[ty * World.W + tx] * ISO_K + 20 : 30;
     if (inView(tx, ty, tall)) solids.push({ d: tx + ty + 1, tx, ty, t });
   }
@@ -471,6 +471,12 @@ function render() {
   for (const d of G.decals) {
     ctx.fillStyle = 'rgba(90,10,10,0.45)';
     ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r, d.r * 0.6, d.a, 0, TAU); ctx.fill();
+  }
+  for (const h of World.hazards) { // 방사능 웅덩이
+    const pul = 0.75 + Math.sin(G.time * 2.5 + h.x) * 0.15;
+    const g = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, h.r);
+    g.addColorStop(0, `rgba(120,255,80,${0.55 * pul})`); g.addColorStop(0.7, `rgba(60,200,40,${0.35 * pul})`); g.addColorStop(1, 'rgba(40,120,20,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, TAU); ctx.fill();
   }
   const bx = World.bossTile.x * TILE + 16, by = World.bossTile.y * TILE + 16;
   ctx.strokeStyle = 'rgba(80,255,90,0.3)'; ctx.lineWidth = 3;
@@ -520,6 +526,14 @@ function render() {
   for (const e of G.enemies) objs.push({ d: depth(e) + (e.def.flying ? 0.5 : 0), draw: drawEnemy, ent: e });
   for (const d of G.drops) objs.push({ d: depth(d), draw: drawDrop, ent: d });
   for (const c of G.corpses) objs.push({ d: depth(c) - 0.3, draw: drawCorpse, ent: c });
+  for (const l of World.landmarks) {
+    const sx = Iso.sx(l.x, l.y);
+    if (sx < -400 || sx > VW + 400) continue;
+    // 플레이어가 뒤에 있으면 반투명
+    const top = Iso.sy(l.x, l.y, 380), bot = Iso.sy(l.x + l.size * 16, l.y + l.size * 16);
+    l.fade = l.tx + l.ty + l.size > pd && Math.abs(psx - sx) < l.size * TILE * ISO_K && psy > top && psy < bot;
+    objs.push({ d: l.tx + l.ty + l.size, draw: drawLandmark, ent: l });
+  }
   if (!p.dead) objs.push({ d: pd, draw: drawPlayer, ent: p });
   objs.sort((a, b) => a.d - b.d);
   for (const o of objs) {
@@ -564,6 +578,11 @@ function render() {
   addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
   for (const ef of G.effects) if (ef.type === 'boom') addLight(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y), ef.r * 2.4 * (1 - ef.t / ef.life), 1, 'rgba(255,150,50,A)');
   for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(120,255,100,A)' : 'rgba(255,90,60,A)');
+  for (const h of World.hazards) addLight(Iso.sx(h.x, h.y), Iso.sy(h.x, h.y), h.r * 2.6, 0.75, 'rgba(110,255,80,A)');
+  for (const l of World.landmarks) {
+    const lc = { cathedral: 'rgba(255,190,120,A)', bosingak: 'rgba(255,90,60,A)', base: 'rgba(230,240,255,A)', tower63: 'rgba(255,210,100,A)' }[l.id];
+    addLight(Iso.sx(l.x, l.y), Iso.sy(l.x, l.y, 20), l.size * 70, 0.8, lc);
+  }
   if (G.boss) addLight(Iso.sx(G.boss.x, G.boss.y), Iso.sy(G.boss.x, G.boss.y), 230, 0.7, 'rgba(90,255,100,A)');
   for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 2) addLight(Iso.sx(d.x, d.y), Iso.sy(d.x, d.y), 70, 0.8, RARITIES[d.item.rarity].color.replace(/^#(..)(..)(..)$/, (m, r, g, b) => `rgba(${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},A)`));
   renderLighting(Math.min(0.9, G.darkness + 0.32));
@@ -588,6 +607,57 @@ function render() {
     ctx.fillStyle = t.color; ctx.fillText(t.text, sx, sy);
   }
   ctx.globalAlpha = 1;
+}
+
+// ---------------- 랜드마크 ----------------
+// 여러 칸에 걸친 면에 32px 간격으로 창문
+function boxWin(x0, y0, x1, y1, h, top, south, east, seed, z0 = 0) {
+  drawBox(x0, y0, x1, y1, h, top, south, east, z0, z0, 0);
+  if (!seed) return;
+  for (let x = x0; x < x1 - 8; x += 32) drawWindows(x, y1, Math.min(x + 32, x1), y1, z0, h, seed + x, 0);
+  for (let y = y0; y < y1 - 8; y += 32) drawWindows(x1, y, x1, Math.min(y + 32, y1), z0, h, seed + y * 3, 1);
+}
+
+function drawLandmark(l) {
+  const x0 = l.tx * TILE, y0 = l.ty * TILE, x1 = x0 + l.size * TILE, y1 = y0 + l.size * TILE;
+  if (l.fade) ctx.globalAlpha = 0.35;
+  const art = ART.landmarks[l.id];
+  if (art && art.ready) { // Gemini 그림: 발판 너비에 맞춰 남쪽 꼭짓점 기준으로 그림
+    const w = 2 * l.size * TILE * ISO_K, sc = w / art.img.width;
+    ctx.drawImage(art.img, Iso.sx(l.x, l.y) - w / 2, Iso.sy(x1, y1) + 2 - art.img.height * sc, w, art.img.height * sc);
+  } else if (l.id === 'cathedral') {
+    drawBox(x0 + 4, y0 + 4, x1 - 4, y1 - 4, 8, '#5a524a', '#3a342e', '#4a433c', 0, 0, 0);
+    boxWin(x0 + 14, y0 + 10, x1 - 10, y1 - 30, 70, '#7a4636', '#4e2a20', '#633628', 911);
+    drawBox(x0 + 26, y0 + 20, x1 - 22, y1 - 40, 96, '#3a2a26', '#2a1e1a', '#33241f', 70, 70, 0);
+    boxWin(x0 + 12, y1 - 46, x0 + 50, y1 - 8, 150, '#80503c', '#52301f', '#6a3c2b', 313);
+    drawBox(x0 + 22, y1 - 36, x0 + 40, y1 - 18, 210, '#3a2a26', '#2a1e1a', '#33241f', 150, 150, 0);
+    const cx = Iso.sx(x0 + 31, y1 - 27), cy = Iso.sy(x0 + 31, y1 - 27, 210);
+    ctx.strokeStyle = '#d9c9a0'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - 22); ctx.moveTo(cx - 7, cy - 15); ctx.lineTo(cx + 7, cy - 15); ctx.stroke(); ctx.lineWidth = 1;
+    drawBox(x1 - 40, y1 - 22, x1 - 6, y1 - 4, 14, '#5d5048', '#3a322c', '#4a3f38', 0, 0, 0); // 무너진 잔해
+  } else if (l.id === 'bosingak') {
+    drawBox(x0 + 4, y0 + 4, x1 - 4, y1 - 4, 16, '#8a8a84', '#5a5a56', '#6e6e6a', 0, 0, 0);
+    for (const [px, py] of [[x0 + 20, y0 + 20], [x1 - 28, y0 + 20], [x0 + 20, y1 - 28], [x1 - 28, y1 - 28]])
+      drawBox(px, py, px + 8, py + 8, 66, '#a8322a', '#6e1e18', '#8a2820', 16, 16, 0);
+    drawBox(x0 + 44, y0 + 44, x1 - 44, y1 - 44, 56, '#5a3a20', '#3a2410', '#4a2e18', 16, 16, 0); // 종
+    drawBox(x0 - 8, y0 - 8, x1 + 8, y1 + 8, 80, '#3c4a44', '#28322e', '#323e38', 66, 66, 0);
+    drawBox(x0 + 14, y0 + 14, x1 - 14, y1 - 14, 100, '#2e3a35', '#1f2824', '#26302c', 80, 80, 0);
+  } else if (l.id === 'base') {
+    drawBox(x0 + 4, y0 + 4, x1 - 4, y0 + 14, 14, '#7a6a48', '#4e4430', '#625639', 0, 0, 0);
+    drawBox(x0 + 4, y0 + 4, x0 + 14, y1 - 4, 14, '#7a6a48', '#4e4430', '#625639', 0, 0, 0);
+    boxWin(x0 + 22, y0 + 22, x0 + 92, y0 + 78, 36, '#55603f', '#353d27', '#454f33', 0);
+    drawBox(x1 - 34, y0 + 10, x1 - 14, y0 + 30, 92, '#4a4a44', '#2e2e2a', '#3c3c36', 0, 0, 0);
+    drawBox(x1 - 40, y0 + 4, x1 - 8, y0 + 36, 106, '#55554e', '#33332e', '#44443e', 92, 92, 0);
+    drawBox(x0 + 86, y0 + 96, x1 - 14, y1 - 26, 20, '#4b5530', '#2f361c', '#3d4526', 0, 0, 0); // 전차 차체
+    drawBox(x0 + 100, y0 + 104, x0 + 130, y0 + 128, 32, '#525d36', '#343c22', '#434c2c', 20, 20, 0);
+    ctx.strokeStyle = '#2f361c'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(Iso.sx(x0 + 115, y0 + 116), Iso.sy(x0 + 115, y0 + 116, 28)); ctx.lineTo(Iso.sx(x0 + 115, y0 + 170), Iso.sy(x0 + 115, y0 + 170, 28)); ctx.stroke(); ctx.lineWidth = 1;
+  } else if (l.id === 'tower63') {
+    boxWin(x0 + 6, y0 + 6, x1 - 6, y1 - 6, 330, '#b8902a', '#7a5c16', '#9c7a20', 6363);
+    boxWin(x0 + 22, y0 + 14, x1 - 34, y1 - 30, 372, '#c49a30', '#806018', '#a68226', 0, 330);
+  }
+  ctx.globalAlpha = 1;
+  if (G.player.found.includes(l.id)) nameTag(Iso.sx(l.x, l.y), Iso.sy(l.x, l.y) + l.size * 9, '★ ' + l.name, '#ffd76a', 'bold 12px sans-serif');
 }
 
 function drawCorpse(c) {
@@ -634,6 +704,8 @@ function drawMinimapIso(mm) {
   for (const n of G.npcs) dot(n.x, n.y, '#ffd76a', 3);
   for (const e of G.enemies) dot(e.x, e.y, e.def.boss ? '#d4f' : '#f44', e.def.boss ? 6 : 2.5);
   dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.85)', 5);
+  for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);
+  for (const l of World.landmarks) dot(l.x, l.y, p.found.includes(l.id) ? '#ffd76a' : '#888', 5);
   dot(p.x, p.y, '#fff', 4);
   g.setTransform(1, 0, 0, 1, 0, 0);
 }

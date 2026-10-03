@@ -72,7 +72,8 @@ const UI = {
     if (World.inSafe(p.x, p.y)) buffs.push('🛡 안전 지대 (체력 회복)');
     $('hud-buffs').textContent = buffs.join('  ');
     const z = ZONES[G.zone];
-    $('hud-zone').textContent = G.zone === 0 ? z.name : `${z.name}  ·  Lv${z.lvl[0]}~${z.lvl[1]}`;
+    $('hud-zone').innerHTML = G.zone === 0 ? z.name : `${z.name}  ·  Lv${z.lvl[0]}~${z.lvl[1]}<div class="zone-sub">${z.desc} · 특산 ${z.gearText}</div>`
+      + (p.inRad ? '<div class="zone-rad">☢ 방사능 피폭 중! 웅덩이에서 벗어나세요</div>' : '');
 
     const w = curWeapon();
     if (w) {

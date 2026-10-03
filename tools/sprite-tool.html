@@ -48,6 +48,9 @@
         <option>player</option><option>zombie</option><option>dog</option><option>raider</option>
         <option>brute</option><option>drone</option><option>boss</option>
         <option>merchant</option><option>captain</option><option>medic</option><option>mechanic</option>
+        <optgroup label="랜드마크 (건물 1장)">
+          <option>cathedral</option><option>bosingak</option><option>base</option><option>tower63</option>
+        </optgroup>
       </select>
       <label>배경색 (자동 감지, 직접 입력 가능)</label>
       <input id="keycolor" type="text" value="auto">
@@ -101,7 +104,7 @@ $('drop').ondrop = e => { e.preventDefault(); $('drop').classList.remove('over')
 $('tol').oninput = () => { $('tolv').textContent = $('tol').value; };
 $('mode').onchange = () => { $('gridopts').style.display = $('mode').value === 'grid' ? '' : 'none'; };
 $('run').onclick = () => imgs.length && process();
-$('key').onchange = () => result && showManifest();
+$('key').onchange = () => imgs.length ? process() : null;
 function load(files) {
   files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   Promise.all(files.map(f => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.src = URL.createObjectURL(f); })))
@@ -214,7 +217,30 @@ function feetX(d, w, b) {
 }
 
 // ---------- 가공 ----------
+const LANDMARK_KEYS = ['cathedral', 'bosingak', 'base', 'tower63'];
+
+// 랜드마크: 배경만 지우고 건물 전체를 잘라서 한 장으로 (애니메이션 없음)
+function processLandmark() {
+  const im = imgs[0], src = $('src'); src.width = im.width; src.height = im.height;
+  const g = src.getContext('2d'); g.drawImage(im, 0, 0);
+  const { key, data } = keyOut(src, +$('tol').value);
+  let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+  for (let y = 0; y < im.height; y++) for (let x = 0; x < im.width; x++) if (data[(y * im.width + x) * 4 + 3] > 60) {
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 < 0) { $('info').innerHTML = '<span class="warn">건물을 찾지 못했습니다.</span>'; return; }
+  const w = x1 - x0 + 1, h = y1 - y0 + 1, sc = Math.min(1, 1024 / w);
+  const out = $('out'); out.width = Math.round(w * sc); out.height = Math.round(h * sc);
+  out.getContext('2d').drawImage(src, x0, y0, w, h, 0, 0, out.width, out.height);
+  result = { landmark: true };
+  $('anims').innerHTML = '';
+  $('info').innerHTML = `<span class="ok">랜드마크 모드 · 배경색 rgb(${key.join(',')}) 제거 · ${out.width}×${out.height}px</span><br>`
+    + '<span class="muted" style="font-size:12px">게임은 이 그림의 가로 폭을 건물 발판 폭에 맞추고, 그림 맨 아래를 건물의 앞쪽 꼭짓점에 맞춥니다.</span>';
+  showManifest();
+}
+
 function process() {
+  if (LANDMARK_KEYS.includes($('key').value)) return processLandmark();
   // 이미지마다: 배경 제거 → 행/프레임 감지. 행들은 파일 순서대로 이어 붙임
   const parts = [], keys = [];
   const mode = $('mode').value;
@@ -281,13 +307,14 @@ function process() {
 }
 
 function showManifest() {
+  if (result.landmark) { $('manifest').textContent = `// js/assets.js 의 landmarks 안에 붙여넣기\n${$('key').value}: { file: '${$('key').value}.png' },`; return; }
   const anims = result.names.map((n, i) => `${n}: [${i}, ${result.rows[i]}]`).filter((_, i) => result.names[i]).join(', ');
   $('manifest').textContent = `${$('key').value}: { file: '${$('key').value}.png', cell: ${result.cell}, w: ${result.cellW}, anims: { ${anims} } },`;
 }
 
 // 미리보기 애니메이션
 setInterval(() => {
-  if (!result) return;
+  if (!result || !result.previews) return; // 랜드마크 모드는 미리보기 애니메이션 없음
   const t = Math.floor(performance.now() / 125);
   for (const p of result.previews) {
     const g = p.cv.getContext('2d'); g.clearRect(0, 0, p.cv.width, p.cv.height);

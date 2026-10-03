@@ -9,6 +9,10 @@ const ART = {
   fps: { idle: 6, walk: 10, attack: 16, hit: 12, death: 10 },
   // 화면에 표시할 대기 자세 키 (px)
   height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44 },
+  // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
+  landmarks: {
+    // cathedral: { file: 'cathedral.png' },
+  },
   sprites: {
     // 예시 (도구가 만들어 주는 형식):
     // zombie: { file: 'zombie.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 6] } },

@@ -70,8 +70,13 @@ function makeConsumable(key, count = 1) {
 }
 
 // 레벨에 맞는 랜덤 장비
-function randomGear(level, rarityBonus = 0, minRarity = 0) {
+// bias: 지역 특산 장비 키 목록 (절반 확률로 이 중에서 고름)
+function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
   const r = Math.max(minRarity, rollRarity(rarityBonus));
+  if (bias && Math.random() < 0.5) {
+    const keys = bias.filter(k => (WEAPONS[k] || ARMORS[k]).lvl <= level + 2);
+    if (keys.length) { const k = pick(keys); return WEAPONS[k] ? makeWeapon(k, level, r) : makeArmor(k, level, r); }
+  }
   if (Math.random() < 0.7) {
     const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2);
     return makeWeapon(pick(keys), level, r);
@@ -137,7 +142,7 @@ function newPlayer(name) {
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0 },
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
-    bossKills: 0, totalKills: 0, pity: 0, respecs: 0,
+    bossKills: 0, totalKills: 0, pity: 0, respecs: 0, found: [], radT: 0,
   };
 }
 

@@ -1,12 +1,13 @@
 // 맵 생성 및 지형 쿼리
-const T = { ROAD: 0, BUILDING: 1, RUBBLE: 2, CAR: 3, GRASS: 4, CAMP: 5, BARRICADE: 6, WALK: 7 };
-const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE]);
+const T = { ROAD: 0, BUILDING: 1, RUBBLE: 2, CAR: 3, GRASS: 4, CAMP: 5, BARRICADE: 6, WALK: 7, LANDMARK: 8 };
+const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE, T.LANDMARK]);
 
 const World = {
   W: 160, H: 160, BLOCK: 14,
   tiles: null, shade: null, height: null,
   cx: 80, cy: 80, safeR: 11,
   bossTile: { x: 22, y: 22 },
+  landmarks: [], hazards: [],
 
   generate(seed) {
     const W = this.W, H = this.H, B = this.BLOCK;
@@ -93,6 +94,27 @@ const World = {
       if (d < 8) set(x, y, d < 2 ? T.GRASS : T.RUBBLE);
     }
 
+    // 랜드마크: 자리와 주변 2칸을 비우고 발판을 고체 타일로
+    this.landmarks = LANDMARKS.map(l => ({ ...l, x: (l.tx + l.size / 2) * TILE, y: (l.ty + l.size / 2) * TILE }));
+    for (const l of this.landmarks) {
+      for (let y = l.ty - 2; y < l.ty + l.size + 2; y++) for (let x = l.tx - 2; x < l.tx + l.size + 2; x++) {
+        const inside = x >= l.tx && y >= l.ty && x < l.tx + l.size && y < l.ty + l.size;
+        set(x, y, inside ? T.LANDMARK : T.WALK);
+      }
+    }
+
+    // 여의도 방사능 웅덩이 (지나갈 수 있는 바닥 위)
+    this.hazards = [];
+    const hr = mulberry32(seed + 77);
+    for (let tries = 0; tries < 4000 && this.hazards.length < 18; tries++) {
+      const tx = 2 + Math.floor(hr() * (W - 4)), ty = 2 + Math.floor(hr() * (H - 4));
+      const px = tx * TILE + 16, py = ty * TILE + 16;
+      if (this.zoneIndex(px, py) !== 4 || SOLID.has(this.tiles[ty * W + tx])) continue;
+      if (Math.hypot(tx - this.bossTile.x, ty - this.bossTile.y) < 9) continue;
+      if (this.hazards.some(h => Math.hypot(h.x - px, h.y - py) < 260)) continue;
+      this.hazards.push({ x: px, y: py, r: 40 + hr() * 40 });
+    }
+
     // 외곽 벽
     for (let i = 0; i < W; i++) { set(i, 0, T.BUILDING); set(i, H - 1, T.BUILDING); }
     for (let i = 0; i < H; i++) { set(0, i, T.BUILDING); set(W - 1, i, T.BUILDING); }
@@ -156,6 +178,7 @@ const World = {
     const col = {
       [T.ROAD]: [45, 47, 52], [T.BUILDING]: [95, 92, 88], [T.RUBBLE]: [70, 64, 56], [T.CAR]: [110, 60, 40],
       [T.GRASS]: [48, 70, 40], [T.CAMP]: [60, 90, 120], [T.BARRICADE]: [140, 110, 60], [T.WALK]: [62, 62, 66],
+      [T.LANDMARK]: [200, 170, 90],
     };
     for (let i = 0; i < this.tiles.length; i++) {
       const c3 = col[this.tiles[i]];
