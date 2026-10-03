@@ -34,7 +34,8 @@ window.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
   const k = e.key.toLowerCase();
   input.keys[k] = true;
-  if (!G.running || G.player.dead) return;
+  if (k === 'escape' && G.paused) { Pause.toggle(); return; }
+  if (!G.running || G.player.dead || G.paused) return;
   if (k === 'r') startReload();
   else if (k === 'q') swapWeapon();
   else if (k === 'e') interact();
@@ -43,7 +44,7 @@ window.addEventListener('keydown', e => {
   else if (k === 'c') UI.toggle('stats');
   else if (k === 'j') UI.toggle('quest');
   else if (k === 'o') UI.toggle('settings');
-  else if (k === 'escape') UI.closeAll();
+  else if (k === 'escape') { if (UI.anyOpen()) UI.closeAll(); else Pause.toggle(); }
   else if (k >= '1' && k <= '4') useSkill(+k - 1);
   else if (k === '5') quickMedkit();
 });
@@ -52,6 +53,7 @@ canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.m
 canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; });
 window.addEventListener('mouseup', e => { if (e.button === 0) input.down = false; });
 window.addEventListener('blur', () => { input.keys = {}; input.down = false; });
+document.addEventListener('visibilitychange', () => { if (document.hidden && G.running && !G.paused && !G.player.dead) Pause.toggle(); }); // 탭을 떠나면 자동 일시정지
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 // ---------------- 공용 ----------------
@@ -120,6 +122,7 @@ function startGame(save, name) {
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
+  const P = G.player; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
   Bounty.refresh(); // v0.14 일일 의뢰
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
@@ -340,8 +343,9 @@ function nearestNpc() {
 
 function gainExp(n) {
   const p = G.player;
+  if (p.level >= MAX_LEVEL) { p.exp = 0; return; }
   p.exp += n;
-  while (p.exp >= PlayerStats.expNext(p.level)) {
+  while (p.level < MAX_LEVEL && p.exp >= PlayerStats.expNext(p.level)) {
     p.exp -= PlayerStats.expNext(p.level);
     p.level++;
     p.statPoints += 3;
@@ -355,6 +359,7 @@ function gainExp(n) {
     UI.buildHotbar(); UI.refreshStats();
     saveGame();
   }
+  if (p.level >= MAX_LEVEL) p.exp = 0;
 }
 
 function damagePlayer(dmg, srcX, srcY) {
@@ -374,7 +379,7 @@ function damagePlayer(dmg, srcX, srcY) {
 
 function playerDie() {
   const p = G.player;
-  p.hp = 0; p.dead = true; input.down = false;
+  p.hp = 0; p.dead = true; input.down = false; p.deaths++;
   const lost = Math.floor(p.credits * 0.1);
   p.credits -= lost;
   burst(p.x, p.y, '#a00', 30, 160, 0.8, 4);
@@ -444,6 +449,7 @@ function killEnemy(e) {
   if (!e.minion) {
     G.combo = G.time - (G.comboT || -9) < 3 ? (G.combo || 0) + 1 : 1; G.comboT = G.time;
     if (G.combo >= 3) SFX.play('combo', G.combo);
+    if (G.combo > p.bestCombo) p.bestCombo = G.combo;
     if (G.combo === 10 || G.combo === 25 || G.combo === 50) { UI.toast(`${G.combo} 연속 처치!`, `보너스 +${G.combo * p.level}₵`); p.credits += G.combo * p.level; }
   }
   const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
@@ -796,6 +802,8 @@ function updateDrops(dt) {
 function update(dt) {
   G.time += dt;
   const p = G.player;
+  p.playTime += dt;
+  Tips.update(dt);
   if (!p.dead) {
     const mv = moveInput();
     if (p.rollT > 0) { // 구르는 중: 정해진 방향으로 빠르게
@@ -873,7 +881,8 @@ function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   if (G.running) {
-    if (G.hitstop > 0) G.hitstop -= dt; // 타격 정지 중에는 월드 정지
+    if (G.paused) { /* 일시정지: 그리기만 */ }
+    else if (G.hitstop > 0) G.hitstop -= dt; // 타격 정지 중에는 월드 정지
     else update(dt);
     render();
     UI.updateHUD(dt);

@@ -46,6 +46,33 @@
   </div>
 </div>
 
+<!-- 일시정지 (v1.0) -->
+<div id="pause-screen" class="overlay hidden">
+  <div class="title-box">
+    <h1 style="font-size:40px">일시정지</h1>
+    <div class="pause-buttons">
+      <button id="btn-resume">계속하기</button>
+      <button id="btn-pause-settings">설정 · 세이브 백업</button>
+      <button id="btn-save">지금 저장</button>
+      <button id="btn-title">타이틀로</button>
+    </div>
+    <div id="pause-stats" class="muted"></div>
+  </div>
+</div>
+
+<!-- 엔딩 (v1.0) -->
+<div id="ending-screen" class="overlay hidden">
+  <div class="title-box">
+    <h1>SEOUL 2049</h1>
+    <h2>— 해방 —</h2>
+    <p class="lore">방사능 군주 타이탄이 쓰러졌다. 여의도의 하늘에 20년 만에 햇빛이 들었다.<br>
+    시청역 캠프의 사람들은 처음으로 지상에서 아침을 맞이했다.</p>
+    <div id="ending-stats"></div>
+    <p class="muted">기획·아트 디렉션: 개발자 · 프로그래밍: Claude Code<br>모험은 계속됩니다 — 위협 등급 어설트, 일일 의뢰, 부활하는 타이탄이 기다립니다.</p>
+    <button id="btn-ending-continue">계속 플레이</button>
+  </div>
+</div>
+
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="hud-top-left">
@@ -69,6 +96,7 @@
   <div id="hotbar"></div>
   <div id="log"></div>
   <div id="interact-hint" class="hidden"></div>
+  <div id="tip" class="hidden"></div>
   <div id="toast" class="hidden"><div id="toast-title"></div><div id="toast-sub"></div></div>
   <div id="quest-tracker"></div>
   <div id="combo" class="hidden"><span id="combo-n"></span><small>연속 처치</small><div id="combo-bar"></div></div>
@@ -77,6 +105,7 @@
     <button data-panel="stats">능력치 (C)</button>
     <button data-panel="quest">임무 (J)</button>
     <button data-panel="settings">설정 (O)</button>
+    <button id="btn-pause">⏸ (ESC)</button>
   </div>
 </div>
 
@@ -145,6 +174,7 @@
 <script src="js/workshop.js"></script>
 <script src="js/interiors.js"></script>
 <script src="js/endgame.js"></script>
+<script src="js/tips.js"></script>
 <script src="js/touch.js"></script>
 <script src="js/game.js"></script>
 </body>

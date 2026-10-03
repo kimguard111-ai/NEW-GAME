@@ -271,3 +271,13 @@ body.touch .controls .desk { display: none; }
 #combo-bar { height: 3px; background: currentColor; margin-top: 3px; }
 #touch-buttons button.roll { border-color: #9fe0ff; color: #9fe0ff; }
 body.touch #combo { right: 80px; top: 30%; } body.touch #combo-n { font-size: 24px; }
+
+/* v1.0 팁 · 일시정지 · 세이브 백업 */
+#tip { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%); max-width: 560px; text-align: center;
+  background: rgba(20,30,40,.9); border: 1px solid #5aa8ff; color: #dfefff; padding: 8px 16px; border-radius: 4px; font-size: 14px; animation: toastIn .4s ease-out; }
+body.touch #tip { bottom: 110px; font-size: 11px; max-width: 70vw; padding: 5px 10px; }
+.pause-buttons { display: flex; flex-direction: column; gap: 8px; align-items: center; margin: 20px 0; }
+.pause-buttons button { width: 240px; font-size: 16px; padding: 10px; }
+#save-code { width: 100%; margin-top: 6px; background: #111; color: #ddd; border: 1px solid #444; font-size: 11px; font-family: monospace; }
+#ending-stats { color: #ffd76a; margin: 16px 0; }
+#btn-pause { font-weight: bold; }

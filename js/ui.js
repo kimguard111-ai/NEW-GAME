@@ -1,10 +1,40 @@
 // DOM 기반 UI (HUD, 패널, 상점, 대화)
 const $ = id => document.getElementById(id);
 
+// 일시정지 · 엔딩 (v1.0)
+const Pause = {
+  toggle() {
+    if (!G.running || G.player.dead) return;
+    G.paused = !G.paused; input.down = false; input.keys = {};
+    $('pause-screen').classList.toggle('hidden', !G.paused);
+    if (G.paused) { UI.closeAll(); $('pause-stats').innerHTML = Pause.statsHtml(); saveGame(); }
+  },
+  statsHtml() {
+    const p = G.player, m = Math.floor(p.playTime / 60);
+    return `${p.name} · Lv${p.level} · 플레이 ${Math.floor(m / 60)}시간 ${m % 60}분 · 처치 ${fmt(p.totalKills)} · 사망 ${p.deaths} · 최고 콤보 ${p.bestCombo}`;
+  },
+  ending() {
+    const p = G.player, best = Object.values(p.assaults).reduce((a, r) => Math.max(a, r.tier || 1), 0);
+    G.paused = true; input.down = false;
+    $('ending-stats').innerHTML = `<p>${Pause.statsHtml()}<br>필드 보스 ${p.fieldBossKills || 0} · 어설트 최고 위협 ${best || '-'} · 타이탄 처치 ${p.bossKills}</p>`;
+    $('ending-screen').classList.remove('hidden');
+    SFX.play('levelup');
+  },
+  init() {
+    $('btn-resume').onclick = () => Pause.toggle();
+    $('btn-pause').onclick = () => Pause.toggle();
+    $('btn-save').onclick = () => { saveGame(false); $('pause-stats').innerHTML = Pause.statsHtml() + '<br>저장했습니다.'; };
+    $('btn-pause-settings').onclick = () => { Pause.toggle(); UI.open('settings'); };
+    $('btn-title').onclick = () => { saveGame(); location.reload(); };
+    $('btn-ending-continue').onclick = () => { $('ending-screen').classList.add('hidden'); G.paused = false; };
+  },
+};
+
 const UI = {
   selected: null, hudT: 0, shopOpen: false,
 
   init() {
+    Pause.init();
     document.querySelectorAll('.panel .close').forEach(el => {
       el.onclick = () => UI.close(el.closest('.panel').id.replace('panel-', ''));
     });
@@ -25,6 +55,7 @@ const UI = {
     if (name === 'shop') { UI.shopOpen = false; UI.refreshInventory(); }
   },
   toggle(name) { UI.isOpen(name) ? UI.close(name) : UI.open(name); },
+  anyOpen() { return ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings'].some(n => UI.isOpen(n)); },
   closeAll() { ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings'].forEach(n => UI.close(n)); },
   refreshAll() { UI.refreshInventory(); UI.refreshStats(); UI.refreshQuest(); },
 
@@ -69,7 +100,7 @@ const UI = {
     $('hp-fill').style.width = clamp(100 * p.hp / mh, 0, 100) + '%';
     $('hp-text').textContent = `${Math.ceil(Math.max(0, p.hp))} / ${mh}`;
     $('exp-fill').style.width = (100 * p.exp / next) + '%';
-    $('exp-text').textContent = `EXP ${fmt(p.exp)} / ${fmt(next)} (${(100 * p.exp / next).toFixed(1)}%)`;
+    $('exp-text').textContent = p.level >= MAX_LEVEL ? `최대 레벨 (Lv${MAX_LEVEL})` : `EXP ${fmt(p.exp)} / ${fmt(next)} (${(100 * p.exp / next).toFixed(1)}%)`;
     $('hud-credits').textContent = `₵ ${fmt(p.credits)} 크레딧   ·   예비 탄약 ${fmt(p.reserve)}` + (p.statPoints ? `   ·   ★ 포인트 ${p.statPoints}` : '')
       + (p.mats.scrap || p.mats.chip ? `   ·   ${Workshop.matsText()}` : '');
     const buffs = [];
@@ -310,9 +341,29 @@ const UI = {
       + opt('sound', '효과음', '총소리·타격·획득 소리')
       + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
       + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="1.8" step="0.1" value="${ZOOM}"></div>`
+      + opt('tips', '도움말 팁', '처음 겪는 상황에서 한 번씩 안내')
+      + `<hr style="border-color:#333"><b>세이브 백업</b> <span class="muted">— 다른 기기·브라우저로 옮길 때</span><br>`
+      + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
+      + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
     $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); }; });
     $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
+    $('btn-export').onclick = () => {
+      saveGame(); const ta = $('save-code'), raw = localStorage.getItem(SAVE_KEY) || '';
+      ta.value = btoa(unescape(encodeURIComponent(raw))); ta.classList.remove('hidden'); ta.select();
+      const ok = () => log('세이브 코드를 복사했습니다. 다른 기기의 설정 → 불러오기에 붙여넣으세요.', '#8f8'), manual = () => log('아래 코드를 직접 복사하세요 (길게 눌러 전체 선택).', '#8cf');
+      try { navigator.clipboard.writeText(ta.value).then(ok, manual); } catch (e) { manual(); }
+    };
+    $('btn-import').onclick = () => {
+      const ta = $('save-code');
+      if (ta.classList.contains('hidden') || !ta.value.trim()) { ta.value = ''; ta.classList.remove('hidden'); ta.placeholder = '여기에 세이브 코드를 붙여넣고 다시 [불러오기]'; ta.focus(); return; }
+      try {
+        const raw = decodeURIComponent(escape(atob(ta.value.trim()))), s = JSON.parse(raw);
+        if (!s || !s.p || !s.p.name) throw new Error('bad');
+        if (!confirm(`${s.p.name} Lv${s.p.level} 세이브로 바꿀까요? 지금 진행은 덮어씌워집니다.`)) return;
+        G.running = false; localStorage.setItem(SAVE_KEY, raw); location.reload();
+      } catch (e) { log('세이브 코드가 올바르지 않습니다.', '#f66'); }
+    };
     $('zoom-range').oninput = e => { setZoom(+e.target.value); $('zoom-val').textContent = ZOOM.toFixed(1) + '배'; };
   },
 

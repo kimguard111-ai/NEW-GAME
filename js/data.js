@@ -1,7 +1,8 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.16';
+const GAME_VERSION = 'v1.0';
+const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -105,7 +106,7 @@ const ENEMIES = {
   brute:  { name: '변이 거한', hp: 190, dmg: 22, speed: 56,  r: 20, exp: 45, weight: 2.5, color: '#7a4f8a', atkCd: 1.5, aggro: 360 },
   drone:  { name: '경비 드론', hp: 60,  dmg: 9,  speed: 115, r: 11, exp: 26, weight: 0.8, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
             ranged: true, range: 290, fireCd: 0.9, bulletSpeed: 480, flying: true },
-  boss:   { name: '방사능 군주 타이탄', hp: 90000, dmg: 130, speed: 75, r: 36, exp: 6000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
+  boss:   { name: '방사능 군주 타이탄', hp: 90000, dmg: 130, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
 };
 
 // 지역 (캠프 중심으로부터 타일 거리)

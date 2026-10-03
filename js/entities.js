@@ -187,7 +187,7 @@ function hasLegend(p, id) { const w = p.equip[p.active]; return !!(w && w.legend
 const PlayerStats = {
   maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp'))),
   def: p => armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5),
-  dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 80); },
+  dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 40 + 8 * p.level); }, // v1.0: 고레벨일수록 같은 방어력의 효과 감소 (Lv5 기존과 동일)
   gunMul: p => 1 + (p.stats.dex - 5) * 0.04,
   meleeMul: p => 1 + (p.stats.str - 5) * 0.06,
   crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w),
@@ -202,7 +202,7 @@ const PlayerStats = {
   reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)),
   regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + gearBonus(p, 'regen'),
   expMul: p => 1 + gearBonus(p, 'exp'),
-  expNext: lvl => Math.floor(45 * Math.pow(lvl, 1.65)), // v0.16: 처치 템포가 2배 이상 빨라져 곡선은 유지
+  expNext: lvl => Math.floor(70 * lvl * lvl), // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
 };
 
 // 스킬 수치: 각 스킬은 연동 능력치 하나를 따라 강해짐
@@ -260,7 +260,7 @@ function armorEhp(p, it) {
   let hp = 0;
   for (const g of [arm, hel]) if (g) for (const a of g.affixes || []) if (a.k === 'hp') hp += a.v;
   const def = armorDef(arm) + armorDef(hel) + Math.max(0, p.stats.str - 5);
-  return base * (1 + hp) / (1 - def / (def + 80));
+  return base * (1 + hp) / (1 - def / (def + 40 + 8 * p.level)); // PlayerStats.dmgReduce 와 같은 식
 }
 
 // 현재 장착 장비보다 좋은지 (인벤토리 ▲ 표시)
