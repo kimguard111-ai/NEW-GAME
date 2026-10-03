@@ -14,9 +14,19 @@ const G = {
 };
 const input = { keys: {}, mx: 0, my: 0, down: false };
 
-function resize() { VW = canvas.width = window.innerWidth; VH = canvas.height = window.innerHeight; }
+function resize() {
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  VW = canvas.width / ZOOM; VH = canvas.height / ZOOM; // 확대 전 기준 화면 크기
+}
 window.addEventListener('resize', resize);
 resize();
+// 마우스 휠: 카메라 확대 1.0 ~ 1.8
+function setZoom(z) {
+  ZOOM = clamp(Math.round(z * 10) / 10, 1, 1.8);
+  try { localStorage.setItem('seoul2049-zoom', ZOOM); } catch (e) { /* 저장 불가 */ }
+  GroundCache.map.clear(); resize();
+}
+canvas.addEventListener('wheel', e => { e.preventDefault(); setZoom(ZOOM + (e.deltaY < 0 ? 0.1 : -0.1)); }, { passive: false });
 
 // ---------------- 입력 ----------------
 window.addEventListener('keydown', e => {
@@ -35,7 +45,7 @@ window.addEventListener('keydown', e => {
   else if (k === '5') quickMedkit();
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
-canvas.addEventListener('mousemove', e => { input.mx = e.clientX; input.my = e.clientY; });
+canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
 canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; });
 window.addEventListener('mouseup', e => { if (e.button === 0) input.down = false; });
 window.addEventListener('blur', () => { input.keys = {}; input.down = false; });
@@ -94,6 +104,7 @@ function startGame(save, name) {
     G.bossT = save.bossT || 0;
     G.player.dead = false;
     if (G.player.hp <= 0) G.player.hp = PlayerStats.maxHp(G.player);
+    if (G.player.mapV !== 2) { Object.assign(G.player, World.campCenter()); G.player.mapV = 2; } // v0.11 맵 축소: 예전 좌표는 캠프에서 시작
     if (World.circleBlocked(G.player.x, G.player.y, G.player.r)) Object.assign(G.player, World.campCenter());
     log(`${G.player.name}님, 다시 오신 것을 환영합니다.`, '#e0b23a');
   } else {
@@ -570,7 +581,7 @@ function spawnEnemies(dt) {
     if (zi > z && Math.random() < 0.7) continue; // 지역 경계 너머(더 위험한 지역) 스폰은 덜 나오게
     const zone = ZONES[zi];
     // 캠프에서 멀어질수록 레벨 상승
-    const prev = ZONES[zi - 1].maxDist, span = Math.min(zone.maxDist, 110) - prev;
+    const prev = ZONES[zi - 1].maxDist, span = Math.min(zone.maxDist, 86) - prev;
     const t = clamp((World.distTiles(x, y) - prev) / span, 0, 1);
     const lvl = clamp(Math.round(lerp(zone.lvl[0], zone.lvl[1], t) + rand(-1, 1)), zone.lvl[0], zone.lvl[1]);
     const type = weighted(zone.spawns), e = makeEnemy(type, x, y, lvl);

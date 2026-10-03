@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.10';
+const GAME_VERSION = 'v0.11';
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -112,15 +112,15 @@ const ENEMIES = {
 const ZONES = [
   { name: '시청역 생존자 캠프', maxDist: 12, lvl: [0, 0], dark: 0.25, tint: null, spawns: [] },
 // v0.6 지역 특성: desc 설명 · packs 무리 출몰(종류: [최소, 최대]) · gear 특산 장비(드랍의 50%) · gearText 표시용
-  { name: '명동 잔해', maxDist: 34, lvl: [1, 4], dark: 0.32, tint: null,
+  { name: '명동 잔해', maxDist: 28, lvl: [1, 4], dark: 0.32, tint: null,
     spawns: [['zombie', 70], ['dog', 30]],
     desc: '감염자 무리가 몰려다닌다', packs: { zombie: [2, 4] },
     gear: ['pistol', 'smg', 'pipe', 'vest', 'cap'], gearText: '권총·기관단총·쇠파이프' },
-  { name: '종로 폐허', maxDist: 54, lvl: [5, 9], dark: 0.42, tint: null,
+  { name: '종로 폐허', maxDist: 44, lvl: [5, 9], dark: 0.42, tint: null,
     spawns: [['zombie', 35], ['dog', 25], ['raider', 40]],
     desc: '약탈자들이 무리 지어 매복한다', packs: { raider: [2, 3], dog: [2, 3] },
     gear: ['shotgun', 'axe', 'tactical', 'tacHelmet'], gearText: '산탄총·소방 도끼·전술 조끼·전술 헬멧' },
-  { name: '용산 군사구역', maxDist: 72, lvl: [10, 15], dark: 0.52, tint: 'rgba(40,20,10,0.12)',
+  { name: '용산 군사구역', maxDist: 58, lvl: [10, 15], dark: 0.52, tint: 'rgba(40,20,10,0.12)',
     spawns: [['raider', 35], ['brute', 25], ['drone', 25], ['dog', 15]],
     desc: '경비 드론 편대가 순찰한다', packs: { drone: [2, 3] },
     gear: ['rifle', 'sniper', 'lmg', 'military'], gearText: '돌격소총·저격소총·기관총·군용 강화복' },
@@ -132,10 +132,10 @@ const ZONES = [
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수. 처음 가까이 가면 발견 보상
 const LANDMARKS = [
-  { id: 'cathedral', name: '무너진 명동성당', zone: 1, tx: 102, ty: 70, size: 4, exp: 80, credits: 200 },
-  { id: 'bosingak', name: '보신각', zone: 2, tx: 48, ty: 108, size: 4, exp: 600, credits: 600 },
-  { id: 'base', name: '버려진 용산 기지', zone: 3, tx: 124, ty: 116, size: 5, exp: 2500, credits: 1500 },
-  { id: 'tower63', name: '63빌딩 잔해', zone: 4, tx: 8, ty: 30, size: 4, exp: 6000, credits: 3000 },
+  { id: 'cathedral', name: '무너진 명동성당', zone: 1, tx: 81, ty: 56, size: 4, exp: 80, credits: 200 },
+  { id: 'bosingak', name: '보신각', zone: 2, tx: 39, ty: 87, size: 4, exp: 600, credits: 600 },
+  { id: 'base', name: '버려진 용산 기지', zone: 3, tx: 99, ty: 93, size: 5, exp: 2500, credits: 1500 },
+  { id: 'tower63', name: '63빌딩 잔해', zone: 4, tx: 6, ty: 24, size: 4, exp: 6000, credits: 3000 },
 ];
 
 const SKILLS = [

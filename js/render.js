@@ -1,6 +1,9 @@
 // 2.5D 쿼터뷰(아이소메트릭) 렌더러
 // 월드 좌표 (x, y, 높이 z) → 화면: sx = (x - y)·K, sy = (x + y)·K/2 - z·K
 const ISO_K = 0.9;
+// 카메라 확대 (v0.11): 월드 전체를 ZOOM 배로 그림. VW·VH 는 확대 전 기준의 가상 화면 크기
+let ZOOM = 1.4;
+try { ZOOM = clamp(+localStorage.getItem('seoul2049-zoom') || 1.4, 1, 1.8); } catch (e) { /* 저장 불가 */ }
 
 const Iso = {
   sx: (x, y) => (x - y) * ISO_K - G.cam.x,
@@ -16,8 +19,8 @@ const Iso = {
     return { x: dx / l, y: dy / l };
   },
   // 바닥 그리기용 변환 (월드 좌표 그대로 그리면 투영됨)
-  groundTransform() { ctx.setTransform(ISO_K, ISO_K / 2, -ISO_K, ISO_K / 2, -G.cam.x, -G.cam.y); },
-  reset() { ctx.setTransform(1, 0, 0, 1, 0, 0); },
+  groundTransform() { const z = ZOOM; ctx.setTransform(ISO_K * z, ISO_K / 2 * z, -ISO_K * z, ISO_K / 2 * z, -G.cam.x * z, -G.cam.y * z); },
+  reset() { ctx.setTransform(ZOOM, 0, 0, ZOOM, 0, 0); },
 };
 
 const TILE_COLORS = {
@@ -33,8 +36,12 @@ function drawGroundTile(tx, ty, t) {
   if (t === T.ROAD || t === T.CAR) {
     const lx = tx % World.BLOCK, ly = ty % World.BLOCK;
     ctx.fillStyle = '#8a7a3a';
-    if (lx === 1 && ly >= 3 && ty % 2 === 0) ctx.fillRect(x + 14, y + 4, 4, 18);
-    if (ly === 1 && lx >= 3 && tx % 2 === 0) ctx.fillRect(x + 4, y + 14, 18, 4);
+    if (lx === 1 && ly >= 4 && ty % 2 === 0) ctx.fillRect(x + 14, y + 4, 4, 18);
+    if (ly === 1 && lx >= 4 && tx % 2 === 0) ctx.fillRect(x + 4, y + 14, 18, 4);
+    // 교차로 앞 횡단보도 (v0.11)
+    ctx.fillStyle = 'rgba(170,170,160,0.35)';
+    if (ly === 3 && lx < 3) for (let i = 0; i < 4; i++) ctx.fillRect(x + 2 + i * 8, y + 5, 4, 22);
+    if (lx === 3 && ly < 3) for (let i = 0; i < 4; i++) ctx.fillRect(x + 5, y + 2 + i * 8, 22, 4);
     if (h < 0.06) { ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x + h * 200, y + 10, 10, 6); }
   } else if (t === T.WALK) {
     ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
@@ -62,31 +69,31 @@ const GroundCache = {
     if (c) { this.map.delete(key); this.map.set(key, c); return c; }
     const CH = this.CH, x0 = cx * CH * TILE, y0 = cy * CH * TILE, span = CH * TILE;
     const left = Math.floor((x0 - y0 - span) * ISO_K) - 2, top = Math.floor((x0 + y0) * ISO_K / 2) - 2;
-    const cv = document.createElement('canvas');
-    cv.width = Math.ceil(2 * span * ISO_K) + 4; cv.height = Math.ceil(span * ISO_K) + 4;
+    const cv = document.createElement('canvas'), z = ZOOM;
+    cv.width = Math.ceil((2 * span * ISO_K + 4) * z); cv.height = Math.ceil((span * ISO_K + 4) * z);
     const g = cv.getContext('2d');
     const saved = ctx; ctx = g;
-    g.setTransform(ISO_K, ISO_K / 2, -ISO_K, ISO_K / 2, -left, -top);
+    g.setTransform(ISO_K * z, ISO_K / 2 * z, -ISO_K * z, ISO_K / 2 * z, -left * z, -top * z);
     // 경계 이음매 방지를 위해 한 칸씩 더 그림
     for (let ty = cy * CH - 1; ty <= cy * CH + CH; ty++) for (let tx = cx * CH - 1; tx <= cx * CH + CH; tx++) {
       if (tx < 0 || ty < 0 || tx >= World.W || ty >= World.H) continue;
       drawGroundTile(tx, ty, World.tiles[ty * World.W + tx]);
     }
     ctx = saved;
-    c = { cv, left, top };
+    c = { cv, left, top, z };
     this.map.set(key, c);
     if (this.map.size > this.LIMIT) this.map.delete(this.map.keys().next().value);
     return c;
   },
   draw(tx0, ty0, tx1, ty1) {
-    const CH = this.CH, ox = Math.round(G.cam.x), oy = Math.round(G.cam.y);
+    const CH = this.CH, ox = Math.round(G.cam.x * ZOOM) / ZOOM, oy = Math.round(G.cam.y * ZOOM) / ZOOM;
     for (let cy = Math.floor(ty0 / CH); cy <= Math.floor(ty1 / CH); cy++)
       for (let cx = Math.floor(tx0 / CH); cx <= Math.floor(tx1 / CH); cx++) {
         const x0 = cx * CH * TILE, y0 = cy * CH * TILE, span = CH * TILE;
         const sl = (x0 - y0 - span) * ISO_K - G.cam.x, st = (x0 + y0) * ISO_K / 2 - G.cam.y;
         if (sl > VW || sl + 2 * span * ISO_K < 0 || st > VH || st + span * ISO_K < 0) continue;
         const c = this.get(cx, cy);
-        ctx.drawImage(c.cv, c.left - ox, c.top - oy);
+        ctx.drawImage(c.cv, c.left - ox, c.top - oy, c.cv.width / c.z, c.cv.height / c.z);
       }
   },
 };
@@ -541,7 +548,7 @@ function burnFx(tx, ty) {
 // ---------------- 메인 렌더 ----------------
 function render() {
   const p = G.player;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  Iso.reset();
   ctx.fillStyle = '#08080a'; ctx.fillRect(0, 0, VW, VH);
 
   // 화면에 보이는 타일 범위 (높은 건물을 위해 아래쪽 여유)
@@ -627,13 +634,14 @@ function render() {
   // 2) 입체 오브젝트 + 캐릭터 깊이 정렬
   const objs = solids;
   const pd = (p.x + p.y) / TILE, psx = Iso.sx(p.x, p.y), psy = Iso.sy(p.x, p.y, 18);
+  // 플레이어와 추격 중인 적을 가리는 앞쪽 건물은 반투명 (v0.11 고층 건물 대응)
+  const watch = [{ d: pd, sx: psx, sy: psy, w: 60 }];
+  for (const e of G.enemies) if (e.state === 'chase' && e.hp > 0) watch.push({ d: (e.x + e.y) / TILE, sx: Iso.sx(e.x, e.y), sy: Iso.sy(e.x, e.y, 18), w: 30 + e.r });
   for (const o of solids) {
-    // 플레이어를 가리는 앞쪽 건물은 반투명
-    if (o.t === T.BUILDING && o.d > pd + 0.3) {
-      const cx = o.tx * TILE + 16, cy = o.ty * TILE + 16;
-      const sx = Iso.sx(cx, cy), ht = World.height[o.ty * World.W + o.tx];
-      if (Math.abs(sx - psx) < 60 && psy > Iso.sy(cx, cy, ht) - 20 && psy < Iso.sy(cx, cy) + 20) o.fade = true;
-    }
+    if (o.t !== T.BUILDING) continue;
+    const cx = o.tx * TILE + 16, cy = o.ty * TILE + 16;
+    const sx = Iso.sx(cx, cy), ht = World.height[o.ty * World.W + o.tx], top = Iso.sy(cx, cy, ht) - 20, bot = Iso.sy(cx, cy) + 20;
+    for (const v of watch) if (o.d > v.d + 0.3 && Math.abs(sx - v.sx) < v.w && v.sy > top && v.sy < bot) { o.fade = true; break; }
   }
   const depth = e => (e.x + e.y) / TILE;
   for (const n of G.npcs) objs.push({ d: depth(n), draw: drawNpc, ent: n });

@@ -3,10 +3,10 @@ const T = { ROAD: 0, BUILDING: 1, RUBBLE: 2, CAR: 3, GRASS: 4, CAMP: 5, BARRICAD
 const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE, T.LANDMARK]);
 
 const World = {
-  W: 160, H: 160, BLOCK: 14,
+  W: 128, H: 128, BLOCK: 14, // v0.11: 160 → 128 (확대 카메라에 맞춰 축소, 지역·랜드마크도 0.8배)
   tiles: null, shade: null, height: null,
-  cx: 80, cy: 80, safeR: 11,
-  bossTile: { x: 22, y: 22 },
+  cx: 64, cy: 64, safeR: 11,
+  bossTile: { x: 18, y: 18 },
   landmarks: [], hazards: [],
 
   generate(seed) {
@@ -26,8 +26,11 @@ const World = {
         }
         const kind = rng();
         const shade = rng();
+        // 도심(종로·용산)일수록 고층 (v0.11): 기본 3~9층, 도심 블록 일부는 10~14층
+        const bz = this.zoneIndex((ox + 8) * TILE, (oy + 8) * TILE);
         const fillB = (x0, y0, x1, y1, s) => {
-          const h = 44 + Math.floor(rng() * 6) * 24; // 2~7층
+          const tall = (bz === 2 || bz === 3) && rng() < 0.3;
+          const h = tall ? 250 + Math.floor(rng() * 5) * 24 : 68 + Math.floor(rng() * 7) * 24;
           for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
             set(ox + x, oy + y, T.BUILDING);
             if (ox + x < W && oy + y < H) { this.shade[(oy + y) * W + ox + x] = s; this.height[(oy + y) * W + ox + x] = h; }
