@@ -48,6 +48,11 @@
         <option>player</option><option>zombie</option><option>dog</option><option>raider</option>
         <option>brute</option><option>drone</option><option>boss</option>
         <option>merchant</option><option>captain</option><option>medic</option><option>mechanic</option>
+        <optgroup label="플레이어 무기 (옆모습 1장)">
+          <option value="w_pipe">w_pipe (쇠파이프)</option><option value="w_pistol">w_pistol (권총)</option><option value="w_axe">w_axe (소방 도끼)</option>
+          <option value="w_smg">w_smg (기관단총)</option><option value="w_shotgun">w_shotgun (산탄총)</option><option value="w_rifle">w_rifle (돌격소총)</option>
+          <option value="w_katana">w_katana (블레이드)</option><option value="w_sniper">w_sniper (저격소총)</option><option value="w_lmg">w_lmg (기관총)</option>
+        </optgroup>
         <optgroup label="랜드마크 (건물 1장)">
           <option>cathedral</option><option>bosingak</option><option>base</option><option>tower63</option>
         </optgroup>
@@ -232,15 +237,16 @@ function processLandmark() {
   const w = x1 - x0 + 1, h = y1 - y0 + 1, sc = Math.min(1, 1024 / w);
   const out = $('out'); out.width = Math.round(w * sc); out.height = Math.round(h * sc);
   out.getContext('2d').drawImage(src, x0, y0, w, h, 0, 0, out.width, out.height);
-  result = { landmark: true };
+  result = { landmark: true, weapon: $('key').value.startsWith('w_') };
   $('anims').innerHTML = '';
-  $('info').innerHTML = `<span class="ok">랜드마크 모드 · 배경색 rgb(${key.join(',')}) 제거 · ${out.width}×${out.height}px</span><br>`
-    + '<span class="muted" style="font-size:12px">게임은 이 그림의 가로 폭을 건물 발판 폭에 맞추고, 그림 맨 아래를 건물의 앞쪽 꼭짓점에 맞춥니다.</span>';
+  $('info').innerHTML = `<span class="ok">${result.weapon ? '무기' : '랜드마크'} 모드 · 배경색 rgb(${key.join(',')}) 제거 · ${out.width}×${out.height}px</span><br>`
+    + (result.weapon ? '<span class="muted" style="font-size:12px">총구(날)가 오른쪽을 향해야 합니다. 게임이 플레이어 손에 붙여 조준 방향으로 돌립니다.</span>'
+      : '<span class="muted" style="font-size:12px">게임은 이 그림의 가로 폭을 건물 발판 폭에 맞추고, 그림 맨 아래를 건물의 앞쪽 꼭짓점에 맞춥니다.</span>');
   showManifest();
 }
 
 function process() {
-  if (LANDMARK_KEYS.includes($('key').value)) return processLandmark();
+  if (LANDMARK_KEYS.includes($('key').value) || $('key').value.startsWith('w_')) return processLandmark();
   // 이미지마다: 배경 제거 → 행/프레임 감지. 행들은 파일 순서대로 이어 붙임
   const parts = [], keys = [];
   const mode = $('mode').value;
@@ -307,6 +313,7 @@ function process() {
 }
 
 function showManifest() {
+  if (result.weapon) { const k = $('key').value; $('manifest').textContent = `// js/assets.js 의 weapons 안에 붙여넣기\n${k.slice(2)}: { file: '${k}.png' },`; return; }
   if (result.landmark) { $('manifest').textContent = `// js/assets.js 의 landmarks 안에 붙여넣기\n${$('key').value}: { file: '${$('key').value}.png' },`; return; }
   const anims = result.names.map((n, i) => `${n}: [${i}, ${result.rows[i]}]`).filter((_, i) => result.names[i]).join(', ');
   $('manifest').textContent = `${$('key').value}: { file: '${$('key').value}.png', cell: ${result.cell}, w: ${result.cellW}, anims: { ${anims} } },`;

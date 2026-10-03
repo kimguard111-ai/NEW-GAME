@@ -170,6 +170,13 @@ const Sprites = {
       im.src = ART.dir + s.file; s.img = im;
     }
   },
+  loadAll() { // 무기 그림까지 포함
+    for (const s of Object.values(ART.weapons)) {
+      const im = new Image(); im.onload = () => { s.ready = true; }; im.src = ART.dir + s.file; s.img = im;
+      im.onerror = () => console.warn('무기 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
+    }
+    this.load();
+  },
   get(key) { const s = ART.sprites[key]; return s && s.ready ? s : null; },
   // 애니메이션 길이(초)
   dur(s, anim) { return s.anims[anim] ? s.anims[anim][1] / (ART.fps[anim] || 8) : 0; },
@@ -281,7 +288,13 @@ function drawPlayer(p) {
     if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
   }
   const [anim, at] = animState(moving, p.hurtT, p.lastAtk, 'player');
-  if (!Sprites.draw('player', anim, at, sx, sy, p.aim, p.hurtT > 0)) drawHuman(sx, sy, o);
+  if (Sprites.get('player')) {
+    // 몸 그림(무기 없음) + 장착 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
+    const back = Iso.dir(p.aim).y < -0.15;
+    if (back && w) drawWeaponOverlay(sx, sy, w, p);
+    Sprites.draw('player', anim, at, sx, sy, p.aim, p.hurtT > 0);
+    if (!back && w) drawWeaponOverlay(sx, sy, w, p);
+  } else drawHuman(sx, sy, o);
   if (p.buffs.adren > 0 || p.buffs.rapid > 0) {
     ctx.strokeStyle = p.buffs.adren > 0 ? 'rgba(255,120,40,0.7)' : 'rgba(120,255,220,0.7)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(sx, sy, 20, 10, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
@@ -292,6 +305,30 @@ function drawPlayer(p) {
     ctx.fillStyle = '#000'; ctx.fillRect(sx - 18, sy + 8, 36, 4);
     ctx.fillStyle = '#ffd27a'; ctx.fillRect(sx - 18, sy + 8, 36 * (1 - p.reloadT / (p.reloadMax || b2.reload)), 4);
   }
+}
+
+// 플레이어 손에 무기 그리기 (무기 그림이 있으면 그림, 없으면 코드로 그린 총·칼)
+function drawWeaponOverlay(sx, sy, w, p) {
+  const b = WEAPONS[w.key], len = ART.weaponLen[w.key] || 26;
+  const swing = b.melee ? (p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * meleeReach(w).arc : -0.5) : 0;
+  const d = Iso.dir(p.aim + swing), ang = Math.atan2(d.y, d.x);
+  const rc = !b.melee && p.recoilT > 0 ? (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07 : 0; // 반동
+  const hx = sx + d.x * (4 - rc), hy = sy - (ART.height.player || 44) * ART.handY + d.y * (2 - rc);
+  const art = ART.weapons[w.key];
+  ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
+  if (Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게
+  if (art && art.ready) {
+    const sc = len / art.img.width, grip = art.grip ?? ART.weaponGrip[w.key] ?? 0.3, h = art.img.height * sc * ART.weaponThick;
+    ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 2; // 어두운 테두리로 몸·바닥과 구분
+    ctx.drawImage(art.img, -art.img.width * sc * grip, -h / 2, art.img.width * sc, h);
+  } else {
+    ctx.lineCap = 'round';
+    if (b.melee) { ctx.strokeStyle = w.key === 'katana' ? '#bfe6ff' : w.key === 'axe' ? '#b33' : '#999'; ctx.lineWidth = 3; }
+    else { ctx.strokeStyle = '#151515'; ctx.lineWidth = 4; }
+    ctx.beginPath(); ctx.moveTo(-len * 0.2, 0); ctx.lineTo(len * 0.8, 0); ctx.stroke();
+    ctx.lineCap = 'butt'; ctx.lineWidth = 1;
+  }
+  ctx.restore();
 }
 
 function drawEnemy(e) {

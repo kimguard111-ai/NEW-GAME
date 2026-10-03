@@ -765,7 +765,7 @@ function frame(now) {
 // ---------------- 타이틀 ----------------
 (function initTitle() {
   UI.init();
-  Sprites.load();
+  Sprites.loadAll();
   const save = loadSave();
   document.getElementById('version-label').textContent = GAME_VERSION;
   const btnC = document.getElementById('btn-continue');

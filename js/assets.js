@@ -9,6 +9,17 @@ const ART = {
   fps: { idle: 6, walk: 10, attack: 16, hit: 12, death: 10 },
   // 화면에 표시할 대기 자세 키 (px)
   height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44 },
+  // 플레이어 무기 그림 (옆모습 1장, 총구/날이 오른쪽). 플레이어 몸 그림은 무기 없이 만들고 이 그림을 손에 붙임
+  // 없으면 코드로 그린 총·칼을 사용
+  weapons: {
+    // rifle: { file: 'w_rifle.png' },
+  },
+  // 화면에 그릴 무기 길이(px)와 손잡이 위치(그림 왼쪽에서 비율)
+  weaponLen: { pipe: 30, pistol: 15, axe: 32, smg: 22, shotgun: 30, rifle: 32, katana: 38, sniper: 40, lmg: 36 },
+  weaponGrip: { pipe: 0.15, pistol: 0.3, axe: 0.15, smg: 0.35, shotgun: 0.3, rifle: 0.32, katana: 0.12, sniper: 0.3, lmg: 0.35 },
+  handY: 0.5,      // 손 높이 (플레이어 키 대비)
+  weaponThick: 1.7, // 무기 그림 세로 과장 배율 (작은 화면에서 총이 실처럼 가늘어 보이지 않게)
+
   // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
   landmarks: {
     // cathedral: { file: 'cathedral.png' },

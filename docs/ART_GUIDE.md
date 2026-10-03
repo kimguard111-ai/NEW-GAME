@@ -61,7 +61,7 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 |---|---|---|
 | idle | 4 | `idle breathing animation, subtle movement` |
 | walk | 6 | `walk cycle` (근접형 적은 `shambling walk cycle`) |
-| attack | 4 | 총기: `firing the rifle, recoil` / 근접: `melee swing attack` / 맨손 적: `claw attack lunging forward` |
+| attack | 4 | 적 전용 (플레이어는 생략). 총기: `firing the pistol, recoil` / 맨손 적: `claw attack lunging forward` |
 | hit | 2 | `getting hit, flinching backward` |
 | death | 5 | `death animation, falling down and lying on the ground` |
 | back_idle / back_walk (선택) | 4 / 6 | 위 문장 + `seen from behind, facing away toward the upper right` |
@@ -77,7 +77,8 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 
 | 키 (도구에서 선택) | 대상 | 화면 키(px) | 비고 |
 |---|---|---|---|
-| player | 플레이어 | 44 | 기본 무기를 든 모습. 무기별 그림은 아직 미지원 |
+| player | 플레이어 | 44 | **무기 없이 빈손**(양손을 가슴 앞에). 무기는 `w_` 그림을 게임이 손에 붙임 |
+| w_pistol 등 9종 | 플레이어 무기 | 15~40 (길이) | 옆모습 1장, 총구 오른쪽. `js/assets.js`의 `weapons`에 등록 |
 | zombie | 감염자 | 44 | |
 | dog | 변이견 | 26 | 네발 짐승. 오른쪽을 보는 옆모습 |
 | raider | 약탈자 | 44 | 총을 든 인간 |
@@ -126,7 +127,6 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 
 - 바닥 타일, 일반 건물, 폐차 같은 배경 그림 (지금은 코드로 그린 입체 박스)
 - 아이템 아이콘 (지금은 이모지)
-- 무기별 플레이어 그림 (지금은 그림 하나로 모든 무기)
 
 ## 참고
 
