@@ -1,311 +1,418 @@
-# Gemini 프롬프트 모음 — SEOUL 2049
+# Gemini 프롬프트 (복붙용)
 
-`docs/ART_GUIDE.md`의 규칙(마젠타 배경, 오른쪽 보기, 그림자 없음)을 모두 반영한, **바로 붙여넣는 프롬프트**입니다.
-결과물은 `tools/sprite-tool.html`로 가공해서 게임에 넣습니다.
+## 사용법
 
-## 0. 작업 순서 (권장)
+1. 아래 번호 순서대로, 회색 상자 안의 글을 **그대로 복사해서** Gemini에 붙여넣습니다.
+2. **📎 첨부**라고 적힌 것은 그 이미지를 같이 올립니다. (같은 캐릭터로 그려지게 하는 핵심)
+3. 마음에 들면 **💾 파일 이름**대로 저장합니다. 마음에 안 들면 다시 생성. (파일 이름 속 `idle`·`walk`·`hit` 같은 단어로 도구가 동작을 자동 인식합니다)
+4. 다 모으면 `tools/sprite-tool.html`에서 **🔧 도구 이름**을 고르고 파일들을 끌어다 놓습니다. (자세한 건 `docs/ART_GUIDE.md`)
 
-| 순서 | 에셋 | 이유 |
-|---|---|---|
-| 1 | 플레이어 몸(방탄 조끼) + 무기 9종 + 헬멧 4종 | 항상 화면 중앙. 아트 방향의 기준이 됨. **몸에는 무기·헬멧을 그리지 않음** (아래 2-0 참고) |
-| 1-2 | 플레이어 몸 나머지 방어구 3벌 | 전술 조끼·군용 강화복·외골격 슈트. 장착하면 외형이 바뀌는 성장 체감 |
-| 2 | 감염자 | 가장 많이 보이는 적 |
-| 3 | 약탈자 · 변이견 | 초중반 주력 적 |
-| 4 | 랜드마크 4종 | 지역의 얼굴 (이번 v0.6에서 그림 자리 생김) |
-| 5 | 변이 거한 · 경비 드론 · 타이탄 | 후반 적 |
-| 6 | NPC 4명 | 대기 동작만 필요 |
-| 7 | 방어구·소모품 아이콘 | **미리 만들어 두기만** (게임 적용은 이후 UI 작업 때) |
-
-**한 캐릭터 = 마스터 이미지 1장 + 동작 스트립 5장.** 마스터가 마음에 들 때까지 충분히 다시 뽑고, 확정되면 이후 모든 요청에 첨부하세요.
+> 한 캐릭터씩 끝내고 다음으로 넘어가세요. 전부 다 만들 필요 없이, 만든 것부터 게임에 바로 적용됩니다.
 
 ---
 
-## 1. 공통 스타일 문장
+# 1. 플레이어 — 기본 몸 (방어구 없음)
 
-모든 프롬프트 끝에 이미 들어 있습니다. 화풍을 바꾸고 싶으면 이 문장만 일괄로 고치세요.
-
+### 1-1. 마스터
+💾 `player_master.png` (이후 플레이어 작업에 계속 첨부)
 ```
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view (camera about 35 degrees above).
-```
-
-## 2. 캐릭터
-
-### 2-0. 플레이어는 몸 · 무기 · 헬멧을 따로 만든다
-
-플레이어는 장비를 바꾸기 때문에 그림을 셋으로 나눕니다.
-
-| 부분 | 만드는 법 | 게임이 하는 일 |
-|---|---|---|
-| **몸** | 방어구 4종마다 한 벌씩. **빈손 + 맨머리** | 장착한 방어구의 몸 그림을 사용 (없으면 기본 `player`) |
-| **무기** | 9종, 옆모습 1장씩 (2-4) | 손 위치에 붙여 조준 방향으로 회전, 반동·휘두르기 |
-| **헬멧** | 4종, 1장씩 (2-5) | 가공 도구가 기록한 **프레임별 머리 위치**에 씌움 |
-
-몸에 갑옷을 입히는 건 팔다리가 프레임마다 움직여서 따로 겹칠 수 없으므로 방어구마다 몸을 한 벌씩 그립니다.
-머리는 프레임마다 모양이 거의 같아서 헬멧은 한 장으로 씌울 수 있습니다. 그림이 없는 부분은 코드 그래픽이 대신합니다.
-
-적(약탈자 등)과 NPC는 무기를 바꾸지 않으므로 무기를 그림에 포함해도 됩니다.
-
-### 2-1. 마스터 이미지 프롬프트
-
-캐릭터마다 아래 해당 블록을 그대로 붙여넣으세요.
-
-**플레이어 (player)**
-```
-Character design of a lone survivor soldier: short dark hair, BARE HEAD (no helmet, no hat, no hood),
-wearing [a worn olive bulletproof vest over a dark jacket], cargo pants, combat boots, a small backpack.
-EMPTY HANDS, no weapon, no gun: both arms bent and raised forward at chest height as if holding an invisible rifle
-(a weapon and a helmet will be added separately).
-Full body, standing ready pose, character facing right.
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view (camera about 35 degrees above).
-Solid flat #FF00FF magenta background filling the entire image. No shadow, no ground, no text, no border.
-Do not use pink or magenta colors on the character.
+Character design of a young male survivor in ruined post-apocalyptic Seoul: short dark hair, bare head, worn dark gray hoodie, plain dark pants, dirty sneakers, a small backpack. Empty hands, no weapon: both arms bent and raised forward at chest height as if holding an invisible rifle. Full body, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the character.
 ```
 
-`[ ]` 부분을 바꿔 방어구별 몸 4벌을 만듭니다. 두 번째 벌부터는 **첫 번째 마스터 이미지를 첨부**하고
-`Same person as the attached character (same face, same hair, same body), now wearing [ ... ].`로 시작하세요.
-
-| 도구 이름 | `[ ]` 에 넣을 방어구 |
-|---|---|
-| player_vest | `a worn olive bulletproof vest over a dark jacket` (기본 `player`로 등록해도 됨) |
-| player_tactical | `a tan tactical plate carrier vest with many pouches and knee pads` |
-| player_military | `dark blue-gray military combat armor with shoulder pads and armored gloves` |
-| player_exo | `a bulky metallic powered exoskeleton suit with hydraulic joints over the limbs` |
-
-**감염자 (zombie)**
+### 1-2. 대기
+📎 `player_master.png` · 💾 `1_idle.png`
 ```
-Character design of an infected zombie: pale gray-green rotting skin, bloody wounds, torn shirt and jeans,
-hunched posture, arms reaching forward, bald with patches of hair.
-Full body, standing idle pose, character facing right.
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view (camera about 35 degrees above).
-Solid flat #FF00FF magenta background filling the entire image. No shadow, no ground, no text, no border.
-Do not use pink or magenta colors on the character.
+Using the attached character as the exact reference (same face, hair, clothes, colors and proportions), create a horizontal sprite strip of exactly 4 frames of an idle breathing animation. Bare head, empty hands raised forward at chest height, no weapon. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
 ```
 
-**변이견 (dog)**
+### 1-3. 걷기
+📎 `player_master.png` · 💾 `2_walk.png`
 ```
-Character design of a mutated feral dog: hairless gray-brown hide, exposed muscles and ribs, glowing yellow eyes,
-oversized jaws with teeth. Four-legged, side view, standing idle, facing right.
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view (camera about 35 degrees above).
-Solid flat #FF00FF magenta background filling the entire image. No shadow, no ground, no text, no border.
-Do not use pink or magenta colors on the character.
+Using the attached character as the exact reference (same face, hair, clothes, colors and proportions), create a horizontal sprite strip of exactly 6 frames of a walk cycle. Bare head, empty hands raised forward at chest height, no weapon. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
 ```
 
-**약탈자 (raider)**
+### 1-4. 피격
+📎 `player_master.png` · 💾 `3_hit.png`
 ```
-Character design of a raider scavenger: red bandana mask over the face, scrap metal shoulder armor,
-dirty brown leather jacket, holding a pistol pointed forward.
-Full body, standing idle pose, character facing right.
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view (camera about 35 degrees above).
-Solid flat #FF00FF magenta background filling the entire image. No shadow, no ground, no text, no border.
-Do not use pink or magenta colors on the character.
+Using the attached character as the exact reference (same face, hair, clothes, colors and proportions), create a horizontal sprite strip of exactly 2 frames of getting hit and flinching backward. Bare head, no weapon. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
 ```
 
-**변이 거한 (brute)**
+### 1-5. 사망
+📎 `player_master.png` · 💾 `4_death.png`
 ```
-Character design of a huge hulking mutant brute, twice the size of a human: gray-brown cracked skin,
-bony growths on the shoulders and back, massive arms with clawed hands, small head, torn pants.
-Full body, standing idle pose, character facing right.
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view (camera about 35 degrees above).
-Solid flat #FF00FF magenta background filling the entire image. No shadow, no ground, no text, no border.
-Do not use pink, purple or magenta colors on the character.
+Using the attached character as the exact reference (same face, hair, clothes, colors and proportions), create a horizontal sprite strip of exactly 5 frames of a death animation: staggering, falling down, and lying on the ground. No weapon. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
 ```
 
-**경비 드론 (drone)**
-```
-Design of a military security quadcopter drone: dark gray armored body, four rotors, a single red sensor eye,
-a small machine gun mounted underneath. Hovering in the air, facing right.
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view (camera about 35 degrees above).
-Solid flat #FF00FF magenta background filling the entire image. No shadow, no ground, no text, no border.
-Do not use pink or magenta colors on the drone.
-```
-
-**방사능 군주 타이탄 (boss)**
-```
-Character design of a giant radioactive mutant boss, three times human size: dark green scarred skin,
-glowing bright green radioactive veins and cracks, armored bony plates, huge claws, glowing yellow eyes.
-Full body, standing menacing idle pose, character facing right.
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view (camera about 35 degrees above).
-Solid flat #FF00FF magenta background filling the entire image. No shadow, no ground, no text, no border.
-Do not use pink or magenta colors on the character.
-```
-
-**NPC 4명** — 위 블록에서 첫 문장만 바꾸면 됩니다.
-
-| 키 | 첫 문장 |
-|---|---|
-| merchant | `Character design of a black market trader: long dark coat full of pockets, bags and goods hanging from the shoulders, cap, cunning smile.` |
-| captain | `Character design of a veteran survivor leader: gray beard, military cap, worn officer jacket, rifle slung on the back, arms crossed.` |
-| medic | `Character design of a field medic: white coat with a red cross armband, medical bag on the side, short hair, surgical mask around the neck.` |
-| mechanic | `Character design of a mechanic: grease-stained overalls, welding goggles on the forehead, tool belt, holding a large wrench.` |
-
-### 2-2. 동작 스트립 프롬프트 (모든 캐릭터 공통)
-
-마스터 이미지를 **첨부**하고, `[프레임 수]`와 `[동작]`만 아래 표에서 골라 넣으세요.
-
-```
-Using the attached character as the exact reference (same design, same outfit, same colors, same proportions),
-create a horizontal sprite strip of exactly [프레임 수] frames showing [동작].
-All frames in ONE row, evenly spaced with clear empty gaps between frames, feet on the same horizontal line,
-same character size in every frame, character facing right.
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, isometric 3/4 top-down view.
-Solid flat #FF00FF magenta background filling the entire image.
-No shadow, no ground, no text, no numbers, no grid lines, no borders, no muzzle flash effects.
-```
-
-파일 이름은 `1_idle.png`, `2_walk.png`, `3_attack.png`, `4_hit.png`, `5_death.png`로 저장하면 도구가 순서대로 처리합니다.
-
-| 캐릭터 | idle (4) | walk (6) | attack (4) | hit (2) | death (5) |
-|---|---|---|---|---|---|
-| player (방어구 4벌 모두) | `an idle breathing animation, bare head, empty hands raised forward at chest height, no weapon` | `a walk cycle, bare head, empty hands raised forward at chest height, no weapon` | — (생략: 사격·휘두르기는 게임이 무기 그림으로 표현) | `getting hit, flinching backward, bare head, no weapon` | `a death animation, falling down and lying on the ground, no weapon` |
-| zombie | `an idle swaying animation` | `a slow shambling walk cycle` | `a claw attack lunging forward` | `getting hit, head snapping back` | `a death animation, collapsing and lying on the ground` |
-| dog | `an idle growling animation` | `a running cycle` | `a biting attack lunging forward` | `getting hit, recoiling` | `a death animation, falling on its side` |
-| raider | `an idle animation holding the pistol` | `a walk cycle holding the pistol` | `firing the pistol with recoil` | `getting hit, flinching backward` | `a death animation, falling down and lying on the ground` |
-| brute | `an idle heavy breathing animation` | `a heavy stomping walk cycle` | `a ground smash attack with both fists` | `getting hit, staggering` | `a death animation, falling forward and lying on the ground` |
-| drone | `a hovering animation with spinning rotors` | — (생략 가능, 대기 동작으로 대체) | `firing the machine gun` | `getting hit, sparks and tilting` | `a death animation, smoking and crashing to the ground` |
-| boss | `a menacing idle animation, glowing veins pulsing` | `a heavy walk cycle` | `a massive claw swipe attack` | `getting hit, roaring in pain` | `a death animation, collapsing to its knees then falling` |
-| NPC 4명 | `an idle breathing animation` | — | — | — | — |
-
-> **뒷모습 (선택)**: `back_idle`(4), `back_walk`(6) 행을 만들면 캐릭터가 화면 위쪽을 볼 때 사용됩니다.
-> `[동작]` 뒤에 `, seen from behind, facing away toward the upper right`를 붙이세요. 처음에는 생략해도 됩니다.
-
-### 2-3. 결과 확인 포인트
-
-- 모든 프레임이 **같은 사람**으로 보이는지 (옷 색·무기 모양) → 아니면 다시 생성
-- 프레임끼리 **붙어 있지 않은지** → 붙었으면 `with wide empty gaps between frames` 강조
-- 캐릭터에 **분홍·자주색이 없는지** → 있으면 배경을 `#00FF00` 초록으로 바꿔 다시 생성
-
-### 2-4. 플레이어 무기 9종 (옆모습 1장씩)
-
-게임이 이 그림을 플레이어 손에 붙여 조준 방향으로 돌립니다. **총구(칼끝)는 반드시 오른쪽**, 손잡이는 왼쪽.
-가공 도구에서 `w_` 로 시작하는 이름(w_rifle 등)을 고르면 자동으로 무기 모드가 됩니다. 결과 코드는 `js/assets.js`의 **`weapons`** 안에 붙여넣으세요.
-같은 그림을 나중에 인벤토리 아이콘으로도 사용할 예정입니다.
-
-공통 문장 (설명 뒤에 붙이기):
-```
-Single weapon, pure side view (profile), horizontal, muzzle or blade tip pointing to the RIGHT, handle on the left,
-fills the image width with small margins. Chunky readable shapes with light edge highlights.
-Detailed dark pixel art, gritty post-apocalyptic style.
-Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
-```
-
-| 도구 이름 | 앞에 붙일 설명 |
-|---|---|
-| w_pipe | `A rusty steel pipe used as a club, wrapped with tape at the handle.` |
-| w_pistol | `An M1911 pistol.` |
-| w_axe | `A red fire axe with a long wooden handle.` |
-| w_smg | `An MP5 submachine gun.` |
-| w_shotgun | `A pump-action shotgun (Remington 870) with a wooden stock.` |
-| w_rifle | `A Korean K2 assault rifle with a folding stock.` |
-| w_katana | `A high-frequency sci-fi blade with a faint blue glowing edge and a dark grip.` |
-| w_sniper | `A bolt-action sniper rifle with a long barrel and a scope.` |
-| w_lmg | `A light machine gun with a bipod and an ammo belt box.` |
-
-> 화면에서는 길이 15~40px로 작게 보이므로 **굵고 단순한 실루엣**이 좋습니다. 게임이 세로를 1.7배 과장해서 그립니다.
-
-### 2-5. 헬멧 4종 (1장씩)
-
-가공 도구에서 `h_` 로 시작하는 이름을 고르면 헬멧 모드가 됩니다. 결과 코드는 `js/assets.js`의 **`helmets`** 안에 붙여넣으세요.
-게임이 몸 그림의 프레임별 머리 위치에 씌우고, 왼쪽을 볼 때는 좌우 반전합니다. 사망 동작 중에는 표시하지 않습니다.
-
-공통 문장 (설명 뒤에 붙이기):
-```
-Single helmet only (no head, no face, no person), isometric 3/4 view, facing right like it is worn by a character looking right.
-Chunky readable shape. Detailed dark pixel art, gritty post-apocalyptic style.
-Solid flat #FF00FF magenta background. No text, no shadow, no border.
-```
-
-| 도구 이름 | 앞에 붙일 설명 |
-|---|---|
-| h_cap | `A simple olive military ballistic helmet.` |
-| h_tacHelmet | `A black tactical helmet with side rails and a mounted flashlight.` |
-| h_gasmask | `A full-face gas mask helmet with two round green-glowing lenses and a filter canister.` |
-| h_exoHelm | `A sleek metallic exoskeleton helmet with a glowing blue visor slit.` |
-
-> 헬멧 크기·높이가 머리에 잘 안 맞으면 `js/assets.js`의 `helmetFit` 값(w: 폭 배율, up: 위로 올리는 정도)을 조절하세요.
+🔧 도구 이름: **player** · 위 4장(1-2~1-5)을 한꺼번에 끌어다 놓기
 
 ---
 
-## 3. 랜드마크 (지역 건물 4종, 각 1장)
+# 2. 플레이어 — 방어구를 입은 몸 (4벌)
 
-게임은 그림의 **가로 폭을 건물 발판(마름모) 폭에 맞추고, 그림 맨 아래를 마름모의 아래 꼭짓점**에 맞춥니다.
-그래서 "정사각형 발판, 아래 꼭짓점이 이미지 맨 아래 중앙"이 중요합니다. 도구에서 해당 이름(cathedral 등)을 고르면 자동으로 랜드마크 모드가 됩니다.
+각 방어구마다: **마스터 1장**을 만든 뒤, 그 마스터를 첨부해서 **1-2 ~ 1-5 프롬프트를 그대로 다시 사용**합니다.
+(1-2~1-5는 "첨부한 캐릭터"를 그리는 문장이라 어떤 방어구에도 그대로 쓸 수 있습니다.)
 
-공통으로 붙는 문장:
+### 2-1. 방탄 조끼
+📎 `player_master.png` · 💾 `vest_master.png` → 이걸 첨부해 1-2~1-5 → 🔧 **player_vest**
 ```
-Single isometric building on a square diamond-shaped footprint, viewed from the south corner
-(the bottom tip of the footprint diamond touches the bottom center of the image).
-Detailed dark pixel art, gritty post-apocalyptic ruined Seoul, desaturated colors with warm orange highlights,
-isometric 3/4 top-down view. Only the building itself: no surrounding street, no ground, no people, no shadow, no text.
-Solid flat #FF00FF magenta background filling the entire image.
+Same person as the attached character (same face, same hair, same body, bare head), now wearing a worn olive bulletproof vest over the dark gray hoodie. Empty hands raised forward at chest height, no weapon. Full body, standing, facing right. Isometric 3/4 top-down view, detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no border.
 ```
 
-**무너진 명동성당 (cathedral)** — 정사각형 이미지 권장
+### 2-2. 전술 조끼
+📎 `player_master.png` · 💾 `tactical_master.png` → 이걸 첨부해 1-2~1-5 → 🔧 **player_tactical**
 ```
-A ruined red-brick gothic cathedral (Myeongdong Cathedral in Seoul) with a tall pointed bell tower and a cross,
-part of the roof collapsed, broken stained glass windows, rubble at the base.
-+ 공통 문장
-```
-
-**보신각 (bosingak)** — 정사각형 이미지 권장
-```
-A traditional Korean bell pavilion (Bosingak in Seoul) on a stone platform: red wooden pillars,
-a curved dark gray tiled roof with upturned eaves, a large bronze bell hanging inside, weathered and dusty.
-+ 공통 문장
+Same person as the attached character (same face, same hair, same body, bare head), now wearing a tan tactical plate carrier vest with many pouches, cargo pants and knee pads. Empty hands raised forward at chest height, no weapon. Full body, standing, facing right. Isometric 3/4 top-down view, detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no border.
 ```
 
-**버려진 용산 기지 (base)** — 정사각형 이미지 권장
+### 2-3. 군용 강화복
+📎 `player_master.png` · 💾 `military_master.png` → 이걸 첨부해 1-2~1-5 → 🔧 **player_military**
 ```
-An abandoned military base compound: a concrete bunker, sandbag walls, a rusty abandoned tank,
-a small watchtower with a searchlight, barbed wire, military crates.
-+ 공통 문장
+Same person as the attached character (same face, same hair, same body, bare head), now wearing dark blue-gray military combat armor with shoulder pads, armored gloves and combat boots. Empty hands raised forward at chest height, no weapon. Full body, standing, facing right. Isometric 3/4 top-down view, detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no border.
 ```
 
-**63빌딩 잔해 (tower63)** — **세로로 긴 이미지(9:16)** 권장
+### 2-4. 외골격 슈트
+📎 `player_master.png` · 💾 `exo_master.png` → 이걸 첨부해 1-2~1-5 → 🔧 **player_exo**
 ```
-A ruined golden glass skyscraper (the 63 Building in Seoul): tall tower with golden reflective glass,
-the top floors broken and collapsed, some windows glowing, radioactive green haze at the base.
-+ 공통 문장
+Same person as the attached character (same face, same hair, bare head), now wearing a bulky metallic powered exoskeleton suit with hydraulic joints on the arms and legs. Empty hands raised forward at chest height, no weapon. Full body, standing, facing right. Isometric 3/4 top-down view, detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no border.
 ```
 
 ---
 
-## 4. 방어구·소모품 아이콘 (미리 만들어 두기)
+# 3. 헬멧 (4장)
 
-아직 게임에 적용되지 않습니다(현재는 이모지). 이후 UI/폴리싱 단계(v0.13)에서 연결할 예정이니, 같은 화풍으로 미리 모아 두면 됩니다.
-무기 아이콘은 따로 만들 필요 없이 2-4의 무기 그림을 사용합니다.
+첨부 없음 · 각각 저장 후 🔧 도구에서 같은 이름 선택
 
-공통 문장:
+### 3-1. 방탄모 — 💾 `h_cap.png` · 🔧 **h_cap**
 ```
-Single game item icon, centered, slight 3/4 angle, fills about 80% of the square image.
-Detailed dark pixel art, gritty post-apocalyptic style, desaturated colors with warm highlights.
-Solid flat #FF00FF magenta background. No text, no border, no shadow, no hands.
+A single olive military ballistic helmet only, no head, no person. Isometric 3/4 view, facing right as if worn by a character looking right. Chunky readable shape, detailed dark pixel art. Solid flat #FF00FF magenta background. No text, no shadow, no border.
 ```
 
-| 파일 이름 | 앞에 붙일 설명 |
-|---|---|
-| icon_vest | `A worn bulletproof vest.` |
-| icon_tactical | `A tactical vest with pouches.` |
-| icon_military | `A military armored combat suit.` |
-| icon_exo | `A powered exoskeleton suit.` |
-| icon_medkit | `A first aid kit with a red cross.` |
-| icon_ammo | `A military ammunition box.` |
+### 3-2. 전술 헬멧 — 💾 `h_tacHelmet.png` · 🔧 **h_tacHelmet**
+```
+A single black tactical helmet with side rails and a small mounted flashlight, no head, no person. Isometric 3/4 view, facing right as if worn by a character looking right. Chunky readable shape, detailed dark pixel art. Solid flat #FF00FF magenta background. No text, no shadow, no border.
+```
+
+### 3-3. 방독면 헬멧 — 💾 `h_gasmask.png` · 🔧 **h_gasmask**
+```
+A single full-face gas mask helmet with two round green-glowing lenses and a filter canister, no head, no person. Isometric 3/4 view, facing right as if worn by a character looking right. Chunky readable shape, detailed dark pixel art. Solid flat #FF00FF magenta background. No text, no shadow, no border.
+```
+
+### 3-4. 외골격 헬멧 — 💾 `h_exoHelm.png` · 🔧 **h_exoHelm**
+```
+A single sleek metallic exoskeleton helmet with a glowing blue visor slit, no head, no person. Isometric 3/4 view, facing right as if worn by a character looking right. Chunky readable shape, detailed dark pixel art. Solid flat #FF00FF magenta background. No text, no shadow, no border.
+```
 
 ---
 
-## 5. 지금은 만들지 않는 것을 권장
+# 4. 무기 (9장)
 
-| 에셋 | 이유 |
+첨부 없음 · 총구·칼끝이 **오른쪽** · 나중에 인벤토리 아이콘으로도 사용
+
+### 4-1. 쇠파이프 — 💾 `w_pipe.png` · 🔧 **w_pipe**
+```
+A single rusty steel pipe used as a club, with tape wrapped around the handle. Pure side view, horizontal, handle on the left and tip pointing right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+### 4-2. 권총 — 💾 `w_pistol.png` · 🔧 **w_pistol**
+```
+A single M1911 pistol. Pure side view, horizontal, grip on the left and muzzle pointing right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+### 4-3. 소방 도끼 — 💾 `w_axe.png` · 🔧 **w_axe**
+```
+A single red fire axe with a long wooden handle. Pure side view, horizontal, handle on the left and axe head on the right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+### 4-4. 기관단총 — 💾 `w_smg.png` · 🔧 **w_smg**
+```
+A single MP5 submachine gun. Pure side view, horizontal, stock on the left and muzzle pointing right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+### 4-5. 산탄총 — 💾 `w_shotgun.png` · 🔧 **w_shotgun**
+```
+A single pump-action shotgun with a wooden stock. Pure side view, horizontal, stock on the left and muzzle pointing right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+### 4-6. 돌격소총 — 💾 `w_rifle.png` · 🔧 **w_rifle**
+```
+A single Korean K2 assault rifle with a folding stock. Pure side view, horizontal, stock on the left and muzzle pointing right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+### 4-7. 고주파 블레이드 — 💾 `w_katana.png` · 🔧 **w_katana**
+```
+A single high-frequency sci-fi sword with a faint blue glowing edge and a dark grip. Pure side view, horizontal, grip on the left and blade tip pointing right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+### 4-8. 저격소총 — 💾 `w_sniper.png` · 🔧 **w_sniper**
+```
+A single bolt-action sniper rifle with a long barrel and a scope. Pure side view, horizontal, stock on the left and muzzle pointing right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+### 4-9. 기관총 — 💾 `w_lmg.png` · 🔧 **w_lmg**
+```
+A single light machine gun with a bipod and an ammo box. Pure side view, horizontal, stock on the left and muzzle pointing right, filling the image width. Chunky readable shape with light edge highlights, detailed dark pixel art. Solid flat #FF00FF magenta background. No hands, no person, no text, no shadow, no border.
+```
+
+---
+
+# 5. 적
+
+적은 무기를 바꾸지 않으므로 무기를 그림에 그려도 됩니다. 캐릭터마다 마스터 1장 + 동작 스트립.
+
+## 5-1. 감염자 → 🔧 **zombie**
+
+**마스터** · 💾 `zombie_master.png`
+```
+Character design of an infected zombie: pale gray-green rotting skin, bloody wounds, torn shirt and jeans, hunched posture, arms reaching forward. Full body, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the character.
+```
+**대기** · 📎 `zombie_master.png` · 💾 `1_idle.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of an idle swaying animation. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**걷기** · 📎 `zombie_master.png` · 💾 `2_walk.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 6 frames of a slow shambling walk cycle. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**공격** · 📎 `zombie_master.png` · 💾 `3_attack.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of a claw attack lunging forward. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**피격** · 📎 `zombie_master.png` · 💾 `4_hit.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 2 frames of getting hit, head snapping back. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**사망** · 📎 `zombie_master.png` · 💾 `5_death.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 5 frames of a death animation: collapsing and lying on the ground. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+## 5-2. 약탈자 → 🔧 **raider**
+
+**마스터** · 💾 `raider_master.png`
+```
+Character design of a raider scavenger: red bandana mask over the face, scrap metal shoulder armor, dirty brown leather jacket, holding a pistol pointed forward. Full body, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the character.
+```
+**대기** · 📎 `raider_master.png` · 💾 `1_idle.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of an idle animation holding the pistol. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**걷기** · 📎 `raider_master.png` · 💾 `2_walk.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 6 frames of a walk cycle holding the pistol. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**공격** · 📎 `raider_master.png` · 💾 `3_attack.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of firing the pistol with recoil, no muzzle flash. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**피격** · 📎 `raider_master.png` · 💾 `4_hit.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 2 frames of getting hit and flinching backward. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**사망** · 📎 `raider_master.png` · 💾 `5_death.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 5 frames of a death animation: falling down and lying on the ground. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+## 5-3. 변이견 → 🔧 **dog**
+
+**마스터** · 💾 `dog_master.png`
+```
+Character design of a mutated feral dog: hairless gray-brown hide, exposed muscles and ribs, glowing yellow eyes, oversized jaws with teeth. Four-legged, side view, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the creature.
+```
+**대기** · 📎 `dog_master.png` · 💾 `1_idle.png`
+```
+Using the attached creature as the exact reference, create a horizontal sprite strip of exactly 4 frames of an idle growling animation. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**달리기** · 📎 `dog_master.png` · 💾 `2_walk.png`
+```
+Using the attached creature as the exact reference, create a horizontal sprite strip of exactly 6 frames of a running cycle. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**공격** · 📎 `dog_master.png` · 💾 `3_attack.png`
+```
+Using the attached creature as the exact reference, create a horizontal sprite strip of exactly 4 frames of a biting attack lunging forward. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**피격** · 📎 `dog_master.png` · 💾 `4_hit.png`
+```
+Using the attached creature as the exact reference, create a horizontal sprite strip of exactly 2 frames of getting hit and recoiling. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**사망** · 📎 `dog_master.png` · 💾 `5_death.png`
+```
+Using the attached creature as the exact reference, create a horizontal sprite strip of exactly 5 frames of a death animation: falling on its side. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+## 5-4. 변이 거한 → 🔧 **brute**
+
+**마스터** · 💾 `brute_master.png`
+```
+Character design of a huge hulking mutant brute, twice the size of a human: gray-brown cracked skin, bony growths on the shoulders and back, massive arms with clawed hands, small head, torn pants. Full body, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink, purple or magenta on the character.
+```
+**대기** · 📎 `brute_master.png` · 💾 `1_idle.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of an idle heavy breathing animation. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**걷기** · 📎 `brute_master.png` · 💾 `2_walk.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 6 frames of a heavy stomping walk cycle. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**공격** · 📎 `brute_master.png` · 💾 `3_attack.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of a ground smash attack with both fists. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**피격** · 📎 `brute_master.png` · 💾 `4_hit.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 2 frames of getting hit and staggering. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**사망** · 📎 `brute_master.png` · 💾 `5_death.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 5 frames of a death animation: falling forward and lying on the ground. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+## 5-5. 경비 드론 → 🔧 **drone** (걷기 없음)
+
+**마스터** · 💾 `drone_master.png`
+```
+Design of a military security quadcopter drone: dark gray armored body, four rotors, a single red sensor eye, a small machine gun mounted underneath. Hovering in the air, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the drone.
+```
+**비행** · 📎 `drone_master.png` · 💾 `1_idle.png`
+```
+Using the attached drone as the exact reference, create a horizontal sprite strip of exactly 4 frames of hovering with spinning rotors. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**공격** · 📎 `drone_master.png` · 💾 `2_attack.png`
+```
+Using the attached drone as the exact reference, create a horizontal sprite strip of exactly 4 frames of firing its machine gun, no muzzle flash. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**피격** · 📎 `drone_master.png` · 💾 `3_hit.png`
+```
+Using the attached drone as the exact reference, create a horizontal sprite strip of exactly 2 frames of getting hit, sparking and tilting. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**추락** · 📎 `drone_master.png` · 💾 `4_death.png`
+```
+Using the attached drone as the exact reference, create a horizontal sprite strip of exactly 5 frames of a destruction animation: smoking and crashing down to the ground. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+## 5-6. 방사능 군주 타이탄 (보스) → 🔧 **boss**
+
+**마스터** · 💾 `boss_master.png`
+```
+Character design of a giant radioactive mutant boss, three times human size: dark green scarred skin, glowing bright green radioactive veins and cracks, armored bony plates, huge claws, glowing yellow eyes. Full body, standing menacingly, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the character.
+```
+**대기** · 📎 `boss_master.png` · 💾 `1_idle.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of a menacing idle animation with glowing veins pulsing. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**걷기** · 📎 `boss_master.png` · 💾 `2_walk.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 6 frames of a heavy walk cycle. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**공격** · 📎 `boss_master.png` · 💾 `3_attack.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of a massive claw swipe attack. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**피격** · 📎 `boss_master.png` · 💾 `4_hit.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 2 frames of getting hit and roaring in pain. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+**사망** · 📎 `boss_master.png` · 💾 `5_death.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 5 frames of a death animation: collapsing to its knees and falling to the ground. All frames in one row with wide empty gaps between them, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+---
+
+# 6. NPC (마스터 1장 + 대기 1장씩)
+
+대기 프롬프트는 4명 모두 같습니다. 각 NPC의 마스터를 첨부해서 사용하세요.
+
+**대기 (공통)** · 📎 각 NPC 마스터 · 💾 `1_idle.png`
+```
+Using the attached character as the exact reference, create a horizontal sprite strip of exactly 4 frames of an idle breathing animation. All frames in one row with wide empty gaps between them, feet on the same line, same size in every frame, facing right. Isometric 3/4 top-down view, detailed dark pixel art. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border.
+```
+
+### 6-1. 암시장 상인 · 💾 `merchant_master.png` · 🔧 **merchant**
+```
+Character design of a black market trader in ruined Seoul: long dark coat full of pockets, bags and goods hanging from the shoulders, flat cap, cunning smile. Full body, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the character.
+```
+
+### 6-2. 생존자 대장 · 💾 `captain_master.png` · 🔧 **captain**
+```
+Character design of a veteran survivor leader: gray beard, military cap, worn officer jacket, rifle slung on the back, arms crossed. Full body, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the character.
+```
+
+### 6-3. 의무병 · 💾 `medic_master.png` · 🔧 **medic**
+```
+Character design of a field medic: white coat with a red cross armband, medical bag on the side, short hair, surgical mask around the neck. Full body, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the character.
+```
+
+### 6-4. 정비공 · 💾 `mechanic_master.png` · 🔧 **mechanic**
+```
+Character design of a mechanic: grease-stained overalls, welding goggles on the forehead, tool belt, holding a large wrench. Full body, standing, facing right. Isometric 3/4 top-down view, camera about 35 degrees above. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background filling the whole image. No shadow, no ground, no text, no border. Do not use pink or magenta on the character.
+```
+
+---
+
+# 7. 랜드마크 (4장)
+
+첨부 없음 · 🔧 도구에서 같은 이름을 고르면 자동으로 건물 모드
+
+### 7-1. 무너진 명동성당 — 💾 `cathedral.png` · 🔧 **cathedral** · 정사각형 이미지
+```
+A single ruined red-brick gothic cathedral (Myeongdong Cathedral in Seoul) with a tall pointed bell tower and a cross, part of the roof collapsed, broken stained glass windows, rubble at the base. The building stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the building: no street, no ground, no people, no shadow, no text. Solid flat #FF00FF magenta background.
+```
+
+### 7-2. 보신각 — 💾 `bosingak.png` · 🔧 **bosingak** · 정사각형 이미지
+```
+A single traditional Korean bell pavilion (Bosingak in Seoul) on a stone platform: red wooden pillars, a curved dark gray tiled roof with upturned eaves, a large bronze bell hanging inside, weathered and dusty. The building stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the building: no street, no ground, no people, no shadow, no text. Solid flat #FF00FF magenta background.
+```
+
+### 7-3. 버려진 용산 기지 — 💾 `base.png` · 🔧 **base** · 정사각형 이미지
+```
+A single abandoned military base compound: a concrete bunker, sandbag walls, a rusty abandoned tank, a small watchtower with a searchlight, barbed wire, military crates. The compound stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the compound: no street, no ground outside it, no people, no shadow, no text. Solid flat #FF00FF magenta background.
+```
+
+### 7-4. 63빌딩 잔해 — 💾 `tower63.png` · 🔧 **tower63** · **세로로 긴 이미지 (9:16)**
+```
+A single ruined golden glass skyscraper (the 63 Building in Seoul): tall tower with golden reflective glass, the top floors broken and collapsed, some windows glowing, green radioactive haze at the base. The building stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the building: no street, no ground, no people, no shadow, no text. Solid flat #FF00FF magenta background. Tall vertical image.
+```
+
+---
+
+# 8. 아이콘 (미리 만들어 두기 — 게임 적용은 나중)
+
+무기 아이콘은 4번 무기 그림을 그대로 씁니다. 헬멧은 3번 그림을 씁니다. 나머지만 만들면 됩니다.
+
+### 8-1. 방탄 조끼 — 💾 `icon_vest.png`
+```
+A single game item icon of a worn olive bulletproof vest, centered, slight 3/4 angle, filling about 80% of a square image. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. No text, no border, no shadow, no person.
+```
+### 8-2. 전술 조끼 — 💾 `icon_tactical.png`
+```
+A single game item icon of a tan tactical plate carrier vest with pouches, centered, slight 3/4 angle, filling about 80% of a square image. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. No text, no border, no shadow, no person.
+```
+### 8-3. 군용 강화복 — 💾 `icon_military.png`
+```
+A single game item icon of dark blue-gray military combat armor, centered, slight 3/4 angle, filling about 80% of a square image. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. No text, no border, no shadow, no person.
+```
+### 8-4. 외골격 슈트 — 💾 `icon_exo.png`
+```
+A single game item icon of a metallic powered exoskeleton suit, centered, slight 3/4 angle, filling about 80% of a square image. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. No text, no border, no shadow, no person.
+```
+### 8-5. 구급상자 — 💾 `icon_medkit.png`
+```
+A single game item icon of a first aid kit with a red cross, centered, slight 3/4 angle, filling about 80% of a square image. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. No text, no border, no shadow, no person.
+```
+### 8-6. 탄약 상자 — 💾 `icon_ammo.png`
+```
+A single game item icon of a military ammunition box, centered, slight 3/4 angle, filling about 80% of a square image. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. No text, no border, no shadow, no person.
+```
+
+---
+
+## 결과가 이상할 때
+
+| 증상 | 해결 |
 |---|---|
-| 바닥 타일 (도로·보도·풀밭) | 쿼터뷰 타일은 이어 붙였을 때 경계가 맞아야 하는데, 이미지 생성은 이 정밀도가 잘 안 나옵니다. 지금의 코드 바닥을 유지하고 나중에 방법을 따로 정합니다 |
-| 일반 건물 | 맵의 건물은 높이·크기가 제각각이라 그림 한 장으로 맞추기 어렵습니다. 랜드마크로 지역 분위기를 먼저 잡는 편이 효과가 큽니다 |
-| 무기를 든 플레이어 그림 | 무기를 바꿔도 그림이 그대로라 어색합니다. 몸(빈손) + 무기 그림 따로 (2-0) |
-| 헬멧을 쓴 플레이어 그림 | 헬멧을 바꿔도 그대로입니다. 몸은 맨머리, 헬멧은 따로 (2-5) |
-| 장갑·가방 등 다른 부위 | 부위가 늘수록 조합이 폭발합니다. 외형이 바뀌는 장비는 방어구·헬멧·무기까지 |
+| 프레임마다 다른 사람처럼 그려짐 | 마스터 이미지를 첨부했는지 확인 후 다시 생성 |
+| 프레임끼리 붙어 있음 | 다시 생성 (프롬프트에 이미 "wide empty gaps"가 있음) |
+| 캐릭터에 분홍·자주색이 있음 | 프롬프트의 `#FF00FF magenta`를 `#00FF00 green`으로 바꿔 다시 생성 |
+| 체크무늬(가짜 투명) 배경이 나옴 | 다시 생성. "transparent"라는 단어는 절대 넣지 않기 |
+| 플레이어가 무기·헬멧을 들고/쓰고 나옴 | 다시 생성 (게임이 따로 붙이므로 빈손·맨머리여야 함) |

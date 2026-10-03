@@ -152,7 +152,7 @@ function newPlayer(name) {
     level: 1, exp: 0, credits: 150, statPoints: 0,
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
     hp: 1, reserve: 150,
-    equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: makeArmor('vest', 1, 0), helmet: null },
+    equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: null, helmet: null }, // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
     active: 'w1',
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
     quest: { idx: 0, active: false, progress: 0 },

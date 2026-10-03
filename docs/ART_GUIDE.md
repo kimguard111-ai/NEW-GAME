@@ -1,6 +1,7 @@
 # 아트 가이드 — Gemini로 캐릭터 스프라이트 만들기
 
-> 바로 붙여넣는 프롬프트 모음: **`docs/GEMINI_PROMPTS.md`**
+> 바로 붙여넣는 프롬프트 모음: **`docs/GEMINI_PROMPTS.md`** (순서대로 복붙만 하면 됨)
+> 도구는 파일 이름 속 `idle`·`walk`·`attack`·`hit`·`death`로 동작을 자동 인식합니다.
 
 게임은 그림이 없으면 지금의 도형 캐릭터를 그대로 쓰고, 그림을 등록한 것부터 하나씩 바뀝니다.
 한 번에 다 만들 필요 없이 **플레이어 → 감염자 → 나머지** 순서로 하나씩 교체하는 것을 권합니다.
@@ -77,7 +78,8 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 
 | 키 (도구에서 선택) | 대상 | 화면 키(px) | 비고 |
 |---|---|---|---|
-| player / player_vest·tactical·military·exo | 플레이어 몸 | 44 | **빈손 + 맨머리**. 방어구마다 한 벌 (없으면 `player` 사용). 가공 시 프레임별 머리 위치가 자동 기록됨 |
+| player | 플레이어 몸 (방어구 없음) | 44 | **빈손 + 맨머리 + 평상복**. 시작 모습이자 방어구 그림이 없을 때의 기본 |
+| player_vest·tactical·military·exo | 방어구별 몸 | 44 | 같은 사람이 각 방어구를 입은 모습. 가공 시 프레임별 머리 위치 자동 기록 |
 | h_cap 등 4종 | 헬멧 | 머리 폭에 맞춤 | 1장. `js/assets.js`의 `helmets`에 등록, 게임이 머리 위치에 씌움 |
 | w_pistol 등 9종 | 플레이어 무기 | 15~40 (길이) | 옆모습 1장, 총구 오른쪽. `js/assets.js`의 `weapons`에 등록 |
 | zombie | 감염자 | 44 | |

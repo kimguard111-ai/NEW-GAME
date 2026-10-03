@@ -286,7 +286,7 @@ const UI = {
     if (!q) h = '모든 임무를 완료했습니다. 당신은 서울의 영웅입니다!<br><span class="muted">타이탄은 4분마다 부활합니다.</span>';
     else if (p.quest.active) {
       h = `<b style="color:#e0b23a">${q.title}</b><br>${q.text}<br><br>목표: ${ENEMIES[q.target].name} 처치 <b>${p.quest.progress} / ${q.count}</b>`;
-      h += `<br><span class="muted">보상: EXP ${fmt(q.reward.exp)}, ${fmt(q.reward.credits)}₵${q.reward.gear ? ', 장비' : ''}</span>`;
+      h += `<br><span class="muted">보상: EXP ${fmt(q.reward.exp)}, ${fmt(q.reward.credits)}₵${q.reward.equip ? ', ' + GEAR_DEFS(q.reward.equip).name : q.reward.gear ? ', 장비' : ''}</span>`;
     } else {
       h = `진행 중인 임무가 없습니다.<br><span class="muted">다음 임무: ${q.title} (Lv${q.minLevel} 이상) — 캠프의 생존자 대장 한씨에게 받으세요.</span>`;
     }
@@ -414,7 +414,7 @@ const UI = {
     } else if (p.level < q.minLevel) {
       UI.dialog(npc.name, `"아직은 자네에게 맡길 일이 없어. 좀 더 강해져서 오게."<br><span class="muted">다음 임무 요구 레벨: Lv${q.minLevel}</span>`, [bye]);
     } else {
-      UI.dialog(npc.name, `<b style="color:#e0b23a">[${q.title}]</b><br>"${q.text}"<br><br><span class="muted">보상: EXP ${fmt(q.reward.exp)}, ${fmt(q.reward.credits)}₵${q.reward.gear ? ', 장비 아이템' : ''}</span>`, [
+      UI.dialog(npc.name, `<b style="color:#e0b23a">[${q.title}]</b><br>"${q.text}"<br><br><span class="muted">보상: EXP ${fmt(q.reward.exp)}, ${fmt(q.reward.credits)}₵${q.reward.equip ? ', ' + GEAR_DEFS(q.reward.equip).name : q.reward.gear ? ', 장비 아이템' : ''}</span>`, [
         ['수락', () => { p.quest.active = true; p.quest.progress = 0; log(`임무 수락: ${q.title}`, '#8cf'); UI.close('dialog'); UI.refreshQuest(); saveGame(); }],
         ['거절', () => UI.close('dialog')]]);
     }
@@ -425,6 +425,11 @@ const UI = {
     p.credits += r.credits;
     log(`임무 완료 보상: EXP ${fmt(r.exp)}, ${fmt(r.credits)}₵`, '#8cf');
     if (r.items) for (const [k, n] of r.items) addItem(makeConsumable(k, n));
+    if (r.equip) { // 정해진 장비 보상 (첫 임무: 방탄 조끼)
+      const it = makeGear(r.equip, Math.max(p.level, 1), 0);
+      if (!addItem(it)) G.drops.push({ x: p.x, y: p.y + 20, kind: 'item', item: it, t: 0 });
+      log(`보상 장비: ${it.name} — 인벤토리(I)에서 장착하세요`, '#8cf');
+    }
     if (r.gear) {
       const it = randomGear(Math.max(p.level, q.minLevel), r.gear);
       if (!addItem(it)) G.drops.push({ x: p.x, y: p.y + 20, kind: 'item', item: it, t: 0 });

@@ -121,7 +121,7 @@ $('run').onclick = () => imgs.length && process();
 $('key').onchange = () => imgs.length ? process() : null;
 function load(files) {
   files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-  Promise.all(files.map(f => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.src = URL.createObjectURL(f); })))
+  Promise.all(files.map(f => new Promise(res => { const im = new Image(); im.fileName = f.name; im.onload = () => res(im); im.src = URL.createObjectURL(f); })))
     .then(list => { imgs = list; process(); });
 }
 
@@ -276,7 +276,7 @@ function process() {
     const { key, data } = keyOut(cv, +$('tol').value);
     keys.push(key);
     const rws = mode === 'grid' ? detectGrid(data, im.width, im.height) : detectAuto(data, im.width, im.height);
-    if (rws.length) parts.push({ cv, data, w: im.width, rows: rws, refH: median(rws[0].map(b => b.y1 - b.y0)) });
+    if (rws.length) parts.push({ cv, data, w: im.width, rows: rws, refH: median(rws[0].map(b => b.y1 - b.y0)), fileName: im.fileName || '' });
   }
   // 원본 미리보기: 첫 이미지
   const src = $('src'); src.width = imgs[0].width; src.height = imgs[0].height; src.getContext('2d').drawImage(parts[0] ? parts[0].cv : imgs[0], 0, 0);
@@ -338,7 +338,11 @@ function process() {
     + (rows.some(r => r.items.length === 1) && rows.length > 3 ? '<br><span class="warn">프레임이 1개뿐인 행이 있습니다. 격자 모드를 시도해 보세요.</span>' : '');
   // 행 이름 입력 + 미리보기
   const box = $('anims'); box.innerHTML = '';
-  result.names = rows.map((_, i) => DEFAULT_NAMES[i] || 'anim' + i);
+  // 파일 이름에 동작 이름이 있으면 그걸 사용 (예: 3_hit.png → hit). 없으면 순서대로 idle, walk, attack, hit, death
+  result.names = rows.map((r, i) => {
+    const m = /(back_)?(idle|walk|attack|hit|death)/i.exec(r.pt.fileName);
+    return m && r.pt.rows.length === 1 ? m[0].toLowerCase() : DEFAULT_NAMES[i] || 'anim' + i;
+  });
   result.previews = [];
   rows.forEach((row, i) => {
     const d = document.createElement('div'); d.className = 'anim';

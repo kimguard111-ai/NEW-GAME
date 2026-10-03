@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.6.2';
+const GAME_VERSION = 'v0.6.3';
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -149,7 +149,7 @@ const SKILLS = [
 const QUESTS = [
   { title: '첫 번째 사냥', target: 'zombie', count: 8, minLevel: 1,
     text: '캠프 바깥 명동 잔해에 감염자들이 몰려들고 있다. 8마리만 정리해 주게.',
-    reward: { exp: 90, credits: 150, items: [['medkit', 2]] } },
+    reward: { exp: 90, credits: 150, items: [['medkit', 2]], equip: 'vest' } }, // 첫 방어구
   { title: '굶주린 사냥개', target: 'dog', count: 8, minLevel: 2,
     text: '변이견 무리가 보급조를 습격했어. 놈들을 8마리 처치해 주게.',
     reward: { exp: 220, credits: 300, items: [['ammo', 3]] } },
