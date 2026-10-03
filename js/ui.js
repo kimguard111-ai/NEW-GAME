@@ -91,10 +91,11 @@ const UI = {
     if ($('medcnt')) $('medcnt').textContent = med ? med.count : 0;
 
     // 보스 바
-    const boss = (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 900) ? G.boss : (G.assault && G.assault.boss) || G.elite; // 보스 · 어설트 보스 · 네임드
+    const fb = G.fieldBoss && dist(G.fieldBoss, p) < 900 ? G.fieldBoss : null;
+    const boss = (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 900) ? G.boss : (G.assault && G.assault.boss) || fb || G.elite; // 보스 · 어설트 보스 · 필드 보스 · 네임드
     if (boss && boss.hp > 0 && dist(boss, p) < 900) {
       $('boss-bar').classList.remove('hidden');
-      $('boss-name').textContent = `Lv${boss.level} ${boss.bossName || (boss.elite ? ELITES[boss.elite].name : boss.def.name)}  ${fmt(boss.hp)} / ${fmt(boss.maxHp)}`;
+      $('boss-name').textContent = `Lv${boss.level} ${boss.bossName || (boss.elite ? ELITES[boss.elite].name : boss.def.name)}${boss.def.boss ? ` · ${Bosses.titanPhase(boss)}페이즈${boss.invulnT > 0 ? ' (무적)' : ''}` : ''}  ${fmt(boss.hp)} / ${fmt(boss.maxHp)}`;
       $('boss-fill').style.width = (100 * boss.hp / boss.maxHp) + '%';
     } else $('boss-bar').classList.add('hidden');
 

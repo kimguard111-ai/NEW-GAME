@@ -100,19 +100,38 @@ const Monsters = {
       this.strike(p.x, p.y, 70, 1.1, e.dmg * 2.2, 'rgba(255,60,60,');
       for (let i = 0; i < 2; i++) this.strike(p.x + rand(-110, 110), p.y + rand(-110, 110), 70, 1.1 + i * 0.25, e.dmg * 2.2, 'rgba(255,60,60,');
       floatText(e.x, e.y - 50, '표적 지정', '#ff6060', 16);
+    } else if (id === 'dash') { // 돌진: 붉은 선 예고 0.5초 후 질주 (보스 돌진과 같은 방식)
+      e.skillT = 4; e.charge = 1.3; e.chargeA = angleTo(e, p);
+    } else if (id === 'howl') { // 울부짖음: 변이견 부하 호출 (최대 6)
+      e.skillT = 8; e.lastAtk = G.time;
+      const n = G.enemies.filter(o => o.guardOf === e && o.hp > 0).length;
+      for (let i = 0; i < 3 && n + i < 6; i++) {
+        const g = makeEnemy('dog', e.x + rand(-70, 70), e.y + rand(-70, 70), Math.max(1, e.level - 1));
+        if (World.circleBlocked(g.x, g.y, g.r)) continue;
+        g.guardOf = e; g.minion = true; g.state = 'chase'; G.enemies.push(g);
+      }
+      floatText(e.x, e.y - 50, '아우우우!', '#ff7a5a', 18);
+    } else if (id === 'fan') { // 부채꼴 사격 7발
+      e.skillT = 3.5; e.lastAtk = G.time;
+      const a = angleTo(e, p);
+      for (let i = -3; i <= 3; i++) spawnEnemyBullet(e, a + i * 0.14, e.def.bulletSpeed || 400, e.dmg * 0.8, '#ffb040', 4);
+    } else if (id === 'quake') { // 내려찍기: 자기 주변 큰 원
+      e.skillT = 5; e.lastAtk = G.time;
+      this.strike(e.x, e.y, 150, 1.0, e.dmg * 1.8, 'rgba(255,150,50,');
+      floatText(e.x, e.y - 50, '쿵!', '#ffb040', 18);
     }
   },
 
   // ---------------- 세력 다툼 ----------------
   // 플레이어를 쫓지 않을 때 근처의 다른 세력과 싸움. 처리했으면 true
   infight(e, dt) {
-    if (e.def.boss || e.elite || e.minion || e.assault) return false;
+    if (e.def.boss || e.elite || e.minion || e.assault || e.bossName) return false;
     e.foeT = (e.foeT || 0) - dt;
     if (e.foeT <= 0) {
       e.foeT = 0.6; e.foe = null;
       let bd = e.def.ranged ? e.def.range : 240;
       for (const o of G.enemies) {
-        if (o === e || o.hp <= 0 || o.def.boss || o.elite || FACTION[o.type] === FACTION[e.type]) continue;
+        if (o === e || o.hp <= 0 || o.def.boss || o.elite || o.bossName || FACTION[o.type] === FACTION[e.type]) continue;
         const d = dist(e, o);
         if (d < bd && World.lineOfSight(e, o)) { bd = d; e.foe = o; }
       }

@@ -612,10 +612,10 @@ function render() {
       ctx.beginPath(); ctx.arc(ef.x, ef.y, ef.r * k, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1;
     }
   }
-  if (G.boss && G.boss.charge > 0.8) {
-    ctx.strokeStyle = 'rgba(255,60,60,0.5)'; ctx.lineWidth = G.boss.r * 1.6;
-    ctx.beginPath(); ctx.moveTo(G.boss.x, G.boss.y);
-    ctx.lineTo(G.boss.x + Math.cos(G.boss.chargeA) * 330, G.boss.y + Math.sin(G.boss.chargeA) * 330); ctx.stroke(); ctx.lineWidth = 1;
+  for (const e of G.enemies) if (e.charge > 0.8) { // 돌진 예고선 (타이탄 · 필드 보스)
+    ctx.strokeStyle = 'rgba(255,60,60,0.5)'; ctx.lineWidth = e.r * 1.6;
+    ctx.beginPath(); ctx.moveTo(e.x, e.y);
+    ctx.lineTo(e.x + Math.cos(e.chargeA) * 330, e.y + Math.sin(e.chargeA) * 330); ctx.stroke(); ctx.lineWidth = 1;
   }
   // 아이템 바닥 빛
   for (const d of G.drops) if (d.kind === 'item') {
@@ -835,6 +835,7 @@ function drawMinimapIso(mm) {
   const dot = (x, y, c, r) => { g.fillStyle = c; g.fillRect(x / TILE - r / 2, y / TILE - r / 2, r, r); };
   for (const n of G.npcs) dot(n.x, n.y, '#ffd76a', 3);
   for (const e of G.enemies) dot(e.x, e.y, e.def.boss ? '#d4f' : '#f44', e.def.boss ? 6 : 2.5);
+  if (G.fieldBoss && Math.sin(G.time * 8) > -0.3) dot(G.fieldBoss.x, G.fieldBoss.y, '#ff3020', 8); // 필드 보스 깜빡임
   dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.85)', 5);
   for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);
   for (const l of World.landmarks) dot(l.x, l.y, p.found.includes(l.id) ? '#ffd76a' : '#888', 5);

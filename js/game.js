@@ -8,7 +8,7 @@ const MAP_SEED = 2049;
 
 const G = {
   player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [],
-  npcs: [], corpses: [], elite: null, strikes: [], pools: [], assault: null, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
+  npcs: [], corpses: [], elite: null, strikes: [], pools: [], assault: null, fieldBoss: null, fbT: 150, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
 };
@@ -103,7 +103,7 @@ function startGame(save, name) {
     log('생존자 대장 한씨(오른쪽 위)에게 말을 걸어 임무를 받으세요. [E]', '#8cf');
   }
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
-  G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null;
+  G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
@@ -334,6 +334,7 @@ function respawn() {
 // hit: { knock 넉백, stagger 경직(초), w 사용 무기, noProc 전설효과 미발동 }
 function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (e.hp <= 0) return;
+  if (e.invulnT > 0) { if (Math.random() < 0.15) floatText(e.x, e.y - e.r - 6, '무적', '#aaa', 12); return; } // 타이탄 페이즈 전환
   const p = G.player, w = hit.w;
   if (w && w.legend === 'execute' && e.hp < e.maxHp * 0.3) dmg *= 1.6;
   dmg = Math.max(1, Math.round(dmg));
@@ -406,6 +407,7 @@ function killEnemy(e) {
     return;
   }
   if (e.minion) return;
+  if (e.fieldBoss) Bosses.onFieldKill(e, dropAt);
   if (e.elite) { // 네임드: 장비 확정 + 크레딧
     G.elite = null;
     log(`${ELITES[e.elite].name} 처치!`, '#ffa53a');
@@ -416,13 +418,13 @@ function killEnemy(e) {
   if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
     Monsters.onDeath(e);
     dropAt('credits', { amount: e.level * 12 });
-    if (Math.random() < 0.6) dropAt('item', { item: randomGear(e.level, 0.8, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
+    if (Math.random() < 0.35) dropAt('item', { item: randomGear(e.level, 0.8, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
   }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
-  const gearChance = e.type === 'brute' ? 0.2 : 0.09;
+  const gearChance = e.assault || e.fieldBoss ? 0 : e.type === 'brute' ? 0.11 : 0.05; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
   if (Math.random() < gearChance) {
     const it = randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
@@ -457,7 +459,9 @@ function tryMoveSmart(e, a, step) {
 }
 
 function updateBoss(e, dt, d) {
-  const p = G.player, rage = e.hp < e.maxHp * 0.5 ? 1.5 : 1;
+  const p = G.player, ph = Bosses.titanPhase(e), rage = ph === 3 ? 1.6 : ph === 2 ? 1.25 : 1;
+  Bosses.updateTitan(e, dt); // v0.10 페이즈 패턴
+  if (e.invulnT > 0) return;
   e.bossT1 -= dt * rage; e.bossT2 -= dt; e.bossT3 -= dt * rage;
   if (e.state !== 'chase') return;
   if (e.bossT1 <= 0) {
@@ -551,7 +555,7 @@ function spawnEnemies(dt) {
   if (G.spawnT > 0 || G.assault) return; // 어설트 중에는 일반 스폰 없음
   G.spawnT = 0.35;
   // 먼 적 정리
-  G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || dist(e, p) < 1800 || e.state === 'chase');
+  G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || e.fieldBoss || dist(e, p) < 1800 || e.state === 'chase');
   if (G.elite && G.elite.hp <= 0) G.elite = null;
   const z = World.zoneIndex(p.x, p.y);
   const near = G.enemies.filter(e => !e.def.boss && dist(e, p) < 1300).length;
@@ -740,6 +744,7 @@ function update(dt) {
   updateBossSpawn(dt);
   updateEnemies(dt);
   Assault.update(dt);
+  Bosses.updateField(dt);
   updateBullets(dt);
   updateGrenades(dt);
   Monsters.updateHazards(dt);

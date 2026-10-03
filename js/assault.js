@@ -17,7 +17,7 @@ const ASSAULTS = {
     boss: { name: '방사능 변이체 「군체」', base: 'brute', hpMul: 9, dmgMul: 1.3, scale: 1.6, patterns: ['glutton', 'argos'], affix: 'commander' } },
 };
 const ASSAULT_R = 11 * TILE; // 봉쇄 구역 반지름
-const RANKS = { S: { gear: 3, bonus: 1.5, min: 2, mul: 1.5, color: '#ffd76a' }, A: { gear: 2, bonus: 1.0, min: 1, mul: 1.2, color: '#c77dff' }, B: { gear: 1, bonus: 0.5, min: 0, mul: 1, color: '#9fd' } };
+const RANKS = { S: { gear: 2, bonus: 1.5, min: 2, mul: 1.5, color: '#ffd76a' }, A: { gear: 1, bonus: 1.0, min: 1, mul: 1.2, color: '#c77dff' }, B: { gear: 1, bonus: 0.5, min: 0, mul: 1, color: '#9fd' } };
 
 const Assault = {
   // 지금 [E]로 시작할 수 있는 어설트 (랜드마크 앞에 있을 때)
