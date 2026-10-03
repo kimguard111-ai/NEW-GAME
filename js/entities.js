@@ -78,6 +78,15 @@ function randomGear(level, rarityBonus = 0, minRarity = 0) {
   return makeArmor(pick(keys), level, r);
 }
 
+// 강화 단계가 반영된 이름 / 수치
+function itemName(it) { return it.plus ? `+${it.plus} ${it.name}` : it.name; }
+function plusMul(it) { return 1 + (it.plus || 0) * ENHANCE.step; }
+function armorDef(arm) { return arm ? Math.round(arm.def * plusMul(arm)) : 0; }
+function itemSellPrice(it) { return Math.max(1, Math.floor((it.value || 0) * 0.3 * (1 + (it.plus || 0) * 0.25))) * (it.count || 1); }
+
+function enhanceCost(it) { return Math.round((20 + it.ilvl * 6) * Math.pow(it.plus + 1, 1.3) * (1 + it.rarity * 0.25)); }
+function enhanceRate(it) { return Math.min(1, ENHANCE.rates[it.plus] + (it.fails || 0) * ENHANCE.failBonus); }
+
 function itemReqLevel(it) {
   if (it.kind === 'weapon') return WEAPONS[it.key].lvl;
   if (it.kind === 'armor') return ARMORS[it.key].lvl;
@@ -87,12 +96,12 @@ function itemReqLevel(it) {
 function itemDesc(it) {
   if (it.kind === 'weapon') {
     const b = WEAPONS[it.key];
-    let s = `피해 ${it.dmg}${b.pellets ? ' x' + b.pellets : ''} · 공격간격 ${b.rate}s`;
+    let s = `피해 ${Math.round(it.dmg * plusMul(it) * 10) / 10}${b.pellets ? ' x' + b.pellets : ''} · 공격간격 ${b.rate}s`;
     s += b.melee ? ' · 근접' : ` · 탄창 ${b.mag} · 사거리 ${b.range}`;
     if (b.pierce) s += ' · 관통';
     return s + ` · 요구 Lv${b.lvl}`;
   }
-  if (it.kind === 'armor') return `방어력 ${it.def} · 요구 Lv${ARMORS[it.key].lvl}`;
+  if (it.kind === 'armor') return `방어력 ${armorDef(it)} · 요구 Lv${ARMORS[it.key].lvl}`;
   return CONSUMABLES[it.key].desc;
 }
 
@@ -147,7 +156,7 @@ function hasLegend(p, id) { const w = p.equip[p.active]; return !!(w && w.legend
 //  민첩: 이동·공격속도 +0.8%, 치명타 +0.8% → 기동형
 const PlayerStats = {
   maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp'))),
-  def: p => (p.equip.armor ? p.equip.armor.def : 0) + Math.max(0, p.stats.str - 5),
+  def: p => armorDef(p.equip.armor) + Math.max(0, p.stats.str - 5),
   dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 80); },
   gunMul: p => 1 + (p.stats.dex - 5) * 0.04,
   meleeMul: p => 1 + (p.stats.str - 5) * 0.06,
@@ -191,13 +200,13 @@ function skillDesc(s, p) {
 function respecCost(p) { return p.respecs ? p.level * 80 : 0; }
 
 function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w))); }
-function weaponDmg(w) { return w.dmg * (1 + (w.plus || 0) * 0.08) * (1 + gearBonus(G.player, 'dmg', w)); }
+function weaponDmg(w) { return w.dmg * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }
 
 // 현재 능력치 기준 무기의 실제 초당 피해 (재장전 시간 포함). 장비 비교와 HUD에 사용
 function weaponDps(p, w) {
   if (!w) return 0;
   const b = WEAPONS[w.key];
-  const mul = (b.melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (1 + (w.plus || 0) * 0.08) * (1 + gearBonus(p, 'dmg', w));
+  const mul = (b.melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * plusMul(w) * (1 + gearBonus(p, 'dmg', w));
   const cc = Math.min(1, PlayerStats.crit(p, w));
   const interval = b.rate * (p.buffs.rapid > 0 ? 2 : 1) * PlayerStats.rateMul(p, w);
   let dps = w.dmg * (b.pellets || 1) * mul * (1 + cc * (PlayerStats.critMul(p, w) - 1)) / interval;
@@ -215,7 +224,7 @@ function armorEhp(p, arm) {
   const base = (100 + p.stats.vit * 15 + p.level * 10);
   let hp = 0;
   if (arm) for (const a of arm.affixes || []) if (a.k === 'hp') hp += a.v;
-  const def = (arm ? arm.def : 0) + Math.max(0, p.stats.str - 5);
+  const def = armorDef(arm) + Math.max(0, p.stats.str - 5);
   return base * (1 + hp) / (1 - def / (def + 80));
 }
 
@@ -230,7 +239,7 @@ function isUpgrade(p, it) {
     const best = same.length ? Math.max(...same.map(w => weaponDps(p, w))) : 0;
     return weaponDps(p, it) > best * 1.02;
   }
-  if (it.kind === 'armor') return armorEhp(p, it) > armorEhp(p, p.equip.armor) * 1.02 || (!!p.equip.armor && it.affixes.length > p.equip.armor.affixes.length && it.def >= p.equip.armor.def);
+  if (it.kind === 'armor') return armorEhp(p, it) > armorEhp(p, p.equip.armor) * 1.02 || (!!p.equip.armor && it.affixes.length > p.equip.armor.affixes.length && armorDef(it) >= armorDef(p.equip.armor));
   return false;
 }
 

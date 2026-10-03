@@ -24,7 +24,7 @@ const UI = {
     if (name === 'shop') { UI.shopOpen = false; UI.refreshInventory(); }
   },
   toggle(name) { UI.isOpen(name) ? UI.close(name) : UI.open(name); },
-  closeAll() { ['inventory', 'stats', 'quest', 'shop', 'dialog'].forEach(n => UI.close(n)); },
+  closeAll() { ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance'].forEach(n => UI.close(n)); },
   refreshAll() { UI.refreshInventory(); UI.refreshStats(); UI.refreshQuest(); },
 
   log(msg, color) {
@@ -77,7 +77,7 @@ const UI = {
     const w = curWeapon();
     if (w) {
       const b = WEAPONS[w.key];
-      $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${w.icon} ${w.name}</span> <span class="muted">[Q]</span>`;
+      $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${w.icon} ${itemName(w)}</span> <span class="muted">[Q]</span>`;
       $('weapon-ammo').textContent = b.melee ? '근접 무기' : p.reloadT > 0 ? '재장전 중...' : `${w.loaded} / ${magSize(w)}${b.infinite ? '  ∞' : ''}`;
       $('weapon-role').textContent = `${b.role} · DPS ${Math.round(weaponDps(p, w))}`;
     } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; $('weapon-role').textContent = ''; }
@@ -122,7 +122,7 @@ const UI = {
       else if (isUpgrade(p, it)) mark = '<span class="mark up">▲</span>';
       if (it.isNew) mark += '<span class="mark new">N</span>';
     }
-    return `${mark}<span class="icon">${it.icon}</span><span class="r${r}">${it.name}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
+    return `${mark}<span class="icon">${it.icon}</span><span class="r${r}">${itemName(it)}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
   },
 
   refreshInventory() {
@@ -132,7 +132,7 @@ const UI = {
       const it = p.equip[el.dataset.slot];
       el.classList.toggle('active', el.dataset.slot === p.active);
       el.className = el.className.replace(/ ?bc\d/g, '') + (it ? ' bc' + it.rarity : '');
-      el.querySelector('div').innerHTML = it ? `${it.icon} <span class="r${it.rarity}">${it.name}</span>` + (it.affixes && it.affixes.length ? `<br><span class="affix">◆ 옵션 ${it.affixes.length}개${it.legend ? ' ★' : ''}</span>` : '') : '<span class="muted">비어 있음</span>';
+      el.querySelector('div').innerHTML = it ? `${it.icon} <span class="r${it.rarity}">${itemName(it)}</span>` + (it.affixes && it.affixes.length ? `<br><span class="affix">◆ 옵션 ${it.affixes.length}개${it.legend ? ' ★' : ''}</span>` : '') : '<span class="muted">비어 있음</span>';
     });
     const grid = $('inv-grid');
     grid.innerHTML = '';
@@ -156,7 +156,7 @@ const UI = {
     const box = $('item-detail'), it = UI.selected, p = G.player;
     if (!it) { box.innerHTML = '<span class="muted">아이템을 선택하세요. ▲ = 지금 장비보다 좋음</span>'; return; }
     const equippedSlot = Object.keys(p.equip).find(k => p.equip[k] === it);
-    const sellPrice = Math.max(1, Math.floor((it.value || 0) * 0.3)) * (it.count || 1);
+    const sellPrice = itemSellPrice(it);
     const diffSpan = (a, b, unit = '') => {
       const d = b - a, pct = a > 0 ? ` (${d >= 0 ? '+' : ''}${Math.round(d / a * 100)}%)` : '';
       return `<span style="color:${d >= 0 ? '#6f6' : '#f66'}">${d >= 0 ? '+' : ''}${Math.round(d)}${unit}${pct}</span>`;
@@ -168,18 +168,18 @@ const UI = {
       if (!equippedSlot) {
         for (const sl of ['w1', 'w2']) {
           const cur = p.equip[sl];
-          if (cur) cmp += `<br><span class="muted">vs ${sl === 'w1' ? '주무기' : '보조무기'} ${cur.name} (${Math.round(weaponDps(p, cur))}):</span> ${diffSpan(weaponDps(p, cur), dps)}`;
+          if (cur) cmp += `<br><span class="muted">vs ${sl === 'w1' ? '주무기' : '보조무기'} ${itemName(cur)} (${Math.round(weaponDps(p, cur))}):</span> ${diffSpan(weaponDps(p, cur), dps)}`;
         }
       }
       cmp += '</div>';
     } else if (it.kind === 'armor' && !equippedSlot) {
       const cur = p.equip.armor;
-      cmp = `<div class="cmp">방어력 ${cur ? diffSpan(cur.def, it.def) : '+' + it.def} · 버티는 체력 ${diffSpan(armorEhp(p, cur), armorEhp(p, it))}`;
+      cmp = `<div class="cmp">방어력 ${cur ? diffSpan(armorDef(cur), armorDef(it)) : '+' + armorDef(it)} · 버티는 체력 ${diffSpan(armorEhp(p, cur), armorEhp(p, it))}`;
       if (cur && cur.affixes.length) cmp += `<br><span class="muted">장착 중 옵션: ${cur.affixes.map(affixText).join(', ')}</span>`;
       cmp += '</div>';
     }
     const req = itemReqLevel(it);
-    box.innerHTML = `<b class="r${it.rarity || 0}">${it.icon} ${it.name}</b> ${it.ilvl ? `<span class="muted">(아이템 Lv${it.ilvl})</span>` : ''}`
+    box.innerHTML = `<b class="r${it.rarity || 0}">${it.icon} ${itemName(it)}</b> ${it.ilvl ? `<span class="muted">(아이템 Lv${it.ilvl})</span>` : ''}`
       + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + `<br>${itemHtml(it)}${cmp}<div class="btns"></div>`;
     const btns = box.querySelector('.btns');
     const add = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = fn; btns.appendChild(b); };
@@ -191,7 +191,7 @@ const UI = {
     if (it.kind === 'armor') add('장착', () => UI.equip(it, 'armor'));
     if (it.kind === 'cons') add('사용', () => useItem(it));
     if (UI.shopOpen) add(`판매 (${fmt(sellPrice)}₵)`, () => UI.sell(it, sellPrice));
-    add('버리기', () => { if (confirm(`${it.name}을(를) 버릴까요?`)) { removeItem(it); UI.selected = null; UI.refreshInventory(); } });
+    add('버리기', () => { if (confirm(`${itemName(it)}을(를) 버릴까요?`)) { removeItem(it); UI.selected = null; UI.refreshInventory(); } });
   },
 
   equip(it, slot) {
@@ -205,7 +205,7 @@ const UI = {
     it.isNew = false;
     if (it.kind === 'weapon' && !WEAPONS[it.key].melee) it.loaded = Math.min(it.loaded, magSize(it));
     p.hp = Math.min(p.hp, PlayerStats.maxHp(p));
-    log(`장착: ${it.name}`, RARITIES[it.rarity].color);
+    log(`장착: ${itemName(it)}`, RARITIES[it.rarity].color);
     UI.selected = it;
     UI.refreshInventory(); UI.refreshStats();
     saveGame();
@@ -225,7 +225,7 @@ const UI = {
   sell(it, price) {
     removeItem(it);
     G.player.credits += price;
-    log(`${it.name} 판매: +${fmt(price)}₵`, '#ffd76a');
+    log(`${itemName(it)} 판매: +${fmt(price)}₵`, '#ffd76a');
     UI.selected = null;
     UI.refreshInventory();
     saveGame();
@@ -248,7 +248,7 @@ const UI = {
       h += `<div class="stat-row" title="${tip}"><span>${n} <span class="tag">${role}</span></span><span><b>${st[k]}</b> <button data-stat="${k}" ${p.statPoints ? '' : 'disabled'}>+</button></span></div>
         <div class="stat-eff">${eff}${(() => { const sk = SKILLS.find(s => s.stat === k); return sk ? ` · <span class="sk-link">${sk.icon} ${sk.name} 강화</span>` : ''; })()}</div>`;
     }
-    const wline = sl => { const w = p.equip[sl]; return w ? `<div class="stat-row"><span>${sl === 'w1' ? '주무기' : '보조무기'} DPS <span class="muted">${w.name}</span></span><b>${Math.round(weaponDps(p, w))}</b></div>` : ''; };
+    const wline = sl => { const w = p.equip[sl]; return w ? `<div class="stat-row"><span>${sl === 'w1' ? '주무기' : '보조무기'} DPS <span class="muted">${itemName(w)}</span></span><b>${Math.round(weaponDps(p, w))}</b></div>` : ''; };
     h += '<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐)</div>';
     for (const s of SKILLS) {
       const locked = p.level < s.lvl;
@@ -317,6 +317,72 @@ const UI = {
         ['치료받기 (무료)', () => { p.hp = mh; log('의무병이 상처를 치료해 주었다.', '#6f6'); UI.close('dialog'); }],
         [`능력치 초기화 (${cost ? fmt(cost) + '₵' : '무료'})`, () => UI.respec()], bye]);
     } else if (npc.id === 'captain') UI.captainDialog(npc);
+    else if (npc.id === 'mechanic') {
+      UI.dialog(npc.name, '"총이든 조끼든 가져와. 손보면 훨씬 쓸만해지지. 다만 +7부터는 실패하면 한 단계 떨어질 수도 있어."', [
+        ['장비 강화', () => { UI.close('dialog'); UI.openEnhance(); }], bye]);
+    }
+  },
+
+  // ---------------- 강화 ----------------
+  enhSel: null,
+  openEnhance() {
+    const p = G.player;
+    if (!UI.enhSel || !UI.enhanceList().includes(UI.enhSel)) UI.enhSel = p.equip[p.active] || p.equip.w1;
+    UI.renderEnhance();
+    UI.open('enhance');
+  },
+  enhanceList() {
+    const p = G.player;
+    return [p.equip.w1, p.equip.w2, p.equip.armor, ...p.inventory.filter(i => i.kind !== 'cons')].filter(Boolean);
+  },
+  renderEnhance() {
+    const p = G.player, list = $('enh-list'), box = $('enh-detail');
+    list.innerHTML = '';
+    for (const it of UI.enhanceList()) {
+      const slot = Object.keys(p.equip).find(k => p.equip[k] === it);
+      const d = document.createElement('div');
+      d.className = 'shop-item' + (it === UI.enhSel ? ' sel' : '');
+      d.innerHTML = `<span>${it.icon} <span class="r${it.rarity}">${itemName(it)}</span>${slot ? ' <span class="tag">장착</span>' : ''}</span>`
+        + `<span class="plus">${it.plus >= ENHANCE.max ? 'MAX' : '+' + it.plus}</span>`;
+      d.onclick = () => { UI.enhSel = it; UI.renderEnhance(); };
+      list.appendChild(d);
+    }
+    const it = UI.enhSel;
+    if (!it) { box.innerHTML = '<span class="muted">강화할 장비를 선택하세요.</span>'; return; }
+    let h = `<b class="r${it.rarity}">${it.icon} ${itemName(it)}</b><br>`;
+    if (it.plus >= ENHANCE.max) { box.innerHTML = h + '<span class="plus">최대 강화 단계입니다.</span>'; return; }
+    const next = Object.assign({}, it, { plus: it.plus + 1 });
+    if (it.kind === 'weapon') {
+      h += `피해 ${Math.round(it.dmg * plusMul(it) * 10) / 10} → <b class="up">${Math.round(it.dmg * plusMul(next) * 10) / 10}</b>`;
+      h += `<br>DPS ${Math.round(weaponDps(p, it))} → <b class="up">${Math.round(weaponDps(p, next))}</b>`;
+    } else h += `방어력 ${armorDef(it)} → <b class="up">${armorDef(next)}</b>`;
+    const rate = enhanceRate(it), cost = enhanceCost(it);
+    h += `<br>성공 확률 <b style="color:${rate >= 0.7 ? '#6f6' : rate >= 0.4 ? '#fc6' : '#f66'}">${Math.round(rate * 100)}%</b>`;
+    if (it.fails) h += ` <span class="muted">(실패 보정 +${Math.round(it.fails * ENHANCE.failBonus * 100)}%)</span>`;
+    h += `<br><span class="muted">실패 시: ${it.plus >= ENHANCE.dropFrom ? '<span style="color:#f88">강화 단계 -1</span>' : '단계 유지'} · 장비는 파괴되지 않음</span>`;
+    box.innerHTML = h + `<div class="btns"><button id="btn-enhance" ${p.credits < cost ? 'disabled' : ''}>강화 (${fmt(cost)}₵)</button></div>`
+      + (p.credits < cost ? '<span style="color:#f88;font-size:12px">크레딧이 부족합니다.</span>' : '');
+    $('btn-enhance').onclick = () => UI.doEnhance(it);
+  },
+  doEnhance(it) {
+    const p = G.player, cost = enhanceCost(it);
+    if (p.credits < cost || it.plus >= ENHANCE.max) return;
+    p.credits -= cost;
+    if (Math.random() < enhanceRate(it)) {
+      it.plus++; it.fails = 0;
+      log(`강화 성공! ${itemName(it)}`, '#ffd76a');
+      floatText(p.x, p.y - 40, `+${it.plus} 강화 성공!`, '#ffd76a', 20);
+      G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.8, color: '#ffd76a', r: 70 + it.plus * 6 });
+    } else {
+      it.fails = (it.fails || 0) + 1;
+      const down = it.plus >= ENHANCE.dropFrom;
+      if (down) it.plus--;
+      log(`강화 실패... ${down ? `단계 하락 → ${itemName(it)}` : '단계 유지'} (다음 확률 +${Math.round(ENHANCE.failBonus * 100)}%)`, '#f88');
+      floatText(p.x, p.y - 40, down ? '실패! 단계 하락' : '실패', '#ff6060', 18);
+      G.shake = Math.max(G.shake, 5);
+    }
+    UI.renderEnhance(); UI.refreshInventory(); UI.refreshStats();
+    saveGame();
   },
 
   respec() {
@@ -360,7 +426,7 @@ const UI = {
     if (r.gear) {
       const it = randomGear(Math.max(p.level, q.minLevel), r.gear);
       if (!addItem(it)) G.drops.push({ x: p.x, y: p.y + 20, kind: 'item', item: it, t: 0 });
-      log(`보상 장비: ${it.name}`, RARITIES[it.rarity].color);
+      log(`보상 장비: ${itemName(it)}`, RARITIES[it.rarity].color);
     }
     p.quest.idx++; p.quest.active = false; p.quest.progress = 0;
     gainExp(r.exp);
@@ -400,7 +466,7 @@ const UI = {
     }
     for (const it of G.shopStock) {
       const req = itemReqLevel(it);
-      row(`${it.icon} <span class="r${it.rarity}">${it.name}</span>` + (req > p.level ? ` <span style="color:#f66">(Lv${req} 필요)</span>` : '') + `<br>${itemHtml(it)}`,
+      row(`${it.icon} <span class="r${it.rarity}">${itemName(it)}</span>` + (req > p.level ? ` <span style="color:#f66">(Lv${req} 필요)</span>` : '') + `<br>${itemHtml(it)}`,
         it.value, () => {
           // 진열품과 같은 옵션 그대로 구매
           const copy = JSON.parse(JSON.stringify(it));
@@ -413,10 +479,10 @@ const UI = {
   // 일반·고급 장비 일괄 판매 (파밍 중 인벤토리 정리)
   sellJunk() {
     const p = G.player;
-    const junk = p.inventory.filter(it => it.kind !== 'cons' && it.rarity <= 1 && !isUpgrade(p, it));
-    if (!junk.length) { log('판매할 일반·고급 장비가 없습니다. (▲ 표시 장비는 제외)', '#aaa'); return; }
+    const junk = p.inventory.filter(it => it.kind !== 'cons' && it.rarity <= 1 && !it.plus && !isUpgrade(p, it));
+    if (!junk.length) { log('판매할 일반·고급 장비가 없습니다. (▲ 표시·강화된 장비는 제외)', '#aaa'); return; }
     let total = 0;
-    for (const it of junk) { total += Math.max(1, Math.floor((it.value || 0) * 0.3)); removeItem(it); }
+    for (const it of junk) { total += itemSellPrice(it); removeItem(it); }
     p.credits += total;
     log(`장비 ${junk.length}개 일괄 판매: +${fmt(total)}₵`, '#ffd76a');
     UI.selected = null; UI.refreshInventory(); saveGame();
@@ -427,7 +493,7 @@ const UI = {
     if (p.credits < price) { log('크레딧이 부족합니다.', '#f88'); return; }
     if (!addItem(it)) { log('인벤토리가 가득 찼습니다.', '#f88'); return; }
     p.credits -= price;
-    log(`구매: ${it.name} (-${fmt(price)}₵)`, '#ffd76a');
+    log(`구매: ${itemName(it)} (-${fmt(price)}₵)`, '#ffd76a');
     saveGame();
   },
 };

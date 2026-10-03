@@ -176,3 +176,12 @@ button:disabled { opacity: .4; cursor: default; }
 .skill-row { font-size: 13px; margin: 4px 0; }
 .skill-row.locked { opacity: 0.45; }
 #stats-body { max-height: calc(100vh - 140px); overflow-y: auto; }
+
+/* v0.5 강화 */
+#panel-enhance { left: 50%; top: 80px; transform: translateX(-50%); width: 420px; }
+#enh-list { max-height: 36vh; overflow-y: auto; padding: 0 8px; }
+#enh-list .shop-item.sel { border-color: #e0b23a; }
+#enh-detail { padding: 10px 14px; border-top: 1px solid #333; font-size: 13px; line-height: 1.7; }
+#enh-detail .btns { margin-top: 6px; }
+.plus { color: #ffd76a; font-weight: bold; }
+b.up { color: #6f6; }

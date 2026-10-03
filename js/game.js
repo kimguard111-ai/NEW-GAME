@@ -77,6 +77,7 @@ function startGame(save, name) {
     { id: 'merchant', name: '암시장 상인 박씨', x: c.x - 120, y: c.y - 70, color: '#c9a227' },
     { id: 'captain', name: '생존자 대장 한씨', x: c.x + 120, y: c.y - 70, color: '#4f7fbf' },
     { id: 'medic', name: '의무병 이씨', x: c.x, y: c.y + 110, color: '#e8e8e8' },
+    { id: 'mechanic', name: '정비공 최씨', x: c.x - 140, y: c.y + 60, color: '#888' },
   ];
   if (save) {
     G.player = Object.assign(newPlayer(save.p.name), save.p);
@@ -113,7 +114,7 @@ function swapWeapon() {
   const p = G.player, other = p.active === 'w1' ? 'w2' : 'w1';
   if (!p.equip[other]) { log('교체할 무기가 없습니다.', '#aaa'); return; }
   p.active = other; p.reloadT = 0; p.atkT = Math.max(p.atkT, 0.2);
-  log(`무기 교체: ${p.equip[other].name}`, '#aaa');
+  log(`무기 교체: ${itemName(p.equip[other])}`, '#aaa');
   UI.refreshInventory();
 }
 
@@ -608,7 +609,7 @@ function updateDrops(dt) {
       else if (d.kind === 'item') {
         if (addItem(d.item)) {
           const r = d.item.rarity || 0, up = isUpgrade(p, d.item);
-          log(`획득: ${d.item.name}${d.item.count > 1 ? ' x' + d.item.count : ''}${up ? '  ▲ 장착 장비보다 좋음!' : ''}`, RARITIES[r].color);
+          log(`획득: ${itemName(d.item)}${d.item.count > 1 ? ' x' + d.item.count : ''}${up ? '  ▲ 장착 장비보다 좋음!' : ''}`, RARITIES[r].color);
           if (r >= 2) {
             floatText(p.x, p.y - 30, `${RARITIES[r].name} 장비!`, RARITIES[r].color, 16 + r * 2);
             G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.7, color: RARITIES[r].color, r: 60 + r * 15 });

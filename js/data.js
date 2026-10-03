@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.3';
+const GAME_VERSION = 'v0.5';
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -57,6 +57,13 @@ const LEGENDARY = {
   leech:   { name: '흡혈',      desc: '입힌 피해의 4%만큼 체력 회복' },
   execute: { name: '처형자',    desc: '체력 30% 이하의 적에게 피해 +60%' },
   thrift:  { name: '보급 장인', desc: '35% 확률로 탄약을 소모하지 않음', gun: true },
+};
+
+// 장비 강화 (v0.5). rates[현재 단계] = 성공 확률
+// 실패 시 dropFrom 단계 이상이면 -1, 실패할 때마다 해당 아이템 다음 확률 +failBonus. 파괴 없음
+const ENHANCE = {
+  max: 10, step: 0.08, dropFrom: 7, failBonus: 0.05,
+  rates: [1, 1, 1, 0.85, 0.75, 0.65, 0.55, 0.45, 0.35, 0.25],
 };
 
 // 등급별 추가 옵션 개수

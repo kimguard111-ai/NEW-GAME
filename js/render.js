@@ -324,6 +324,7 @@ function drawNpc(n) {
     merchant: { body: '#7a6420', helmet: '#3a2a10', legs: '#3a3020' },
     captain: { body: '#35507a', helmet: '#22324a', legs: '#262c36', gun: 18 },
     medic: { body: '#e8e8e8', helmet: '#c33', legs: '#555' },
+    mechanic: { body: '#5a5a62', helmet: '#c98a20', legs: '#33333a', blade: '#aaa' },
   }[n.id];
   drawHuman(sx, sy, { s: 1.05, skin: '#d9b48f', aim: angleTo(n, G.player), ...look });
   nameTag(sx, sy - 50, n.name, '#ffd76a', 'bold 12px sans-serif');
@@ -334,6 +335,7 @@ function drawNpc(n) {
     else if (q && !p.quest.active && p.level >= q.minLevel) mark = ['!', '#ffd700'];
   } else if (n.id === 'merchant') mark = ['₵', '#bbb'];
   else if (n.id === 'medic') mark = ['✚', '#f55'];
+  else if (n.id === 'mechanic') mark = ['⚙', '#ddd'];
   if (mark) {
     ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = mark[1];
     ctx.fillText(mark[0], sx, sy - 66 + Math.sin(G.time * 3) * 3);
@@ -492,7 +494,7 @@ function drawDrop(d) {
       ctx.fillRect(sx - 3 - r, gy - hgt, 6 + r * 2, hgt); ctx.globalAlpha = 1;
     }
     ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(d.item.icon, sx, sy - 2);
-    nameTag(sx, sy - 20, d.item.name, c);
+    nameTag(sx, sy - 20, itemName(d.item), c);
   }
 }
 
