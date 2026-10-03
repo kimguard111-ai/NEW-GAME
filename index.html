@@ -11,7 +11,7 @@
 </head>
 <body>
 <canvas id="game"></canvas>
-<div id="rotate">📱 화면을 가로로 돌려 주세요</div>
+<div id="rotate"><span data-ico="phone"></span> 화면을 가로로 돌려 주세요</div>
 
 <!-- 타이틀 화면 (v1.1: 코드로 그린 서울 야경 · ART.title 키아트가 있으면 그 그림) -->
 <div id="title-screen" class="overlay">
@@ -25,11 +25,11 @@
       <button id="btn-new">새 게임</button>
       <button id="btn-continue">이어하기</button>
     </div>
-    <div class="title-tags"><span>🛡 생존</span><span>🧭 탐험</span><span>⚔ 전투</span><span>📈 성장</span></div>
+    <div class="title-tags"><span><span data-ico="shield"></span> 생존</span><span><span data-ico="compass"></span> 탐험</span><span><span data-ico="swords"></span> 전투</span><span><span data-ico="growth"></span> 성장</span></div>
     <div class="controls">
       <span class="desk">WASD 이동 · 마우스 조준·사격 · <b>Space 구르기</b> · R 재장전 · Q 무기 교체 · 1~4 스킬 · E 상호작용<br>
       I 가방 · C 능력치 · J 미션 · O 설정 · ESC 일시정지 · 휠 확대</span>
-      <span class="mobile">왼쪽을 끌어 이동 · 오른쪽을 끌어 조준·사격 · 💨 구르기 · E 상호작용 · 아래 칸 스킬</span>
+      <span class="mobile">왼쪽을 끌어 이동 · 오른쪽을 끌어 조준·사격 · <span data-ico="roll"></span> 구르기 · E 상호작용 · 아래 칸 스킬</span>
     </div>
   </div>
   <div class="title-quote">다시, 서울을 걷다.<br><small>그리고… 살아남다.</small></div>
@@ -114,10 +114,10 @@
   <div id="toast" class="hidden"><div id="toast-title"></div><div id="toast-sub"></div></div>
   <div id="combo" class="hidden"><span id="combo-n"></span><small>연속 처치</small><div id="combo-bar"></div></div>
   <div id="menu-buttons">
-    <button data-panel="inventory"><span class="ic">🎒</span>가방<i>I</i></button>
-    <button data-panel="quest"><span class="ic">📜</span>미션<i>J</i></button>
-    <button data-panel="stats"><span class="ic">📊</span>능력치<i>C</i></button>
-    <button data-panel="settings"><span class="ic">⚙️</span>설정<i>O</i></button>
+    <button data-panel="inventory"><span class="ic" data-ico="bag"></span>가방<i>I</i></button>
+    <button data-panel="quest"><span class="ic" data-ico="quest"></span>미션<i>J</i></button>
+    <button data-panel="stats"><span class="ic" data-ico="stats"></span>능력치<i>C</i></button>
+    <button data-panel="settings"><span class="ic" data-ico="settings"></span>설정<i>O</i></button>
     <button id="btn-pause"><span class="ic">⏸</span>정지<i>ESC</i></button>
   </div>
 </div>
@@ -188,6 +188,7 @@
 </div>
 
 <script src="js/util.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/sfx.js"></script>
 <script src="js/data.js"></script>

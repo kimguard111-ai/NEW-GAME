@@ -41,7 +41,7 @@ const Bosses = {
       const dirs = ['동', '남동', '남', '남서', '서', '북서', '북', '북동'];
       const sa = Math.atan2((x + y) - (p.x + p.y), (x - y) - (p.x - p.y)); // 화면 기준 방향
       const dir = dirs[Math.round(((sa % TAU) + TAU) % TAU / (TAU / 8)) % 8];
-      log(`⚠ 필드 보스 ${def.name} 출현! (${dir}쪽 약 ${Math.round(r / TILE * 2)}m · 미니맵 붉은 표시)`, '#ff7a5a');
+      log(`${ICON('warn')} 필드 보스 ${def.name} 출현! (${dir}쪽 약 ${Math.round(r / TILE * 2)}m · 미니맵 붉은 표시)`, '#ff7a5a');
       UI.toast('필드 보스 출현', `${def.name} — ${ZONES[z].name}`);
       return;
     }
@@ -54,7 +54,7 @@ const Bosses = {
     UI.toast('필드 보스 처치', e.bossName);
     dropAt('credits', { amount: e.level * 60 });
     dropAt('item', { item: randomGear(e.level + 1, 1.5, Math.random() < 0.3 ? 3 : 2, ZONES[e.fieldBoss].gear) });
-    if (Math.random() < 0.5) dropAt('item', { item: randomGear(e.level + 1, 1, 1, ZONES[e.fieldBoss].gear) });
+    if (Math.random() < 0.25) dropAt('item', { item: randomGear(e.level + 1, 1, 1, ZONES[e.fieldBoss].gear) });
     dropAt('item', { item: makeConsumable('medkit', 2) });
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0; // 부하 정리
     p.fieldBossKills = (p.fieldBossKills || 0) + 1;
@@ -79,7 +79,7 @@ const Bosses = {
       G.enemies.push(b); G.labBoss = b;
       G.shake = 14; SFX.play('roar', 1);
       UI.toast('격리실 봉인 해제', `${LAB_BOSS.name} — 산성 장판 · 돌진 · 실험체 호출 · 내려찍기`);
-      log(`⚠ 격리 탱크가 깨졌다! ${LAB_BOSS.name}이(가) 깨어났다!`, '#ff5050');
+      log(`${ICON('warn')} 격리 탱크가 깨졌다! ${LAB_BOSS.name}이(가) 깨어났다!`, '#ff5050');
       return;
     }
     if (e.hp <= 0) { G.labBoss = null; return; }

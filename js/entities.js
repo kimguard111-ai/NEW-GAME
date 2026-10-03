@@ -38,7 +38,7 @@ function makeWeapon(key, ilvl, rarity) {
   const scale = r.mul * (1 + (ilvl - 1) * 0.07);
   const it = {
     id: nextItemId++, kind: 'weapon', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
-    name: (rarity > 0 ? r.name + ' ' : '') + b.name, icon: b.icon,
+    name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     dmg: Math.round(b.dmg * scale * 10) / 10,
     affixes: rollAffixes('weapon', key, rarity, ilvl), isNew: true,
   };
@@ -56,7 +56,7 @@ function makeArmor(key, ilvl, rarity) {
   const affixes = rollAffixes('armor', key, rarity, ilvl);
   return {
     id: nextItemId++, kind: 'armor', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
-    name: (rarity > 0 ? r.name + ' ' : '') + b.name, icon: b.icon,
+    name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     def: Math.round(b.def * r.mul * (1 + (ilvl - 1) * 0.06)),
     affixes, isNew: true,
     value: Math.round(b.price * r.mul * (1 + ilvl * 0.15) * (1 + affixes.length * 0.15)),
@@ -68,7 +68,7 @@ function makeHelmet(key, ilvl, rarity) {
   const affixes = rollAffixes('helmet', key, rarity, ilvl);
   return {
     id: nextItemId++, kind: 'helmet', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
-    name: (rarity > 0 ? r.name + ' ' : '') + b.name, icon: b.icon,
+    name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     def: Math.round(b.def * r.mul * (1 + (ilvl - 1) * 0.06)),
     affixes, isNew: true,
     value: Math.round(b.price * r.mul * (1 + ilvl * 0.15) * (1 + affixes.length * 0.15)),
@@ -87,7 +87,7 @@ function normalizeItem(it) {
 
 function makeConsumable(key, count = 1) {
   const b = CONSUMABLES[key];
-  return { id: nextItemId++, kind: 'cons', key, name: b.name, icon: b.icon, count, value: b.price };
+  return { id: nextItemId++, kind: 'cons', key, name: b.name, count, value: b.price };
 }
 
 // 레벨에 맞는 랜덤 장비

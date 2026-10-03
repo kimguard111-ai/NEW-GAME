@@ -2,8 +2,8 @@
 // 재료 2종: 고철(모든 장비) · 전자 부품(희귀 이상 장비, 필드 보스·어설트 보상)
 
 const MATS = {
-  scrap: { name: '고철', icon: '🔩' },
-  chip:  { name: '전자 부품', icon: '💾' },
+  scrap: { name: '고철', icon: 'scrap' },
+  chip:  { name: '전자 부품', icon: 'chip' },
 };
 // 등급별 분해 결과 (일반 · 고급 · 희귀 · 영웅 · 전설)
 const SALVAGE = { scrap: [2, 4, 7, 12, 20], chip: [0, 0, 1, 3, 6] };
@@ -30,15 +30,15 @@ const Workshop = {
   pay(c) { const p = G.player; p.mats.scrap -= c.scrap || 0; p.mats.chip -= c.chip || 0; p.credits -= c.credits || 0; },
   costText(c) {
     const p = G.player, part = (have, need, txt) => need ? `<span style="color:${have >= need ? '#ddd' : '#f66'}">${txt}</span>` : '';
-    return [part(p.mats.scrap, c.scrap, `${MATS.scrap.icon}${c.scrap}`), part(p.mats.chip, c.chip, `${MATS.chip.icon}${c.chip}`),
+    return [part(p.mats.scrap, c.scrap, `${ICON('scrap')}${c.scrap}`), part(p.mats.chip, c.chip, `${ICON('chip')}${c.chip}`),
       part(p.credits, c.credits, `${fmt(c.credits || 0)}₵`)].filter(Boolean).join(' ');
   },
   gain(scrap, chip, why) {
     const p = G.player;
     p.mats.scrap += scrap; p.mats.chip += chip;
-    if (why) log(`${why}: ${MATS.scrap.icon} 고철 +${scrap}${chip ? `, ${MATS.chip.icon} 전자 부품 +${chip}` : ''}`, '#9fd');
+    if (why) log(`${why}: ${ICON('scrap')} 고철 +${scrap}${chip ? `, ${ICON('chip')} 전자 부품 +${chip}` : ''}`, '#9fd');
   },
-  matsText() { const m = G.player.mats; return `${MATS.scrap.icon} 고철 ${m.scrap} · ${MATS.chip.icon} 전자 부품 ${m.chip}`; },
+  matsText() { const m = G.player.mats; return `${ICON('scrap')} 고철 ${m.scrap} · ${ICON('chip')} 전자 부품 ${m.chip}`; },
 
   // ---------------- 화면 ----------------
   open(mode) {
@@ -68,8 +68,8 @@ const Workshop = {
       const slot = Object.keys(p.equip).find(k => p.equip[k] === it), y = this.salvageYield(it);
       const d = document.createElement('div');
       d.className = 'shop-item' + (it === this.sel ? ' sel' : '');
-      d.innerHTML = `<span>${it.icon} <span class="r${it.rarity}">${itemName(it)}</span>${slot ? ' <span class="tag">장착</span>' : ''}${isUpgrade(p, it) ? ' <span class="mark up">▲</span>' : ''}</span>`
-        + (this.mode === 'salvage' ? `<span class="muted">${MATS.scrap.icon}${y.scrap}${y.chip ? ' ' + MATS.chip.icon + y.chip : ''}</span>` : `<span class="muted">옵션 ${it.affixes.length}</span>`);
+      d.innerHTML = `<span>${itemIcon(it)} <span class="r${it.rarity}">${itemName(it)}</span>${slot ? ' <span class="tag">장착</span>' : ''}${isUpgrade(p, it) ? ' <span class="mark up">▲</span>' : ''}</span>`
+        + (this.mode === 'salvage' ? `<span class="muted">${ICON('scrap')}${y.scrap}${y.chip ? ' ' + ICON('chip') + y.chip : ''}</span>` : `<span class="muted">옵션 ${it.affixes.length}</span>`);
       d.onclick = () => { this.sel = it; this.render(); };
       list.appendChild(d);
     }
@@ -81,11 +81,11 @@ const Workshop = {
     let h = '';
     if (it) {
       const y = this.salvageYield(it);
-      h += `<b class="r${it.rarity}">${it.icon} ${itemName(it)}</b><br>${itemHtml(it)}<br>분해 시 ${MATS.scrap.icon} 고철 ${y.scrap}${y.chip ? `, ${MATS.chip.icon} 전자 부품 ${y.chip}` : ''}`
+      h += `<b class="r${it.rarity}">${itemIcon(it)} ${itemName(it)}</b><br>${itemHtml(it)}<br>분해 시 ${ICON('scrap')} 고철 ${y.scrap}${y.chip ? `, ${ICON('chip')} 전자 부품 ${y.chip}` : ''}`
         + `<div class="btns"><button id="ws-salvage">분해</button></div>`;
     } else h += '<span class="muted">분해할 장비가 없습니다.</span>';
     h += `<div class="btns"><button id="ws-bulk">일반·고급 일괄 분해</button></div><hr style="border-color:#333">소모품 제작`;
-    for (const k of Object.keys(CRAFTS)) h += `<div class="btns"><button data-craft="${k}" ${this.canPay(CRAFTS[k]) ? '' : 'disabled'}>${CONSUMABLES[k].icon} ${CONSUMABLES[k].name} 제작 (${this.costText(CRAFTS[k])})</button></div>`;
+    for (const k of Object.keys(CRAFTS)) h += `<div class="btns"><button data-craft="${k}" ${this.canPay(CRAFTS[k]) ? '' : 'disabled'}>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} 제작 (${this.costText(CRAFTS[k])})</button></div>`;
     box.innerHTML = h;
     if (it) $('ws-salvage').onclick = () => this.salvage(it);
     $('ws-bulk').onclick = () => this.bulkSalvage();
@@ -120,7 +120,7 @@ const Workshop = {
     const it = this.sel;
     if (!it) { box.innerHTML = '<span class="muted">추가 옵션이 있는 장비(고급 이상)가 없습니다.</span>'; return; }
     const full = this.rerollCost(it, true), val = this.rerollCost(it, false);
-    let h = `<b class="r${it.rarity}">${it.icon} ${itemName(it)}</b><br><span class="muted">${itemDesc(it)}</span>`;
+    let h = `<b class="r${it.rarity}">${itemIcon(it)} ${itemName(it)}</b><br><span class="muted">${itemDesc(it)}</span>`;
     it.affixes.forEach((a, i) => {
       const d = AFFIXES[a.k], lo = rollAffixRange(a.k, it, 0), hi = rollAffixRange(a.k, it, 1);
       h += `<div class="ws-affix"><span class="affix">◆ ${affixText(a)}</span> <span class="muted">(범위 ${fmtAffix(d, lo)} ~ ${fmtAffix(d, hi)})</span><br>`

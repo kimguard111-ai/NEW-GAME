@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.5';
+const GAME_VERSION = 'v1.5.1';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -12,29 +12,29 @@ const RARITIES = [
   { name: '전설', mul: 2.0, color: '#ffa53a', weight: 1.0 },
 ];
 // 천장: 몬스터 장비 드랍이 이 횟수만큼 영웅 미만이면 다음 드랍은 영웅 이상 확정
-const PITY_DROPS = 35; // v0.10 드랍률 하향에 맞춰 50 → 35
+const PITY_DROPS = 25; // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 → 25
 
 // 무기 기본 정보
 // range: 사거리(px) · knock: 넉백 · stagger: 경직(초) · move: 장착 시 이동속도 배율
 // role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
-  pipe:    { name: '쇠파이프',      icon: '🔧', melee: true, dmg: 18, rate: 0.40, range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
+  pipe:    { name: '쇠파이프',      icon: 'pipe', melee: true, dmg: 18, rate: 0.40, range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
              role: '빠른 연타 · 탄약 불필요' },
-  pistol:  { name: 'M1911 권총',    icon: '🔫', dmg: 14, rate: 0.26, mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
+  pistol:  { name: 'M1911 권총',    icon: 'pistol', dmg: 14, rate: 0.26, mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
              infinite: true, lvl: 1, price: 80, role: '탄약 무한 · 언제나 믿을 수 있는 보조무기' },
-  axe:     { name: '소방 도끼',     icon: '🪓', melee: true, dmg: 44, rate: 0.8, range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
+  axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 44, rate: 0.8, range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
              role: '느리지만 넓은 일격 · 여러 적을 밀치고 경직' },
-  smg:     { name: 'MP5 기관단총',  icon: '🔫', dmg: 9, rate: 0.075, mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
+  smg:     { name: 'MP5 기관단총',  icon: 'smg', dmg: 9, rate: 0.075, mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
-  shotgun: { name: 'M870 산탄총',   icon: '🔫', dmg: 10, pellets: 7, rate: 0.8, mag: 6, reload: 2.2, spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
+  shotgun: { name: 'M870 산탄총',   icon: 'shotgun', dmg: 10, pellets: 7, rate: 0.8, mag: 6, reload: 2.2, spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
              lvl: 5, price: 380, role: '근거리 폭발력 · 맞은 적을 크게 밀쳐냄' },
-  rifle:   { name: 'K2 돌격소총',   icon: '🔫', dmg: 17, rate: 0.11, mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
+  rifle:   { name: 'K2 돌격소총',   icon: 'rifle', dmg: 17, rate: 0.11, mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
              lvl: 8, price: 620, role: '안정적인 중거리 지속 화력' },
-  katana:  { name: '고주파 블레이드', icon: '🗡️', melee: true, dmg: 60, rate: 0.38, range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
+  katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 60, rate: 0.38, range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
              role: '빠르고 긴 칼날 · 가장 빠른 이동' },
-  sniper:  { name: 'K14 저격소총',  icon: '🎯', dmg: 120, rate: 1.2, mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
+  sniper:  { name: 'K14 저격소총',  icon: 'sniper', dmg: 120, rate: 1.2, mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
              lvl: 12, price: 1100, role: '장거리 일격 · 관통 · 치명타 x2.6' },
-  lmg:     { name: 'K3 기관총',     icon: '🔫', dmg: 15, rate: 0.07, mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
+  lmg:     { name: 'K3 기관총',     icon: 'lmg', dmg: 15, rate: 0.07, mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
              lvl: 16, price: 1800, role: '압도적 지속 화력 · 무겁고 탄약 소모 큼' },
 };
 
@@ -78,23 +78,23 @@ const ENHANCE = {
 const AFFIX_COUNT = { weapon: [0, 1, 2, 3, 3], armor: [0, 1, 2, 3, 4], helmet: [0, 1, 2, 3, 4] };
 
 const ARMORS = {
-  vest:     { name: '방탄 조끼',     icon: '🦺', def: 8, lvl: 1, price: 120 },
-  tactical: { name: '전술 조끼',     icon: '🦺', def: 16, lvl: 5, price: 420 },
-  military: { name: '군용 강화복',   icon: '🛡️', def: 28, lvl: 10, price: 950 },
-  exo:      { name: '외골격 슈트',   icon: '🤖', def: 45, lvl: 16, price: 2000 },
+  vest:     { name: '방탄 조끼',     icon: 'vest', def: 8, lvl: 1, price: 120 },
+  tactical: { name: '전술 조끼',     icon: 'tactical', def: 16, lvl: 5, price: 420 },
+  military: { name: '군용 강화복',   icon: 'military', def: 28, lvl: 10, price: 950 },
+  exo:      { name: '외골격 슈트',   icon: 'exo', def: 45, lvl: 16, price: 2000 },
 };
 
 // 헬멧 (v0.6.2). radRes: 방사능 피해 감소율
 const HELMETS = {
-  cap:       { name: '방탄모',       icon: '⛑️', def: 4,  lvl: 1,  price: 80 },
-  tacHelmet: { name: '전술 헬멧',    icon: '⛑️', def: 9,  lvl: 6,  price: 320 },
-  gasmask:   { name: '방독면 헬멧',  icon: '😷', def: 12, lvl: 12, price: 800, radRes: 0.7 },
-  exoHelm:   { name: '외골격 헬멧',  icon: '🪖', def: 20, lvl: 16, price: 1600 },
+  cap:       { name: '방탄모',       icon: 'cap', def: 4,  lvl: 1,  price: 80 },
+  tacHelmet: { name: '전술 헬멧',    icon: 'tacHelmet', def: 9,  lvl: 6,  price: 320 },
+  gasmask:   { name: '방독면 헬멧',  icon: 'gasmask', def: 12, lvl: 12, price: 800, radRes: 0.7 },
+  exoHelm:   { name: '외골격 헬멧',  icon: 'exoHelm', def: 20, lvl: 16, price: 1600 },
 };
 
 const CONSUMABLES = {
-  medkit: { name: '구급상자', icon: '💊', desc: '최대 체력의 40% 회복', price: 40, stack: 20 },
-  ammo:   { name: '탄약 상자', icon: '📦', desc: '예비 탄약 +120', price: 45, stack: 20 },
+  medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복', price: 40, stack: 20 },
+  ammo:   { name: '탄약 상자', icon: 'ammo', desc: '예비 탄약 +120', price: 45, stack: 20 },
 };
 
 // 적 정의
@@ -164,10 +164,10 @@ const LANDMARKS = [
 
 const SKILLS = [
 // stat: 스킬을 강화하는 능력치 (v0.3)
-  { id: 'rapid',   name: '집중 사격', icon: '⚡', lvl: 1,  cd: 14, stat: 'agi' },
-  { id: 'grenade', name: '수류탄',   icon: '💣', lvl: 3,  cd: 8,  stat: 'dex' },
-  { id: 'heal',    name: '응급 처치', icon: '✚',  lvl: 6,  cd: 22, stat: 'vit' },
-  { id: 'adren',   name: '아드레날린', icon: '🔥', lvl: 10, cd: 40, stat: 'str' },
+  { id: 'rapid',   name: '집중 사격', icon: 'rapid', lvl: 1,  cd: 14, stat: 'agi' },
+  { id: 'grenade', name: '수류탄',   icon: 'grenade', lvl: 3,  cd: 8,  stat: 'dex' },
+  { id: 'heal',    name: '응급 처치', icon: 'heal',  lvl: 6,  cd: 22, stat: 'vit' },
+  { id: 'adren',   name: '아드레날린', icon: 'adren', lvl: 10, cd: 40, stat: 'str' },
 ];
 
 // 임무는 js/quests.js (v0.7 챕터 구조)

@@ -519,13 +519,13 @@ function killEnemy(e) {
   if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
     Monsters.onDeath(e);
     dropAt('credits', { amount: e.level * 12 });
-    if (Math.random() < 0.35) dropAt('item', { item: randomGear(e.level, 0.8, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
+    if (Math.random() < 0.2) dropAt('item', { item: randomGear(e.level, 0.8, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
   }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
-  const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.11 : 0.05; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체)
+  const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.07 : 0.03; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 한 번 더 하향 (0.05/0.11 → 0.03/0.07)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
   if (Math.random() < gearChance) {
     const it = randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
@@ -600,7 +600,7 @@ function updateEnemies(dt) {
     if (e.assault && !p.dead) e.state = 'chase'; // 어설트 적은 항상 추격
     if (e.def.boss) updateBoss(e, dt, d);
     if ((e.elite || e.patterns) && e.state === 'chase') Monsters.updateNamed(e, dt);
-    if (e.affix && e.state === 'chase' && !e.announced) { e.announced = true; log(`⚠ 엘리트: ${ELITE_AFFIXES[e.affix].name} ${e.def.name} (${ELITE_AFFIXES[e.affix].desc})`, ELITE_AFFIXES[e.affix].color); }
+    if (e.affix && e.state === 'chase' && !e.announced) { e.announced = true; log(`${ICON('warn')} 엘리트: ${ELITE_AFFIXES[e.affix].name} ${e.def.name} (${ELITE_AFFIXES[e.affix].desc})`, ELITE_AFFIXES[e.affix].color); }
 
     if (e.charge > 0) {
       // 보스 돌진 (0.5초 예고 후 질주)
@@ -727,7 +727,7 @@ function updateRadiation(dt) {
   const hel = p.equip.helmet, res = hel ? HELMETS[hel.key].radRes || 0 : 0; // 방독면
   const d = Math.max(1, Math.round(PlayerStats.maxHp(p) * 0.015 * (1 - res)));
   p.hp -= d;
-  floatText(p.x, p.y - 20, `☢ -${d}`, '#7fff6a', 13);
+  floatText(p.x, p.y - 20, `방사능 -${d}`, '#7fff6a', 13);
   if (p.hp <= 0) playerDie();
 }
 

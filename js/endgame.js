@@ -26,7 +26,7 @@ const Bounty = {
       list.push({ k, need: randInt(b.n[0], b.n[1]), have: 0, done: false });
     }
     p.bounty = { day, list, bonus: false };
-    if (G.running) log('📋 오늘의 의뢰가 갱신되었습니다. (임무 창 J)', '#8cf');
+    if (G.running) log(`${ICON('bounty')} 오늘의 의뢰가 갱신되었습니다. (임무 창 J)`, '#8cf');
   },
 
   on(kind, v = 1) {
@@ -57,13 +57,13 @@ const Bounty = {
     const it = randomGear(lv, 1.2, hard ? 3 : 2);
     if (!addItem(it)) G.drops.push({ x: p.x, y: p.y, kind: 'item', t: 0, item: it });
     UI.toast('의뢰 완료', `${BOUNTIES[b.k].text(b.need)} · +${fmt(lv * 100)}₵ · ${itemName(it)}`);
-    log(`📋 의뢰 완료: ${BOUNTIES[b.k].text(b.need)} → ${itemName(it)}`, '#8cf');
+    log(`${ICON('bounty')} 의뢰 완료: ${BOUNTIES[b.k].text(b.need)} → ${itemName(it)}`, '#8cf');
     if (!p.bounty.bonus && p.bounty.list.every(x => x.done)) { // 3개 모두: 영웅 이상 + 전자 부품
       p.bounty.bonus = true;
       const big = randomGear(lv, 2, 3);
       if (!addItem(big)) G.drops.push({ x: p.x, y: p.y, kind: 'item', t: 0, item: big });
       Workshop.gain(10, 5);
-      log(`📋 오늘의 의뢰 모두 완료! 보너스: ${itemName(big)}`, '#ffd76a');
+      log(`${ICON('bounty')} 오늘의 의뢰 모두 완료! 보너스: ${itemName(big)}`, '#ffd76a');
     }
     saveGame();
   },
@@ -73,7 +73,7 @@ const Bounty = {
     if (!bt) return '';
     const n = bt.list.filter(b => b.done).length;
     const cur = bt.list.find(b => !b.done);
-    return `<br><span class="muted">📋 의뢰 ${n}/${bt.list.length}${cur ? ` · ${BOUNTIES[cur.k].text(cur.need)} ${cur.have}/${cur.need}` : ' · 완료'}</span>`;
+    return `<br><span class="muted">${ICON('bounty')} 의뢰 ${n}/${bt.list.length}${cur ? ` · ${BOUNTIES[cur.k].text(cur.need)} ${cur.have}/${cur.need}` : ' · 완료'}</span>`;
   },
   panelHtml() {
     const bt = G.player.bounty;

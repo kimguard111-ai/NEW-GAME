@@ -60,7 +60,7 @@ const CHAPTERS = [
     ] },
 ];
 
-function radio(msg) { log(`📻 한씨: "${msg}"`, '#8cf'); }
+function radio(msg) { log(`${ICON('radio')} 한씨: "${msg}"`, '#8cf'); }
 
 const Story = {
   chapter(p) { return CHAPTERS[p.quest.ch]; },
@@ -142,7 +142,7 @@ const Story = {
       e.r = Math.round(e.r * def.scale); e.speed *= def.speedMul || 1; e.fireMul = def.fireMul || 1;
       e.weight = e.def.weight * 4; // 잘 밀리지 않음
       G.enemies.push(e); G.elite = e;
-      log(`⚠ ${def.name} 출현!`, '#ffa53a');
+      log(`${ICON('warn')} ${def.name} 출현!`, '#ffa53a');
       return;
     }
   },

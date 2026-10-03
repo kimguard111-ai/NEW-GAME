@@ -15,13 +15,13 @@ const Raid = {
   openMap() {
     const p = G.player, btns = [], med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
     let h = '"어디로 나갈 건가? 탈출 지점까지 살아서 돌아와야 주운 걸 챙길 수 있어."<br>'
-      + `<div class="prep">출격 준비: 💊 구급상자 <b>${med}</b> · 예비 탄약 <b>${fmt(p.reserve)}</b> · 가방 <b>${p.inventory.length}/24</b> · ₵${fmt(p.credits)}</div>`;
-    btns.push(['💊 +3 (120₵)', () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
-    btns.push(['탄약 +120 (45₵)', () => { if (p.credits < 45) return log('크레딧이 부족합니다.', '#f88'); p.reserve += 120; p.credits -= 45; SFX.play('ammo'); this.openMap(); }]);
+      + `<div class="prep">출격 준비: ${ICON('medkit')} 구급상자 <b>${med}</b> · 예비 탄약 <b>${fmt(p.reserve)}</b> · 가방 <b>${p.inventory.length}/24</b> · ₵${fmt(p.credits)}</div>`;
+    btns.push([`${ICON('medkit')} +3 (120₵)`, () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
+    btns.push([`${ICON('ammo')} 탄약 +120 (45₵)`, () => { if (p.credits < 45) return log('크레딧이 부족합니다.', '#f88'); p.reserve += 120; p.credits -= 45; SFX.play('ammo'); this.openMap(); }]);
     for (const id of MAP_ORDER) {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id);
       const gr = p.graves[id];
-      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? '🗺' : '🔒'} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">💀 시체 가방 (장비 ${gr.items.length})</span>` : ''}</div>`;
+      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}</div>`;
       if (ok) btns.push([`${d.name} 출격`, () => { UI.close('dialog'); this.deploy(id); }]);
     }
     btns.push(['닫기', () => UI.close('dialog')]);
@@ -49,7 +49,7 @@ const Raid = {
       }
       if (best) [G.grave.x, G.grave.y] = best;
     }
-    if (G.grave) log(`💀 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
+    if (G.grave) log(`${ICON('skull')} 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
     UI.toast(`출격 — ${MAPS[id].name}`, `탈출 지점 ${G.exits.length}곳 (미니맵 초록 ◎) · 주운 것은 탈출해야 확정`);
     log(`${MAPS[id].name}에 진입했다. 탈출 지점: ${G.exits.map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(' · ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}`, '#8cf');
     if (World.def.lab) log('비상 전원만 남은 연구소다. 붉은 비상등 아래가 그나마 밝다. 격리실(미니맵 붉은 방)에 무언가 있다.', '#ff8a8a');
@@ -122,7 +122,7 @@ const Raid = {
 
   // 출격 결과 (탈출 성공 / 사망)
   summary(ok, r, items) {
-    const li = items.length ? items.map(it => `<span class="r${it.rarity || 0}">${it.icon} ${itemName(it)}</span>`).join('<br>') : '<span class="muted">없음</span>';
+    const li = items.length ? items.map(it => `<span class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</span>`).join('<br>') : '<span class="muted">없음</span>';
     $('summary-title').textContent = ok ? '탈출 성공' : '사망';
     $('summary-title').className = ok ? 'ok' : 'bad';
     $('summary-body').innerHTML = `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}</b></div>`
@@ -140,7 +140,7 @@ const Raid = {
     const p = G.player;
     if (!p.raid) return '';
     const n = this.allItems().filter(it => it.raid).length, ex = G.extractT > 0 ? ` · <b style="color:#7fe08a">탈출 ${Math.ceil(EXTRACT_TIME - G.extractT)}초</b>` : '';
-    return `<br><span class="muted">📦 미확정 장비 ${n} · ₵${fmt(p.raid.credits)} — 탈출 지점 ◎${ex}</span>`;
+    return `<br><span class="muted">${ICON('box')} 미확정 장비 ${n} · ₵${fmt(p.raid.credits)} — 탈출 지점 ◎${ex}</span>`;
   },
 };
 

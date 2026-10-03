@@ -22,7 +22,7 @@ const Touch = {
     const bar = document.createElement('div');
     bar.id = 'touch-buttons';
     const btn = (label, fn, cls = '') => {
-      const b = document.createElement('button'); b.textContent = label; b.className = cls;
+      const b = document.createElement('button'); b.innerHTML = label; b.className = cls;
       b.addEventListener('touchstart', e => { e.preventDefault(); this.tapT = performance.now(); if (G.running && !G.player.dead) fn(); }, opts);
       b.addEventListener('click', () => { if (performance.now() - (this.tapT || 0) > 600 && G.running && !G.player.dead) fn(); }); // 스타일러스·마우스 (터치 직후 합성 클릭은 무시)
       bar.appendChild(b);
@@ -32,7 +32,7 @@ const Touch = {
     btn('Q', () => swapWeapon());
     btn('R', () => startReload());
     btn('E', () => interact(), 'big');
-    btn('💨', () => dodge(), 'big roll'); // v0.16 구르기
+    btn(ICON('roll'), () => dodge(), 'big roll'); // v0.16 구르기
     document.getElementById('hud').appendChild(bar);
     // 스킬 칸 터치
     document.getElementById('hotbar').addEventListener('touchstart', e => {

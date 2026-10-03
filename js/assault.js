@@ -141,7 +141,7 @@ const Assault = {
     e.r = Math.round(e.r * b.scale); e.fireMul = b.fireMul || 1; e.weight = e.def.weight * 5;
     if (b.affix) { e.affix = b.affix; e.announced = true; }
     this.add(e); G.assault.boss = e;
-    log(`⚠ 거점 보스 ${b.name} 출현!`, '#ffa53a');
+    log(`${ICON('warn')} 거점 보스 ${b.name} 출현!`, '#ffa53a');
     UI.toast('거점 보스', b.name);
     G.shake = Math.max(G.shake, 10);
   },
@@ -188,7 +188,7 @@ const Assault = {
     const s = G.assault, a = ASSAULTS[s.id];
     const left = G.enemies.filter(e => e.assault && e.hp > 0).length, rem = Math.max(0, Math.ceil(a.limit - s.t));
     const stage = s.wave >= a.waves.length ? '거점 보스' : s.wave < 0 ? '준비' : `웨이브 ${s.wave + 1} / ${a.waves.length}`;
-    return `<b style="color:#ff9a5a">⚔ ${a.name}${s.tier > 1 ? ` · 위협 ${s.tier}` : ''}</b><br>${stage}${s.phase === 'fight' ? ` · 남은 적 <b>${left}</b>` : ''}`
+    return `<b style="color:#ff9a5a">${ICON('swords')} ${a.name}${s.tier > 1 ? ` · 위협 ${s.tier}` : ''}</b><br>${stage}${s.phase === 'fight' ? ` · 남은 적 <b>${left}</b>` : ''}`
       + `<br><span class="muted">${Math.floor(s.t)}초 · 예상 등급 ${this.rank(s.t, a, s.tier)} · 남은 시간 ${rem}초</span>`;
   },
 
@@ -197,7 +197,7 @@ const Assault = {
     for (const l of World.landmarks) {
       const a = ASSAULTS[l.id], rec = p.assaults[l.id];
       if (!a) continue;
-      const state = !p.found.includes(l.id) ? `🔒 ${l.name} 발견 필요` : rec ? `<b style="color:${RANKS[rec.best].color}">${rec.best}</b> 최고 ${rec.time}초 · ${rec.clears}회 · 위협 ${rec.tier || 1}/${TIER_MAX}` : '미도전 · 첫 클리어 시 영웅 장비';
+      const state = !p.found.includes(l.id) ? `${ICON('lock')} ${l.name} 발견 필요` : rec ? `<b style="color:${RANKS[rec.best].color}">${rec.best}</b> 최고 ${rec.time}초 · ${rec.clears}회 · 위협 ${rec.tier || 1}/${TIER_MAX}` : '미도전 · 첫 클리어 시 영웅 장비';
       h += `<div class="step-row">${a.name} <span class="muted">Lv${a.minLevel}+</span> — ${state}</div>`;
     }
     return h;

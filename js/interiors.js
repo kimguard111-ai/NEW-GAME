@@ -30,7 +30,7 @@ const Interiors = {
         G.enemies.push(e); i++;
       }
     }
-    log(`🚪 ${b.name} 안으로 들어왔다.${ready ? ` 보급 상자 ${ready}개` : ''}`, '#c9b27a');
+    log(`${ICON('door')} ${b.name} 안으로 들어왔다.${ready ? ` 보급 상자 ${ready}개` : ''}`, '#c9b27a');
   },
 
   // 같은 공간(같은 건물 안 / 둘 다 바깥)에 있는지 — 다르면 적이 쫓아오지 않음
@@ -54,7 +54,7 @@ const Interiors = {
     drop('credits', { amount: Math.round(zone.lvl[1] * rand(8, 16)) });
     if (Math.random() < 0.6) drop('ammo', { amount: randInt(20, 45) });
     if (Math.random() < 0.3) drop('item', { item: makeConsumable('medkit', 1) });
-    if (Math.random() < 0.22) drop('item', { item: randomGear(lvl, 0.6, 0, zone.gear) });
+    if (Math.random() < 0.12) drop('item', { item: randomGear(lvl, 0.6, 0, zone.gear) });
     Workshop.gain(randInt(2, 4), Math.random() < 0.15 ? 1 : 0);
     floatText(c.x, c.y - 30, '보급 상자', '#e0c070', 14);
     burst(c.x, c.y, '#c9a24a', 10, 100, 0.4);

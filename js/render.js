@@ -365,8 +365,9 @@ function drawHuman(sx, sy, o) {
   if (!back) weapon();
 }
 
-function nameTag(sx, y, text, color, font = '11px sans-serif') {
+function nameTag(sx, y, text, color, font = '11px sans-serif', icon = null) {
   ctx.font = font; ctx.textAlign = 'center';
+  if (icon) { const w = ctx.measureText(text).width; Icons.draw(icon, sx - w / 2 - 2, y - 4, 14); sx += 8; } // v1.5.1 캔버스 아이콘
   ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillText(text, sx + 1, y + 1);
   ctx.fillStyle = color; ctx.fillText(text, sx, y);
 }
@@ -650,8 +651,9 @@ function drawNpc(n) {
     if (c && !p.quest.active && p.level >= c.minLevel) mark = ['!', '#ffd700']; // 새 장 시작 가능
   } else if (n.id === 'merchant') mark = ['₵', '#bbb'];
   else if (n.id === 'medic') mark = ['✚', '#f55'];
-  else if (n.id === 'mechanic') mark = ['⚙', '#ddd'];
-  if (mark) {
+  else if (n.id === 'mechanic') mark = ['@settings', '#ddd'];
+  if (mark && mark[0][0] === '@') Icons.draw(mark[0].slice(1), sx, sy - 72 + Math.sin(G.time * 3) * 3, 22); // 아이콘 표시
+  else if (mark) {
     ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = mark[1];
     ctx.fillText(mark[0], sx, sy - 66 + Math.sin(G.time * 3) * 3);
   }
@@ -1058,7 +1060,7 @@ function drawShopSigns() {
     const [dx, dy] = b.door[0]; // 문 위 노란 간판에 상호
     ctx.save(); City.faceTransform(dx, dy, b.south ? 's' : 'e', 54 + 22); if (!b.south) ctx.translate(-TILE, 0);
     ctx.fillStyle = '#2a1c08'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.name, TILE, 8); ctx.restore();
-    nameTag(Iso.sx(b.doorX, b.doorY), Iso.sy(b.doorX, b.doorY, 92), `🚪 ${b.name}${ready ? ' ·상자' : ''}`, '#e0c070', 'bold 12px sans-serif');
+    nameTag(Iso.sx(b.doorX, b.doorY), Iso.sy(b.doorX, b.doorY, 92), `${b.name}${ready ? ' ·상자' : ''}`, '#e0c070', 'bold 12px sans-serif', 'door');
   }
 }
 
@@ -1088,7 +1090,7 @@ function drawDrop(d) {
       ctx.globalAlpha = 0.35 + Math.sin(G.time * 4) * 0.1; ctx.fillStyle = g;
       ctx.fillRect(sx - 3 - r, gy - hgt, 6 + r * 2, hgt); ctx.globalAlpha = 1;
     }
-    ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(d.item.icon, sx, sy - 2);
+    Icons.draw(d.item.key, sx, sy - 8, 20); // v1.5.1 캔버스 아이콘
     nameTag(sx, sy - 20, itemName(d.item), c);
   }
 }
