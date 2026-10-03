@@ -132,7 +132,7 @@ const Story = {
     for (let i = 0; i < 24; i++) { // 랜드마크 주변 빈 자리
       const a = i / 24 * TAU, r = l.size * TILE / 2 + 70;
       const x = l.x + Math.cos(a) * r, y = l.y + Math.sin(a) * r;
-      if (World.circleBlocked(x, y, ENEMIES[def.base].r * def.scale)) continue;
+      if (World.circleBlocked(x, y, ENEMIES[def.base].r * def.scale) || World.buildingAt(x, y)) continue;
       const e = makeEnemy(def.base, x, y, def.level);
       e.elite = id; e.scale = def.scale;
       e.hp = e.maxHp = Math.round(e.maxHp * def.hpMul); e.dmg *= def.dmgMul;

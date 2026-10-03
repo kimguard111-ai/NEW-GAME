@@ -16,7 +16,7 @@ const ASSAULTS = {
     waves: [{ zombie: 8, brute: 2 }, { drone: 4, raider: 3, zombie: 4 }, { brute: 3, drone: 3, zombie: 4, elites: 3 }],
     boss: { name: '방사능 변이체 「군체」', base: 'brute', hpMul: 9, dmgMul: 1.3, scale: 1.6, patterns: ['glutton', 'argos'], affix: 'commander' } },
 };
-const ASSAULT_R = 11 * TILE; // 봉쇄 구역 반지름
+const ASSAULT_R = 13 * TILE; // 봉쇄 구역 반지름
 const RANKS = { S: { gear: 2, bonus: 1.5, min: 2, mul: 1.5, color: '#ffd76a' }, A: { gear: 1, bonus: 1.0, min: 1, mul: 1.2, color: '#c77dff' }, B: { gear: 1, bonus: 0.5, min: 0, mul: 1, color: '#9fd' } };
 
 const Assault = {
@@ -81,7 +81,7 @@ const Assault = {
     const l = G.assault.l;
     for (let i = 0; i < 30; i++) {
       const ang = rand(0, TAU), r = rand(r0, r1), x = l.x + Math.cos(ang) * r, y = l.y + Math.sin(ang) * r;
-      if (!World.circleBlocked(x, y, rad) && dist({ x, y }, G.player) > 140) return { x, y };
+      if (!World.circleBlocked(x, y, rad) && !World.buildingAt(x, y) && dist({ x, y }, G.player) > 140) return { x, y };
     }
     return null;
   },

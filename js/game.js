@@ -8,7 +8,7 @@ const MAP_SEED = 2049;
 
 const G = {
   player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [],
-  npcs: [], corpses: [], elite: null, strikes: [], pools: [], assault: null, fieldBoss: null, fbT: 150, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
+  npcs: [], corpses: [], elite: null, strikes: [], pools: [], assault: null, fieldBoss: null, fbT: 150, inside: null, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
 };
@@ -105,7 +105,7 @@ function startGame(save, name) {
     G.bossT = save.bossT || 0;
     G.player.dead = false;
     if (G.player.hp <= 0) G.player.hp = PlayerStats.maxHp(G.player);
-    if (G.player.mapV !== 2) { Object.assign(G.player, World.campCenter()); G.player.mapV = 2; } // v0.11 맵 축소: 예전 좌표는 캠프에서 시작
+    if (G.player.mapV !== 3) { Object.assign(G.player, World.campCenter()); G.player.mapV = 3; } // 맵 구조가 바뀌면(v0.11 축소 · v0.13 큰 건물) 캠프에서 시작
     if (World.circleBlocked(G.player.x, G.player.y, G.player.r)) Object.assign(G.player, World.campCenter());
     log(`${G.player.name}님, 다시 오신 것을 환영합니다.`, '#e0b23a');
   } else {
@@ -115,7 +115,7 @@ function startGame(save, name) {
     log('생존자 대장 한씨(오른쪽 위)에게 말을 걸어 임무를 받으세요. [E]', '#8cf');
   }
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
-  G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150;
+  G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
@@ -283,6 +283,8 @@ function removeItem(it) {
 function interact() {
   const npc = nearestNpc();
   if (npc) { UI.openNpc(npc); return; }
+  const crate = Interiors.nearCrate();
+  if (crate) { Interiors.openCrate(crate); return; }
   const l = Assault.available();
   if (l) Assault.start(l);
 }
@@ -506,8 +508,9 @@ function updateEnemies(dt) {
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt;
     const d = dist(e, p);
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); continue; } // 경직: 이동·공격 불가
-    if (!p.dead && !pSafe && d < e.def.aggro) e.state = 'chase';
-    else if (e.state === 'chase' && (p.dead || pSafe || d > e.def.aggro * 1.7)) e.state = 'idle';
+    const same = Interiors.sameSpace(e); // 건물 안팎이 다르면 쫓지 않음 (벽 너머 길찾기 없음)
+    if (!p.dead && !pSafe && same && d < e.def.aggro) e.state = 'chase';
+    else if (e.state === 'chase' && (p.dead || pSafe || !same || d > e.def.aggro * 1.7)) e.state = 'idle';
     if (e.assault && !p.dead) e.state = 'chase'; // 어설트 적은 항상 추격
     if (e.def.boss) updateBoss(e, dt, d);
     if ((e.elite || e.patterns) && e.state === 'chase') Monsters.updateNamed(e, dt);
@@ -577,7 +580,7 @@ function spawnEnemies(dt) {
   for (let tries = 0; tries < 6; tries++) {
     const a = rand(0, TAU), r = rand(560, 950);
     const x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
-    if (World.circleBlocked(x, y, 22) || World.inSafe(x, y)) continue;
+    if (World.circleBlocked(x, y, 22) || World.inSafe(x, y) || World.buildingAt(x, y)) continue; // 실내 적은 입장 시 따로
     const zi = World.zoneIndex(x, y);
     if (zi === 0) continue;
     if (zi > z && Math.random() < 0.7) continue; // 지역 경계 너머(더 위험한 지역) 스폰은 덜 나오게
@@ -755,6 +758,7 @@ function update(dt) {
 
   spawnEnemies(dt);
   updateBossSpawn(dt);
+  Interiors.update();
   updateEnemies(dt);
   Assault.update(dt);
   Bosses.updateField(dt);
@@ -782,7 +786,7 @@ function update(dt) {
     log(z === 0 ? `${zn.name} — 안전 지대` : `${zn.name} 진입 (권장 Lv${zn.lvl[0]}~${zn.lvl[1]})`, z === 0 ? '#8f8' : '#fc8');
     if (zn.desc) log(`  ${zn.desc} · 특산: ${zn.gearText}`, '#c9b27a');
   }
-  G.darkness = lerp(G.darkness, ZONES[z].dark, dt * 1.5);
+  G.darkness = lerp(G.darkness, ZONES[z].dark + (G.inside ? 0.15 : 0), dt * 1.5); // 실내는 조금 어둡게
 
   // 카메라
   G.shake *= Math.pow(0.002, dt);

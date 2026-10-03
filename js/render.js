@@ -26,6 +26,7 @@ const Iso = {
 const TILE_COLORS = {
   [T.ROAD]: '#2a2c30', [T.WALK]: '#45464b', [T.RUBBLE]: '#3d3833', [T.GRASS]: '#2c3824',
   [T.CAMP]: '#363c45', [T.CAR]: '#2a2c30', [T.BARRICADE]: '#363c45', [T.BUILDING]: '#1d1d20', [T.LANDMARK]: '#3a3833',
+  [T.WALL]: '#2a2420', [T.FLOOR]: '#4a4038', [T.DOOR]: '#4a4038',
 };
 
 // ---------------- 바닥 ----------------
@@ -34,14 +35,17 @@ function drawGroundTile(tx, ty, t) {
   ctx.fillStyle = TILE_COLORS[t];
   ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
   if (t === T.ROAD || t === T.CAR) {
-    const lx = tx % World.BLOCK, ly = ty % World.BLOCK;
-    ctx.fillStyle = '#8a7a3a';
-    if (lx === 1 && ly >= 4 && ty % 2 === 0) ctx.fillRect(x + 14, y + 4, 4, 18);
-    if (ly === 1 && lx >= 4 && tx % 2 === 0) ctx.fillRect(x + 4, y + 14, 18, 4);
-    // 교차로 앞 횡단보도 (v0.11)
+    const lx = tx % World.BLOCK, ly = ty % World.BLOCK, RW = World.ROADW;
+    ctx.fillStyle = '#8a7a3a'; // 중앙선 (4차선: 2번째와 3번째 칸 사이)
+    if (lx === RW / 2 && ly > RW && ty % 2 === 0) ctx.fillRect(x - 2, y + 4, 4, 18);
+    if (ly === RW / 2 && lx > RW && tx % 2 === 0) ctx.fillRect(x + 4, y - 2, 18, 4);
+    ctx.fillStyle = 'rgba(200,200,190,0.18)'; // 차선
+    if ((lx === 1 || lx === 3) && ly > RW && ty % 3 === 0) ctx.fillRect(x - 1, y + 6, 2, 12);
+    if ((ly === 1 || ly === 3) && lx > RW && tx % 3 === 0) ctx.fillRect(x + 6, y - 1, 12, 2);
+    // 교차로 앞 횡단보도
     ctx.fillStyle = 'rgba(170,170,160,0.35)';
-    if (ly === 3 && lx < 3) for (let i = 0; i < 4; i++) ctx.fillRect(x + 2 + i * 8, y + 5, 4, 22);
-    if (lx === 3 && ly < 3) for (let i = 0; i < 4; i++) ctx.fillRect(x + 5, y + 2 + i * 8, 22, 4);
+    if (ly === RW && lx < RW) for (let i = 0; i < 4; i++) ctx.fillRect(x + 2 + i * 8, y + 5, 4, 22);
+    if (lx === RW && ly < RW) for (let i = 0; i < 4; i++) ctx.fillRect(x + 5, y + 2 + i * 8, 22, 4);
     if (h < 0.06) { ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x + h * 200, y + 10, 10, 6); }
   } else if (t === T.WALK) {
     ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
@@ -55,6 +59,11 @@ function drawGroundTile(tx, ty, t) {
     ctx.fillStyle = '#3a4a2c';
     if (h < 0.5) ctx.fillRect(x + h * 50, y + 8, 3, 3);
     if (h > 0.4) ctx.fillRect(x + 6, y + h * 26, 3, 3);
+  } else if (t === T.FLOOR || t === T.DOOR) { // 실내 바닥 (나무 마루)
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    for (let i = 8; i < TILE; i += 8) { ctx.beginPath(); ctx.moveTo(x, y + i); ctx.lineTo(x + TILE, y + i); ctx.stroke(); }
+    if (h < 0.15) { ctx.fillStyle = 'rgba(30,25,20,0.5)'; ctx.fillRect(x + h * 100, y + 6, 10, 8); } // 얼룩·잔해
+    if (t === T.DOOR) { ctx.fillStyle = '#5a5048'; ctx.fillRect(x, y, TILE, TILE); }
   } else if (t === T.CAMP) {
     ctx.strokeStyle = 'rgba(120,150,190,0.14)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
   }
@@ -122,21 +131,26 @@ function drawBox(x0, y0, x1, y1, h, top, south, east, sz, ez, win) {
 
 // 벽면 창문 (층마다 2개)
 function drawWindows(ax, ay, bx, by, z0, h, seed, side) {
-  for (let fz = 10; fz + 12 < h; fz += 24) {
+  for (let fz = 12; fz + 20 < h; fz += FLOOR_H) {
     if (fz < z0) continue;
     for (let k = 0; k < 2; k++) {
       const u0 = 0.18 + k * 0.42, u1 = u0 + 0.24;
       const lit = hash2(seed * 31 + k + side * 7, fz) < 0.12;
       const ax0 = lerp(ax, bx, u0), ay0 = lerp(ay, by, u0), ax1 = lerp(ax, bx, u1), ay1 = lerp(ay, by, u1);
       poly([Iso.sx(ax0, ay0), Iso.sy(ax0, ay0, fz), Iso.sx(ax1, ay1), Iso.sy(ax1, ay1, fz),
-        Iso.sx(ax1, ay1), Iso.sy(ax1, ay1, fz + 11), Iso.sx(ax0, ay0), Iso.sy(ax0, ay0, fz + 11)], lit ? '#c9a24a' : '#16181c');
+        Iso.sx(ax1, ay1), Iso.sy(ax1, ay1, fz + 17), Iso.sx(ax0, ay0), Iso.sy(ax0, ay0, fz + 17)], lit ? '#c9a24a' : '#16181c');
     }
   }
 }
 
+// 들어간 건물의 벽은 낮게 잘라 내부가 보이게 (v0.13)
+const CUT_H = 34;
+function insideBid(tx, ty) { return G.inside && World.bid[ty * World.W + tx] === G.inside.id; }
 function tileHeight(tx, ty) {
   const t = World.tileAt(tx, ty);
   if (t === T.BUILDING) return World.height[ty * World.W + tx] || 60;
+  if (t === T.WALL) return insideBid(tx, ty) ? CUT_H : World.height[ty * World.W + tx];
+  if (t === T.FLOOR || t === T.DOOR) return insideBid(tx, ty) ? 0 : World.height[ty * World.W + tx];
   return 0;
 }
 
@@ -154,10 +168,30 @@ function drawSolidTile(o) {
     if (!ruin && h < 0.04) { // 옥상 환풍기
       drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0);
     }
+  } else if (t === T.WALL || t === T.FLOOR || t === T.DOOR) { // 들어갈 수 있는 건물 (상가)
+    const i = ty * World.W + tx, s = World.shade[i], cut = insideBid(tx, ty), ht = tileHeight(tx, ty);
+    const b = 92 + Math.floor(s * 30);
+    const top = `rgb(${b + 6},${b - 10},${b - 26})`, south = `rgb(${b - 40},${b - 52},${b - 62})`, east = `rgb(${b - 24},${b - 36},${b - 46})`;
+    if (t === T.WALL) {
+      drawBox(x0, y0, x1, y1, ht, cut ? '#6a5a4c' : top, south, east, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), cut ? 0 : tx * 977 + ty);
+    } else if (t === T.FLOOR) { // 지붕 (바깥에서만)
+      drawBox(x0, y0, x1, y1, ht, `rgb(${b - 20},${b - 26},${b - 32})`, south, east, -1, -1, 0);
+      if (h < 0.05) drawBox(x0 + 8, y0 + 8, x1 - 8, y1 - 8, ht + 10, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 실외기
+    } else { // 출입문: 위쪽 문틀만, 아래는 어두운 입구
+      const bd = World.buildings[World.bid[i]], LIN = 54;
+      const S = Iso.sx, Y = Iso.sy;
+      if (bd.south) poly([S(x0, y1), Y(x0, y1, 0), S(x1, y1), Y(x1, y1, 0), S(x1, y1), Y(x1, y1, LIN), S(x0, y1), Y(x0, y1, LIN)], 'rgba(10,8,6,0.85)');
+      else poly([S(x1, y0), Y(x1, y0, 0), S(x1, y1), Y(x1, y1, 0), S(x1, y1), Y(x1, y1, LIN), S(x1, y0), Y(x1, y0, LIN)], 'rgba(10,8,6,0.85)');
+      drawBox(x0, y0, x1, y1, ht, top, south, east, bd.south ? LIN : -1, bd.south ? -1 : LIN, 0);
+      // 간판 (문 위 노란 띠)
+      const z0 = LIN + 6, z1 = LIN + 22;
+      if (bd.south) poly([S(x0, y1), Y(x0, y1, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x0, y1), Y(x0, y1, z1)], '#c9a24a');
+      else poly([S(x1, y0), Y(x1, y0, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x1, y0), Y(x1, y0, z1)], '#c9a24a');
+    }
   } else if (t === T.CAR) {
     const cols = [['#7b4a32', '#4b2a1a', '#5f3824'], ['#56626e', '#333b44', '#454f5a'], ['#6d6a44', '#43412a', '#575536'], ['#44566a', '#28323e', '#364556']];
     const c = cols[Math.floor(h * 4)];
-    const vertical = (tx % World.BLOCK) < 3;
+    const vertical = (tx % World.BLOCK) < World.ROADW;
     const [ix, iy] = vertical ? [8, 2] : [2, 8];
     drawBox(x0 + ix, y0 + iy, x1 - ix, y1 - iy, 13, c[0], c[1], c[2], 0, 0, 0);
     drawBox(x0 + ix + 3, y0 + iy + 6, x1 - ix - 3, y1 - iy - 6, 21, '#1d2024', '#151719', '#1a1c1f', 13, 13, 0);
@@ -568,8 +602,9 @@ function render() {
   const solids = [];
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
     const t = World.tiles[ty * World.W + tx];
-    if (!SOLID.has(t) || t === T.LANDMARK) continue;
-    const tall = t === T.BUILDING ? World.height[ty * World.W + tx] * ISO_K + 20 : 30;
+    const roof = (t === T.FLOOR || t === T.DOOR) && !insideBid(tx, ty); // 바깥에서 본 상가 지붕·문틀
+    if ((!SOLID.has(t) && !roof) || t === T.LANDMARK) continue;
+    const tall = t === T.BUILDING || t === T.WALL || roof ? tileHeight(tx, ty) * ISO_K + 20 : 30;
     if (inView(tx, ty, tall)) solids.push({ d: tx + ty + 1, tx, ty, t });
   }
   Iso.groundTransform();
@@ -638,9 +673,9 @@ function render() {
   const watch = [{ d: pd, sx: psx, sy: psy, w: 60 }];
   for (const e of G.enemies) if (e.state === 'chase' && e.hp > 0) watch.push({ d: (e.x + e.y) / TILE, sx: Iso.sx(e.x, e.y), sy: Iso.sy(e.x, e.y, 18), w: 30 + e.r });
   for (const o of solids) {
-    if (o.t !== T.BUILDING) continue;
+    if (o.t !== T.BUILDING && o.t !== T.WALL && o.t !== T.FLOOR && o.t !== T.DOOR) continue;
     const cx = o.tx * TILE + 16, cy = o.ty * TILE + 16;
-    const sx = Iso.sx(cx, cy), ht = World.height[o.ty * World.W + o.tx], top = Iso.sy(cx, cy, ht) - 20, bot = Iso.sy(cx, cy) + 20;
+    const sx = Iso.sx(cx, cy), ht = tileHeight(o.tx, o.ty), top = Iso.sy(cx, cy, ht) - 20, bot = Iso.sy(cx, cy) + 20;
     for (const v of watch) if (o.d > v.d + 0.3 && Math.abs(sx - v.sx) < v.w && v.sy > top && v.sy < bot) { o.fade = true; break; }
   }
   const depth = e => (e.x + e.y) / TILE;
@@ -648,6 +683,7 @@ function render() {
   for (const e of G.enemies) objs.push({ d: depth(e) + (e.def.flying ? 0.5 : 0), draw: drawEnemy, ent: e });
   for (const d of G.drops) objs.push({ d: depth(d), draw: drawDrop, ent: d });
   for (const c of G.corpses) objs.push({ d: depth(c) - 0.3, draw: drawCorpse, ent: c });
+  if (G.inside) for (const c of G.inside.crates) objs.push({ d: depth(c), draw: drawCrate, ent: c });
   for (const l of World.landmarks) {
     const sx = Iso.sx(l.x, l.y);
     if (sx < -400 || sx > VW + 400) continue;
@@ -662,6 +698,8 @@ function render() {
     if (o.draw) o.draw(o.ent);
     else { drawSolidTile(o); if (o.t === T.CAR && isBurningCar(o.tx, o.ty)) burnFx(o.tx, o.ty); }
   }
+
+  drawShopSigns();
 
   // 3) 투사체 / 파티클 (위에 그림)
   for (const b of G.bullets) {
@@ -759,13 +797,21 @@ function boxWin(x0, y0, x1, y1, h, top, south, east, seed, z0 = 0) {
 }
 
 function drawLandmark(l) {
-  const x0 = l.tx * TILE, y0 = l.ty * TILE, x1 = x0 + l.size * TILE, y1 = y0 + l.size * TILE;
+  const x0 = l.tx * TILE, y0 = l.ty * TILE;
+  let x1 = x0 + l.size * TILE, y1 = y0 + l.size * TILE;
   if (l.fade) ctx.globalAlpha = 0.35;
   const art = ART.landmarks[l.id];
+  ctx.save();
   if (art && art.ready) { // Gemini 그림: 발판 너비에 맞춰 남쪽 꼭짓점 기준으로 그림
     const w = 2 * l.size * TILE * ISO_K, sc = w / art.img.width;
     ctx.drawImage(art.img, Iso.sx(l.x, l.y) - w / 2, Iso.sy(x1, y1) + 2 - art.img.height * sc, w, art.img.height * sc);
-  } else if (l.id === 'cathedral') {
+  } else {
+    // 기본 그래픽은 base 크기 기준으로 그리고 화면에서 size/base 배 확대 (등각 투영은 선형이라 그대로 커짐)
+    const k = l.size / (l.base || l.size), ax = Iso.sx(x0, y0), ay = Iso.sy(x0, y0);
+    ctx.translate(ax, ay); ctx.scale(k, k); ctx.translate(-ax, -ay);
+    x1 = x0 + (l.base || l.size) * TILE; y1 = y0 + (l.base || l.size) * TILE;
+  }
+  if (art && art.ready) { /* 그림 사용 */ } else if (l.id === 'cathedral') {
     drawBox(x0 + 4, y0 + 4, x1 - 4, y1 - 4, 8, '#5a524a', '#3a342e', '#4a433c', 0, 0, 0);
     boxWin(x0 + 14, y0 + 10, x1 - 10, y1 - 30, 70, '#7a4636', '#4e2a20', '#633628', 911);
     drawBox(x0 + 26, y0 + 20, x1 - 22, y1 - 40, 96, '#3a2a26', '#2a1e1a', '#33241f', 70, 70, 0);
@@ -796,8 +842,30 @@ function drawLandmark(l) {
     boxWin(x0 + 6, y0 + 6, x1 - 6, y1 - 6, 330, '#b8902a', '#7a5c16', '#9c7a20', 6363);
     boxWin(x0 + 22, y0 + 14, x1 - 34, y1 - 30, 372, '#c49a30', '#806018', '#a68226', 0, 330);
   }
+  ctx.restore();
   ctx.globalAlpha = 1;
   if (G.player.found.includes(l.id)) nameTag(Iso.sx(l.x, l.y), Iso.sy(l.x, l.y) + l.size * 9, '★ ' + l.name, '#ffd76a', 'bold 12px sans-serif');
+}
+
+// 보급 상자 (건물 안)
+function drawCrate(c) {
+  const x0 = c.x - 11, y0 = c.y - 9, x1 = c.x + 11, y1 = c.y + 9, open = G.time - c.openT <= CRATE_RESTOCK;
+  drawShadow(Iso.sx(c.x, c.y), Iso.sy(c.x, c.y), 14);
+  drawBox(x0, y0, x1, y1, 16, open ? '#3a3024' : '#8a6a3a', '#5a4424', '#6e5430', 0, 0, 0);
+  if (!open) {
+    ctx.fillStyle = '#e0c070'; ctx.globalAlpha = 0.5 + Math.sin(G.time * 4) * 0.3;
+    ctx.beginPath(); ctx.arc(Iso.sx(c.x, c.y), Iso.sy(c.x, c.y, 26), 3, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+  }
+}
+
+// 상가 이름 (바깥에서 가까이 가면 출입문 위에 표시)
+function drawShopSigns() {
+  const p = G.player;
+  for (const b of World.buildings) {
+    if (b === G.inside || Math.hypot(p.x - b.doorX, p.y - b.doorY) > 420) continue;
+    const ready = b.crates.some(c => G.time - c.openT > CRATE_RESTOCK);
+    nameTag(Iso.sx(b.doorX, b.doorY), Iso.sy(b.doorX, b.doorY, 92), `🚪 ${b.name}${ready ? ' ·상자' : ''}`, '#e0c070', 'bold 12px sans-serif');
+  }
 }
 
 function drawCorpse(c) {

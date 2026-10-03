@@ -101,8 +101,8 @@ const UI = {
     } else $('boss-bar').classList.add('hidden');
 
     const npc = !p.dead && nearestNpc();
-    const asl = !npc && Assault.available();
-    if (npc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : Assault.hint(asl); }
+    const crate = !npc && Interiors.nearCrate(), asl = !npc && !crate && Assault.available();
+    if (npc || crate || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : crate ? '[E] 보급 상자 열기' : Assault.hint(asl); }
     else $('interact-hint').classList.add('hidden');
 
     // 임무 추적 (챕터)

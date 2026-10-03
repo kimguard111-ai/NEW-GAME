@@ -30,7 +30,7 @@ const Bosses = {
     const def = FIELD_BOSSES[z];
     for (let i = 0; i < 40; i++) {
       const a = rand(0, TAU), r = rand(700, 1300), x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r;
-      if (World.zoneIndex(x, y) !== z || World.circleBlocked(x, y, ENEMIES[def.base].r * def.scale + 4) || World.inSafe(x, y)) continue;
+      if (World.zoneIndex(x, y) !== z || World.circleBlocked(x, y, ENEMIES[def.base].r * def.scale + 4) || World.inSafe(x, y) || World.buildingAt(x, y)) continue;
       const e = makeEnemy(def.base, x, y, def.level);
       e.bossName = def.name; e.fieldBoss = z; e.patterns = def.patterns; e.scale = def.scale; e.expMul = 10;
       e.hp = e.maxHp = Math.round(e.maxHp * def.hpMul); e.dmg *= def.dmgMul;

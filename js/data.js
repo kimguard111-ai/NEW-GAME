@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v0.12';
+const GAME_VERSION = 'v0.13';
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -130,12 +130,12 @@ const ZONES = [
     gear: ['katana', 'lmg', 'sniper', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },
 ];
 
-// 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수. 처음 가까이 가면 발견 보상
+// 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상
 const LANDMARKS = [
-  { id: 'cathedral', name: '무너진 명동성당', zone: 1, tx: 81, ty: 56, size: 4, exp: 80, credits: 200 },
-  { id: 'bosingak', name: '보신각', zone: 2, tx: 39, ty: 87, size: 4, exp: 600, credits: 600 },
-  { id: 'base', name: '버려진 용산 기지', zone: 3, tx: 99, ty: 93, size: 5, exp: 2500, credits: 1500 },
-  { id: 'tower63', name: '63빌딩 잔해', zone: 4, tx: 6, ty: 24, size: 4, exp: 6000, credits: 3000 },
+  { id: 'cathedral', name: '무너진 명동성당', zone: 1, tx: 80, ty: 55, size: 7, base: 4, exp: 80, credits: 200 },
+  { id: 'bosingak', name: '보신각', zone: 2, tx: 38, ty: 86, size: 6, base: 4, exp: 600, credits: 600 },
+  { id: 'base', name: '버려진 용산 기지', zone: 3, tx: 98, ty: 92, size: 8, base: 5, exp: 2500, credits: 1500 },
+  { id: 'tower63', name: '63빌딩 잔해', zone: 4, tx: 5, ty: 23, size: 7, base: 4, exp: 6000, credits: 3000 },
 ];
 
 const SKILLS = [
