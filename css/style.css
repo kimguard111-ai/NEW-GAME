@@ -1,0 +1,155 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; overflow: hidden;
+  background: #0b0c0e; color: #ddd;
+  font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  user-select: none;
+}
+canvas#game { display: block; cursor: crosshair; }
+.hidden { display: none !important; }
+button {
+  background: #2a2f36; color: #e8e8e8; border: 1px solid #555; padding: 6px 12px;
+  font-family: inherit; cursor: pointer; border-radius: 3px;
+}
+button:hover { background: #3b4450; border-color: #c9a227; }
+button:disabled { opacity: .4; cursor: default; }
+
+/* 오버레이 */
+.overlay {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(30,25,15,.85), rgba(0,0,0,.97));
+  z-index: 50;
+}
+.title-box { text-align: center; max-width: 620px; padding: 30px; }
+.title-box h1 {
+  font-size: 64px; margin: 0; letter-spacing: 8px; color: #e0b23a;
+  text-shadow: 0 0 20px rgba(224,178,58,.5), 3px 3px 0 #5a1a0a;
+}
+.title-box h1.red { color: #d33; text-shadow: 0 0 20px rgba(220,30,30,.6); }
+.title-box h2 { margin: 4px 0 20px; color: #bbb; letter-spacing: 10px; font-weight: normal; }
+.lore { color: #aaa; line-height: 1.7; font-size: 14px; }
+#name-input {
+  background: #15181c; border: 1px solid #666; color: #fff; padding: 8px 12px; font-size: 16px;
+  width: 220px; text-align: center; margin: 10px 0; font-family: inherit;
+}
+.title-buttons button { font-size: 18px; padding: 10px 26px; margin: 6px; }
+.controls { margin-top: 24px; font-size: 13px; color: #888; line-height: 1.8; }
+
+/* HUD */
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+#hud button { pointer-events: auto; }
+#hud-top-left {
+  position: absolute; left: 12px; top: 12px; width: 280px;
+  background: rgba(10,12,15,.7); border: 1px solid #333; padding: 8px 10px; border-radius: 4px;
+}
+#hud-name { font-weight: bold; color: #e0b23a; margin-bottom: 4px; }
+.bar { position: relative; height: 18px; background: #222; border: 1px solid #444; margin: 3px 0; }
+.bar.small { height: 10px; }
+.bar.small span { font-size: 9px; line-height: 9px; }
+.bar .fill { height: 100%; transition: width .1s; }
+.bar span { position: absolute; inset: 0; text-align: center; font-size: 12px; line-height: 17px; text-shadow: 1px 1px 1px #000; }
+.fill.hp { background: linear-gradient(#d64040, #8a1a1a); }
+.fill.exp { background: linear-gradient(#e0c040, #a07a10); }
+.fill.bosshp { background: linear-gradient(#b030d0, #501070); }
+#hud-credits { color: #ffd76a; font-size: 13px; margin-top: 4px; }
+#hud-buffs { font-size: 12px; color: #7fd; min-height: 14px; }
+
+#hud-zone {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  font-size: 15px; background: rgba(0,0,0,.55); padding: 4px 14px; border-radius: 3px; border: 1px solid #333;
+}
+#boss-bar { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 420px; text-align: center; }
+#boss-name { color: #e7a0ff; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+.bar.boss { height: 14px; }
+
+#minimap {
+  position: absolute; right: 12px; top: 12px; width: 180px; height: 180px;
+  border: 2px solid #444; background: #000; image-rendering: pixelated; border-radius: 4px;
+}
+#hud-weapon {
+  position: absolute; right: 12px; bottom: 80px; text-align: right;
+  background: rgba(10,12,15,.7); border: 1px solid #333; padding: 8px 12px; border-radius: 4px; min-width: 180px;
+}
+#weapon-name { font-weight: bold; }
+#weapon-ammo { font-size: 22px; color: #fff; }
+
+#hotbar { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+.hot {
+  position: relative; width: 56px; height: 56px; background: rgba(15,17,20,.85); border: 1px solid #555;
+  border-radius: 4px; font-size: 11px; text-align: center; padding-top: 6px; overflow: hidden;
+}
+.hot .icon { font-size: 20px; }
+.hot .key { position: absolute; left: 3px; top: 1px; font-size: 10px; color: #e0b23a; }
+.hot .cd { position: absolute; left: 0; bottom: 0; width: 100%; background: rgba(0,0,0,.7); }
+.hot .cnt { position: absolute; right: 3px; bottom: 1px; font-size: 11px; }
+.hot.locked { opacity: .35; }
+
+#log {
+  position: absolute; left: 12px; bottom: 12px; width: 420px; max-height: 170px; overflow: hidden;
+  font-size: 13px; display: flex; flex-direction: column; justify-content: flex-end;
+  text-shadow: 1px 1px 1px #000;
+}
+#log div { padding: 1px 6px; background: rgba(0,0,0,.35); margin-top: 1px; }
+#interact-hint {
+  position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%);
+  background: rgba(0,0,0,.75); border: 1px solid #e0b23a; padding: 6px 14px; border-radius: 3px;
+}
+#quest-tracker {
+  position: absolute; right: 12px; top: 204px; width: 210px; font-size: 12px;
+  background: rgba(10,12,15,.6); border: 1px solid #333; padding: 6px 8px; border-radius: 4px;
+}
+#quest-tracker:empty { display: none; }
+#quest-tracker b { color: #e0b23a; }
+#menu-buttons { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 4px; }
+#menu-buttons button { font-size: 12px; padding: 4px 8px; }
+
+/* 패널 */
+.panel {
+  position: fixed; z-index: 20; background: rgba(18,20,24,.96); border: 1px solid #5a5040;
+  border-radius: 5px; box-shadow: 0 6px 30px rgba(0,0,0,.7); min-width: 320px;
+}
+.panel-head {
+  background: linear-gradient(#3a3226, #261f16); padding: 8px 12px; font-weight: bold; color: #e0b23a;
+  display: flex; justify-content: space-between; border-bottom: 1px solid #5a5040;
+}
+.panel .close { cursor: pointer; color: #aaa; }
+.panel .close:hover { color: #fff; }
+#panel-inventory { right: 210px; top: 80px; width: 380px; }
+#panel-stats { left: 310px; top: 80px; width: 320px; }
+#panel-quest { left: 310px; top: 80px; width: 380px; }
+#panel-shop { left: 50%; top: 80px; transform: translateX(-105%); width: 420px; }
+#panel-dialog { left: 50%; bottom: 140px; transform: translateX(-50%); width: 480px; }
+
+.equip-row { display: flex; gap: 6px; padding: 8px; }
+.equip-slot { flex: 1; background: #111; border: 1px solid #444; padding: 4px; min-height: 52px; cursor: pointer; font-size: 12px; }
+.equip-slot label { color: #888; font-size: 10px; display: block; }
+.equip-slot.active { border-color: #e0b23a; }
+#inv-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 0 8px 8px; }
+.inv-cell {
+  height: 54px; background: #111; border: 1px solid #333; font-size: 10px; padding: 2px; cursor: pointer;
+  text-align: center; overflow: hidden; position: relative; line-height: 1.2;
+}
+.inv-cell .icon { font-size: 18px; display: block; }
+.inv-cell .cnt { position: absolute; right: 2px; bottom: 1px; font-size: 11px; color: #fff; }
+.inv-cell.sel { outline: 2px solid #e0b23a; }
+#item-detail { padding: 8px 12px; border-top: 1px solid #333; min-height: 70px; font-size: 13px; }
+#item-detail .btns { margin-top: 6px; display: flex; gap: 6px; }
+
+.r0 { color: #ddd; } .r1 { color: #6fdc6f; } .r2 { color: #5aa8ff; } .r3 { color: #c77dff; } .r4 { color: #ffa53a; }
+.bc0 { border-color: #444 !important; } .bc1 { border-color: #3a7a3a !important; } .bc2 { border-color: #2f5f9f !important; }
+.bc3 { border-color: #7a3fa0 !important; } .bc4 { border-color: #b87020 !important; }
+
+#stats-body, #quest-body { padding: 10px 14px; font-size: 14px; line-height: 1.8; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; }
+.stat-row button { padding: 0 8px; }
+.muted { color: #888; font-size: 12px; }
+.shop-hint { font-size: 12px; color: #999; padding: 6px 12px; }
+#shop-list { max-height: 60vh; overflow-y: auto; padding: 0 8px 8px; }
+.shop-item {
+  display: flex; justify-content: space-between; align-items: center; background: #111; border: 1px solid #333;
+  margin: 4px 0; padding: 6px 8px; font-size: 13px; cursor: pointer;
+}
+.shop-item:hover { border-color: #e0b23a; }
+.shop-item .price { color: #ffd76a; white-space: nowrap; margin-left: 10px; }
+#dialog-text { padding: 14px; line-height: 1.7; font-size: 14px; }
+#dialog-buttons { padding: 0 14px 14px; display: flex; gap: 8px; flex-wrap: wrap; }

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEOUL 2049 : 폐허의 도시</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- 타이틀 화면 -->
+<div id="title-screen" class="overlay">
+  <div class="title-box">
+    <h1>SEOUL 2049</h1>
+    <h2>폐허의 도시</h2>
+    <p class="lore">대붕괴 이후 20년. 서울은 감염자와 변이체, 약탈자들의 도시가 되었다.<br>
+    시청역 지하 캠프의 생존자로서 폐허를 개척하고, 방사능 지대의 군주 '타이탄'을 쓰러뜨려라.</p>
+    <input id="name-input" maxlength="10" placeholder="생존자 이름" value="">
+    <div class="title-buttons">
+      <button id="btn-new">새 게임</button>
+      <button id="btn-continue">이어하기</button>
+    </div>
+    <div class="controls">
+      <b>조작법</b><br>
+      WASD 이동 · 마우스 조준 · 좌클릭 공격(누르고 있으면 연사)<br>
+      R 재장전 · Q 무기 교체 · 1~4 스킬 · 5 구급상자 · E 상호작용<br>
+      I 인벤토리 · C 능력치 · J 임무 · ESC 창 닫기
+    </div>
+  </div>
+</div>
+
+<!-- 사망 화면 -->
+<div id="death-screen" class="overlay hidden">
+  <div class="title-box">
+    <h1 class="red">사망</h1>
+    <p>당신은 쓰러졌다... 크레딧 일부를 잃었다.</p>
+    <button id="btn-respawn">캠프에서 부활</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="hud-top-left">
+    <div id="hud-name"></div>
+    <div class="bar"><div id="hp-fill" class="fill hp"></div><span id="hp-text"></span></div>
+    <div class="bar small"><div id="exp-fill" class="fill exp"></div><span id="exp-text"></span></div>
+    <div id="hud-credits"></div>
+    <div id="hud-buffs"></div>
+  </div>
+  <div id="hud-zone"></div>
+  <div id="boss-bar" class="hidden">
+    <div id="boss-name"></div>
+    <div class="bar boss"><div id="boss-fill" class="fill bosshp"></div></div>
+  </div>
+  <canvas id="minimap" width="160" height="160"></canvas>
+  <div id="hud-weapon">
+    <div id="weapon-name"></div>
+    <div id="weapon-ammo"></div>
+  </div>
+  <div id="hotbar"></div>
+  <div id="log"></div>
+  <div id="interact-hint" class="hidden"></div>
+  <div id="quest-tracker"></div>
+  <div id="menu-buttons">
+    <button data-panel="inventory">인벤토리 (I)</button>
+    <button data-panel="stats">능력치 (C)</button>
+    <button data-panel="quest">임무 (J)</button>
+  </div>
+</div>
+
+<!-- 패널들 -->
+<div id="panel-inventory" class="panel hidden">
+  <div class="panel-head">인벤토리 <span class="close">✕</span></div>
+  <div class="equip-row">
+    <div class="equip-slot" data-slot="w1"><label>주무기</label><div></div></div>
+    <div class="equip-slot" data-slot="w2"><label>보조무기</label><div></div></div>
+    <div class="equip-slot" data-slot="armor"><label>방어구</label><div></div></div>
+  </div>
+  <div id="inv-grid"></div>
+  <div id="item-detail"></div>
+</div>
+
+<div id="panel-stats" class="panel hidden">
+  <div class="panel-head">능력치 <span class="close">✕</span></div>
+  <div id="stats-body"></div>
+</div>
+
+<div id="panel-quest" class="panel hidden">
+  <div class="panel-head">임무 <span class="close">✕</span></div>
+  <div id="quest-body"></div>
+</div>
+
+<div id="panel-shop" class="panel hidden">
+  <div class="panel-head">암시장 상인 <span class="close">✕</span></div>
+  <div class="shop-hint">아이템 구매는 클릭. 판매는 인벤토리에서 아이템 선택 후 [판매].</div>
+  <div id="shop-list"></div>
+</div>
+
+<div id="panel-dialog" class="panel hidden">
+  <div class="panel-head"><span id="dialog-name"></span> <span class="close">✕</span></div>
+  <div id="dialog-text"></div>
+  <div id="dialog-buttons"></div>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/data.js"></script>
+<script src="js/world.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
