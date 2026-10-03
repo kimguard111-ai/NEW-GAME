@@ -164,16 +164,23 @@ function drawSolidTile(o) {
 const Sprites = {
   load() {
     for (const s of [...Object.values(ART.sprites), ...Object.values(ART.landmarks)]) {
-      const im = new Image();
+      const im = new Image(); s.ready = false; // 다시 읽을 때 이전 상태가 남지 않게
       im.onload = () => { s.ready = true; };
       im.onerror = () => console.warn('에셋을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
       im.src = ART.dir + s.file; s.img = im;
     }
   },
   loadAll() { // 무기·헬멧 그림까지 포함
+    const cache = {}; // 한 파일에 여러 무기·헬멧(rect)이 들어 있으면 한 번만 읽음
     for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets)]) {
-      const im = new Image(); im.onload = () => { s.ready = true; }; im.src = ART.dir + s.file; s.img = im;
-      im.onerror = () => console.warn('무기 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
+      let im = cache[s.file];
+      if (!im) {
+        im = cache[s.file] = new Image(); im.users = [];
+        im.onload = () => im.users.forEach(u => { u.ready = true; });
+        im.onerror = () => console.warn('무기·헬멧 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
+        im.src = ART.dir + s.file;
+      }
+      im.users.push(s); s.img = im; s.ready = false;
     }
     this.load();
   },
@@ -333,9 +340,10 @@ function drawHelmetOverlay(sx, sy, info, hel, color) {
   const hx = sx + hd.x * sc * (info.flip ? -1 : 1), hy = sy + hd.y * sc, hw = hd.w * sc * ART.helmetFit.w;
   const art = ART.helmets[hel.key];
   if (art && art.ready) {
-    const h = art.img.height * hw / art.img.width;
+    const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height];
+    const h = rh * hw / rw;
     ctx.save(); ctx.translate(hx, hy - hw * ART.helmetFit.up); if (info.flip) ctx.scale(-1, 1);
-    ctx.drawImage(art.img, -hw / 2, 0, hw, h);
+    ctx.drawImage(art.img, rx, ry, rw, rh, -hw / 2, 0, hw, h);
     ctx.restore();
   } else {
     ctx.fillStyle = color || '#333';
@@ -355,9 +363,10 @@ function drawWeaponOverlay(sx, sy, w, p) {
   ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
   if (Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게
   if (art && art.ready) {
-    const sc = len / art.img.width, grip = art.grip ?? ART.weaponGrip[w.key] ?? 0.3, h = art.img.height * sc * ART.weaponThick;
+    const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height]; // rect: 한 장 안의 위치
+    const sc = len / rw, grip = art.grip ?? ART.weaponGrip[w.key] ?? 0.3, h = rh * sc * ART.weaponThick;
     ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 2; // 어두운 테두리로 몸·바닥과 구분
-    ctx.drawImage(art.img, -art.img.width * sc * grip, -h / 2, art.img.width * sc, h);
+    ctx.drawImage(art.img, rx, ry, rw, rh, -rw * sc * grip, -h / 2, rw * sc, h);
   } else {
     ctx.lineCap = 'round';
     if (b.melee) { ctx.strokeStyle = w.key === 'katana' ? '#bfe6ff' : w.key === 'axe' ? '#b33' : '#999'; ctx.lineWidth = 3; }

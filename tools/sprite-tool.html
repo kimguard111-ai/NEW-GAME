@@ -57,6 +57,10 @@
           <option value="h_cap">h_cap (방탄모)</option><option value="h_tacHelmet">h_tacHelmet (전술 헬멧)</option>
           <option value="h_gasmask">h_gasmask (방독면 헬멧)</option><option value="h_exoHelm">h_exoHelm (외골격 헬멧)</option>
         </optgroup>
+        <optgroup label="한 장에 여러 개 (격자)">
+          <option value="weapons_all">무기 9종 한 장 (3×3)</option>
+          <option value="helmets_all">헬멧 4종 한 장 (1×4)</option>
+        </optgroup>
         <optgroup label="플레이어 무기 (옆모습 1장)">
           <option value="w_pipe">w_pipe (쇠파이프)</option><option value="w_pistol">w_pistol (권총)</option><option value="w_axe">w_axe (소방 도끼)</option>
           <option value="w_smg">w_smg (기관단총)</option><option value="w_shotgun">w_shotgun (산탄총)</option><option value="w_rifle">w_rifle (돌격소총)</option>
@@ -276,6 +280,8 @@ function processLandmark() {
   const im = imgs[0], src = $('src'); src.width = im.width; src.height = im.height;
   const g = src.getContext('2d'); g.drawImage(im, 0, 0);
   const { key, data } = keyOut(src, +$('tol').value);
+  if ($('wm').checked) removeWatermark(src, data);
+  if ($('despill').checked) despill(src, data, key);
   let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
   for (let y = 0; y < im.height; y++) for (let x = 0; x < im.width; x++) if (data[(y * im.width + x) * 4 + 3] > 60) {
     if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
@@ -293,7 +299,57 @@ function processLandmark() {
   showManifest();
 }
 
+// 한 장에 여러 개: 격자 칸마다 그 칸에 중심이 있는 덩어리들을 모아 하나로. 결과는 가로로 이어 붙인 한 파일 + 칸별 위치
+const ATLAS = {
+  weapons_all: { file: 'weapons.png', cols: 3, rows: 3, target: 'weapons', keys: ['pipe', 'pistol', 'axe', 'smg', 'shotgun', 'rifle', 'katana', 'sniper', 'lmg'] },
+  helmets_all: { file: 'helmets.png', cols: 4, rows: 1, target: 'helmets', keys: ['cap', 'tacHelmet', 'gasmask', 'exoHelm'] },
+};
+function processAtlas(cfg) {
+  const im = imgs[0], src = $('src'); src.width = im.width; src.height = im.height;
+  src.getContext('2d').drawImage(im, 0, 0);
+  const { key, data } = keyOut(src, +$('tol').value);
+  if ($('wm').checked) removeWatermark(src, data);
+  if ($('despill').checked) despill(src, data, key);
+  const W = im.width, H = im.height, S = 4, gw = Math.ceil(W / S), gh = Math.ceil(H / S), mask = new Uint8Array(gw * gh);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (data[(y * W + x) * 4 + 3] > 60) mask[(y / S | 0) * gw + (x / S | 0)] = 1;
+  const seen = new Uint8Array(gw * gh), comps = [];
+  for (let i = 0; i < mask.length; i++) {
+    if (!mask[i] || seen[i]) continue;
+    let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1, n = 0; const st = [i]; seen[i] = 1;
+    while (st.length) { const j = st.pop(), x = j % gw, y = (j / gw) | 0; n++;
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, k = ny * gw + nx;
+        if (nx >= 0 && ny >= 0 && nx < gw && ny < gh && mask[k] && !seen[k]) { seen[k] = 1; st.push(k); } } }
+    comps.push({ x0: x0 * S, y0: y0 * S, x1: (x1 + 1) * S, y1: (y1 + 1) * S, n });
+  }
+  const big = Math.max(1, ...comps.map(c => c.n));
+  const cells = cfg.keys.map(() => null);
+  for (const c of comps) {
+    if (c.n < big * 0.02) continue; // 잡티
+    const col = Math.min(cfg.cols - 1, Math.floor((c.x0 + c.x1) / 2 / (W / cfg.cols))), row = Math.min(cfg.rows - 1, Math.floor((c.y0 + c.y1) / 2 / (H / cfg.rows)));
+    const k = row * cfg.cols + col, b = cells[k];
+    cells[k] = b ? { x0: Math.min(b.x0, c.x0), y0: Math.min(b.y0, c.y0), x1: Math.max(b.x1, c.x1), y1: Math.max(b.y1, c.y1) } : { ...c };
+  }
+  const MAXW = 320, GAP = 8, out = $('out'), sizes = cells.map(b => b ? Math.min(1, MAXW / (b.x1 - b.x0)) : 0);
+  out.width = cells.reduce((a, b, i) => a + (b ? Math.round((b.x1 - b.x0) * sizes[i]) + GAP : 0), 0) || 1;
+  out.height = Math.max(1, ...cells.map((b, i) => b ? Math.round((b.y1 - b.y0) * sizes[i]) : 0));
+  const og = out.getContext('2d'); let x = 0; const rects = {};
+  cells.forEach((b, i) => {
+    if (!b) return;
+    const w = Math.round((b.x1 - b.x0) * sizes[i]), h = Math.round((b.y1 - b.y0) * sizes[i]);
+    og.drawImage(src, b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0, x, 0, w, h);
+    rects[cfg.keys[i]] = [x, 0, w, h]; x += w + GAP;
+  });
+  const missing = cfg.keys.filter((_, i) => !cells[i]);
+  result = { atlas: cfg, rects };
+  $('anims').innerHTML = '';
+  $('info').innerHTML = `<span class="ok">한 장 모드 · 배경색 rgb(${key.join(',')}) 제거 · ${Object.keys(rects).length}/${cfg.keys.length}개 인식 (왼쪽 위부터: ${cfg.keys.join(', ')})</span>`
+    + (missing.length ? `<br><span class="warn">빈 칸: ${missing.join(', ')} — ${cfg.cols}×${cfg.rows} 격자로 다시 생성하거나 해당 항목만 따로 만드세요</span>` : '');
+  showManifest();
+}
+
 function process() {
+  if (ATLAS[$('key').value]) return processAtlas(ATLAS[$('key').value]);
   if (LANDMARK_KEYS.includes($('key').value) || /^[wh]_/.test($('key').value)) return processLandmark();
   // 이미지마다: 배경 제거 → 행/프레임 감지. 행들은 파일 순서대로 이어 붙임
   const parts = [], keys = [];
@@ -398,6 +454,11 @@ function process() {
 }
 
 function showManifest() {
+  if (result.atlas) {
+    $('manifest').textContent = `// js/assets.js 의 ${result.atlas.target} 안에 붙여넣기 (파일 이름: ${result.atlas.file})\n`
+      + Object.entries(result.rects).map(([k, r]) => `${k}: { file: '${result.atlas.file}', rect: [${r.join(', ')}] },`).join('\n');
+    return;
+  }
   if (result.helmet) { const k = $('key').value; $('manifest').textContent = `// js/assets.js 의 helmets 안에 붙여넣기\n${k.slice(2)}: { file: '${k}.png' },`; return; }
   if (result.weapon) { const k = $('key').value; $('manifest').textContent = `// js/assets.js 의 weapons 안에 붙여넣기\n${k.slice(2)}: { file: '${k}.png' },`; return; }
   if (result.landmark) { $('manifest').textContent = `// js/assets.js 의 landmarks 안에 붙여넣기\n${$('key').value}: { file: '${$('key').value}.png' },`; return; }
@@ -421,7 +482,7 @@ setInterval(() => {
 $('download').onclick = () => {
   if (!result) return;
   $('out').toBlob(b => {
-    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = $('key').value + '.png'; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = result.atlas ? result.atlas.file : $('key').value + '.png'; a.click();
   }, 'image/png');
 };
 </script>
