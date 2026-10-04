@@ -424,9 +424,9 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   const p = G.player, w = hit.w;
   if (w && w.legend === 'execute' && e.hp < e.maxHp * 0.3) dmg *= 1.6;
   dmg = Math.max(1, Math.round(dmg));
-  // v1.6 방패병: 정면(방패가 향한 쪽)에서 맞으면 80% 감소. 폭발·경직 중·뒤/옆은 그대로
+  // v1.6 방패병: 정면(방패가 향한 쪽)에서 맞으면 피해 감소 (v1.7 80% → 65%). 폭발·경직 중·뒤/옆은 그대로
   if (e.def.shield && !hit.blast && angle !== undefined && e.stunT <= 0 && Math.abs(angDiff(angle, (e.face || 0) + Math.PI)) < 1.05) {
-    dmg = Math.max(1, Math.round(dmg * 0.2));
+    dmg = Math.max(1, Math.round(dmg * 0.35));
     if (Math.random() < 0.3) floatText(e.x, e.y - e.r - 6, '막힘', '#9fb2c8', 12);
     SFX.play('metal', 0.6); burst(e.x + Math.cos(angle + Math.PI) * 12, e.y + Math.sin(angle + Math.PI) * 12, '#ffe0a0', 3, 120, 0.15, 2);
     e.hp -= dmg; e.hitT = 0.05; e.state = 'chase';
@@ -668,13 +668,14 @@ function spawnEnemies(dt) {
   const p = G.player;
   G.spawnT -= dt;
   if (G.spawnT > 0 || G.assault || World.map === 'camp') return; // 어설트 중·캠프에는 일반 스폰 없음
+  if (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 1100) return; // v1.7 타이탄과 싸우는 중엔 일반 스폰 없음 (소환수만) — 봇 측정 사망 원인 1위가 끼어든 변이 거한
   G.spawnT = 0.35;
   // 먼 적 정리
   G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || e.fieldBoss || e.labBoss || dist(e, p) < 1800 || e.state === 'chase');
   if (G.elite && G.elite.hp <= 0) G.elite = null;
   const z = World.zoneIndex(p.x, p.y);
   const near = G.enemies.filter(e => !e.def.boss && dist(e, p) < 1300).length;
-  const target = z === 0 ? 8 : 18 + z * 4; // v0.16 밀도 상향 (14+z·3 → 18+z·4)
+  const target = z === 0 ? 8 : 18 + Math.min(z, 4) * 4; // v0.16 밀도 상향 (14+z·3 → 18+z·4) · v1.7 연구소·강남·잠실(z 5~7)은 여의도 밀도로 상한 (최대 46 → 34)
   if (near >= target) return;
   for (let tries = 0; tries < 6; tries++) {
     const a = rand(0, TAU), r = rand(560, 950);

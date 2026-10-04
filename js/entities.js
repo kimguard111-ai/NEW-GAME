@@ -202,7 +202,9 @@ const PlayerStats = {
   reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)),
   regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + gearBonus(p, 'regen'),
   expMul: p => 1 + gearBonus(p, 'exp'),
-  expNext: lvl => Math.floor(70 * lvl * lvl), // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
+  // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
+  // v1.7: 밸런스 봇 측정 결과 Lv30까지 너무 빠름 → Lv5부터 점점 더 많이 (Lv10 ×1.65 · Lv20 ×2.4 · Lv30 ×3.0)
+  expNext: lvl => Math.floor(70 * lvl * lvl * Math.max(1, Math.pow(lvl / 4, 0.55))),
 };
 
 // 스킬 수치: 각 스킬은 연동 능력치 하나를 따라 강해짐

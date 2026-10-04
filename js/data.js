@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.6';
+const GAME_VERSION = 'v1.7';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -113,11 +113,11 @@ const ENEMIES = {
   sentry:  { name: '보안 포탑', hp: 160, dmg: 8, speed: 0, r: 14, exp: 38, weight: 99, color: '#9aa4b0', atkCd: 1.0, aggro: 520,
              ranged: true, range: 480, fireCd: 1.5, burst: 3, bulletSpeed: 520, turret: true },
   // v1.6 강남 · 잠실
-  merc:    { name: '블랙선 용병', hp: 110, dmg: 11, speed: 96, r: 12, exp: 40, weight: 1.1, color: '#2a2e36', atkCd: 1.0, aggro: 500,
-             ranged: true, range: 420, fireCd: 1.9, burst: 3, bulletSpeed: 560, nade: true },  // 3점사 · 가끔 수류탄
-  shield:  { name: '방패 돌격병', hp: 200, dmg: 20, speed: 78, r: 14, exp: 48, weight: 2.2, color: '#3a3e46', atkCd: 1.3, aggro: 460, shield: true }, // 정면 피해 80% 감소 · 느리게 돌아섬
-  stalker: { name: '은신 변이체', hp: 120, dmg: 21, speed: 150, r: 12, exp: 46, weight: 0.9, color: '#4a3a5a', atkCd: 0.9, aggro: 420, pounce: true, cloak: true }, // 가까이 오거나 맞기 전엔 거의 안 보임
-  boss:   { name: '방사능 군주 타이탄', hp: 90000, dmg: 130, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
+  merc:    { name: '블랙선 용병', hp: 110, dmg: 6, speed: 96, r: 12, exp: 40, weight: 1.1, color: '#2a2e36', atkCd: 1.0, aggro: 500,
+             ranged: true, range: 360, fireCd: 2.8, burst: 3, bulletSpeed: 480, nade: true }, // v1.7 하향: 피해 11→7 · 사격 간격 1.9→2.4 · 사거리 420→360 · 탄속 560→480  // 3점사 · 가끔 수류탄
+  shield:  { name: '방패 돌격병', hp: 170, dmg: 14, speed: 78, r: 14, exp: 48, weight: 2.2, color: '#3a3e46', atkCd: 1.6, aggro: 460, shield: true }, // 정면 피해 65% 감소 · 느리게 돌아섬 · v1.7 하향 (체력 200→170 · 피해 20→14 · 공격 간격 1.3→1.6)
+  stalker: { name: '은신 변이체', hp: 120, dmg: 16, /* v1.7 21→16: 위협은 은신, 피해까지 최고일 필요 없음 */ speed: 150, r: 12, exp: 46, weight: 0.9, color: '#4a3a5a', atkCd: 0.9, aggro: 420, pounce: true, cloak: true }, // 가까이 오거나 맞기 전엔 거의 안 보임
+  boss:   { name: '방사능 군주 타이탄', hp: 60000, /* v1.7 90000→60000: 엔딩이 6장으로 옮겨져 중간 보스, 봇 측정상 Lv20 장비로 2분+ */ dmg: 130, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
 };
 
 // 지역 (캠프 중심으로부터 타일 거리)
@@ -147,11 +147,11 @@ const ZONES = [
     gear: ['katana', 'sniper', 'lmg', 'exo', 'exoHelm'], gearText: '고주파 블레이드·저격소총·기관총·외골격 장비' },
   // v1.6
   { name: '강남 업무지구', maxDist: 999, lvl: [20, 25], dark: 0.55, tint: 'rgba(30,20,70,0.10)',
-    spawns: [['merc', 35], ['shield', 20], ['drone', 20], ['raider', 15], ['brute', 10]],
-    desc: '민간 군사 회사 「블랙선」의 구역 — 방패병은 뒤나 폭발로', packs: { merc: [2, 3] },
+    spawns: [['merc', 25], ['shield', 25], ['brute', 15], ['dog', 15], ['drone', 10], ['raider', 10]], // v1.7 원거리 비율 70% → 45% (봇 측정 사망률 100%)
+    desc: '민간 군사 회사 「블랙선」의 구역 — 방패병은 뒤나 폭발로', packs: { merc: [1, 2] },
     gear: ['rifle', 'sniper', 'lmg', 'military', 'exo', 'tacHelmet', 'exoHelm'], gearText: '돌격소총·저격소총·기관총·강화복·외골격' },
   { name: '잠실 변이 지대', maxDist: 999, lvl: [25, 30], dark: 0.62, tint: 'rgba(60,10,60,0.10)',
-    spawns: [['stalker', 30], ['brute', 25], ['zombie', 20], ['dog', 15], ['spitter', 10]],
+    spawns: [['stalker', 25], ['zombie', 30], ['brute', 15], ['dog', 18], ['spitter', 12]], // v1.7 변이 거한 25→15 (잠실 사망 원인 2위)
     desc: '보이지 않는 포식자 · 석촌호수 물가는 발이 느려진다', packs: { zombie: [3, 5] },
     gear: ['katana', 'lmg', 'sniper', 'exo', 'exoHelm', 'gasmask'], gearText: '고주파 블레이드·기관총·저격소총·외골격·방독면' },
 ];

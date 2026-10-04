@@ -30,6 +30,10 @@ const Raid = {
 
   deploy(id) {
     const p = G.player;
+    // v1.7 비상 보급: 구급상자도 돈도 없으면 2개, 예비 탄약이 바닥이면 120발 (죽음의 악순환 방지 — 봇 측정에서 발견)
+    const med = p.inventory.find(i => i.key === 'medkit');
+    if (!med && p.credits < 120 && addItem(makeConsumable('medkit', 2))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." — 비상 구급상자 2개', '#8cf');
+    if (p.reserve < 60) { p.reserve += 120; log('작전 장교 윤씨: 비상 탄약 120발 지급', '#8cf'); }
     saveGame();
     World.generate(id);
     this.resetWorld();
