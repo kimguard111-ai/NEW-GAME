@@ -133,7 +133,10 @@ function startGame(save, name) {
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.exits = []; G.extractT = 0;
-  const P = G.player; P.stam = 100; P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
+  const P = G.player; P.stam = 100; // v1.8.1 근접 무기 공속↓·피해↑: 이미 가진 근접 무기도 같은 비율로 피해 보정 (초당 피해 유지)
+    { const R = { pipe: 25 / 18, axe: 55 / 44, katana: 79 / 60 };
+      for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || [])]) if (it && it.kind === 'weapon' && R[it.key] && !it.v181) { it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v181 = true; } }
+    P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
   Bounty.refresh(); // v0.14 일일 의뢰
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
@@ -148,6 +151,23 @@ function startGame(save, name) {
 // 구르기 (v0.16): 0.28초 무적 돌진, 1초 쿨타임. 이동 중이면 그 방향, 아니면 조준 방향
 // v1.1: 쿨타임 대신 스태미나 50 소모 (최대 100 → 연속 2번), 초당 40 회복
 const ROLL = { dur: 0.28, speed: 540, cd: 0.35, cost: 50, regen: 40 };
+// v1.8.1 총구 위치: 총을 든 몸 그림이면 그림 속 총구(옆으로 · 어깨 높이)에서 쏘고, 조준점(커서)을 향해 날아감
+// 총알은 높이 22에서 그려지므로, 화면상 총구 위치에 맞는 바닥 좌표를 역산
+function gunMuzzle(p, w) {
+  const def = { x: p.x + Math.cos(p.aim) * 22, y: p.y + Math.sin(p.aim) * 22, a: p.aim };
+  const grp = ART.weaponGroup[w.key], m = ART.muzzle && ART.muzzle[grp];
+  if (!m || typeof Sprites === 'undefined') return def;
+  const base = p.equip.armor && Sprites.get('player_' + p.equip.armor.key) ? 'player_' + p.equip.armor.key : 'player';
+  if (!Sprites.get(base + '_' + grp)) return def; // 총을 든 몸 그림이 없으면 예전 방식
+  const H = ART.height.player || 44, f = Iso.dir(p.aim).x < 0 ? -1 : 1;
+  const dsx = f * H * m[0], dsy = -H * m[1] + 22 * ISO_K, ix = dsx / ISO_K, iy = dsy / ISO_K;
+  const x = p.x + (ix + 2 * iy) / 2, y = p.y + (2 * iy - ix) / 2;
+  if (World.solidAt(x, y)) return def; // 벽에 붙어 있으면 몸 앞에서
+  const R = p.aimPt && G.time - (p.aimPtT || -9) < 0.5 ? clamp(dist(p, p.aimPt), 160, 700) : 320; // 조준점 (터치는 앞쪽 320)
+  const tx = p.x + Math.cos(p.aim) * R, ty = p.y + Math.sin(p.aim) * R;
+  return { x, y, a: Math.atan2(ty - y, tx - x) };
+}
+
 function dodge() {
   const p = G.player;
   if (p.dead || p.rollT > 0 || (p.rollCd || 0) > 0) return;
@@ -253,10 +273,10 @@ function playerAttack() {
   if (!(w.legend === 'thrift' && Math.random() < 0.35)) w.loaded--;
   const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false);
   const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w);
-  const mx = p.x + Math.cos(p.aim) * 22, my = p.y + Math.sin(p.aim) * 22;
+  const mz = gunMuzzle(p, w), mx = mz.x, my = mz.y, aim0 = mz.a;
   const life = b.range / b.speed;
   for (let i = 0; i < pellets; i++) {
-    const a = p.aim + rand(-spread, spread);
+    const a = aim0 + rand(-spread, spread);
     const s = b.speed * rand(0.95, 1.05);
     const crit = Math.random() < cc;
     G.bullets.push({
@@ -878,7 +898,7 @@ function update(dt) {
     }
     if (IS_TOUCH) Touch.aimUpdate(p); // 모바일 오른쪽 조이스틱 → 조준점·사격
     const aimAt = Iso.toWorld(input.mx, input.my, 20); // 가슴 높이 조준
-    p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x);
+    p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x); p.aimPt = aimAt; p.aimPtT = G.time;
     if (input.down && !(p.rollT > 0)) playerAttack();
     if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; finishReload(); } }
     // 캠프 안에서는 천천히 회복

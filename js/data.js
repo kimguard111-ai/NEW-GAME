@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.8.0';
+const GAME_VERSION = 'v1.8.1';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -18,11 +18,11 @@ const PITY_DROPS = 15; // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 �
 // range: 사거리(px) · knock: 넉백 · stagger: 경직(초) · move: 장착 시 이동속도 배율
 // role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
-  pipe:    { name: '쇠파이프',      icon: 'pipe', melee: true, dmg: 18, rate: 0.40, range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
+  pipe:    { name: '쇠파이프',      icon: 'pipe', melee: true, dmg: 25, rate: 0.55, /* v1.8.1 공속↓·피해↑ (DPS 유지) 0.40/18 */ range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
              role: '빠른 연타 · 탄약 불필요' },
   pistol:  { name: 'M1911 권총',    icon: 'pistol', dmg: 14, rate: 0.26, mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
              infinite: true, lvl: 1, price: 80, role: '탄약 무한 · 언제나 믿을 수 있는 보조무기' },
-  axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 44, rate: 0.8, range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
+  axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 55, rate: 1.0, /* v1.8.1 0.8/44 */ range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
              role: '느리지만 넓은 일격 · 여러 적을 밀치고 경직' },
   smg:     { name: 'MP5 기관단총',  icon: 'smg', dmg: 9, rate: 0.075, mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
@@ -30,7 +30,7 @@ const WEAPONS = {
              lvl: 5, price: 380, role: '근거리 폭발력 · 맞은 적을 크게 밀쳐냄' },
   rifle:   { name: 'K2 돌격소총',   icon: 'rifle', dmg: 17, rate: 0.11, mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
              lvl: 8, price: 620, role: '안정적인 중거리 지속 화력' },
-  katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 60, rate: 0.38, range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
+  katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 79, rate: 0.5, /* v1.8.1 0.38/60 */ range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
              role: '빠르고 긴 칼날 · 가장 빠른 이동' },
   sniper:  { name: 'K14 저격소총',  icon: 'sniper', dmg: 120, rate: 1.2, mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
              lvl: 12, price: 1100, role: '장거리 일격 · 관통 · 치명타 x2.6' },
