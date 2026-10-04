@@ -251,6 +251,10 @@ function weaponDps(p, w) {
     const rl = b.reload / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w));
     dps *= (mag * interval) / (mag * interval + rl);
   }
+  if (b.melee && MELEE_FINISH[w.key]) { // v1.9 3타 콤보를 이어 휘두른다고 가정
+    const F = MELEE_FINISH[w.key], C = MELEE_COMBO;
+    dps *= (2 * C.dmg + F.dmg) / (2 * C.rate + F.rate);
+  }
   if (w.legend === 'boom') dps *= 1.1;
   return dps;
 }

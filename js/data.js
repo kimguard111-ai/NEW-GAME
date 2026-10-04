@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.8.1';
+const GAME_VERSION = 'v1.9';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -19,23 +19,33 @@ const PITY_DROPS = 15; // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 �
 // role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
   pipe:    { name: '쇠파이프',      icon: 'pipe', melee: true, dmg: 25, rate: 0.55, /* v1.8.1 공속↓·피해↑ (DPS 유지) 0.40/18 */ range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
-             role: '빠른 연타 · 탄약 불필요' },
+             role: '3타째 강타로 크게 경직 · 탄약 불필요' },
   pistol:  { name: 'M1911 권총',    icon: 'pistol', dmg: 14, rate: 0.26, mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
-             infinite: true, lvl: 1, price: 80, role: '탄약 무한 · 언제나 믿을 수 있는 보조무기' },
+             infinite: true, quickDraw: true, lvl: 1, price: 80, role: '탄약 무한 · 즉시 꺼내 듦 · 언제나 믿을 수 있는 보조무기' },
   axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 55, rate: 1.0, /* v1.8.1 0.8/44 */ range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
-             role: '느리지만 넓은 일격 · 여러 적을 밀치고 경직' },
+             role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄' },
   smg:     { name: 'MP5 기관단총',  icon: 'smg', dmg: 9, rate: 0.075, mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
   shotgun: { name: 'M870 산탄총',   icon: 'shotgun', dmg: 10, pellets: 7, rate: 0.8, mag: 6, reload: 2.2, spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
-             lvl: 5, price: 380, role: '근거리 폭발력 · 맞은 적을 크게 밀쳐냄' },
+             lvl: 5, price: 380, role: '근거리 폭발력 · 코앞에서 쏘면 크게 날려버림' },
   rifle:   { name: 'K2 돌격소총',   icon: 'rifle', dmg: 17, rate: 0.11, mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
-             lvl: 8, price: 620, role: '안정적인 중거리 지속 화력' },
+             lvl: 8, price: 620, role: '안정적인 중거리 화력 · 끊어 쏘면 첫 발이 정확' },
   katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 79, rate: 0.5, /* v1.8.1 0.38/60 */ range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
-             role: '빠르고 긴 칼날 · 가장 빠른 이동' },
+             role: '긴 칼날 · 3타째 돌진 찌르기 · 가장 빠른 이동' },
   sniper:  { name: 'K14 저격소총',  icon: 'sniper', dmg: 120, rate: 1.2, mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
              lvl: 12, price: 1100, role: '장거리 일격 · 관통 · 치명타 x2.6' },
   lmg:     { name: 'K3 기관총',     icon: 'lmg', dmg: 15, rate: 0.07, mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
-             lvl: 16, price: 1800, role: '압도적 지속 화력 · 무겁고 탄약 소모 큼' },
+             lvl: 16, price: 1800, role: '압도적 지속 화력 · 쏠수록 빨라지고 정확해짐 · 무거움' },
+};
+
+// v1.9 근접 3타 콤보. 1·2타(MELEE_COMBO) → 3타 무기별 마무리(MELEE_FINISH). 값은 무기 기본치에 곱함
+// rate: 다음 공격까지 간격 배율 · arc: 고정 각도(없으면 arcMul) · lunge: 전진 거리(px) · stagger: 경직 추가(초) · crit: 치명타 확률 추가
+// 한 바퀴(3타) DPS ≈ 기존 ×1.15 — 콤보를 이어 갈수록 이득
+const MELEE_COMBO = { dmg: 0.85, rate: 0.8, range: 1, arcMul: 1, knock: 1, stagger: 0, lunge: 6 };
+const MELEE_FINISH = {
+  pipe:   { name: '강타',      dmg: 1.7,  rate: 1.3,  range: 1.05, arcMul: 0.8, knock: 2.2, stagger: 0.5, lunge: 10, crit: 0.15 },
+  axe:    { name: '회전 베기', dmg: 1.4,  rate: 1.35, range: 1.1,  arc: Math.PI * 2, knock: 1.6, stagger: 0.3, lunge: 4 },
+  katana: { name: '돌진 찌르기', dmg: 1.75, rate: 1.2, range: 1.7,  arc: 0.55, knock: 0.8, stagger: 0.2, lunge: 34 },
 };
 
 // 장비 추가 옵션 (v0.2). pct: 퍼센트 표시 · slot: weapon(모든 무기) / gun(총기만) / armor

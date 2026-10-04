@@ -418,7 +418,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   }
   if (b && b.melee) {
     o.blade = w.key === 'katana' ? '#bfe6ff' : w.key === 'axe' ? '#b33' : '#999';
-    o.swing = p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * meleeReach(w).arc : -0.5;
+    o.swing = meleeSwing(p, w);
   } else if (b) {
     o.gun = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 12 : w.key === 'lmg' ? 26 : w.key === 'shotgun' ? 22 : w.key === 'smg' ? 15 : 20;
     if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
@@ -517,10 +517,18 @@ function drawHelmetOverlay(sx, sy, info, hel, color) {
   }
 }
 
+// v1.9 근접 휘두르기 각도 (2타는 반대로, 3타 회전 베기는 한 바퀴, 찌르기는 거의 정면)
+function meleeSwing(p, w) {
+  if (!(p.swingT > 0)) return -0.5;
+  const k = p.swingT / (p.swingMax || 0.18), arc = Math.min(p.swingArc || meleeReach(w).arc, Math.PI * 2);
+  if (p.swingFin === 'katana') return 0;
+  return (k - 0.5) * arc * (p.swingDir || 1);
+}
+
 // 플레이어 손에 무기 그리기 (무기 그림이 있으면 그림, 없으면 코드로 그린 총·칼)
 function drawWeaponOverlay(sx, sy, w, p, fr) {
   const b = WEAPONS[w.key], len = ART.weaponLen[w.key] || 26;
-  const swing = b.melee ? (p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * meleeReach(w).arc : -0.5) : 0;
+  const swing = b.melee ? meleeSwing(p, w) : 0;
   const d = Iso.dir(p.aim + swing);
   let ang = Math.atan2(d.y, d.x);
   if (!b.melee) { // v1.7.5 총은 수평에 가깝게: 몸 그림은 좌우만 보므로 거의 수직으로 세우면 몸과 따로 놀아 보임 (총알 방향은 그대로)
@@ -854,11 +862,24 @@ function render() {
   }
   // 근접 공격 궤적
   const w = curWeapon();
-  if (w && WEAPONS[w.key].melee && p.swingT > 0 && !p.dead) {
-    const b = WEAPONS[w.key];
+  if (w && WEAPONS[w.key].melee && p.swingT > 0 && !p.dead && !p.swingFin) {
+    const rc = meleeReach(w), arc = p.swingArc || rc.arc, r = (p.swingRange || rc.range) * 0.85;
     ctx.strokeStyle = `rgba(255,255,255,${p.swingT * 3})`; ctx.lineWidth = 4;
-    const rc = meleeReach(w);
-    ctx.beginPath(); ctx.arc(p.x, p.y, rc.range * 0.85, p.aim - rc.arc / 2, p.aim + rc.arc / 2); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, p.aim - arc / 2, p.aim + arc / 2); ctx.stroke(); ctx.lineWidth = 1;
+  }
+  for (const ef of G.effects) if (ef.type === 'slash') { // v1.9 근접 마무리 궤적
+    const k = ef.t / ef.life, al = 1 - k;
+    if (ef.kind === 'katana') { // 찌르기: 앞으로 뻗는 빛줄기
+      const c = Math.cos(ef.a), sn = Math.sin(ef.a);
+      ctx.strokeStyle = `rgba(190,230,255,${al})`; ctx.lineWidth = 10 * al + 2;
+      ctx.beginPath(); ctx.moveTo(ef.x - c * 10, ef.y - sn * 10); ctx.lineTo(ef.x + c * ef.r * (0.6 + k * 0.4), ef.y + sn * ef.r * (0.6 + k * 0.4)); ctx.stroke();
+    } else {
+      const full = ef.arc >= Math.PI * 1.9;
+      ctx.strokeStyle = ef.kind === 'axe' ? `rgba(255,170,120,${al})` : `rgba(255,240,200,${al})`; ctx.lineWidth = 9 * al + 2;
+      ctx.beginPath(); if (full) ctx.arc(ef.x, ef.y, ef.r * (0.7 + k * 0.3), 0, Math.PI * 2); else ctx.arc(ef.x, ef.y, ef.r * (0.75 + k * 0.25), ef.a - ef.arc / 2, ef.a + ef.arc / 2); ctx.stroke();
+      if (ef.kind === 'pipe') { ctx.fillStyle = `rgba(255,230,160,${0.35 * al})`; ctx.beginPath(); ctx.arc(ef.x + Math.cos(ef.a) * ef.r * 0.7, ef.y + Math.sin(ef.a) * ef.r * 0.7, 26 * (0.5 + k), 0, Math.PI * 2); ctx.fill(); }
+    }
+    ctx.lineWidth = 1;
   }
   for (const ef of G.effects) {
     const k = ef.t / ef.life;
@@ -957,7 +978,7 @@ function render() {
   }
   ctx.lineWidth = 1;
   for (const ef of G.effects) if (ef.type === 'tracer') {
-    ctx.strokeStyle = ef.color; ctx.globalAlpha = 1 - ef.t / ef.life; ctx.lineWidth = 1.5;
+    ctx.strokeStyle = ef.color; ctx.globalAlpha = 1 - ef.t / ef.life; ctx.lineWidth = ef.w || 1.5;
     ctx.beginPath(); ctx.moveTo(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y, 22)); ctx.lineTo(Iso.sx(ef.x2, ef.y2), Iso.sy(ef.x2, ef.y2, 18)); ctx.stroke();
     ctx.globalAlpha = 1; ctx.lineWidth = 1;
   }

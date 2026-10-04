@@ -176,7 +176,7 @@ function dodge() {
   let a = p.aim;
   const m = moveInput();
   if (m) a = Math.atan2(m.wy, m.wx);
-  p.rollT = ROLL.dur; p.rollCd = ROLL.cd; p.rollA = a;
+  p.rollT = ROLL.dur; p.rollCd = ROLL.cd; p.rollA = a; p.lastRoll = G.time;
   SFX.play('dodge'); burst(p.x, p.y, '#8a8070', 6, 80, 0.3, 3);
 }
 // 현재 이동 입력 (월드 방향, 정규화 안 됨). 없으면 null
@@ -195,7 +195,8 @@ function moveInput() {
 function swapWeapon() {
   const p = G.player, other = p.active === 'w1' ? 'w2' : 'w1';
   if (!p.equip[other]) { log('교체할 무기가 없습니다.', '#aaa'); return; }
-  p.active = other; p.reloadT = 0; p.atkT = Math.max(p.atkT, 0.2);
+  p.active = other; p.reloadT = 0; p.atkT = Math.max(p.atkT, WEAPONS[p.equip[other].key].quickDraw ? 0.03 : 0.2); // v1.9 권총은 즉시 뽑음
+  p.mStep = 0; p.mLast = -9; // 근접 콤보 초기화
   log(`무기 교체: ${itemName(p.equip[other])}`, '#aaa');
   UI.refreshInventory();
 }
@@ -222,6 +223,9 @@ function finishReload() {
   w.loaded += take; p.reserve -= take;
 }
 
+// v1.9 기관총 예열: 연사할수록 최대 25% 빨라짐 (0.4초 쉬면 식기 시작)
+function gunRateMul(p, w) { return w.key === 'lmg' ? 1 - 0.25 * (p.heat || 0) : 1; }
+
 function playerDamageMul(melee) {
   const p = G.player;
   return (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1);
@@ -231,31 +235,43 @@ function playerAttack() {
   const p = G.player, w = curWeapon();
   if (!w || p.atkT > 0 || p.reloadT > 0) return;
   const b = WEAPONS[w.key];
-  p.atkT = b.rate * PlayerStats.rateMul(p);
+  if (!b.melee) p.atkT = b.rate * PlayerStats.rateMul(p) * gunRateMul(p, w);
   p.lastAtk = G.time; // 공격 애니메이션용
   SFX.play(b.melee ? 'swing' : { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[w.key] || 'pistol');
   const critMul = PlayerStats.critMul(p, w), cc = PlayerStats.crit(p, w);
   if (b.melee) {
-    const reach = meleeReach(w);
-    p.swingT = 0.18;
-    World.move(p, Math.cos(p.aim) * 6, Math.sin(p.aim) * 6); // 휘두르며 살짝 전진
-    const dmg = weaponDmg(w) * playerDamageMul(true);
+    // v1.9 근접 3타 콤보: 1·2타는 빠르게, 3타는 무기별 마무리 (쇠파이프 강타 · 도끼 회전 베기 · 칼 찌르기)
+    // 구르기 직후 0.35초 안의 공격은 바로 마무리 일격 (구르기 베기)
+    const rolled = G.time - ((p.lastRoll || -9) + ROLL.dur) < 0.35 && (p.lastRoll || -9) > (p.rollAtk || -9);
+    p.mStep = rolled ? 2 : G.time - (p.mLast || -9) < b.rate * 1.6 + 0.35 ? ((p.mStep || 0) + 1) % 3 : 0;
+    p.mLast = G.time;
+    if (rolled) p.rollAtk = p.lastRoll;
+    const fin = p.mStep === 2, M = fin ? MELEE_FINISH[w.key] : MELEE_COMBO;
+    p.atkT = b.rate * M.rate * PlayerStats.rateMul(p);
+    const reach = meleeReach(w), range = reach.range * M.range, arc = M.arc ? M.arc : reach.arc * (M.arcMul || 1);
+    p.swingT = p.swingMax = fin ? 0.26 : 0.18; p.swingArc = arc; p.swingRange = range; p.swingFin = fin ? w.key : null;
+    p.swingDir = p.mStep === 1 ? -1 : 1; // 2타는 반대 방향으로
+    World.move(p, Math.cos(p.aim) * M.lunge * (rolled ? 1.5 : 1), Math.sin(p.aim) * M.lunge * (rolled ? 1.5 : 1)); // 휘두르며 전진
+    if (fin) { SFX.play('heavy'); if (rolled) floatText(p.x, p.y - 34, '구르기 베기!', '#ffd27a', 13); }
+    const dmg = weaponDmg(w) * playerDamageMul(true) * M.dmg;
     let hits = 0, anyCrit = false;
     for (const e of G.enemies) {
       if (e.hp <= 0) continue;
       const d = dist(p, e);
-      if (d > reach.range + e.r) continue;
+      if (d > range + e.r) continue;
       const da = Math.abs(((angleTo(p, e) - p.aim + Math.PI * 3) % TAU) - Math.PI);
-      if (da > reach.arc / 2 && d > e.r + p.r + 4) continue;
+      if (da > arc / 2 && d > e.r + p.r + 4) continue;
       if (!World.lineOfSight(p, e)) continue; // 벽 너머 타격 방지
-      const crit = Math.random() < cc;
+      const crit = Math.random() < cc + (M.crit || 0);
       anyCrit = anyCrit || crit;
-      damageEnemy(e, dmg * (crit ? critMul : 1), crit, angleTo(p, e), { knock: b.knock, stagger: b.stagger, w });
+      damageEnemy(e, dmg * (crit ? critMul : 1), crit, angleTo(p, e), { knock: b.knock * M.knock, stagger: b.stagger + M.stagger, w, melee: true, fin });
       hits++;
     }
+    if (fin) G.effects.push({ type: 'slash', x: p.x, y: p.y, a: p.aim, arc, r: range, kind: w.key, t: 0, life: 0.3 });
     if (hits) {
-      G.shake = Math.max(G.shake, 3 + b.knock * 0.12);
-      hitstop(anyCrit ? 0.075 : 0.04 + Math.min(0.03, b.stagger * 0.04));
+      G.shake = Math.max(G.shake, (3 + b.knock * 0.12) * (fin ? 1.8 : 1));
+      hitstop((anyCrit ? 0.075 : 0.04 + Math.min(0.03, b.stagger * 0.04)) + (fin ? 0.045 : 0));
+      if (fin) SFX.play(w.key === 'katana' ? 'crit' : 'metal', 1);
     }
     return;
   }
@@ -272,13 +288,17 @@ function playerAttack() {
   }
   if (!(w.legend === 'thrift' && Math.random() < 0.35)) w.loaded--;
   const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false);
-  const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w);
+  // v1.9 무기 손맛: 기관총 예열(연사할수록 정확·빨라짐) · 소총 첫 발 정조준(잠깐 쉬었다 쏘면 정확 + 치명타)
+  const first = w.key === 'rifle' && G.time - (p.lastShot || -9) > 0.35;
+  if (w.key === 'lmg') p.heat = Math.min(1, (p.heat || 0) + 0.04);
+  p.lastShot = G.time;
+  const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w);
   const mz = gunMuzzle(p, w), mx = mz.x, my = mz.y, aim0 = mz.a;
   const life = b.range / b.speed;
   for (let i = 0; i < pellets; i++) {
     const a = aim0 + rand(-spread, spread);
     const s = b.speed * rand(0.95, 1.05);
-    const crit = Math.random() < cc;
+    const crit = Math.random() < cc + (first ? 0.1 : 0);
     G.bullets.push({
       x: mx, y: my, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, falloff: b.falloff,
       dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w,
@@ -286,6 +306,11 @@ function playerAttack() {
     });
   }
   p.recoilT = 0.07;
+  if (w.key === 'sniper') { // v1.9 저격: 탄도가 잠깐 남음
+    let ex = mx, ey = my; const c = Math.cos(aim0), sn = Math.sin(aim0);
+    for (let d = 0; d < b.range; d += 16) { const nx = mx + c * d, ny = my + sn * d; if (World.solidAt(nx, ny)) break; ex = nx; ey = ny; }
+    G.effects.push({ type: 'tracer', x: mx, y: my, x2: ex, y2: ey, t: 0, life: 0.35, color: 'rgba(255,240,200,0.8)', w: 2.5 });
+  }
   G.particles.push({ x: mx, y: my, vx: 0, vy: 0, t: 0, life: 0.06, color: '#ffe9a0', size: b.pellets ? 14 : w.key === 'sniper' ? 12 : 8, z: 22 });
   G.shake = Math.max(G.shake, b.pellets ? 6 : w.key === 'sniper' ? 7 : w.key === 'lmg' ? 2.2 : 1.5);
   if (w.loaded === 0) startReload();
@@ -482,11 +507,28 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
     }
   }
   if (e.hp <= 0) {
+    e.lastHit = { crit, melee: hit.melee, fin: hit.fin, blast: hit.blast || hit.blastKill, a: angle };
     killEnemy(e);
     if (w && w.legend === 'quickload' && w === curWeapon() && !hit.noProc) {
       w.loaded = magSize(w); p.reloadT = 0;
       floatText(p.x, p.y - 34, '장전!', '#ffd27a', 13);
     }
+  }
+}
+
+// v1.9 처치 연출: 무엇으로 쓰러뜨렸는지에 따라 다르게 (치명타 · 폭발 · 근접 마무리)
+function killFx(e) {
+  const h = e.lastHit; if (!h || e.def.boss) return;
+  const mech = FACTION[e.type] === 'machine', a = h.a || 0;
+  if (h.fin) { // 근접 마무리: 맞은 방향으로 피 튀김 + 잠깐 멈춤
+    for (let i = 0; i < 14; i++) { const aa = a + rand(-0.5, 0.5), sp = rand(120, 300); G.particles.push({ x: e.x, y: e.y, vx: Math.cos(aa) * sp, vy: Math.sin(aa) * sp, t: 0, life: rand(0.3, 0.6), color: mech ? '#ffd' : '#9a1010', size: rand(2, 4), z: 16 }); }
+    hitstop(0.06); G.shake = Math.max(G.shake, 6);
+  } else if (h.blast) { // 폭발·산탄 코앞: 그을음 + 불씨, 시체가 밀려남
+    burst(e.x, e.y, '#ff9a3a', 12, 220, 0.5, 3); burst(e.x, e.y, '#333', 8, 90, 0.8, 5);
+    const c = G.corpses[G.corpses.length - 1]; if (c && c.x === e.x && c.y === e.y) { c.x += Math.cos(a) * 18; c.y += Math.sin(a) * 18; }
+  } else if (h.crit) { // 치명타 처치: 금빛 고리 + 높은 소리
+    G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.35, color: '#ffe14a', r: e.r * 3.5 });
+    burst(e.x, e.y, '#fff3a0', 10, 200, 0.3, 2); SFX.play('crit', 1.2); hitstop(0.04);
   }
 }
 
@@ -518,6 +560,7 @@ function killEnemy(e) {
   G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.3, color: FACTION[e.type] === 'machine' ? '#cde' : '#fff', r: e.r * 2.5 });
   if (e.type === 'brute') hitstop(0.06);
   if (e.def.boss) hitstop(0.3);
+  killFx(e);
   // 퀘스트
   Story.onKill(e);
   Bounty.onKill(e); // v0.14 일일 의뢰
@@ -783,7 +826,9 @@ function updateBullets(dt) {
             // 산탄총·기관단총: 사거리 후반부 피해 감소 (최대 -50%)
             const fall = b.falloff ? clamp(1 - Math.max(0, (1 - b.life / b.maxLife) - 0.5), 0.5, 1) : 1;
             const wb = b.w && WEAPONS[b.w.key];
-            damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock : 3, stagger: wb ? wb.stagger : 0, w: b.w });
+            // v1.9 산탄총 코앞 사격: 크게 밀치고 경직
+            const pb = wb && wb.pellets && b.maxLife - b.life < 0.1;
+            damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb });
             if (wb && wb.key === 'sniper') hitstop(0.035);
             if (b.pierce-- <= 0) { b.life = 0; break; }
           }
@@ -908,7 +953,7 @@ function update(dt) {
   }
   p.rollCd = (p.rollCd || 0) - dt;
   if ((p.stamT = (p.stamT || 0) - dt) <= 0) p.stam = Math.min(100, p.stam + ROLL.regen * dt); // 스태미나 회복
-  p.atkT -= dt; p.hurtT -= dt; p.swingT -= dt; p.recoilT = (p.recoilT || 0) - dt; G.noAmmoT -= dt;
+  p.atkT -= dt; p.hurtT -= dt; p.swingT -= dt; if (G.time - (p.lastShot || -9) > 0.4) p.heat = Math.max(0, (p.heat || 0) - dt * 0.8); p.recoilT = (p.recoilT || 0) - dt; G.noAmmoT -= dt;
   for (let i = 0; i < 4; i++) p.skillCd[i] = Math.max(0, p.skillCd[i] - dt);
   p.buffs.rapid = Math.max(0, p.buffs.rapid - dt);
   p.buffs.adren = Math.max(0, p.buffs.adren - dt);

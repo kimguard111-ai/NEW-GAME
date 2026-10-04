@@ -50,6 +50,7 @@ const SFX = {
       case 'shotgun': this.noise(0.28, 900, 0.7, 0.75 * v, 'lowpass', 0.3); this.tone(80, 0.2, 0.4 * v, 'sine', 0, 0.4); break;
       case 'sniper': this.noise(0.4, 1100, 0.6, 0.8 * v, 'lowpass', 0.2); this.tone(70, 0.3, 0.45 * v, 'sine', 0, 0.3); break;
       case 'swing': this.noise(0.14, 700, 1.5, 0.25 * v, 'bandpass', 3); break;
+      case 'heavy': this.noise(0.22, 420, 1.2, 0.4 * v, 'bandpass', 2.5); this.tone(90, 0.18, 0.3 * v, 'sine', 0.05, 0.5); break; // v1.9 근접 마무리
       case 'empty': this.tone(1200, 0.03, 0.12, 'square'); break;
       case 'reload': this.tone(600, 0.04, 0.12, 'square'); this.tone(380, 0.05, 0.12, 'square', 0.12); break;
       // 타격
