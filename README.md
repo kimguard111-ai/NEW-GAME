@@ -70,6 +70,7 @@ js/game.js      게임 루프, 전투, AI, 저장
 tools/sprite-tool.html  Gemini 이미지 → 게임용 스프라이트 가공 도구
 tools/balance-bot.js    밸런스 측정 봇 (출격 루프 자동 플레이 → 레벨 시간·사망률·사망 원인)
 docs/ART_GUIDE.md, docs/GEMINI_PROMPTS.md  아트 제작 가이드 · 복붙 프롬프트
+docs/ROADMAP.md  다음 패치 계획 (v1.9~v1.15)
 ```
 
 밸런스 수치는 대부분 `js/data.js`(무기·적·지역)와 `js/entities.js`(능력치·경험치 곡선)에서 바로 수정할 수 있습니다. 버전별 변경 내용은 `CHANGELOG.md`를 참고하세요.
