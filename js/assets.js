@@ -10,7 +10,7 @@ const ART = {
   fps: { idle: 6, walk: 10, attack: 16, hit: 12, death: 10 },
   // 화면에 표시할 대기 자세 키 (px)
   // player_vest 등 방어구별 몸 그림은 player 키를 따름
-  height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44,
+  height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44, deploy: 44, stash: 44,
     // v0.15 보스 전용 그림 (등록하면 기본 적 그림을 키워 쓰는 대신 이 그림 사용)
     glutton: 66, panther: 56, argos: 46, redfang: 50, viper: 58, goliath: 118, warden: 100, butcher: 58, cerberus: 50, colony: 118, chimera: 120, merc: 44, shield: 48, stalker: 46,
     raven: 54, babel: 120, hawk: 54, shade: 66, anvil: 62, queen: 118 },

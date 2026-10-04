@@ -529,16 +529,16 @@ function killEnemy(e) {
   if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
     Monsters.onDeath(e);
     dropAt('credits', { amount: e.level * 12 });
-    if (Math.random() < 0.2) dropAt('item', { item: randomGear(e.level, 0.8, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
+    if (Math.random() < 0.12) dropAt('item', { item: randomGear(e.level, 1.2, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
   }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
-  const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.07 : 0.03; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 한 번 더 하향 (0.05/0.11 → 0.03/0.07)
+  const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
   if (Math.random() < gearChance) {
-    const it = randomGear(e.level, zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
+    const it = randomGear(e.level, 0.4 + zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
     p.pity = it.rarity >= 3 ? 0 : p.pity + 1;
     dropAt('item', { item: it });
   }
@@ -794,13 +794,40 @@ function updateGrenades(dt) {
   G.grenades = G.grenades.filter(g => !g.done);
 }
 
+// v1.7.1 장비가 땅에 닿는 순간의 연출 — 드랍이 귀해진 만큼 등급별로 확실하게
+function dropReveal(d, r) {
+  const c = RARITIES[r].color, p = G.player;
+  if (r < 2) { if (d.kind === 'item' && d.item.kind !== 'cons') { SFX.play('item', r); burst(d.x, d.y, c, 6, 70, 0.3, 2); } return; }
+  SFX.play(r >= 4 ? 'legend' : 'item', r);
+  burst(d.x, d.y, c, 10 + r * 8, 120 + r * 40, 0.6, 3);
+  G.effects.push({ type: 'ring', x: d.x, y: d.y, t: 0, life: 0.6 + r * 0.1, color: c, r: 50 + r * 25 });
+  floatText(d.x, d.y - 46, r >= 4 ? `★ ${RARITIES[r].name} ★` : `${RARITIES[r].name}!`, c, 15 + r * 3);
+  if (r >= 3) { // 영웅 이상: 화면이 잠깐 멈추고 번쩍
+    hitstop(r >= 4 ? 0.14 : 0.06); G.shake = Math.max(G.shake, r >= 4 ? 10 : 5);
+    G.flash = { color: c, t: 0, life: r >= 4 ? 0.7 : 0.35, a: r >= 4 ? 0.45 : 0.22 };
+    UI.toast(r >= 4 ? '★ 전설 장비 ★' : `${RARITIES[r].name} 장비 드랍!`, itemName(d.item) + (isUpgrade(p, d.item) ? '  ▲ 지금 장비보다 좋음' : ''));
+    log(`${RARITIES[r].name} 장비가 떨어졌다: ${itemName(d.item)}`, c);
+  }
+}
+
 function updateDrops(dt) {
   const p = G.player;
   for (const d of G.drops) {
-    if (!d.seen) { // 희귀 이상 장비가 떨어지는 순간: 소리 + 글자 (빛기둥은 render)
-      d.seen = true;
-      const r = d.kind === 'item' && d.item.kind !== 'cons' ? d.item.rarity || 0 : 0;
-      if (r >= 2) { SFX.play('item', r); floatText(d.x, d.y - 40, `${RARITIES[r].name}!`, RARITIES[r].color, 14 + r * 2); }
+    const r = d.kind === 'item' && d.item.kind !== 'cons' ? d.item.rarity || 0 : 0;
+    if (d.z === undefined) { // v1.7.1 튀어나오기: 적 자리에서 포물선으로 솟았다가 한 번 튕기고 착지
+      const a = rand(0, TAU), s = rand(30, 70);
+      d.z = 6; d.vz = d.kind === 'item' ? 170 + r * 30 : rand(90, 130); d.vx = Math.cos(a) * s; d.vy = Math.sin(a) * s; d.bounce = 0;
+    }
+    if (!d.landed) {
+      d.vz -= 560 * dt; d.z += d.vz * dt;
+      const nx = d.x + d.vx * dt, ny = d.y + d.vy * dt;
+      if (!World.solidAt(nx, ny)) { d.x = nx; d.y = ny; }
+      if (d.z <= 0 && d.vz < 0) {
+        d.z = 0;
+        if (d.bounce++ === 0 && d.vz < -90) { d.vz = -d.vz * 0.32; d.vx *= 0.4; d.vy *= 0.4; }
+        else { d.landed = true; d.vz = 0; if (!d.seen) { d.seen = true; dropReveal(d, r); } }
+      }
+      d.t += dt; continue; // 공중에선 줍지 않음
     }
     d.t += dt;
     if (p.dead) continue;

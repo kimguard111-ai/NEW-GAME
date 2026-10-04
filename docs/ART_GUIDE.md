@@ -90,7 +90,9 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 | brute | 변이 거한 | 74 | 덩치 큰 변이체 |
 | drone | 경비 드론 | 26 | 공중에 뜬 모습. 게임이 공중에 띄워서 그림 (바닥 그림자 X) |
 | boss | 방사능 군주 타이탄 | 120 | 거대 보스 |
-| merchant / captain / medic / mechanic | NPC | 44 | idle 행만 있어도 됨 |
+| subject · spitter · sentry | 연구소 적 (v1.5) | 44 · 50 · 30 | 포탑은 걷기 행 없음 |
+| merc · shield · stalker | 강남·잠실 적 (v1.6) | 44 · 48 · 46 | 은신 변이체는 게임이 투명 처리하므로 잘 보이게 그리기 |
+| merchant / captain / medic / mechanic / deploy / stash | NPC | 44 | idle 행만 있어도 됨 (deploy = 작전 장교 윤씨, stash = 창고 관리인 정씨) |
 
 화면 키는 `js/assets.js`의 `height`에서 조절할 수 있습니다.
 
@@ -123,7 +125,7 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 
 ## 랜드마크 그림 (v0.6)
 
-지역 랜드마크 4종(cathedral · bosingak · base · tower63)은 건물 한 장 그림으로 교체할 수 있습니다.
+지역 랜드마크 6종(cathedral · bosingak · base · tower63 · coex · lotte)은 건물 한 장 그림으로 교체할 수 있습니다.
 도구에서 해당 이름을 고르면 **랜드마크 모드**로 바뀌어 배경만 지우고 건물을 잘라 줍니다.
 결과 코드는 `js/assets.js`의 **`landmarks`** 안에 붙여넣으세요 (`sprites`가 아님).
 게임은 그림의 가로 폭을 건물 발판 폭에 맞추고, 그림 맨 아래를 발판 마름모의 아래 꼭짓점에 맞춥니다.
@@ -131,7 +133,8 @@ No shadow, no ground, no text, no numbers, no grid lines, no borders.
 ## 아직 지원하지 않는 것 (다음 단계)
 
 - 바닥 타일, 일반 건물, 폐차 같은 배경 그림 (지금은 코드로 그린 입체 박스)
-- 아이템 아이콘 (지금은 이모지)
+- 방어구·소모품·메뉴 아이콘 (v1.5.1부터 코드로 그린 아이콘 46종. 무기·헬멧 아이콘은 무기·헬멧 그림을 등록하면 자동으로 그 그림을 씀)
+- 뒤질 곳(쓰레기통·트렁크·보관함)·시체 가방 (코드 그림)
 
 ## 참고
 
@@ -139,6 +142,7 @@ Gemini로 생성한 이미지의 상업적 이용 조건은 사용 중인 Gemini
 
 ## 보스 전용 그림 (v0.15, 선택)
 네임드·필드 보스·거점 보스는 기본 적 그림을 크게 키워 쓰다가, 전용 그림을 등록하면 그 그림을 씁니다.
-- 프롬프트: `docs/GEMINI_PROMPTS.md` 5-7 ~ 5-16
+- 프롬프트: `docs/GEMINI_PROMPTS.md` 9번 (9-1 ~ 9-17)
 - 가공 도구 에셋 이름: glutton · panther · argos · redfang · viper · goliath · warden · butcher · cerberus · colony
+  · (v1.5~1.6) chimera · raven · babel · hawk · shade · anvil · queen
 - 등록: 도구가 주는 한 줄을 `js/assets.js` 의 `sprites` 에 붙여넣기 (화면 키는 `height` 에 이미 들어 있음)

@@ -71,6 +71,10 @@ const SFX = {
       case 'item': { const r = k; // 등급별 차임
         const notes = [[523], [523, 659], [523, 659, 784], [523, 659, 784, 1047], [523, 659, 784, 1047, 1319]][r] || [523];
         notes.forEach((f, i) => this.tone(f, 0.25 + r * 0.05, 0.12 + r * 0.03, 'triangle', i * 0.07)); break; }
+      case 'legend': { // v1.7.1 전설 드랍: 낮은 울림 + 높이 올라가는 반짝임
+        this.tone(130, 0.9, 0.25, 'sine', 0, 0.5);
+        [523, 659, 784, 1047, 1319, 1568, 2093].forEach((f, i) => this.tone(f, 0.4, 0.14, 'triangle', 0.05 + i * 0.06));
+        [2637, 3136].forEach((f, i) => this.tone(f, 0.6, 0.06, 'sine', 0.5 + i * 0.12)); break; }
       case 'levelup': [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.35, 0.18, 'triangle', i * 0.08)); break;
       case 'combo': this.tone(700 + Math.min(10, k) * 60, 0.08, 0.1, 'triangle'); break;
       case 'skill': this.tone(400, 0.15, 0.15, 'sawtooth', 0, 2); break;

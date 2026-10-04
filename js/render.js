@@ -975,6 +975,11 @@ function render() {
   const tint = ZONES[G.zone].tint;
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(200,0,0,${p.hurtT})`; ctx.fillRect(0, 0, VW, VH); }
+  if (G.flash) { // v1.7.1 영웅·전설 드랍 번쩍임
+    const f = G.flash; f.t += 1 / 60;
+    if (f.t >= f.life) G.flash = null;
+    else { ctx.globalAlpha = f.a * (1 - f.t / f.life); ctx.fillStyle = f.color; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
+  }
   if (!p.dead && p.hp < PlayerStats.maxHp(p) * 0.3) { // 저체력: 붉은 테두리가 맥박처럼
     const k = 0.25 + Math.max(0, Math.sin(G.time * 6)) * 0.25;
     const g3 = ctx.createRadialGradient(VW / 2, VH / 2, VH * 0.35, VW / 2, VH / 2, VH * 0.85);
@@ -1092,7 +1097,9 @@ function drawLandmark(l) {
 // 희귀 이상 장비 빛기둥 (v0.16): 멀리서도 보이게
 function drawDropBeams() {
   for (const d of G.drops) {
-    if (d.kind !== 'item' || d.item.kind === 'cons' || (d.item.rarity || 0) < 2) continue;
+    if (d.kind !== 'item' || d.item.kind === 'cons' || (d.item.rarity || 0) < 2 || !d.landed) continue;
+    if (d.item.rarity >= 4 && G.hitstop <= 0 && G.particles.length < 500 && Math.random() < 0.5) // 전설: 빛 입자가 계속 솟아오름
+      G.particles.push({ x: d.x + rand(-10, 10), y: d.y + rand(-10, 10), vx: 0, vy: 0, z: 6, vz: rand(50, 90), t: 0, life: rand(0.8, 1.4), color: pick(['#ffa53a', '#ffd76a', '#fff3c0']), size: rand(2, 4) });
     const r = d.item.rarity, sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y), h = 60 + r * 30, pul = 0.7 + Math.sin(G.time * 4 + d.x) * 0.3;
     const g = ctx.createLinearGradient(0, sy, 0, sy - h);
     const c = RARITIES[r].color;
@@ -1135,7 +1142,8 @@ function drawCorpse(c) {
 }
 
 function drawDrop(d) {
-  const sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y, 6 + Math.sin(G.time * 4 + d.x) * 2);
+  const air = d.landed ? 0 : d.z || 0, sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y, 6 + (d.landed ? Math.sin(G.time * 4 + d.x) * 2 : 0) + air);
+  if (air > 2) drawShadow(sx, Iso.sy(d.x, d.y), 5 * Math.max(0.4, 1 - air / 120)); // 공중: 바닥 그림자
   if (d.kind === 'credits') {
     ctx.fillStyle = '#ffd24a'; ctx.beginPath(); ctx.ellipse(sx, sy, 5, 5, 0, 0, TAU); ctx.fill();
     ctx.strokeStyle = '#a07a10'; ctx.stroke();
@@ -1144,15 +1152,15 @@ function drawDrop(d) {
     ctx.fillStyle = '#cc8'; ctx.fillRect(sx - 4, sy - 3, 8, 2);
   } else {
     const r = d.item.rarity || 0, c = RARITIES[r].color;
-    if (r >= 2) { // 희귀 이상: 멀리서도 보이는 빛기둥
+    if (r >= 2 && d.landed) { // 희귀 이상: 멀리서도 보이는 빛기둥 (착지 후)
       const gy = Iso.sy(d.x, d.y), hgt = 40 + r * 25;
       const g = ctx.createLinearGradient(0, gy - hgt, 0, gy);
       g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, c);
       ctx.globalAlpha = 0.35 + Math.sin(G.time * 4) * 0.1; ctx.fillStyle = g;
       ctx.fillRect(sx - 3 - r, gy - hgt, 6 + r * 2, hgt); ctx.globalAlpha = 1;
     }
-    Icons.draw(d.item.key, sx, sy - 8, 20); // v1.5.1 캔버스 아이콘
-    nameTag(sx, sy - 20, itemName(d.item), c);
+    Icons.draw(d.item.key, sx, sy - 8, 20 + (r >= 3 ? 4 : 0)); // v1.5.1 캔버스 아이콘
+    if (d.landed) nameTag(sx, sy - 20 - (r >= 3 ? 4 : 0), itemName(d.item), c, r >= 3 ? 'bold 12px sans-serif' : undefined);
   }
 }
 
@@ -1173,6 +1181,7 @@ function drawMinimapIso(mm) {
   const lb = World.labBoss; // v1.5 격리실 (키메라를 잡기 전까지 붉은 테두리)
   if (lb && !G.labBossDone) { g.strokeStyle = `rgba(255,50,40,${0.5 + Math.sin(G.time * 5) * 0.3})`; g.lineWidth = 1; g.strokeRect(lb.x0, lb.y0, lb.x1 - lb.x0 + 1, lb.y1 - lb.y0 + 1); }
   if (G.labBoss && G.labBoss.hp > 0) dot(G.labBoss.x, G.labBoss.y, '#ff3020', 7);
+  for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 3 && d.landed && Math.sin(G.time * 7) > -0.2) dot(d.x, d.y, RARITIES[d.item.rarity].color, 5); // 영웅 이상 드랍 위치
   if (G.grave && Math.sin(G.time * 5) > -0.3) { g.fillStyle = '#ff3030'; g.fillRect(G.grave.x / TILE - 0.6, G.grave.y / TILE - 2.5, 1.2, 5); g.fillRect(G.grave.x / TILE - 2.5, G.grave.y / TILE - 0.6, 5, 1.2); } // 시체 가방
   if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
   for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);

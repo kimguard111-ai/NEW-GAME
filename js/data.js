@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.7';
+const GAME_VERSION = 'v1.7.1';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -12,7 +12,7 @@ const RARITIES = [
   { name: '전설', mul: 2.0, color: '#ffa53a', weight: 1.0 },
 ];
 // 천장: 몬스터 장비 드랍이 이 횟수만큼 영웅 미만이면 다음 드랍은 영웅 이상 확정
-const PITY_DROPS = 25; // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 → 25
+const PITY_DROPS = 15; // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 → 25 · v1.7.1 → 15 (드랍이 더 귀해진 만큼)
 
 // 무기 기본 정보
 // range: 사거리(px) · knock: 넉백 · stagger: 경직(초) · move: 장착 시 이동속도 배율

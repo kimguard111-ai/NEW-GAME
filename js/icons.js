@@ -6,13 +6,24 @@ const ICON_PX = 96;
 const Icons = {
   cache: {}, urls: {},
   cv(key) {
-    if (this.cache[key]) return this.cache[key];
-    const c = document.createElement('canvas'); c.width = c.height = ICON_PX;
-    const g = c.getContext('2d'); g.scale(ICON_PX / 32, ICON_PX / 32); g.lineJoin = 'round'; g.lineCap = 'round';
-    (ICON_DRAW[key] || ICON_DRAW.unknown)(icoKit(g));
+    // v1.7.1 무기·헬멧 그림(assets.js)을 등록하면 아이콘도 그 그림으로 (읽히기 전엔 코드 아이콘)
+    const art = typeof ART !== 'undefined' && (ART.weapons[key] || ART.helmets[key]);
+    const useArt = !!(art && art.ready);
+    const old = this.cache[key];
+    if (old && old.art === useArt) return old;
+    if (old) delete this.urls[key]; // 그림이 막 읽혔으면 새로 만듦
+    const c = document.createElement('canvas'); c.width = c.height = ICON_PX; c.art = useArt;
+    const g = c.getContext('2d');
+    if (useArt) {
+      const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height], sc = Math.min(ICON_PX * 0.92 / rw, ICON_PX * 0.92 / rh);
+      g.drawImage(art.img, rx, ry, rw, rh, (ICON_PX - rw * sc) / 2, (ICON_PX - rh * sc) / 2, rw * sc, rh * sc);
+    } else {
+      g.scale(ICON_PX / 32, ICON_PX / 32); g.lineJoin = 'round'; g.lineCap = 'round';
+      (ICON_DRAW[key] || ICON_DRAW.unknown)(icoKit(g));
+    }
     return (this.cache[key] = c);
   },
-  url(key) { return this.urls[key] || (this.urls[key] = this.cv(key).toDataURL()); },
+  url(key) { const c = this.cv(key); return (this.urls[key] && this.urls[key].art === c.art) ? this.urls[key].u : (this.urls[key] = { u: c.toDataURL(), art: c.art }).u; },
   // 정적 HTML 의 <span data-ico="key"> 를 아이콘으로 채움
   fill(root = document) { for (const el of root.querySelectorAll('[data-ico]')) if (!el.firstChild) el.innerHTML = ICON(el.dataset.ico); },
   // 게임 화면(캔버스)에 그리기: 중심 (x, y), 크기 s(px)
