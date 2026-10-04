@@ -603,7 +603,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     ctx.strokeStyle = p.buffs.adren > 0 ? 'rgba(255,120,40,0.7)' : 'rgba(120,255,220,0.7)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(sx, sy, 20, 10, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
   }
-  if (!ui && (p.buffs.shield > 0 || p.invT > 0)) { // v1.11 방어막 · 두 번째 숨 무적
+  if (!ui && (p.buffs.shield > 0 || p.invT > 0 || p.plate > 0)) { // v1.11 방어막 · 두 번째 숨 무적
     ctx.strokeStyle = `rgba(120,184,255,${0.45 + Math.sin(G.time * 10) * 0.2})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(sx, sy - 22, 20, 30, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
   }
@@ -1165,9 +1165,12 @@ function render() {
     for (let k = 1; k < 4; k++) ctx.lineTo(lerp(ax, bx, k / 4) + rand(-6, 6), lerp(ay, by, k / 4) + rand(-6, 6));
     ctx.lineTo(bx, by); ctx.stroke(); ctx.lineWidth = 1;
   }
+  Gadgets.draw(); // v1.14 지뢰
   for (const g of G.grenades) {
     drawShadow(Iso.sx(g.x, g.y), Iso.sy(g.x, g.y), 4);
-    ctx.fillStyle = '#4a5a3a'; ctx.beginPath(); ctx.arc(Iso.sx(g.x, g.y), Iso.sy(g.x, g.y, 6 + g.h * 1.5), 4, 0, TAU); ctx.fill();
+    const gx = Iso.sx(g.x, g.y), gy = Iso.sy(g.x, g.y, 6 + g.h * 1.5);
+    ctx.fillStyle = g.kind === 'molotov' ? '#6a8a4a' : g.kind === 'flash' ? '#8a919b' : '#4a5a3a'; ctx.beginPath(); ctx.arc(gx, gy, 4, 0, TAU); ctx.fill();
+    if (g.kind === 'molotov') { ctx.fillStyle = `rgba(255,${140 + Math.random() * 80},40,0.9)`; ctx.beginPath(); ctx.arc(gx + 2, gy - 4, 2.5, 0, TAU); ctx.fill(); }
   }
   for (const pt of G.particles) {
     ctx.globalAlpha = 1 - pt.t / pt.life; ctx.fillStyle = pt.color;

@@ -424,3 +424,7 @@ body.touch #panel-stash.panel { width: 96vw !important; } body.touch .stash-body
 /* v1.13 캠프 시설 */
 .fac-row { margin: 6px 0; padding: 4px 6px; background: rgba(255,255,255,0.03); border-left: 2px solid #5a4a2e; font-size: 13px; }
 .fac-lv { color: #ffd76a; letter-spacing: 1px; margin-left: 4px; }
+/* v1.14 투척물 · 보조 칸 */
+.hot.gad .cyc { position: absolute; top: 1px; right: 3px; font-size: 9px; color: #9fe0ff; background: rgba(0,0,0,0.5); border-radius: 3px; padding: 0 3px; }
+body.touch .hot.gad .cyc { font-size: 12px; padding: 0 4px; top: 0; right: 0; background: #1c2a3a; border: 1px solid #5aa8ff; }
+.hot.gad.empty .icon { opacity: 0.35; }

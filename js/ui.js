@@ -78,17 +78,25 @@ const UI = {
     hb.innerHTML = '';
     SKILLS.forEach((s, i) => {
       const d = document.createElement('div');
-      d.className = 'hot' + (p.level < s.lvl ? ' locked' : '');
+      d.className = 'hot' + (p.level < s.lvl ? ' locked' : ''); d.dataset.act = 'sk' + i;
       d.title = `${s.name} (Lv${s.lvl}) - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;
       d.innerHTML = `<span class="key">${i + 1}</span><div class="icon">${ICON(s.icon)}</div>${s.name}<span class="sk-stat">${STAT_NAMES[s.stat]}</span><div class="cd" id="cd${i}"></div>`;
       hb.appendChild(d);
     });
     const m = document.createElement('div');
-    m.className = 'hot'; m.title = '구급상자 사용';
+    m.className = 'hot'; m.title = '구급상자 사용'; m.dataset.act = 'med';
     m.innerHTML = `<span class="key">5</span><div class="icon">${ICON('medkit')}</div>구급상자<span class="cnt" id="medcnt"></span>`;
     hb.appendChild(m);
+    for (const [slot, key, cyc] of [['throw', '6', 'T'], ['util', '7', 'Y']]) { // v1.14 투척물 · 보조
+      const k = Gadgets.sel(slot), c = CONSUMABLES[k], n = Gadgets.count(k);
+      const d = document.createElement('div');
+      d.className = 'hot gad' + (n ? '' : ' empty'); d.dataset.act = slot;
+      d.title = `${c.name} — ${c.desc}\n${cyc}: 종류 바꾸기 (${GADGET_SLOTS[slot].map(x => CONSUMABLES[x].name).join(' · ')})`;
+      d.innerHTML = `<span class="key">${key}</span><div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" id="${slot}cnt">${n}</span><span class="cyc" data-cyc="${slot}">${IS_TOUCH ? '↻' : cyc}</span>`;
+      hb.appendChild(d);
+    }
     const r = document.createElement('div'); // v0.16 구르기
-    r.className = 'hot'; r.title = '구르기: 짧은 무적 돌진 (적 공격 예고를 보고 피하기)';
+    r.className = 'hot'; r.dataset.act = 'roll'; r.title = '구르기: 짧은 무적 돌진 (적 공격 예고를 보고 피하기)';
     r.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'SPC'}</span><div class="icon">${ICON('roll')}</div>구르기<div class="cd" id="cdroll"></div>`;
     hb.appendChild(r);
   },
@@ -115,6 +123,8 @@ const UI = {
     if (p.buffs.adren > 0) buffs.push(`${ICON('adren')}아드레날린 ${p.buffs.adren.toFixed(1)}s`);
     if (p.buffs.regen > 0) buffs.push(`${ICON('heal')}재생 ${p.buffs.regen.toFixed(1)}s`);
     if (p.buffs.shield > 0) buffs.push(`${ICON('shield')}방어막 ${p.buffs.shield.toFixed(1)}s`);
+    if (p.buffs.stim > 0) buffs.push(`${ICON('stim')}자극제 ${p.buffs.stim.toFixed(1)}s`);
+    if (p.plate > 0) buffs.push(`${ICON('plate')}방탄판 ${Math.ceil(p.plate)}`);
     if (PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])) buffs.push(`<b style="color:#ffd76a">${ICON('tip')}특성 선택 가능 (C)</b>`);
     if (World.inSafe(p.x, p.y)) buffs.push(`${ICON('shield')} 안전 지대 (체력 회복)`);
     UI.html('hud-buffs', buffs.join('&nbsp; '));
@@ -144,6 +154,7 @@ const UI = {
     if (live) { $('combo-n').textContent = `x${G.combo}`; $('combo-bar').style.width = (100 * (1 - (G.time - G.comboT) / 3)) + '%'; $('combo').style.color = G.combo >= 25 ? '#ffa53a' : G.combo >= 10 ? '#c77dff' : '#ffd76a'; }
     const med = p.inventory.find(i => i && i.key === 'medkit');
     if ($('medcnt')) $('medcnt').textContent = med ? med.count : 0;
+    for (const slot of ['throw', 'util']) { const el = $(slot + 'cnt'); if (el) { const n = Gadgets.count(Gadgets.sel(slot)); el.textContent = n; el.parentNode.classList.toggle('empty', !n); } } // v1.14
 
     // 보스 바
     const fb = G.fieldBoss && dist(G.fieldBoss, p) < 900 ? G.fieldBoss : G.labBoss && G.labBoss.hp > 0 && dist(G.labBoss, p) < 900 ? G.labBoss : null;

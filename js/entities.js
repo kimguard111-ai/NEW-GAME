@@ -238,10 +238,10 @@ const PlayerStats = {
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {
     const w = p.equip[p.active];
-    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
+    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
-  rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1),
+  rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1) / (p.buffs.stim > 0 ? 1.15 : 1),
   reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)) / (perk('bulletStorm') ? 1.2 : 1),
   regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + gearBonus(p, 'regen') + (armorLegend('filter') ? 2 : 0) + (wornUnique('chimera') ? (p.hp < PlayerStats.maxHp(p) * 0.5 ? 9 : 3) : 0),
   expMul: p => 1 + gearBonus(p, 'exp'),

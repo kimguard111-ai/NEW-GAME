@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.13';
+const GAME_VERSION = 'v1.14';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -149,6 +149,12 @@ const HELMETS = {
 const CONSUMABLES = {
   medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복', price: 40, stack: 20 },
   ammo:   { name: '탄약 상자', icon: 'ammo', desc: '예비 탄약 +120', price: 45, stack: 20 },
+  // v1.14 투척물 (6번 칸, T로 바꿈) · 보조 (7번 칸, Y로 바꿈)
+  molotov: { name: '화염병', icon: 'molotov', desc: '던진 자리에 5초 불길 (넓게 · 계속 피해)', price: 90, stack: 10, slot: 'throw' },
+  flash:   { name: '섬광탄', icon: 'flash', desc: '반경 170 안의 적 2.5초 기절 (보스 0.6초) · 은신 드러냄', price: 70, stack: 10, slot: 'throw' },
+  mine:    { name: '지뢰', icon: 'mine', desc: '발밑에 설치 — 적이 밟으면 큰 폭발 (최대 4개)', price: 110, stack: 10, slot: 'throw' },
+  stim:    { name: '전투 자극제', icon: 'stim', desc: '12초 동안 이동 +20% · 공격 속도 +15% · 받는 피해 -10%', price: 120, stack: 10, slot: 'util' },
+  plate:   { name: '방탄판', icon: 'plate', desc: '최대 체력 25%만큼 피해를 막는 보호막 (최대 50%까지 쌓임)', price: 100, stack: 10, slot: 'util' },
 };
 
 // 적 정의

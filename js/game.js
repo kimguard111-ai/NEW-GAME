@@ -7,7 +7,7 @@ const SAVE_KEY = 'seoul2049-save-v1';
 const MAP_SEED = 2049;
 
 const G = {
-  player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [], fires: [],
+  player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [], fires: [], mines: [],
   npcs: [], corpses: [], elite: null, strikes: [], pools: [], assault: null, fieldBoss: null, fbT: 150, inside: null, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
@@ -47,6 +47,10 @@ window.addEventListener('keydown', e => {
   else if (k === 'escape') { if (UI.anyOpen()) UI.closeAll(); else Pause.toggle(); }
   else if (k >= '1' && k <= '4') useSkill(+k - 1);
   else if (k === '5') quickMedkit();
+  else if (k === '6') Gadgets.use('throw'); // v1.14
+  else if (k === '7') Gadgets.use('util');
+  else if (k === 't') Gadgets.cycle('throw');
+  else if (k === 'y') Gadgets.cycle('util');
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
@@ -129,7 +133,7 @@ function startGame(save, name) {
     log('대붕괴 20년 후, 서울. 시청역 생존자 캠프에서 눈을 떴다.', '#e0b23a');
     G.autoStory = true; // v0.16: 1장을 바로 시작 (캠프 대화 없이)
   }
-  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.corpses = [];
+  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.exits = []; G.extractT = 0;
@@ -377,6 +381,9 @@ function useItem(it) {
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
   } else if (it.key === 'ammo') {
     p.reserve += 120; log('예비 탄약 +120', '#cc8');
+  } else if (CONSUMABLES[it.key].slot) { // v1.14 투척물·보조: 가방에서 누르면 그 칸에 선택
+    const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
+    log(`${it.name}을(를) ${slot === 'throw' ? '6번(투척)' : '7번(보조)'} 칸에 올렸다.`, '#cfe'); UI.buildHotbar(); return;
   } else return;
   it.count--;
   if (it.count <= 0) removeItem(it);
@@ -454,9 +461,15 @@ function damagePlayer(dmg, srcX, srcY) {
   if (perk('ghost') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1) tk *= 0.5;
   if (p.buffs.shield > 0) tk *= 0.6;
   if (p.buffs.adren > 0 && smod('adren') === 'b') tk *= 0.7;
+  if (p.buffs.stim > 0) tk *= 0.9; // v1.14 전투 자극제
   if (setOn('steel', 3) && p.hp >= PlayerStats.maxHp(p) * 0.5) tk *= 0.8; // v1.12 강철 부대 3세트
   if (wornUnique('shade') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1.5) tk *= 0.7; // 그림자 외피
-  const d = Math.max(1, Math.round(dmg * tk * (1 - PlayerStats.dmgReduce(p))));
+  let d = Math.max(1, Math.round(dmg * tk * (1 - PlayerStats.dmgReduce(p))));
+  if (p.plate > 0) { // v1.14 방탄판이 먼저 막음
+    const ab = Math.min(p.plate, d); p.plate -= ab; d -= ab;
+    if (p.plate <= 0) { floatText(p.x, p.y - 34, '방탄판 파손', '#7ab8ff', 12); SFX.play('metal', 0.8); }
+    if (d <= 0) { p.lastHurt = G.time; floatText(p.x, p.y - 20, '막음', '#7ab8ff', 12); return; }
+  }
   p.hp -= d; p.hurtT = 0.15; p.lastHurt = G.time;
   // v1.12 방어구 전설
   if (armorLegend('aegis') && G.time > (p.aegisCd || 0) && Math.random() < 0.2) { p.aegisCd = G.time + 10; p.buffs.shield = Math.max(p.buffs.shield || 0, 3); floatText(p.x, p.y - 44, '반응 장갑!', '#7ab8ff', 13); }
@@ -490,7 +503,7 @@ function respawn() {
   if (World.map !== 'camp') { Raid.toCamp(); document.getElementById('death-screen').classList.add('hidden'); saveGame(); return; } // 출격 맵에서 죽으면 캠프로
   const p = G.player, c = World.campCenter();
   p.x = c.x; p.y = c.y; p.dead = false; p.hp = PlayerStats.maxHp(p); p.reloadT = 0; p.hurtT = 0;
-  p.buffs.rapid = 0; p.buffs.adren = 0; p.buffs.regen = 0; p.buffs.shield = 0;
+  p.buffs.rapid = 0; p.buffs.adren = 0; p.buffs.regen = 0; p.buffs.shield = 0; p.buffs.stim = 0; p.plate = 0;
   G.enemies = G.enemies.filter(e => e.def.boss || dist(e, p) > 900);
   G.bullets = []; G.strikes = []; G.pools = [];
   document.getElementById('death-screen').classList.add('hidden');
@@ -911,6 +924,7 @@ function updateGrenades(dt) {
     g.x = lerp(g.sx, g.tx, k); g.y = lerp(g.sy, g.ty, k); g.h = Math.sin(k * Math.PI) * 40;
     if (k >= 1) {
       g.done = true;
+      if (g.kind) { Gadgets.land(g); continue; } // v1.14 화염병 · 섬광탄
       const base = SkillCalc.grenadeDmg(p) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1) * (perk('demolition') ? 1.3 : 1);
       const dmg = base * (g.child ? 0.35 : g.mod === 'b' ? 0.8 : 1), r = SkillCalc.grenadeR(p) * (g.child ? 0.55 : 1);
       explode(g.x, g.y, dmg, r, { knock: g.child ? 12 : 30, stagger: g.child ? 0.2 : 0.6, small: g.child });
@@ -1053,6 +1067,7 @@ function update(dt) {
   p.buffs.adren = Math.max(0, p.buffs.adren - dt);
   p.invT = Math.max(0, (p.invT || 0) - dt);
   p.buffs.shield = Math.max(0, (p.buffs.shield || 0) - dt);
+  p.buffs.stim = Math.max(0, (p.buffs.stim || 0) - dt);
   if (p.buffs.regen > 0 && !p.dead) { p.buffs.regen -= dt; p.hp = Math.min(PlayerStats.maxHp(p), p.hp + (p.regenRate || 0) * dt); }
 
   spawnEnemies(dt);
@@ -1061,6 +1076,7 @@ function update(dt) {
   Raid.update(dt);
   Scavenge.update(dt);
   RaidEvents.update(dt); // v1.10
+  Gadgets.update(dt); // v1.14 지뢰
   Nav.update(dt);
   updateEnemies(dt);
   Assault.update(dt);

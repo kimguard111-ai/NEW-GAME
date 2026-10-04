@@ -22,6 +22,7 @@ const TIPS = {
   events:    () => '이번 출격에 사건이 있습니다 (미니맵 노란 ◆ · 목표 창). 보급 투하·금고·둥지는 좋은 보상, 오래 머물면 경보 단계가 올라 적이 늘어납니다. 주황 점선 ◎은 조건을 채우면 열리는 특수 탈출.',
   perk:      () => '특성을 고를 수 있습니다! 능력치 창(C) 가운데의 특성 칸에서 하나를 고르세요. 스킬마다 갈래(오른쪽 버튼 2개)도 캠프에서 고를 수 있습니다.',
   camp:      () => '캠프 시설을 지을 수 있습니다! 생존자 대장 한씨 → 「캠프 시설」. 의무실·사격장·창고 증축·작업대·무전실 — 크레딧과 고철·전자 부품이 듭니다.',
+  gadget:    () => `투척물·보조 소모품을 얻었습니다! ${tipKey('6', '6번 칸')} 투척(화염병·섬광탄·지뢰) · ${tipKey('7', '7번 칸')} 보조(자극제·방탄판). 종류 바꾸기: ${tipKey('T / Y', '칸 모서리 ↻')}`,
   extract:   () => '이번 출격에서 주운 장비·크레딧은 맵 끝의 초록 ◎ 탈출 지점에 5초 머물러야 확정됩니다. 죽으면 그것만 잃어요.',
 };
 
@@ -57,6 +58,7 @@ const Tips = {
     if (G.enemies.filter(e => e.heard && near(e, 600)).length >= 2) return this.show('noise');
     if (w && WEAPONS[w.key].melee && G.enemies.some(e => near(e, 300))) return this.show('melee');
     if (PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])) return this.show('perk');
+    if (!p.tips.includes('gadget') && Object.keys(GADGET_SLOTS).some(s => GADGET_SLOTS[s].some(k => Gadgets.count(k)))) return this.show('gadget');
     if (p.statPoints > 0 && p.level >= 2) return this.show('levelup');
     if (p.inventory.some(it => it.kind !== 'cons' && p.level >= itemReqLevel(it) && isUpgrade(p, it))) return this.show('upgrade');
     if (p.hp < mh * 0.3) return this.show('lowhp');

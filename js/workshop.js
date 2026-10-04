@@ -11,6 +11,12 @@ const SALVAGE = { scrap: [2, 4, 7, 12, 20], chip: [0, 0, 1, 3, 6] };
 const CRAFTS = {
   medkit: { scrap: 4 },
   ammo:   { scrap: 3 },
+  // v1.14 작업대(캠프 시설) 단계에 따라 제작 목록이 늘어남
+  molotov: { scrap: 3, bench: 1 },
+  plate:   { scrap: 6, bench: 1 },
+  flash:   { scrap: 2, chip: 1, bench: 2 },
+  mine:    { scrap: 5, chip: 1, bench: 2 },
+  stim:    { scrap: 2, chip: 2, bench: 3 },
 };
 
 const Workshop = {
@@ -86,7 +92,11 @@ const Workshop = {
         + `<div class="btns"><button id="ws-salvage">분해</button></div>`;
     } else h += '<span class="muted">분해할 장비가 없습니다.</span>';
     h += `<div class="btns"><button id="ws-bulk">일반·고급 일괄 분해</button></div><hr style="border-color:#333">소모품 제작`;
-    for (const k of Object.keys(CRAFTS)) h += `<div class="btns"><button data-craft="${k}" ${this.canPay(CRAFTS[k]) ? '' : 'disabled'}>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} 제작 (${this.costText(CRAFTS[k])})</button></div>`;
+    for (const k of Object.keys(CRAFTS)) {
+      const need = CRAFTS[k].bench || 0;
+      if (need > Camp.lv('bench')) { h += `<div class="btns"><button disabled>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} <span class="muted">— 작업대 ${need}단계 필요 (캠프 시설)</span></button></div>`; continue; }
+      h += `<div class="btns"><button data-craft="${k}" ${this.canPay(CRAFTS[k]) ? '' : 'disabled'}>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} 제작 (${this.costText(CRAFTS[k])})</button></div>`;
+    }
     box.innerHTML = h;
     if (it) $('ws-salvage').onclick = () => this.salvage(it);
     $('ws-bulk').onclick = () => this.bulkSalvage();
@@ -110,7 +120,7 @@ const Workshop = {
     this.sel = null; this.after();
   },
   craft(k) {
-    if (!this.canPay(CRAFTS[k])) return;
+    if (!this.canPay(CRAFTS[k]) || (CRAFTS[k].bench || 0) > Camp.lv('bench')) return;
     if (!addItem(makeConsumable(k, 1))) { log('인벤토리가 가득 찼습니다.', '#f88'); return; }
     this.pay(CRAFTS[k]);
     log(`제작: ${CONSUMABLES[k].name}`, '#9fd');
