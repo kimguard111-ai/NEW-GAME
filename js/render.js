@@ -281,16 +281,26 @@ const Sprites = {
   // 애니메이션 길이(초)
   dur(s, anim) { return s.anims[anim] ? s.anims[anim][1] / (ART.fps[anim] || 8) : 0; },
   // 그리기. anim 이 없으면 idle 로 대체. t = 애니메이션 시작 후 경과(초). 성공 시 true
-  draw(key, anim, t, sx, sy, faceA, flash) {
+  // 이번에 그릴 프레임 (그리지 않고 계산만 — 무기를 몸보다 먼저 그릴 때 머리 위치가 필요)
+  frame(key, anim, t, faceA) {
     const s = this.get(key);
-    if (!s) return false;
+    if (!s) return null;
     const d = Iso.dir(faceA || 0);
     if (!s.anims[anim]) anim = s.anims.idle ? 'idle' : Object.keys(s.anims)[0];
     if (d.y < -0.35 && s.anims['back_' + anim]) anim = 'back_' + anim; // 등 돌린 그림이 있으면 사용
     const [row, n] = s.anims[anim], fps = ART.fps[anim.replace('back_', '')] || 8;
     const once = /attack|hit|death/.test(anim);
     const f = once ? Math.min(n - 1, Math.floor(t * fps)) : Math.floor(t * fps) % n;
-    const sc = (ART.height[key] || ART.height[key.split('_')[0]] || 44) / (s.cell * ART.charFill), size = s.cell * sc, cw = s.w || s.cell; // w: 칸 가로 (없으면 정사각형)
+    const sc = (ART.height[key] || ART.height[key.split('_')[0]] || 44) / (s.cell * ART.charFill);
+    const hd = s.heads && s.heads[anim] && s.heads[anim][f];
+    return { s, d, anim, row, f, sc, flip: d.x < 0, head: hd ? { x: hd[0], y: hd[1], w: s.headW || 20 } : null };
+  },
+  draw(key, anim, t, sx, sy, faceA, flash) {
+    const fr = this.frame(key, anim, t, faceA);
+    if (!fr) return false;
+    const { s, d, row, f, sc } = fr;
+    anim = fr.anim;
+    const size = s.cell * sc, cw = s.w || s.cell; // w: 칸 가로 (없으면 정사각형)
     ctx.save();
     ctx.translate(sx, sy + ART.feetPad * sc);
     if (d.x < 0) ctx.scale(-1, 1); // 그림은 오른쪽을 보는 기준, 왼쪽은 좌우 반전
@@ -298,8 +308,7 @@ const Sprites = {
     ctx.drawImage(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
     ctx.restore();
     // 머리 위치 (가공 도구가 기록한 프레임별 값, 발 기준 칸 좌표)
-    const hd = s.heads && s.heads[anim] && s.heads[anim][f];
-    return { anim, sc, flip: d.x < 0, head: hd ? { x: hd[0], y: hd[1], w: s.headW || 20 } : null };
+    return { anim, sc, flip: fr.flip, head: fr.head };
   },
 };
 
@@ -418,11 +427,12 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   const bodyKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
   if (Sprites.get(bodyKey)) {
     // 몸 그림(무기·헬멧 없음) + 헬멧을 머리에, 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
-    const back = Iso.dir(p.aim).y < -0.15;
-    if (back && w) drawWeaponOverlay(sx, sy, w, p);
+    // v1.7.5 무기는 이번 프레임의 머리 위치를 따라감 (걷기 흔들림·피격 젖힘과 함께 움직임) · 쓰러지는 중엔 손에서 놓음
+    const back = Iso.dir(p.aim).y < -0.15, fr = Sprites.frame(bodyKey, anim, at, p.aim), hold = w && !p.dead && fr.anim.indexOf('death') < 0;
+    if (back && hold) drawWeaponOverlay(sx, sy, w, p, fr);
     const info = Sprites.draw(bodyKey, anim, at, sx, sy, p.aim, p.hurtT > 0);
     if (hel && info.anim.indexOf('death') < 0) drawHelmetOverlay(sx, sy, info, hel, o.helmet);
-    if (!back && w) drawWeaponOverlay(sx, sy, w, p);
+    if (!back && hold) drawWeaponOverlay(sx, sy, w, p, info);
   } else drawHuman(sx, sy, o);
   if (p.buffs.adren > 0 || p.buffs.rapid > 0) {
     ctx.strokeStyle = p.buffs.adren > 0 ? 'rgba(255,120,40,0.7)' : 'rgba(120,255,220,0.7)'; ctx.lineWidth = 2;
@@ -499,13 +509,25 @@ function drawHelmetOverlay(sx, sy, info, hel, color) {
 }
 
 // 플레이어 손에 무기 그리기 (무기 그림이 있으면 그림, 없으면 코드로 그린 총·칼)
-function drawWeaponOverlay(sx, sy, w, p) {
+function drawWeaponOverlay(sx, sy, w, p, fr) {
   const b = WEAPONS[w.key], len = ART.weaponLen[w.key] || 26;
   const swing = b.melee ? (p.swingT > 0 ? (p.swingT / 0.18 - 0.5) * meleeReach(w).arc : -0.5) : 0;
-  const d = Iso.dir(p.aim + swing), ang = Math.atan2(d.y, d.x);
+  const d = Iso.dir(p.aim + swing);
+  let ang = Math.atan2(d.y, d.x);
+  if (!b.melee) { // v1.7.5 총은 수평에 가깝게: 몸 그림은 좌우만 보므로 거의 수직으로 세우면 몸과 따로 놀아 보임 (총알 방향은 그대로)
+    const right = Math.cos(ang) >= 0, rel = right ? ang : Math.atan2(d.y, -d.x), r2 = clamp(rel * 0.75, -0.96, 0.96);
+    ang = right ? r2 : Math.PI - r2; d.x = Math.cos(ang); d.y = Math.sin(ang);
+  }
   const rc = !b.melee && p.recoilT > 0 ? (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07 : 0; // 반동
   const H = ART.height.player || 44, fw = H * (ART.handX ?? 0.1);
-  const hx = sx + d.x * (fw - rc), hy = sy - H * ART.handY + d.y * (fw * 0.5 - rc);
+  // 손(가슴) 위치: 몸 그림의 이번 프레임 머리 위치 기준 (없으면 예전처럼 키 비율)
+  let cx = sx, cy = sy - H * ART.handY;
+  if (fr && fr.head) {
+    const hf = ART.handFromHead;
+    cx = sx + fr.head.x * fr.sc * (fr.flip ? -1 : 1) + (fr.flip ? -1 : 1) * H * hf.x;
+    cy = sy + fr.head.y * fr.sc + H * hf.y;
+  }
+  const hx = cx + d.x * (fw - rc), hy = cy + d.y * (fw * 0.5 - rc);
   const art = ART.weapons[w.key];
   ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
   if (Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게
