@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.10';
+const GAME_VERSION = 'v1.11';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -198,5 +198,45 @@ const SKILLS = [
   { id: 'heal',    name: '응급 처치', icon: 'heal',  lvl: 6,  cd: 22, stat: 'vit' },
   { id: 'adren',   name: '아드레날린', icon: 'adren', lvl: 10, cd: 40, stat: 'str' },
 ];
+
+// v1.11 특성: 이 레벨이 되면 3개 중 1개 선택 (총 6개). 의무병의 능력치 초기화 때 함께 초기화
+const PERK_TIERS = [
+  { lvl: 5, perks: [
+    { id: 'rollStrike', name: '구르기 공격', desc: '구르기가 끝나고 1.5초 동안 주는 피해 +30%' },
+    { id: 'scavenger', name: '청소부', desc: '뒤지기 속도 +40% · 뒤질 곳의 크레딧 +50%' },
+    { id: 'thickSkin', name: '강인함', desc: '최대 체력 +12%' } ] },
+  { lvl: 10, perks: [
+    { id: 'lastRounds', name: '마지막 탄', desc: '탄창이 25% 이하일 때 치명타 확률 +25%' },
+    { id: 'brawler', name: '싸움꾼', desc: '근접 공격으로 처치하면 최대 체력 4% 회복' },
+    { id: 'runner', name: '질주', desc: '이동 속도 +8% · 구르기 기력 소모 -25%' } ] },
+  { lvl: 15, perks: [
+    { id: 'executioner', name: '처형 일격', desc: '근접 3타 마무리 · 구르기 베기 피해 +40%' },
+    { id: 'steadyAim', name: '침착함', desc: '2초 동안 맞지 않으면 총기 피해 +15%' },
+    { id: 'fieldMedic', name: '응급 요원', desc: '구급상자 회복량 +50% · 응급 처치 재사용 -30%' } ] },
+  { lvl: 20, perks: [
+    { id: 'lastStand', name: '투쟁 본능', desc: '체력 35% 이하일 때 주는 피해 +25% · 받는 피해 -15%' },
+    { id: 'demolition', name: '폭파 전문가', desc: '수류탄 반경 +30% · 내가 일으킨 폭발 피해 +30%' },
+    { id: 'killStreak', name: '연쇄 사냥', desc: '연속 처치 5 이상일 때 공격 속도 +15%' } ] },
+  { lvl: 25, perks: [
+    { id: 'secondWind', name: '두 번째 숨', desc: '출격마다 한 번, 쓰러질 피해를 받으면 체력 30%로 버티고 2초 무적' },
+    { id: 'treasure', name: '보물 사냥꾼', desc: '몬스터·뒤질 곳의 장비 드랍 확률 +25%' },
+    { id: 'bulletStorm', name: '탄막', desc: '탄창 용량 +30% · 재장전 속도 +20%' } ] },
+  { lvl: 30, perks: [
+    { id: 'apex', name: '정점 포식자', desc: '엘리트·네임드·보스·둥지에게 주는 피해 +20%' },
+    { id: 'ghost', name: '그림자 걸음', desc: '구르기 재사용 -40% · 구르기 후 1초 동안 받는 피해 -50%' },
+    { id: 'warlord', name: '전쟁군주', desc: '모든 스킬 재사용 대기 -25%' } ] },
+];
+
+// v1.11 스킬 갈래: 스킬마다 2개 중 하나 (캠프에서 자유롭게 바꿈). 고르지 않으면 기본형
+const SKILL_MODS = {
+  rapid:   { a: { name: '정밀 사격', desc: '공격 속도 ×1.5로 낮추는 대신 치명타 확률 +25%' },
+             b: { name: '탄약 보급', desc: '발동 순간 탄창 가득 · 지속 중 탄약 소모 없음 (지속 -25%)' } },
+  grenade: { a: { name: '집속탄', desc: '터진 뒤 작은 폭탄 4개가 흩어져 다시 폭발 (각 35%)' },
+             b: { name: '소이탄', desc: '폭발 피해 -20% · 그 자리에 4초 불길 (초당 폭발 피해의 22%)' } },
+  heal:    { a: { name: '재생 주사', desc: '즉시 절반 회복 + 6초 동안 나머지의 2배를 서서히 회복' },
+             b: { name: '방어막', desc: '회복 + 4초 동안 받는 피해 -40%' } },
+  adren:   { a: { name: '광폭', desc: '지속 중 처치할 때마다 지속 +1.5초 (최대 +8초)' },
+             b: { name: '진통제', desc: '지속 중 받는 피해 -30% (피해 증가는 절반)' } },
+};
 
 // 임무는 js/quests.js (v0.7 챕터 구조)

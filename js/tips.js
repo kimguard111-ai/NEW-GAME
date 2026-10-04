@@ -20,6 +20,7 @@ const TIPS = {
   water:     () => '얕은 물에서는 사람도 적도 느려집니다. 쫓길 땐 물을 피하고, 근접형 적을 물가로 끌어들이세요.',
   melee:     () => `근접 무기는 계속 휘두르면 3타째에 강한 마무리(쇠파이프 강타 · 도끼 회전 베기 · 블레이드 돌진 찌르기)가 나갑니다. ${tipKey('Space', '구르기')} 직후 바로 공격하면 곧장 마무리 일격!`,
   events:    () => '이번 출격에 사건이 있습니다 (미니맵 노란 ◆ · 목표 창). 보급 투하·금고·둥지는 좋은 보상, 오래 머물면 경보 단계가 올라 적이 늘어납니다. 주황 점선 ◎은 조건을 채우면 열리는 특수 탈출.',
+  perk:      () => '특성을 고를 수 있습니다! 능력치 창(C) 가운데의 특성 칸에서 하나를 고르세요. 스킬마다 갈래(오른쪽 버튼 2개)도 캠프에서 고를 수 있습니다.',
   extract:   () => '이번 출격에서 주운 장비·크레딧은 맵 끝의 초록 ◎ 탈출 지점에 5초 머물러야 확정됩니다. 죽으면 그것만 잃어요.',
 };
 
@@ -53,6 +54,7 @@ const Tips = {
     if (G.enemies.some(e => near(e, 400) && (e.windT > 0 || e.pounceT > 0 || e.aimT > 0)) || G.strikes.some(s => Math.hypot(s.x - p.x, s.y - p.y) < 300)) return this.show('telegraph');
     if (G.enemies.filter(e => e.heard && near(e, 600)).length >= 2) return this.show('noise');
     if (w && WEAPONS[w.key].melee && G.enemies.some(e => near(e, 300))) return this.show('melee');
+    if (PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])) return this.show('perk');
     if (p.statPoints > 0 && p.level >= 2) return this.show('levelup');
     if (p.inventory.some(it => it.kind !== 'cons' && p.level >= itemReqLevel(it) && isUpgrade(p, it))) return this.show('upgrade');
     if (p.hp < mh * 0.3) return this.show('lowhp');

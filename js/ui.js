@@ -113,6 +113,9 @@ const UI = {
     const buffs = [];
     if (p.buffs.rapid > 0) buffs.push(`${ICON('rapid')}집중 사격 ${p.buffs.rapid.toFixed(1)}s`);
     if (p.buffs.adren > 0) buffs.push(`${ICON('adren')}아드레날린 ${p.buffs.adren.toFixed(1)}s`);
+    if (p.buffs.regen > 0) buffs.push(`${ICON('heal')}재생 ${p.buffs.regen.toFixed(1)}s`);
+    if (p.buffs.shield > 0) buffs.push(`${ICON('shield')}방어막 ${p.buffs.shield.toFixed(1)}s`);
+    if (PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])) buffs.push(`<b style="color:#ffd76a">${ICON('tip')}특성 선택 가능 (C)</b>`);
     if (World.inSafe(p.x, p.y)) buffs.push(`${ICON('shield')} 안전 지대 (체력 회복)`);
     UI.html('hud-buffs', buffs.join('&nbsp; '));
     const z = ZONES[G.zone];
@@ -325,10 +328,23 @@ const UI = {
         <div class="stat-eff">${eff}${(() => { const sk = SKILLS.find(s => s.stat === k); return sk ? ` · <span class="sk-link">${ICON(sk.icon)} ${sk.name} 강화</span>` : ''; })()}</div>`;
     }
     const wline = sl => { const w = p.equip[sl]; return w ? `<div class="stat-row"><span>${sl === 'w1' ? '주무기' : '보조무기'} DPS <span class="muted">${itemName(w)}</span></span><b>${Math.round(weaponDps(p, w))}</b></div>` : ''; };
-    h += '<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐)</div>';
+    // v1.11 특성: 단계마다 3개 중 1개
+    h += '<hr style="border-color:#333"><div class="muted">특성 (5레벨마다 하나 선택 · 의무병의 능력치 초기화 때 함께 초기화)</div>';
+    PERK_TIERS.forEach((t, i) => {
+      const got = p.perks[i], open = p.level >= t.lvl;
+      h += `<div class="perk-tier${open ? '' : ' locked'}"><span class="tag">Lv${t.lvl}</span>`;
+      for (const k of t.perks) {
+        const sel = got === k.id, can = open && !got;
+        h += `<button class="perk${sel ? ' sel' : ''}" ${can ? `data-perk="${i}:${k.id}"` : 'disabled'} title="${k.desc}"><b>${k.name}</b><span>${k.desc}</span></button>`;
+      }
+      h += '</div>';
+    });
+    h += '<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐 · 갈래는 캠프에서 바꿀 수 있음)</div>';
+    const inCamp = World.map === 'camp';
     for (const s of SKILLS) {
-      const locked = p.level < s.lvl;
-      h += `<div class="skill-row${locked ? ' locked' : ''}">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">Lv${s.lvl} 습득</span>` : ''}<br><span class="stat-eff">${skillDesc(s, p)}</span></div>`;
+      const locked = p.level < s.lvl, m = p.skillMods[s.id];
+      const mb = k => `<button class="smod${m === k ? ' sel' : ''}" ${!locked && inCamp ? `data-smod="${s.id}:${k}"` : 'disabled'} title="${SKILL_MODS[s.id][k].desc}">${SKILL_MODS[s.id][k].name}</button>`;
+      h += `<div class="skill-row${locked ? ' locked' : ''}">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">Lv${s.lvl} 습득</span>` : ''} <span class="smods">${mb('a')}${mb('b')}</span><br><span class="stat-eff">${skillDesc(s, p)}</span></div>`;
     }
     h += `<hr style="border-color:#333">${wline('w1')}${wline('w2')}
       <div class="stat-row"><span>최대 체력</span><span>${PlayerStats.maxHp(p)}</span></div>
@@ -341,6 +357,23 @@ const UI = {
       <div class="stat-row"><span>처치 수</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div>
       <div class="muted" style="margin-top:6px">능력치 초기화: 캠프의 의무병 이씨 (${respecCost(p) ? fmt(respecCost(p)) + '₵' : '첫 1회 무료'})</div>`;
     $('stats-body').innerHTML = h;
+    $('stats-body').querySelectorAll('button[data-perk]').forEach(b => {
+      b.onclick = () => {
+        const [i, id] = b.dataset.perk.split(':'), t = PERK_TIERS[+i], k = t.perks.find(q => q.id === id);
+        if (p.perks[+i] || p.level < t.lvl) return;
+        if (!confirm(`특성 「${k.name}」 — ${k.desc}\n선택할까요? (의무병에게서 초기화 가능)`)) return;
+        const before = PlayerStats.maxHp(p); p.perks[+i] = id; p.hp += Math.max(0, PlayerStats.maxHp(p) - before);
+        log(`특성 획득: ${k.name} — ${k.desc}`, '#ffd76a'); SFX.play('levelup');
+        UI.refreshStats(); UI.refreshInventory(); saveGame();
+      };
+    });
+    $('stats-body').querySelectorAll('button[data-smod]').forEach(b => {
+      b.onclick = () => {
+        const [id, k] = b.dataset.smod.split(':');
+        p.skillMods[id] = p.skillMods[id] === k ? null : k; // 다시 누르면 기본형
+        SFX.play('ui'); UI.refreshStats(); UI.buildHotbar(); saveGame();
+      };
+    });
     $('stats-body').querySelectorAll('button[data-stat]').forEach(b => {
       b.onclick = () => {
         if (p.statPoints <= 0) return;
@@ -356,6 +389,7 @@ const UI = {
   refreshSettings() {
     const opt = (k, label, desc) => `<label class="set-row"><input type="checkbox" data-set="${k}" ${Settings[k] ? 'checked' : ''}> <b>${label}</b> <span class="muted">${desc}</span></label>`;
     $('settings-body').innerHTML = opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
+      + opt('detail', '세부 묘사', '옥상·1층·도로·차 디테일 (끄면 가벼워짐)')
       + opt('shake', '화면 흔들림', '타격·폭발 시 화면 흔들림')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
       + opt('sound', '효과음', '총소리·타격·획득 소리')
@@ -366,7 +400,7 @@ const UI = {
       + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
-    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); }; });
+    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.map.clear(); }; });
     $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
     $('btn-export').onclick = () => {
       saveGame(); const ta = $('save-code'), raw = localStorage.getItem(SAVE_KEY) || '';
@@ -513,11 +547,11 @@ const UI = {
 
   respec() {
     const p = G.player, cost = respecCost(p);
-    const spent = Object.values(p.stats).reduce((a, v) => a + Math.max(0, v - 5), 0);
-    if (!spent) { log('초기화할 능력치가 없습니다.', '#aaa'); return; }
+    const spent = Object.values(p.stats).reduce((a, v) => a + Math.max(0, v - 5), 0), np = p.perks.filter(Boolean).length;
+    if (!spent && !np) { log('초기화할 능력치·특성이 없습니다.', '#aaa'); return; }
     if (p.credits < cost) { log('크레딧이 부족합니다.', '#f88'); return; }
-    if (!confirm(`능력치 ${spent}포인트를 모두 돌려받습니다.${cost ? ` 비용 ${fmt(cost)}₵` : ''} 진행할까요?`)) return;
-    p.credits -= cost; p.respecs++;
+    if (!confirm(`능력치 ${spent}포인트와 특성 ${np}개를 모두 돌려받습니다.${cost ? ` 비용 ${fmt(cost)}₵` : ''} 진행할까요?`)) return;
+    p.credits -= cost; p.respecs++; p.perks = []; // v1.11 특성도 초기화
     for (const k of Object.keys(p.stats)) p.stats[k] = Math.min(p.stats[k], 5);
     p.statPoints += spent;
     p.hp = Math.min(p.hp, PlayerStats.maxHp(p));

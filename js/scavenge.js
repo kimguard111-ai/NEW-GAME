@@ -49,7 +49,7 @@ const Scavenge = {
     const p = G.player;
     if (G.search) return;
     if (t.hint && !RaidEvents.onStart(t)) return;
-    G.search = { target: t, t: 0, dur: t.hint ? t.dur : t.grave ? GRAVE_DUR : CACHES[t.type].dur, x: p.x, y: p.y };
+    G.search = { target: t, t: 0, dur: t.hint ? t.dur : t.grave ? GRAVE_DUR : CACHES[t.type].dur * (perk('scavenger') ? 0.6 : 1), x: p.x, y: p.y };
     SFX.play('ui');
   },
 
@@ -68,10 +68,10 @@ const Scavenge = {
     c.looted = true;
     const lvl = randInt(z.lvl[0], z.lvl[1]);
     const drop = (kind, extra) => G.drops.push({ x: c.x + rand(-16, 16), y: c.y + rand(-16, 16), kind, t: 0, ...extra });
-    drop('credits', { amount: Math.round(lvl * C.cr * rand(0.6, 1.4)) });
+    drop('credits', { amount: Math.round(lvl * C.cr * rand(0.6, 1.4) * (perk('scavenger') ? 1.5 : 1)) });
     if (Math.random() < C.ammo) drop('ammo', { amount: randInt(15, 40) });
     if (Math.random() < C.med) drop('item', { item: makeConsumable('medkit', 1) });
-    if (Math.random() < C.gear) drop('item', { item: randomGear(lvl, (C.bonus || 0.3) + 0.3, 0, z.gear) });
+    if (Math.random() < C.gear * (perk('treasure') ? 1.25 : 1)) drop('item', { item: randomGear(lvl, (C.bonus || 0.3) + 0.3, 0, z.gear) });
     const sc = randInt(C.scrap[0], C.scrap[1]), ch = C.chip && Math.random() < C.chip ? 1 : 0;
     if (sc || ch) Workshop.gain(sc, ch);
     burst(c.x, c.y, '#c9a24a', 8, 90, 0.4);

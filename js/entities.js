@@ -164,7 +164,8 @@ function newPlayer(name) {
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0],
-    buffs: { rapid: 0, adren: 0 },
+    buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
+    perks: [], skillMods: {}, // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
     bossKills: 0, totalKills: 0, pity: 0, respecs: 0, found: [], radT: 0,
   };
@@ -184,22 +185,25 @@ function hasLegend(p, id) { const w = p.equip[p.active]; return !!(w && w.legend
 //  사격: 총기 피해 +4%, 재장전 +1.5% → 총잡이
 //  체력: 최대 체력 +15, 재생 +0.25/초 → 생존형
 //  민첩: 이동·공격속도 +0.8%, 치명타 +0.8% → 기동형
+// v1.11 특성 · 스킬 갈래 확인
+const perk = id => !!(G.player && G.player.perks && G.player.perks.includes(id));
+const smod = sid => (G.player && G.player.skillMods && G.player.skillMods[sid]) || null;
 const PlayerStats = {
-  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp'))),
+  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1)),
   def: p => armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5),
   dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 40 + 8 * p.level); }, // v1.0: 고레벨일수록 같은 방어력의 효과 감소 (Lv5 기존과 동일)
   gunMul: p => 1 + (p.stats.dex - 5) * 0.04,
   meleeMul: p => 1 + (p.stats.str - 5) * 0.06,
-  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w),
+  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.25 : 0),
   critMul: (p, w) => ((w && WEAPONS[w.key].critMul) || 1.8) + gearBonus(p, 'critDmg', w),
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {
     const w = p.equip[p.active];
-    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1);
+    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
-  rateMul: (p, w) => (p.buffs.rapid > 0 ? 0.5 : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)),
-  reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)),
+  rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1),
+  reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)) / (perk('bulletStorm') ? 1.2 : 1),
   regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + gearBonus(p, 'regen'),
   expMul: p => 1 + gearBonus(p, 'exp'),
   // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
@@ -211,13 +215,17 @@ const PlayerStats = {
 const STAT_NAMES = { str: '근력', dex: '사격', vit: '체력', agi: '민첩' };
 const statUp = (p, k) => Math.max(0, p.stats[k] - 5);
 const SkillCalc = {
-  rapidDur: p => 4 + Math.min(4, statUp(p, 'agi') * 0.1),
-  grenadeR: p => 110 + Math.min(50, statUp(p, 'dex') * 2),
+  rapidDur: p => (4 + Math.min(4, statUp(p, 'agi') * 0.1)) * (smod('rapid') === 'b' ? 0.75 : 1),
+  grenadeR: p => (110 + Math.min(50, statUp(p, 'dex') * 2)) * (perk('demolition') ? 1.3 : 1),
   grenadeDmg: p => (45 + p.level * 9) * PlayerStats.gunMul(p),
   healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006),
-  adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01),
+  adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.5 : 1),
 };
 function skillDesc(s, p) {
+  const m = smod(s.id), base = skillBaseDesc(s, p);
+  return m ? `<b class="r2">[${SKILL_MODS[s.id][m].name}]</b> ${base} · ${SKILL_MODS[s.id][m].desc}` : base;
+}
+function skillBaseDesc(s, p) {
   const pc = v => Math.round(v * 100) + '%';
   switch (s.id) {
     case 'rapid': return `${SkillCalc.rapidDur(p).toFixed(1)}초간 공격 속도 2배`;
@@ -235,7 +243,7 @@ function respecCost(p) { return p.respecs ? p.level * 80 : 0; }
 function pelletCount(w) { return (WEAPONS[w.key].pellets || 1) + gearBonus(G.player, 'pellets', w); }
 function meleeReach(w) { const b = WEAPONS[w.key], r = gearBonus(G.player, 'reach', w); return { range: b.range * (1 + r), arc: b.arc * (1 + r) }; }
 
-function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w))); }
+function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w)) * (perk('bulletStorm') ? 1.3 : 1)); }
 function weaponDmg(w) { return w.dmg * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }
 
 // 현재 능력치 기준 무기의 실제 초당 피해 (재장전 시간 포함). 장비 비교와 HUD에 사용

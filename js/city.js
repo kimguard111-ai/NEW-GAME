@@ -28,6 +28,10 @@ const City = {
         const lx = x % B, ly = y % B, curb = lx === RW || ly === RW; // 도로와 맞닿은 보도
         if (curb && (lx === RW ? y : x) % 7 === 0) add('lamp', x * TILE + 16, y * TILE + 16, { broken: h < 0.35, side: lx === RW ? 'x' : 'y' });
         else if (curb && h < 0.06) add('tree', x * TILE + 16, y * TILE + 16, { dead: zone >= 3 || h < 0.02, s: 0.8 + h * 4 });
+        else if (lx === RW && ly === RW && h < 0.6) add('signal', x * TILE + 8, y * TILE + 8, { ph: h * 10 }); // v1.11 교차로 모서리 신호등
+        else if (curb && h > 0.3 && h < 0.33) add('bench', x * TILE + 16, y * TILE + 16, { side: lx === RW ? 'x' : 'y' });
+        else if (curb && h > 0.4 && h < 0.415) add('hydrant', x * TILE + 16, y * TILE + 16);
+        else if (h > 0.935 && h < 0.955) add('paper', x * TILE + 16, y * TILE + 16, { s: h });
         else if (h > 0.965) add('trash', x * TILE + rand2(h, 8, 24), y * TILE + rand2(h * 7, 8, 24), { n: 2 + Math.floor(h * 100) % 3 });
         else if (h > 0.955 && zone >= 1) add('barrel', x * TILE + 16, y * TILE + 16);
       } else if (t === T.GRASS && h < 0.12) add('tree', x * TILE + 16, y * TILE + 16, { dead: zone >= 3, s: 1 + h * 3 });
@@ -113,54 +117,109 @@ function rand2(h, a, b) { return a + (h * 9301 % 1) * (b - a); }
 function drawCityProp(o) {
   const sx = Iso.sx(o.x, o.y), sy = Iso.sy(o.x, o.y), K = ISO_K;
   switch (o.type) {
-    case 'lamp': {
-      const top = sy - 74 * K;
-      ctx.strokeStyle = '#2a2c30'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, top); ctx.stroke();
-      const dx = o.side === 'x' ? -12 : 12, dy = 6;
-      ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx, top); ctx.lineTo(sx + dx, top + dy * 0.3); ctx.stroke(); ctx.lineWidth = 1;
+    case 'lamp': { // v1.11 받침대 + 굵은 기둥 + 등갓
+      const top = sy - 74 * K, dx = o.side === 'x' ? -14 : 14;
+      ctx.fillStyle = '#1e2024'; ctx.beginPath(); ctx.ellipse(sx, sy, 5, 2.5, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#2a2c30'; ctx.fillRect(sx - 2.5, top, 5, sy - top); ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(sx - 2.5, top, 1.5, sy - top);
+      ctx.strokeStyle = '#2a2c30'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(sx, top + 2); ctx.quadraticCurveTo(sx + dx * 0.5, top - 6, sx + dx, top + 1); ctx.stroke(); ctx.lineWidth = 1;
       const lit = !o.broken || Math.sin(G.time * 17 + o.x) > 0.7;
-      ctx.fillStyle = lit ? '#ffe9b0' : '#444'; ctx.beginPath(); ctx.ellipse(sx + dx, top + dy * 0.3 + 2, 5, 2.5, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1a1c20'; ctx.beginPath(); ctx.moveTo(sx + dx - 7, top + 1); ctx.lineTo(sx + dx + 7, top + 1); ctx.lineTo(sx + dx + 4, top + 5); ctx.lineTo(sx + dx - 4, top + 5); ctx.fill();
+      ctx.fillStyle = lit ? '#ffe9b0' : '#3a3a3a'; ctx.beginPath(); ctx.ellipse(sx + dx, top + 5, 4, 1.6, 0, 0, TAU); ctx.fill();
       if (lit && Settings.light && Light.list.length < LIGHT_CAP) addLight(sx + dx, sy + 6, 110, 0.75, 'rgba(255,220,150,A)');
       break;
     }
-    case 'tree': {
+    case 'tree': { // v1.11 굵어지는 줄기 + 명암 있는 잎 덩어리 / 죽은 나무는 갈라진 가지
       const s = o.s || 1;
-      drawShadow(sx, sy, 10 * s);
-      ctx.strokeStyle = '#3a2a1e'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - 26 * s); ctx.stroke();
-      if (o.dead) { // 죽은 나무: 가지만
-        ctx.lineWidth = 1.5; for (let i = 0; i < 4; i++) { const a = -Math.PI / 2 + (i - 1.5) * 0.5; ctx.beginPath(); ctx.moveTo(sx, sy - 20 * s); ctx.lineTo(sx + Math.cos(a) * 14 * s, sy - 20 * s + Math.sin(a) * 14 * s); ctx.stroke(); }
+      drawShadow(sx, sy, 12 * s);
+      ctx.fillStyle = '#3a2a1e'; ctx.beginPath(); ctx.moveTo(sx - 3 * s, sy); ctx.lineTo(sx - 1.2 * s, sy - 26 * s); ctx.lineTo(sx + 1.2 * s, sy - 26 * s); ctx.lineTo(sx + 3 * s, sy); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(sx, sy - 24 * s, 1.5 * s, 24 * s);
+      if (o.dead) {
+        ctx.strokeStyle = '#3a2a1e';
+        const br = (x, y, a, l, d) => { if (d > 2) return; const ex = x + Math.cos(a) * l, ey = y + Math.sin(a) * l; ctx.lineWidth = (3 - d) * s; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke(); br(ex, ey, a - 0.45, l * 0.6, d + 1); br(ex, ey, a + 0.4, l * 0.55, d + 1); };
+        br(sx, sy - 22 * s, -Math.PI / 2 - 0.5, 12 * s, 0); br(sx, sy - 24 * s, -Math.PI / 2 + 0.45, 11 * s, 0);
       } else {
-        for (const [ox, oy, r, c] of [[-6, -30, 11, '#1e3a1e'], [6, -32, 10, '#25472a'], [0, -40, 11, '#2c5232']]) {
+        for (const [ox, oy, r, c] of [[-8, -30, 11, '#1a331b'], [8, -31, 10, '#1e3a20'], [0, -38, 12, '#244527'], [-5, -44, 9, '#2c5232'], [6, -42, 8, '#2f5a35']]) {
           ctx.fillStyle = c; ctx.beginPath(); ctx.arc(sx + ox * s, sy + oy * s, r * s, 0, TAU); ctx.fill();
         }
+        ctx.fillStyle = 'rgba(140,200,120,0.18)'; ctx.beginPath(); ctx.arc(sx - 4 * s, sy - 46 * s, 5 * s, 0, TAU); ctx.fill(); // 빛 받는 쪽
       }
       ctx.lineWidth = 1;
       break;
     }
-    case 'trash':
-      for (let i = 0; i < o.n; i++) { ctx.fillStyle = i % 2 ? '#1a1a1c' : '#26262a'; ctx.beginPath(); ctx.ellipse(sx + (i - 1) * 7, sy - 4 - (i % 2) * 2, 7, 5.5, 0, 0, TAU); ctx.fill(); }
+    case 'trash': // v1.11 묶은 쓰레기봉투 + 흩어진 종이
+      for (let i = 0; i < o.n; i++) {
+        const bx = sx + (i - 1) * 7, by = sy - 4 - (i % 2) * 2;
+        ctx.fillStyle = i % 2 ? '#1a1a1c' : '#26262a'; ctx.beginPath(); ctx.ellipse(bx, by, 7, 5.5, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.ellipse(bx - 2, by - 2, 3, 2, -0.4, 0, TAU); ctx.fill();
+        ctx.fillStyle = i % 2 ? '#26262a' : '#1a1a1c'; ctx.beginPath(); ctx.moveTo(bx - 2, by - 5); ctx.lineTo(bx + 2, by - 5); ctx.lineTo(bx, by - 8); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(200,195,180,0.5)'; ctx.fillRect(sx + 10, sy - 1, 5, 3); ctx.fillRect(sx - 14, sy + 2, 4, 2.5);
       break;
-    case 'cone':
-      ctx.fillStyle = '#e06020'; ctx.beginPath(); ctx.moveTo(sx, sy - 14); ctx.lineTo(sx - 5, sy); ctx.lineTo(sx + 5, sy); ctx.fill();
-      ctx.fillStyle = '#eee'; ctx.fillRect(sx - 3, sy - 8, 6, 2);
+    case 'cone': // v1.11 받침 + 줄무늬
+      ctx.fillStyle = '#b04a18'; ctx.beginPath(); ctx.moveTo(sx - 7, sy); ctx.lineTo(sx, sy - 3.5); ctx.lineTo(sx + 7, sy); ctx.lineTo(sx, sy + 3.5); ctx.fill();
+      ctx.fillStyle = '#e06020'; ctx.beginPath(); ctx.moveTo(sx, sy - 15); ctx.lineTo(sx - 4.5, sy - 1); ctx.lineTo(sx + 4.5, sy - 1); ctx.fill();
+      ctx.fillStyle = '#eee'; ctx.fillRect(sx - 2.8, sy - 9, 5.6, 2); ctx.fillRect(sx - 3.8, sy - 5, 7.6, 1.5);
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.moveTo(sx, sy - 15); ctx.lineTo(sx + 4.5, sy - 1); ctx.lineTo(sx + 1, sy - 1); ctx.fill();
       break;
-    case 'barrel': {
-      drawBox(o.x - 7, o.y - 7, o.x + 7, o.y + 7, 22, '#2a1a12', '#5a3420', '#6e4228', 0, 0, 0);
-      const ft = Iso.sy(o.x, o.y, 22);
-      for (let i = 0; i < 3; i++) { const k = (G.time * 2 + i / 3 + o.x * 0.01) % 1; ctx.fillStyle = `rgba(255,${120 + i * 40},40,${1 - k})`; ctx.beginPath(); ctx.arc(sx + Math.sin(G.time * 5 + i) * 3, ft - k * 18, 4 * (1 - k) + 2, 0, TAU); ctx.fill(); }
-      if (Settings.light && Light.list.length < LIGHT_CAP) addLight(sx, ft, 120, 0.9, 'rgba(255,140,60,A)');
+    case 'barrel': { // v1.11 원통 드럼통 (테두리 · 녹) + 불
+      const r = 8, hh = 20 * K, top = sy - hh;
+      ctx.fillStyle = '#4a2a1a'; ctx.fillRect(sx - r, top, r * 2, hh); ctx.beginPath(); ctx.ellipse(sx, sy, r, r / 2, 0, 0, Math.PI); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(sx + r * 0.3, top, r * 0.7, hh);
+      ctx.strokeStyle = '#2a1810'; ctx.lineWidth = 1.2; for (const k of [0.3, 0.7]) { ctx.beginPath(); ctx.ellipse(sx, top + hh * k, r, r / 2, 0, 0, Math.PI); ctx.stroke(); } ctx.lineWidth = 1;
+      ctx.fillStyle = '#7a4a2a'; ctx.fillRect(sx - r + 2, top + hh * 0.45, 3, 4); // 녹
+      ctx.fillStyle = '#1a0e08'; ctx.beginPath(); ctx.ellipse(sx, top, r, r / 2, 0, 0, TAU); ctx.fill();
+      for (let i = 0; i < 4; i++) { const k = (G.time * 2 + i / 4 + o.x * 0.01) % 1; ctx.fillStyle = `rgba(255,${110 + i * 35},40,${1 - k})`; ctx.beginPath(); ctx.arc(sx + Math.sin(G.time * 5 + i) * 3, top - k * 20, 4.5 * (1 - k) + 2, 0, TAU); ctx.fill(); }
+      if (Settings.light && Light.list.length < LIGHT_CAP) addLight(sx, top, 120, 0.9, 'rgba(255,140,60,A)');
       break;
     }
-    case 'bus': {
+    case 'signal': { // v1.11 신호등: 기둥 + 길 쪽으로 뻗은 팔 + 깜빡이는 노란불(고장)
+      const top = sy - 80 * K;
+      ctx.fillStyle = '#26282c'; ctx.fillRect(sx - 2, top, 4, sy - top);
+      ctx.strokeStyle = '#26282c'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(sx, top + 3); ctx.lineTo(sx - 26, top + 13); ctx.stroke(); ctx.lineWidth = 1;
+      ctx.fillStyle = '#16181b'; ctx.fillRect(sx - 34, top + 9, 16, 7);
+      const on = Math.sin(G.time * 3 + o.ph) > 0;
+      ctx.fillStyle = '#3a1010'; ctx.beginPath(); ctx.arc(sx - 30, top + 12.5, 2, 0, TAU); ctx.fill();
+      ctx.fillStyle = on ? '#ffc23a' : '#3a2e10'; ctx.beginPath(); ctx.arc(sx - 26, top + 12.5, 2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#10301a'; ctx.beginPath(); ctx.arc(sx - 22, top + 12.5, 2, 0, TAU); ctx.fill();
+      if (on && Settings.light && Light.list.length < LIGHT_CAP) addLight(sx - 26, top + 12, 40, 0.5, 'rgba(255,190,60,A)');
+      break;
+    }
+    case 'bench': { // v1.11 벤치 (나무 판 + 쇠다리)
+      const [L, Wd] = o.side === 'x' ? [3, 11] : [11, 3];
+      for (const k of [-1, 1]) { const lx = o.side === 'x' ? o.x : o.x + k * 8, ly = o.side === 'x' ? o.y + k * 8 : o.y; drawBox(lx - 1, ly - 1, lx + 1, ly + 1, 8, '#222', '#151515', '#1a1a1a', 0, 0, 0); }
+      drawBox(o.x - L - 1, o.y - Wd - 1, o.x + L + 1, o.y + Wd + 1, 10, '#6a4a2e', '#4a321e', '#5a3e26', 8, 8, 0);
+      const bx = o.side === 'x' ? o.x - L - 1 : o.x, by = o.side === 'x' ? o.y : o.y - Wd - 1; // 등받이
+      drawBox(o.side === 'x' ? bx - 1 : o.x - L - 1, o.side === 'x' ? o.y - Wd - 1 : by - 1, o.side === 'x' ? bx + 1 : o.x + L + 1, o.side === 'x' ? o.y + Wd + 1 : by + 1, 18, '#5a3e26', '#3e2a18', '#4a3420', 10, 10, 0);
+      break;
+    }
+    case 'hydrant': // v1.11 소화전
+      drawShadow(sx, sy, 5);
+      ctx.fillStyle = '#9a1e1e'; ctx.fillRect(sx - 3.5, sy - 13, 7, 13); ctx.fillStyle = '#c42828'; ctx.beginPath(); ctx.ellipse(sx, sy - 13, 3.5, 2.2, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#7a1414'; ctx.fillRect(sx - 6, sy - 9, 12, 3); ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(sx + 1, sy - 13, 2.5, 13);
+      break;
+    case 'paper': // v1.11 바람에 흩날린 신문지
+      for (let i = 0; i < 3; i++) { const a = o.s * 40 + i * 2.1, px = sx + Math.cos(a) * 10, py = sy + Math.sin(a) * 4; ctx.fillStyle = i % 2 ? 'rgba(200,195,175,0.6)' : 'rgba(170,165,150,0.55)'; ctx.beginPath(); ctx.moveTo(px - 4, py); ctx.lineTo(px, py - 2); ctx.lineTo(px + 4, py); ctx.lineTo(px, py + 2); ctx.fill(); }
+      break;
+    case 'bus': { // v1.11 바퀴 · 창문 칸 · 문 · 지붕 냉방기 · 행선지 표시
       const L = 46, Wd = 13, cols = o.burnt ? ['#2a2420', '#1a1614', '#221d1a'] : o.color ? ['#3a6aa8', '#244a7a', '#2e5a92'] : ['#4a9a52', '#2f6a36', '#3c8244'];
       const [x0, y0, x1, y1] = o.vertical ? [o.x - Wd, o.y - L, o.x + Wd, o.y + L] : [o.x - L, o.y - Wd, o.x + L, o.y + Wd];
-      drawShadow(sx, sy, 40);
-      drawBox(x0, y0, x1, y1, 8, '#111', '#151515', '#151515', 0, 0, 0);                   // 바퀴 높이
-      drawBox(x0, y0, x1, y1, 40, cols[0], cols[1], cols[2], 8, 8, 0);                       // 차체
-      // 창문 띠
       const S = Iso.sx, Y = Iso.sy;
-      if (o.vertical) poly([S(x1, y0 + 6), Y(x1, y0 + 6, 22), S(x1, y1 - 6), Y(x1, y1 - 6, 22), S(x1, y1 - 6), Y(x1, y1 - 6, 34), S(x1, y0 + 6), Y(x1, y0 + 6, 34)], o.burnt ? '#0a0a0a' : '#1b2430');
-      else poly([S(x0 + 6, y1), Y(x0 + 6, y1, 22), S(x1 - 6, y1), Y(x1 - 6, y1, 22), S(x1 - 6, y1), Y(x1 - 6, y1, 34), S(x0 + 6, y1), Y(x0 + 6, y1, 34)], o.burnt ? '#0a0a0a' : '#1b2430');
+      drawShadow(sx, sy, 44);
+      for (const a of [-L + 8, L - 14]) for (const b of [-Wd, Wd - 4]) { const r = o.vertical ? [o.x + b, o.y + a, o.x + b + 4, o.y + a + 6] : [o.x + a, o.y + b, o.x + a + 6, o.y + b + 4]; drawBox(r[0], r[1], r[2], r[3], 8, '#111', '#0a0a0a', '#0e0e0e', 0, 0, 0); }
+      drawBox(x0, y0, x1, y1, 40, cols[0], cols[1], cols[2], 5, 5, 0);
+      // 옆면 (화면에 보이는 긴 면) 창문 칸 · 문
+      const side = (u0, u1, z0, z1, c) => o.vertical ? poly([S(x1, lerp(y0, y1, u0)), Y(x1, lerp(y0, y1, u0), z0), S(x1, lerp(y0, y1, u1)), Y(x1, lerp(y0, y1, u1), z0), S(x1, lerp(y0, y1, u1)), Y(x1, lerp(y0, y1, u1), z1), S(x1, lerp(y0, y1, u0)), Y(x1, lerp(y0, y1, u0), z1)], c)
+        : poly([S(lerp(x0, x1, u0), y1), Y(lerp(x0, x1, u0), y1, z0), S(lerp(x0, x1, u1), y1), Y(lerp(x0, x1, u1), y1, z0), S(lerp(x0, x1, u1), y1), Y(lerp(x0, x1, u1), y1, z1), S(lerp(x0, x1, u0), y1), Y(lerp(x0, x1, u0), y1, z1)], c);
+      for (let i = 0; i < 6; i++) { const u0 = 0.06 + i * 0.15, broken = !o.burnt && hash2(o.x + i, o.y) < 0.25; side(u0, u0 + 0.12, 22, 34, o.burnt ? '#0a0a0a' : broken ? '#0e1218' : '#1b2430'); if (!o.burnt && !broken) side(u0, u0 + 0.04, 30, 34, 'rgba(160,190,220,0.18)'); }
+      side(0.88, 0.97, 6, 34, o.burnt ? '#0d0c0b' : '#151a20'); // 문
+      if (!o.burnt) side(0.02, 0.98, 14, 16, 'rgba(255,255,255,0.15)'); // 띠
+      const rt = o.vertical ? [o.x - 7, o.y - 12, o.x + 7, o.y + 12] : [o.x - 12, o.y - 7, o.x + 12, o.y + 7];
+      drawBox(rt[0], rt[1], rt[2], rt[3], 45, '#8a8e94', '#55585c', '#6a6e72', 40, 40, 0); // 지붕 냉방기
+      if (!o.burnt) { // 앞쪽 행선지 표시
+        const fz = 34, fe = o.vertical ? y1 : x1;
+        if (o.vertical) poly([S(x0 + 4, fe), Y(x0 + 4, fe, fz), S(x1 - 4, fe), Y(x1 - 4, fe, fz), S(x1 - 4, fe), Y(x1 - 4, fe, fz + 4), S(x0 + 4, fe), Y(x0 + 4, fe, fz + 4)], '#d88a1a');
+        else poly([S(fe, y0 + 4), Y(fe, y0 + 4, fz), S(fe, y1 - 4), Y(fe, y1 - 4, fz), S(fe, y1 - 4), Y(fe, y1 - 4, fz + 4), S(fe, y0 + 4), Y(fe, y0 + 4, fz + 4)], '#d88a1a');
+      }
       if (o.burnt) { burnFx(Math.floor(o.x / TILE), Math.floor(o.y / TILE)); }
       break;
     }
@@ -222,14 +281,15 @@ function drawCityProp(o) {
       if ((G.time * 3) % 1 < 0.5) { ctx.fillStyle = 'rgba(80,80,80,0.3)'; ctx.beginPath(); ctx.arc(Iso.sx(o.x, o.y) + 2, Iso.sy(o.x, o.y, 30) - (G.time * 20 % 10), 4, 0, TAU); ctx.fill(); }
       break;
     }
-    case 'police': {
-      const [ix, iy] = o.vertical ? [8, 2] : [2, 8], tx = Math.floor(o.x / TILE) * TILE, ty = Math.floor(o.y / TILE) * TILE;
-      drawBox(tx + ix, ty + iy, tx + TILE - ix, ty + TILE - iy, 13, '#e8e8ec', '#9a9aa2', '#b8b8c0', 0, 0, 0);
-      drawBox(tx + ix + 3, ty + iy + 6, tx + TILE - ix - 3, ty + TILE - iy - 6, 21, '#1d2024', '#151719', '#1a1c1f', 13, 13, 0);
-      const blink = Math.sin(G.time * 10 + o.x) > 0, ly = Iso.sy(o.x, o.y, 23);
-      ctx.fillStyle = blink ? '#ff2a2a' : '#3a0a0a'; ctx.fillRect(sx - 6, ly - 2, 5, 3);
-      ctx.fillStyle = blink ? '#1a1a3a' : '#2a6aff'; ctx.fillRect(sx + 1, ly - 2, 5, 3);
-      if (Settings.light && Light.list.length < LIGHT_CAP) addLight(sx, ly, 70, 0.6, blink ? 'rgba(255,40,40,A)' : 'rgba(40,100,255,A)');
+    case 'police': { // v1.11 흰 차체 + 검은 보닛 + 경광등
+      const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16;
+      drawCarShape(tx, ty, o.vertical, ['#e8e8ec', '#9a9aa2', '#b8b8c0'], hash2(tx, ty), { roof: '#e8e8ec' });
+      const blink = Math.sin(G.time * 10 + o.x) > 0, ly = Iso.sy(tx, ty, 20), lx = Iso.sx(tx, ty);
+      ctx.fillStyle = '#222'; ctx.fillRect(lx - 7, ly - 1, 14, 3);
+      ctx.fillStyle = blink ? '#ff2a2a' : '#3a0a0a'; ctx.fillRect(lx - 6, ly - 3, 5, 3);
+      ctx.fillStyle = blink ? '#1a1a3a' : '#2a6aff'; ctx.fillRect(lx + 1, ly - 3, 5, 3);
+      ctx.fillStyle = '#1a2a6a'; ctx.fillRect(Iso.sx(tx + (o.vertical ? 8 : 0), ty + (o.vertical ? 0 : 8)) - 4, Iso.sy(tx + (o.vertical ? 8 : 0), ty + (o.vertical ? 0 : 8), 8) - 1.5, 8, 2); // 옆 줄무늬
+      if (Settings.light && Light.list.length < LIGHT_CAP) addLight(lx, ly, 70, 0.6, blink ? 'rgba(255,40,40,A)' : 'rgba(40,100,255,A)');
       break;
     }
   }

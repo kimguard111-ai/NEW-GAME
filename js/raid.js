@@ -63,7 +63,7 @@ const Raid = {
 
   // 맵을 바꿀 때 월드 상태 초기화
   resetWorld() {
-    G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
+    G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.corpses = [];
     G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
     G.labBoss = null; G.labBossDone = false; // v1.5
     G.exits = []; RaidEvents.list = []; RaidEvents.alert = 0; G.extractT = 0; G.zone = World.zoneIndex(); G.bossT = Math.min(G.bossT, 0);

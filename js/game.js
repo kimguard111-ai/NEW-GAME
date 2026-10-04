@@ -7,7 +7,7 @@ const SAVE_KEY = 'seoul2049-save-v1';
 const MAP_SEED = 2049;
 
 const G = {
-  player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [],
+  player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [], fires: [],
   npcs: [], corpses: [], elite: null, strikes: [], pools: [], assault: null, fieldBoss: null, fbT: 150, inside: null, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
@@ -129,7 +129,7 @@ function startGame(save, name) {
     log('대붕괴 20년 후, 서울. 시청역 생존자 캠프에서 눈을 떴다.', '#e0b23a');
     G.autoStory = true; // v0.16: 1장을 바로 시작 (캠프 대화 없이)
   }
-  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
+  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.exits = []; G.extractT = 0;
@@ -171,12 +171,12 @@ function gunMuzzle(p, w) {
 function dodge() {
   const p = G.player;
   if (p.dead || p.rollT > 0 || (p.rollCd || 0) > 0) return;
-  if (p.stam < ROLL.cost) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, '기력 부족', '#7ab8ff', 12); } return; }
-  p.stam -= ROLL.cost; p.stamT = 0.5;
+  if (p.stam < ROLL.cost * (perk('runner') ? 0.75 : 1)) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, '기력 부족', '#7ab8ff', 12); } return; }
+  p.stam -= ROLL.cost * (perk('runner') ? 0.75 : 1); p.stamT = 0.5;
   let a = p.aim;
   const m = moveInput();
   if (m) a = Math.atan2(m.wy, m.wx);
-  p.rollT = ROLL.dur; p.rollCd = ROLL.cd; p.rollA = a; p.lastRoll = G.time;
+  p.rollT = ROLL.dur; p.rollCd = ROLL.cd * (perk('ghost') ? 0.6 : 1); p.rollA = a; p.lastRoll = G.time;
   SFX.play('dodge'); burst(p.x, p.y, '#8a8070', 6, 80, 0.3, 3);
 }
 // 현재 이동 입력 (월드 방향, 정규화 안 됨). 없으면 null
@@ -228,7 +228,12 @@ function gunRateMul(p, w) { return w.key === 'lmg' ? 1 - 0.25 * (p.heat || 0) : 
 
 function playerDamageMul(melee) {
   const p = G.player;
-  return (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1);
+  let m = (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1);
+  // v1.11 특성
+  if (perk('rollStrike') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1.5) m *= 1.3;
+  if (!melee && perk('steadyAim') && G.time - (p.lastHurt || -9) > 2) m *= 1.15;
+  if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) m *= 1.25;
+  return m;
 }
 
 function playerAttack() {
@@ -238,7 +243,7 @@ function playerAttack() {
   if (!b.melee) p.atkT = b.rate * PlayerStats.rateMul(p) * gunRateMul(p, w);
   p.lastAtk = G.time; // 공격 애니메이션용
   SFX.play(b.melee ? 'swing' : { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[w.key] || 'pistol');
-  const critMul = PlayerStats.critMul(p, w), cc = PlayerStats.crit(p, w);
+  const critMul = PlayerStats.critMul(p, w); let cc = PlayerStats.crit(p, w);
   if (b.melee) {
     // v1.9 근접 3타 콤보: 1·2타는 빠르게, 3타는 무기별 마무리 (쇠파이프 강타 · 도끼 회전 베기 · 칼 찌르기)
     // 구르기 직후 0.35초 안의 공격은 바로 마무리 일격 (구르기 베기)
@@ -253,7 +258,7 @@ function playerAttack() {
     p.swingDir = p.mStep === 1 ? -1 : 1; // 2타는 반대 방향으로
     World.move(p, Math.cos(p.aim) * M.lunge * (rolled ? 1.5 : 1), Math.sin(p.aim) * M.lunge * (rolled ? 1.5 : 1)); // 휘두르며 전진
     if (fin) { SFX.play('heavy'); if (rolled) floatText(p.x, p.y - 34, '구르기 베기!', '#ffd27a', 13); }
-    const dmg = weaponDmg(w) * playerDamageMul(true) * M.dmg;
+    const dmg = weaponDmg(w) * playerDamageMul(true) * M.dmg * (fin && perk('executioner') ? 1.4 : 1);
     let hits = 0, anyCrit = false;
     for (const e of G.enemies) {
       if (e.hp <= 0) continue;
@@ -286,7 +291,8 @@ function playerAttack() {
       if (e.def.flying || nd >= 0) { e.state = 'chase'; e.heard = true; }
     }
   }
-  if (!(w.legend === 'thrift' && Math.random() < 0.35)) w.loaded--;
+  if (perk('lastRounds') && w.loaded <= magSize(w) * 0.25) cc += 0.25; // v1.11 마지막 탄
+  if (!(w.legend === 'thrift' && Math.random() < 0.35) && !(p.buffs.rapid > 0 && smod('rapid') === 'b')) w.loaded--; // v1.11 탄약 보급: 소모 없음
   const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false);
   // v1.9 무기 손맛: 기관총 예열(연사할수록 정확·빨라짐) · 소총 첫 발 정조준(잠깐 쉬었다 쏘면 정확 + 치명타)
   const first = w.key === 'rifle' && G.time - (p.lastShot || -9) > 0.35;
@@ -334,17 +340,23 @@ function useSkill(i) {
   if (p.level < s.lvl) { log(`${s.name}: Lv${s.lvl}에 습득합니다.`, '#aaa'); return; }
   if (p.skillCd[i] > 0) return;
   SFX.play(s.id === 'heal' ? 'heal' : 'skill');
-  if (s.id === 'rapid') { p.buffs.rapid = SkillCalc.rapidDur(p); floatText(p.x, p.y - 30, '집중 사격!', '#7fd'); }
-  else if (s.id === 'grenade') {
+  const m = smod(s.id); // v1.11 스킬 갈래
+  if (s.id === 'rapid') {
+    p.buffs.rapid = SkillCalc.rapidDur(p); floatText(p.x, p.y - 30, m === 'a' ? '정밀 사격!' : m === 'b' ? '탄약 보급!' : '집중 사격!', '#7fd');
+    const w = curWeapon(); if (m === 'b' && w && !WEAPONS[w.key].melee) { w.loaded = magSize(w); p.reloadT = 0; }
+  } else if (s.id === 'grenade') {
     const { x: tx, y: ty } = Iso.toWorld(input.mx, input.my);
     const a = Math.atan2(ty - p.y, tx - p.x), d = Math.min(380, Math.hypot(tx - p.x, ty - p.y));
-    G.grenades.push({ sx: p.x, sy: p.y, x: p.x, y: p.y, tx: p.x + Math.cos(a) * d, ty: p.y + Math.sin(a) * d, t: 0, dur: 0.55 });
+    G.grenades.push({ sx: p.x, sy: p.y, x: p.x, y: p.y, tx: p.x + Math.cos(a) * d, ty: p.y + Math.sin(a) * d, t: 0, dur: 0.55, mod: m });
   } else if (s.id === 'heal') {
     const mh = PlayerStats.maxHp(p), amt = Math.round(mh * SkillCalc.healPct(p));
-    p.hp = Math.min(mh, p.hp + amt);
-    floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16); burst(p.x, p.y, '#6f6', 16, 80);
-  } else if (s.id === 'adren') { p.buffs.adren = 8; floatText(p.x, p.y - 30, '아드레날린!', '#f84'); }
-  p.skillCd[i] = s.cd;
+    const now = m === 'a' ? Math.round(amt / 2) : amt;
+    p.hp = Math.min(mh, p.hp + now);
+    if (m === 'a') { p.buffs.regen = 6; p.regenRate = amt / 6; }
+    if (m === 'b') { p.buffs.shield = 4; G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.4, color: '#7ab8ff', r: 60 }); }
+    floatText(p.x, p.y - 30, '+' + now, '#6f6', 16); burst(p.x, p.y, '#6f6', 16, 80);
+  } else if (s.id === 'adren') { p.buffs.adren = 8; p.adrenExt = 0; floatText(p.x, p.y - 30, m === 'a' ? '광폭!' : m === 'b' ? '진통제!' : '아드레날린!', '#f84'); }
+  p.skillCd[i] = s.cd * (perk('warlord') ? 0.75 : 1) * (s.id === 'heal' && perk('fieldMedic') ? 0.7 : 1);
 }
 
 function quickMedkit() {
@@ -358,7 +370,7 @@ function useItem(it) {
   if (it.key === 'medkit') {
     const mh = PlayerStats.maxHp(p);
     if (p.hp >= mh) { log('체력이 이미 가득합니다.', '#aaa'); return; }
-    const amt = Math.round(mh * 0.4);
+    const amt = Math.round(mh * 0.4 * (perk('fieldMedic') ? 1.5 : 1));
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
   } else if (it.key === 'ammo') {
@@ -415,6 +427,8 @@ function gainExp(n) {
     SFX.play('levelup');
     const sk = SKILLS.find(s => s.lvl === p.level);
     if (sk) log(`새 스킬 습득: ${sk.name} [${SKILLS.indexOf(sk) + 1}]`, '#7fd');
+    const pt = PERK_TIERS.find(t => t.lvl === p.level); // v1.11 특성 선택
+    if (pt) { UI.toast(`특성 선택 — Lv${pt.lvl}`, `능력치 창(C)에서 ${pt.perks.map(k => k.name).join(' · ')} 중 하나`); log(`특성을 고를 수 있다: ${pt.perks.map(k => k.name).join(' · ')} (능력치 창 C)`, '#ffd76a'); }
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.8, color: '#ffd76a', r: 80 });
     floatText(p.x, p.y - 40, 'LEVEL UP!', '#ffd76a', 22);
     UI.buildHotbar(); UI.refreshStats();
@@ -426,13 +440,26 @@ function gainExp(n) {
 function damagePlayer(dmg, srcX, srcY) {
   const p = G.player;
   if (p.dead || World.inSafe(p.x, p.y)) return;
+  if (p.invT > 0) return; // v1.11 두 번째 숨 무적
   if (p.rollT > 0) { // 구르기 무적
     if (G.time - (p.dodgeTxt || 0) > 0.4) { p.dodgeTxt = G.time; floatText(p.x, p.y - 30, '회피!', '#9fe0ff', 14); }
     return;
   }
   SFX.play('ehit');
-  const d = Math.max(1, Math.round(dmg * (1 - PlayerStats.dmgReduce(p))));
-  p.hp -= d; p.hurtT = 0.15;
+  // v1.11 받는 피해 감소: 투쟁 본능 · 그림자 걸음 · 방어막 · 진통제
+  let tk = 1;
+  if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) tk *= 0.85;
+  if (perk('ghost') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1) tk *= 0.5;
+  if (p.buffs.shield > 0) tk *= 0.6;
+  if (p.buffs.adren > 0 && smod('adren') === 'b') tk *= 0.7;
+  const d = Math.max(1, Math.round(dmg * tk * (1 - PlayerStats.dmgReduce(p))));
+  p.hp -= d; p.hurtT = 0.15; p.lastHurt = G.time;
+  if (p.hp <= 0 && perk('secondWind') && p.raid && !p.raid.sw) { // 출격마다 한 번
+    p.raid.sw = true; p.hp = Math.round(PlayerStats.maxHp(p) * 0.3); p.invT = 2;
+    floatText(p.x, p.y - 40, '두 번째 숨!', '#9fe0ff', 18); SFX.play('levelup'); G.flash = 0.3; hitstop(0.15);
+    G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.5, color: '#9fe0ff', r: 120 });
+    return;
+  }
   floatText(p.x, p.y - 20, '-' + d, '#ff5050', 14);
   G.shake = Math.max(G.shake, 4);
   if (p.hp <= 0) playerDie();
@@ -455,7 +482,7 @@ function respawn() {
   if (World.map !== 'camp') { Raid.toCamp(); document.getElementById('death-screen').classList.add('hidden'); saveGame(); return; } // 출격 맵에서 죽으면 캠프로
   const p = G.player, c = World.campCenter();
   p.x = c.x; p.y = c.y; p.dead = false; p.hp = PlayerStats.maxHp(p); p.reloadT = 0; p.hurtT = 0;
-  p.buffs.rapid = 0; p.buffs.adren = 0;
+  p.buffs.rapid = 0; p.buffs.adren = 0; p.buffs.regen = 0; p.buffs.shield = 0;
   G.enemies = G.enemies.filter(e => e.def.boss || dist(e, p) > 900);
   G.bullets = []; G.strikes = []; G.pools = [];
   document.getElementById('death-screen').classList.add('hidden');
@@ -468,6 +495,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (e.invulnT > 0) { if (Math.random() < 0.15) floatText(e.x, e.y - e.r - 6, '무적', '#aaa', 12); return; } // 타이탄 페이즈 전환
   const p = G.player, w = hit.w;
   if (w && w.legend === 'execute' && e.hp < e.maxHp * 0.3) dmg *= 1.6;
+  if (perk('apex') && (e.elite || e.affix || e.fieldBoss || e.labBoss || e.nest || e.def.boss)) dmg *= 1.2; // v1.11
   dmg = Math.max(1, Math.round(dmg));
   // v1.6 방패병: 정면(방패가 향한 쪽)에서 맞으면 피해 감소 (v1.7 80% → 65%). 폭발·경직 중·뒤/옆은 그대로
   if (e.def.shield && !hit.blast && angle !== undefined && e.stunT <= 0 && Math.abs(angDiff(angle, (e.face || 0) + Math.PI)) < 1.05) {
@@ -496,7 +524,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (e.def.boss && (crit || (hit.stagger || 0) >= 0.5)) { G.shake = Math.max(G.shake, 5); hitstop(0.035); }
   if (w && !hit.noProc) {
     if (w.legend === 'leech') p.hp = Math.min(PlayerStats.maxHp(p), p.hp + dmg * 0.04);
-    if (w.legend === 'boom' && Math.random() < 0.2) explode(e.x, e.y, dmg * 0.6, 55, { small: true, knock: 10, stagger: 0.15 });
+    if (w.legend === 'boom' && Math.random() < 0.2) explode(e.x, e.y, dmg * 0.6 * (perk('demolition') ? 1.3 : 1), 55, { small: true, knock: 10, stagger: 0.15 });
     if (w.legend === 'chain' && crit) {
       let t = null, bd = 170;
       for (const o of G.enemies) { const dd = dist(o, e); if (o !== e && o.hp > 0 && dd < bd && World.lineOfSight(e, o)) { bd = dd; t = o; } }
@@ -543,6 +571,8 @@ function killEnemy(e) {
     if (G.combo > p.bestCombo) p.bestCombo = G.combo;
     if (G.combo === 10 || G.combo === 25 || G.combo === 50) { UI.toast(`${G.combo} 연속 처치!`, `보너스 +${G.combo * p.level}₵`); p.credits += G.combo * p.level; }
   }
+  if (e.lastHit && e.lastHit.melee && perk('brawler')) { const mh = PlayerStats.maxHp(p); p.hp = Math.min(mh, p.hp + mh * 0.04); } // v1.11 싸움꾼
+  if (p.buffs.adren > 0 && smod('adren') === 'a' && (p.adrenExt || 0) < 8) { p.buffs.adren += 1.5; p.adrenExt = (p.adrenExt || 0) + 1.5; } // 광폭
   const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
   SFX.play(e.def.boss || e.fieldBoss || e.elite ? 'roar' : 'kill', e.def.boss ? 1 : 0.8);
   const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul); // 엘리트 4배
@@ -601,7 +631,7 @@ function killEnemy(e) {
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
   const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
-  if (Math.random() < gearChance) {
+  if (Math.random() < gearChance * (perk('treasure') ? 1.25 : 1)) {
     const it = randomGear(e.level, 0.4 + zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
     p.pity = it.rarity >= 3 ? 0 : p.pity + 1;
     dropAt('item', { item: it });
@@ -848,18 +878,31 @@ function updateBullets(dt) {
 }
 
 function updateGrenades(dt) {
-  const p = G.player;
+  const p = G.player, later = [];
   for (const g of G.grenades) {
     g.t += dt;
     const k = Math.min(1, g.t / g.dur);
     g.x = lerp(g.sx, g.tx, k); g.y = lerp(g.sy, g.ty, k); g.h = Math.sin(k * Math.PI) * 40;
     if (k >= 1) {
       g.done = true;
-      explode(g.x, g.y, SkillCalc.grenadeDmg(p) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1), SkillCalc.grenadeR(p), { knock: 30, stagger: 0.6 });
-      hitstop(0.05);
+      const base = SkillCalc.grenadeDmg(p) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1) * (perk('demolition') ? 1.3 : 1);
+      const dmg = base * (g.child ? 0.35 : g.mod === 'b' ? 0.8 : 1), r = SkillCalc.grenadeR(p) * (g.child ? 0.55 : 1);
+      explode(g.x, g.y, dmg, r, { knock: g.child ? 12 : 30, stagger: g.child ? 0.2 : 0.6, small: g.child });
+      hitstop(g.child ? 0.02 : 0.05);
+      if (g.mod === 'a' && !g.child) for (let i = 0; i < 4; i++) { // v1.11 집속탄
+        const a = i / 4 * TAU + rand(-0.4, 0.4), d = rand(55, 90);
+        later.push({ sx: g.x, sy: g.y, x: g.x, y: g.y, tx: g.x + Math.cos(a) * d, ty: g.y + Math.sin(a) * d, t: 0, dur: 0.35, child: true });
+      }
+      if (g.mod === 'b' && !g.child) G.fires.push({ x: g.x, y: g.y, r: r * 0.85, t: 0, life: 4, tick: 0, dmg: base * 0.22 * 0.5 }); // 소이탄 (0.5초마다)
     }
   }
-  G.grenades = G.grenades.filter(g => !g.done);
+  G.grenades = G.grenades.filter(g => !g.done).concat(later);
+  // v1.11 소이탄 불길: 0.5초마다 안의 적에게 피해
+  for (const f of G.fires) {
+    f.t += dt; f.tick -= dt;
+    if (f.tick <= 0) { f.tick = 0.5; for (const e of G.enemies) if (e.hp > 0 && Math.hypot(e.x - f.x, e.y - f.y) < f.r + e.r) damageEnemy(e, f.dmg, false, undefined, { noProc: true, blast: true }); }
+  }
+  G.fires = G.fires.filter(f => f.t < f.life);
 }
 
 // v1.7.1 장비가 땅에 닿는 순간의 연출 — 드랍이 귀해진 만큼 등급별로 확실하게
@@ -960,6 +1003,9 @@ function update(dt) {
   for (let i = 0; i < 4; i++) p.skillCd[i] = Math.max(0, p.skillCd[i] - dt);
   p.buffs.rapid = Math.max(0, p.buffs.rapid - dt);
   p.buffs.adren = Math.max(0, p.buffs.adren - dt);
+  p.invT = Math.max(0, (p.invT || 0) - dt);
+  p.buffs.shield = Math.max(0, (p.buffs.shield || 0) - dt);
+  if (p.buffs.regen > 0 && !p.dead) { p.buffs.regen -= dt; p.hp = Math.min(PlayerStats.maxHp(p), p.hp + (p.regenRate || 0) * dt); }
 
   spawnEnemies(dt);
   updateBossSpawn(dt);

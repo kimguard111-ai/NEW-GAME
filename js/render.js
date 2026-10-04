@@ -52,7 +52,7 @@ function drawGroundTile(tx, ty, t) {
     if (ly === RW && lx < RW) for (let i = 0; i < 4; i++) ctx.fillRect(x + 2 + i * 8, y + 5, 4, 22);
     if (lx === RW && ly < RW) for (let i = 0; i < 4; i++) ctx.fillRect(x + 5, y + 2 + i * 8, 22, 4);
     if (h < 0.06) { ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x + h * 200, y + 10, 10, 6); }
-    roadWear(x, y, h, tx, ty);
+    if (Settings.detail) roadWear(x, y, h, tx, ty);
   } else if (t === T.WALK) { // v1.10 보도블록: 칸마다 조금씩 다른 색 · 깨진 블록 · 틈새 풀
     const v = Math.floor((hash2(tx * 5 + 1, ty * 3 + 2) - 0.5) * 10);
     ctx.fillStyle = `rgb(${69 + v},${70 + v},${75 + v})`; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
@@ -241,9 +241,10 @@ function drawSolidTile(o) {
     if (ruin) { drawRuinTile(tx, ty, x0, y0, ht, b, h); ctx.globalAlpha = 1; return; } // v1.10 무너진 건물
     const sz = tileHeight(tx, ty + 1), ez = tileHeight(tx + 1, ty);
     drawBox(x0, y0, x1, y1, ht, top, south, east, sz, ez, tx * 977 + ty);
-    if (!glass) drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h); // v1.10 1층 셔터·때
+    if (!glass && Settings.detail) drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h); // v1.10 1층 셔터·때
     City.drawSign(tx, ty); // v1.2 한글 네온 간판
-    drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass);
+    if (Settings.detail) drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass);
+    else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 환풍기
   } else if (t === T.PROP && insideBid(tx, ty)) { // 실내 소품 (v0.15)
     const bd = World.buildings[World.bid[ty * World.W + tx]], S = SHOP_STYLES[bd.style], ph = tileHeight(tx, ty);
     const ins = bd.style === 'table' || bd.style === 'washer' ? 5 : 2; // 식탁·세탁기는 한 칸 안에서 작게
@@ -294,12 +295,10 @@ function drawSolidTile(o) {
     }
   } else if (t === T.CAR && City.carSkip.has(ty * World.W + tx)) { /* 버스·경찰차는 소품으로 그림 */
   } else if (t === T.CAR) {
-    const cols = [['#7b4a32', '#4b2a1a', '#5f3824'], ['#56626e', '#333b44', '#454f5a'], ['#6d6a44', '#43412a', '#575536'], ['#44566a', '#28323e', '#364556']];
-    const c = cols[Math.floor(h * 4)];
-    const vertical = (tx % World.BLOCK) < World.ROADW;
-    const [ix, iy] = vertical ? [8, 2] : [2, 8];
-    drawBox(x0 + ix, y0 + iy, x1 - ix, y1 - iy, 13, c[0], c[1], c[2], 0, 0, 0);
-    drawBox(x0 + ix + 3, y0 + iy + 6, x1 - ix - 3, y1 - iy - 6, 21, '#1d2024', '#151719', '#1a1c1f', 13, 13, 0);
+    const cols = [['#7b4a32', '#4b2a1a', '#5f3824'], ['#56626e', '#333b44', '#454f5a'], ['#6d6a44', '#43412a', '#575536'], ['#44566a', '#28323e', '#364556'], ['#8a8a86', '#555552', '#6e6e6a'], ['#6a2a2a', '#401818', '#552020']];
+    const burnt = isBurningCar(tx, ty);
+    const c = burnt ? ['#2a2624', '#171514', '#201d1b'] : cols[Math.floor(h * cols.length)];
+    drawCarShape(x0 + 16, y0 + 16, (tx % World.BLOCK) < World.ROADW, c, h, { burnt });
   } else if (t === T.BARRICADE) { // v1.10 모래주머니 3단 + 위에 철조망
     const S = Iso.sx, Y = Iso.sy;
     for (let r = 0; r < 3; r++) {
@@ -315,6 +314,34 @@ function drawSolidTile(o) {
     if (h < 0.15) { ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, 21)); ctx.lineTo(S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, 34)); ctx.stroke(); ctx.lineWidth = 1; } // 말뚝
   }
   ctx.globalAlpha = 1;
+}
+
+// v1.11 버려진 차: 바퀴 · 떠 있는 차체 · 유리창 운전석 · 앞뒤 등 · 녹 · 깨진 유리. vert = 세로 차선(길이가 y 방향)
+function drawCarShape(cx, cy, vert, c, h, o = {}) {
+  const L = o.L || 13, Wd = o.W || 8, S = Iso.sx, Y = Iso.sy;
+  const R = (a0, a1, b0, b1) => vert ? [cx + b0, cy + a0, cx + b1, cy + a1] : [cx + a0, cy + b0, cx + a1, cy + b1]; // a: 길이축, b: 폭축
+  const front = h * 7 % 1 < 0.5 ? 1 : -1; // 앞쪽 방향
+  drawShadow(S(cx, cy), Y(cx, cy), 15);
+  for (const a of [-L + 3, L - 6]) for (const b of [-Wd, Wd - 3]) { const r = R(a, a + 3, b, b + 3); drawBox(r[0], r[1], r[2], r[3], 5, '#111', '#0a0a0a', '#0e0e0e', 0, 0, 0); } // 바퀴
+  const body = R(-L, L, -Wd, Wd);
+  drawBox(body[0], body[1], body[2], body[3], 11, c[0], c[1], c[2], 3, 3, 0);
+  // 운전석: 뒤쪽으로 치우친 짧은 상자, 옆면은 유리
+  const ca = front > 0 ? [-L + 3, L - 7] : [-L + 7, L - 3], cab = R(ca[0], ca[1], -Wd + 1.5, Wd - 1.5);
+  const glass = o.burnt ? '#0a0a0a' : '#1b2430', glassE = o.burnt ? '#0d0d0d' : '#24303e';
+  drawBox(cab[0], cab[1], cab[2], cab[3], o.tall ? 22 : 18, o.roof || c[0], glass, glassE, 11, 11, 0);
+  if (!o.burnt && h * 13 % 1 < 0.35) { // 깨진 앞유리
+    ctx.strokeStyle = 'rgba(200,220,235,0.5)'; ctx.lineWidth = 1; const fx = S(cab[2], cab[3]), fy = Y(cab[2], cab[3], 15);
+    ctx.beginPath(); ctx.moveTo(fx - 4, fy - 2); ctx.lineTo(fx, fy); ctx.lineTo(fx - 2, fy + 3); ctx.moveTo(fx, fy); ctx.lineTo(fx + 3, fy - 3); ctx.stroke();
+  }
+  // 앞뒤 등 (화면에 보이는 남·동쪽 끝)
+  const endFace = vert ? cy + L : cx + L, lit = front > 0 ? (o.burnt ? '#332' : '#e8dca0') : '#a02020';
+  if (vert) { poly([S(cx - Wd + 1, endFace), Y(cx - Wd + 1, endFace, 7), S(cx - Wd + 4, endFace), Y(cx - Wd + 4, endFace, 7), S(cx - Wd + 4, endFace), Y(cx - Wd + 4, endFace, 9.5), S(cx - Wd + 1, endFace), Y(cx - Wd + 1, endFace, 9.5)], lit); poly([S(cx + Wd - 4, endFace), Y(cx + Wd - 4, endFace, 7), S(cx + Wd - 1, endFace), Y(cx + Wd - 1, endFace, 7), S(cx + Wd - 1, endFace), Y(cx + Wd - 1, endFace, 9.5), S(cx + Wd - 4, endFace), Y(cx + Wd - 4, endFace, 9.5)], lit); }
+  else { poly([S(endFace, cy - Wd + 1), Y(endFace, cy - Wd + 1, 7), S(endFace, cy - Wd + 4), Y(endFace, cy - Wd + 4, 7), S(endFace, cy - Wd + 4), Y(endFace, cy - Wd + 4, 9.5), S(endFace, cy - Wd + 1), Y(endFace, cy - Wd + 1, 9.5)], lit); poly([S(endFace, cy + Wd - 4), Y(endFace, cy + Wd - 4, 7), S(endFace, cy + Wd - 1), Y(endFace, cy + Wd - 1, 7), S(endFace, cy + Wd - 1), Y(endFace, cy + Wd - 1, 9.5), S(endFace, cy + Wd - 4), Y(endFace, cy + Wd - 4, 9.5)], lit); }
+  // 문 이음새 (옆면)
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath();
+  if (vert) { const x = cx + Wd; ctx.moveTo(S(x, cy), Y(x, cy, 4)); ctx.lineTo(S(x, cy), Y(x, cy, 11)); } else { const y = cy + Wd; ctx.moveTo(S(cx, y), Y(cx, y, 4)); ctx.lineTo(S(cx, y), Y(cx, y, 11)); }
+  ctx.stroke();
+  if (h * 31 % 1 < 0.4 || o.burnt) { ctx.fillStyle = o.burnt ? 'rgba(0,0,0,0.4)' : 'rgba(90,50,25,0.45)'; ctx.beginPath(); ctx.ellipse(S(cx, cy) + (h - 0.5) * 10, Y(cx, cy, 11), 5, 2.5, 0, 0, TAU); ctx.fill(); } // 녹·그을음
 }
 
 // v1.10 무너진 건물: 한 칸을 2×2 조각으로 나눠 높이가 들쭉날쭉한 콘크리트 + 철근 + 꺾인 바닥판
@@ -575,6 +602,10 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   if (p.buffs.adren > 0 || p.buffs.rapid > 0) {
     ctx.strokeStyle = p.buffs.adren > 0 ? 'rgba(255,120,40,0.7)' : 'rgba(120,255,220,0.7)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(sx, sy, 20, 10, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+  }
+  if (!ui && (p.buffs.shield > 0 || p.invT > 0)) { // v1.11 방어막 · 두 번째 숨 무적
+    ctx.strokeStyle = `rgba(120,184,255,${0.45 + Math.sin(G.time * 10) * 0.2})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(sx, sy - 22, 20, 30, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
   }
   if (ui) return;
   nameTag(sx, sy - 48, p.name, '#9fe08f', '12px sans-serif');
@@ -967,6 +998,12 @@ function render() {
     g.addColorStop(0, `rgba(120,255,80,${0.55 * pul})`); g.addColorStop(0.7, `rgba(60,200,40,${0.35 * pul})`); g.addColorStop(1, 'rgba(40,120,20,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, TAU); ctx.fill();
   }
+  for (const f of G.fires) { // v1.11 소이탄 불길
+    const a = Math.min(1, (f.life - f.t) / 0.6), fl = 0.85 + Math.sin(G.time * 13 + f.x) * 0.15;
+    const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+    g.addColorStop(0, `rgba(255,190,70,${0.55 * a * fl})`); g.addColorStop(0.7, `rgba(240,90,30,${0.4 * a})`); g.addColorStop(1, 'rgba(120,30,10,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, TAU); ctx.fill();
+  }
   for (const pl of G.pools) { // 산성 장판
     const a = Math.min(1, (pl.life - pl.t) / 0.6);
     ctx.fillStyle = `rgba(120,200,60,${0.4 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill();
@@ -1151,6 +1188,7 @@ function render() {
   const cc = World.campCenter();
   if (World.map === 'camp') addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
   for (const e of G.exits || []) if (!e.locked) addLight(Iso.sx(e.x, e.y), Iso.sy(e.x, e.y), 160, 0.9, 'rgba(110,240,130,A)'); // 탈출 지점
+  for (const f of G.fires) addLight(Iso.sx(f.x, f.y), Iso.sy(f.x, f.y), f.r * 2.2, 0.8, 'rgba(255,130,50,A)'); // v1.11 불길
   for (const ef of G.effects) if (ef.type === 'boom') addLight(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y), ef.r * 2.4 * (1 - ef.t / ef.life), 1, 'rgba(255,150,50,A)');
   for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(120,255,100,A)' : 'rgba(255,90,60,A)');
   for (const s of G.strikes) addLight(Iso.sx(s.x, s.y), Iso.sy(s.x, s.y), s.r * 1.8, 0.5 + 0.4 * s.t / s.delay, s.pool ? 'rgba(140,230,70,A)' : 'rgba(255,90,50,A)');
