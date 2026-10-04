@@ -37,7 +37,11 @@ const ART = {
 
   // 헬멧 그림 (1장, 오른쪽을 보는 3/4 시점). 몸 그림의 프레임별 머리 위치(heads)에 씌움
   helmets: {
-    // gasmask: { file: 'h_gasmask.png' },
+    // v1.7.4 Gemini 아트 4종 한 장 (인벤토리 아이콘도 이 그림)
+    cap: { file: 'helmets.png', rect: [0, 0, 180, 208] },
+    tacHelmet: { file: 'helmets.png', rect: [188, 0, 212, 208] },
+    gasmask: { file: 'helmets.png', rect: [408, 0, 188, 228] },
+    exoHelm: { file: 'helmets.png', rect: [604, 0, 164, 204] },
   },
   helmetFit: { w: 1.35, up: 0.18 }, // 헬멧 폭 = 머리 폭 × w, 머리 꼭대기보다 (헬멧 폭 × up) 만큼 위에서 시작
 
@@ -77,5 +81,11 @@ const ART = {
     deploy: { file: 'deploy.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
     medic: { file: 'medic.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
     merchant: { file: 'merchant.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
+    // v1.7.4 Gemini 아트: NPC 3명 · 보스 먹보·흑표
+    captain: { file: 'captain.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
+    mechanic: { file: 'mechanic.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
+    stash: { file: 'stash.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
+    glutton: { file: 'glutton.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    panther: { file: 'panther.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
   },
 };
