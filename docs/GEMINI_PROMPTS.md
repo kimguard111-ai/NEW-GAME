@@ -43,7 +43,7 @@
 | 8 | 랜드마크 6채 | 6 | cathedral · bosingak · base · tower63 · coex · lotte | 맵마다 상징 건물 |
 | 9 | 보스 전용 17종 (선택) | 17 | glutton … chimera | 없으면 기본 적을 키워서 씀 |
 | 10 | 타이틀 키아트 | 1 | (가공 없음) | 첫 화면 |
-| 11 | **무기를 든 플레이어 몸** (v1.7.7) | 2~10 | player_long · player_pistol · player_vest_long … | 손과 총이 붙어 보임 |
+| 11 | **무기를 든 플레이어 몸** (v1.7.7 · 근접 v1.7.9) | 2~20 | player_long · player_pistol · player_vest_long … | 손과 총이 붙어 보임 |
 
 > 아이콘: 무기·헬멧은 2·5번을 등록하면 자동으로 그 그림이 됩니다. 방어구·구급상자·메뉴 아이콘은 코드로 그린 아이콘(46종)이 이미 통일돼 있어 따로 만들지 않아도 됩니다.
 
@@ -357,7 +357,8 @@ Match the art style of the attached concept image. Create ONE wide 16:9 cinemati
 |---|---|---|
 | **long** (장총) | 기관단총 · 산탄총 · 돌격소총 · 저격소총 · 기관총 | 검은 돌격소총 하나로 통일 |
 | **pistol** (권총) | 권총 | 검은 권총 |
-| (근접 무기) | 쇠파이프 · 도끼 · 블레이드 | 지금 방식 그대로 (빈손 몸 + 무기) |
+| **heavy** (둔기) | 쇠파이프 · 소방 도끼 | 빨간 소방 도끼 (v1.7.9) |
+| **blade** (칼) | 고주파 블레이드 | 푸른 날 블레이드 (v1.7.9) |
 
 - 방어구마다 2장(장총·권총)씩 필요합니다. **올라온 것부터 바로 적용**되고, 없는 조합은 지금 방식으로 보입니다.
 - 추천 순서: **기본 몸 장총 → 기본 몸 권총** → 자주 입는 방어구 → 나머지
@@ -372,6 +373,7 @@ Match the art style of the attached concept image. Create ONE wide 16:9 cinemati
 | `player_tactical_long` · `player_tactical_pistol` | 전술 조끼 | `player_best2.png` |
 | `player_military_long` · `player_military_pistol` | 군용 강화복 | `player_best3.png` |
 | `player_exo_long` · `player_exo_pistol` | 외골격 | `player_best4.png` |
+| (근접) `player_heavy` · `player_blade` · `player_vest_heavy` · `player_vest_blade` … | 위와 같은 순서 | 위와 같음 |
 
 ### 11-1. 장총 든 몸 · 🔧 **player_long** (방어구 버전은 이름만 바꿔 같은 프롬프트)
 📎 해당 방어구의 빈손 몸 그림 + 콘셉트 아트
@@ -383,6 +385,18 @@ Using the attached character as the exact reference (same face, same hair, same 
 📎 해당 방어구의 빈손 몸 그림 + 콘셉트 아트
 ```
 Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a black M1911 pistol with both hands in a firing stance, arms extended forward at chest height, the pistol pointing straight to the RIGHT and level with the ground. The pistol stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while aiming the pistol forward; row 2: 6 frames of a walk cycle while keeping the pistol aimed forward; row 3: 3 frames of firing the pistol with a small recoil kick of the hands, no muzzle flash, no bullets; row 4: 2 frames of getting hit and flinching backward while still holding the pistol; row 5: 5 frames of a death animation, dropping the pistol, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 11-3. 둔기(도끼) 든 몸 · 🔧 **player_heavy** · 🔢 `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 해당 방어구의 빈손 몸 그림 + 콘셉트 아트 · 방어구 버전: `player_vest_heavy` · `player_tactical_heavy` · `player_military_heavy` · `player_exo_heavy`
+```
+Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a red fire axe with a long wooden handle in both hands, in a ready stance with the axe head raised near the right shoulder. The axe stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing in the ready stance; row 2: 6 frames of a walk cycle holding the axe ready; row 3: 4 frames of one big horizontal swing to the RIGHT: wind-up behind the shoulder, fast swing forward, follow-through, return to ready (no motion blur, no slash effect); row 4: 2 frames of getting hit and flinching backward while still holding the axe; row 5: 5 frames of a death animation, dropping the axe, falling down and lying on the ground. Keep the head and face steady and upright in every frame. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 11-4. 블레이드 든 몸 · 🔧 **player_blade** · 🔢 `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 해당 방어구의 빈손 몸 그림 + 콘셉트 아트 · 방어구 버전: `player_vest_blade` · `player_tactical_blade` · `player_military_blade` · `player_exo_blade`
+```
+Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a long high-frequency sci-fi sword with a black handle and a faint cyan glowing blade in his right hand, in a low ready stance with the blade pointing forward to the RIGHT. The sword stays in his hand in every frame except the death frames. Rows: row 1: 4 frames of idle breathing in the ready stance; row 2: 6 frames of a fast walk cycle holding the sword ready; row 3: 4 frames of one quick horizontal slash to the RIGHT: draw back, fast slash forward, follow-through, return to ready (no motion blur, no slash effect); row 4: 2 frames of getting hit and flinching backward while still holding the sword; row 5: 5 frames of a death animation, dropping the sword, falling down and lying on the ground. Keep the head and face steady and upright in every frame. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
 ```
 
 > 결과가 이상할 때: 총이 비스듬하면 "barrel perfectly horizontal" 을, 사람이 바뀌면 빈손 몸 그림을 다시 첨부했는지 확인하세요. 행이 섞이거나 공격·피격이 한 줄에 그려져도 괜찮습니다 (가공할 때 세어서 맞춥니다).

@@ -34,7 +34,8 @@ const ART = {
   handY: 0.62,     // 손 높이 (플레이어 키 대비, 가슴 높이)
   handX: 0.1,      // 손이 몸 중심에서 앞으로 나온 정도 (플레이어 키 대비)
   // v1.7.7 무기를 든 몸 그림의 그룹: player[_방어구]_그룹 그림이 있으면 그 몸을 쓰고 무기를 따로 붙이지 않음 (근접 무기는 기존 방식)
-  weaponGroup: { pistol: 'pistol', smg: 'long', shotgun: 'long', rifle: 'long', sniper: 'long', lmg: 'long' },
+  weaponGroup: { pistol: 'pistol', smg: 'long', shotgun: 'long', rifle: 'long', sniper: 'long', lmg: 'long',
+    pipe: 'heavy', axe: 'heavy', katana: 'blade' }, // v1.7.9 근접: 둔기·도끼(heavy) · 블레이드(blade)
   handFromHead: { x: 0.1, y: 0.46 }, // v1.7.5 손 위치 = 이번 프레임 머리 꼭대기에서 (앞으로 x, 아래로 y) × 플레이어 키
   weaponThick: 1.7, // 코드로 그린 총의 세로 과장 배율 (작은 화면에서 실처럼 가늘어 보이지 않게)
   weaponThickArt: 1.0, // v1.7.6 무기 그림의 세로 배율 (그림은 원래 비율 그대로 — 1.7배였을 때 권총이 덩어리처럼 보였음)

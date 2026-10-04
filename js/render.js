@@ -423,18 +423,24 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     o.gun = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 12 : w.key === 'lmg' ? 26 : w.key === 'shotgun' ? 22 : w.key === 'smg' ? 15 : 20;
     if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
   }
-  const [anim, at] = animState(moving, p.hurtT, p.lastAtk, w && ART.weaponGroup[w.key] ? ((p.equip.armor && Sprites.get('player_' + p.equip.armor.key) ? 'player_' + p.equip.armor.key : 'player') + '_' + ART.weaponGroup[w.key]) : 'player');
+  let [anim, at] = animState(moving, p.hurtT, p.lastAtk, w && ART.weaponGroup[w.key] ? ((p.equip.armor && Sprites.get('player_' + p.equip.armor.key) ? 'player_' + p.equip.armor.key : 'player') + '_' + ART.weaponGroup[w.key]) : 'player');
   const baseKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
   // v1.7.7 무기를 든 몸 그림 (예: player_long, player_vest_pistol) 이 있으면 그걸 쓰고 무기를 따로 붙이지 않음
   const grp = w ? ART.weaponGroup[w.key] : null, heldKey = grp && Sprites.get(baseKey + '_' + grp) ? baseKey + '_' + grp : null;
   const bodyKey = heldKey || baseKey;
+  let sxb = sx; // 몸을 그릴 x (총 반동으로 살짝 밀림)
+  if (heldKey && (grp === 'long' || grp === 'pistol')) {
+    // v1.7.9 총을 든 몸: 사격 동작(고개가 크게 젖혀짐 · 연사 때 계속 재시작)은 쓰지 않고 조준 자세 그대로 몸만 뒤로 1~3px
+    if (anim === 'attack') [anim, at] = moving ? ['walk', G.time] : ['idle', G.time];
+    if (p.recoilT > 0) sxb = sx - (Iso.dir(p.aim).x < 0 ? -1 : 1) * (b.pellets || w.key === 'sniper' ? 3 : 1.5) * p.recoilT / 0.07;
+  }
   if (Sprites.get(bodyKey)) {
     // 몸 그림(무기·헬멧 없음) + 헬멧을 머리에, 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
     // v1.7.5 무기는 이번 프레임의 머리 위치를 따라감 (걷기 흔들림·피격 젖힘과 함께 움직임) · 쓰러지는 중엔 손에서 놓음
     const back = Iso.dir(p.aim).y < -0.15, fr = Sprites.frame(bodyKey, anim, at, p.aim), hold = w && !heldKey && !p.dead && fr.anim.indexOf('death') < 0;
     if (back && hold) drawWeaponOverlay(sx, sy, w, p, fr);
-    const info = Sprites.draw(bodyKey, anim, at, sx, sy, p.aim, p.hurtT > 0);
-    if (hel && info.anim.indexOf('death') < 0) drawHelmetOverlay(sx, sy, info, hel, o.helmet);
+    const info = Sprites.draw(bodyKey, anim, at, sxb, sy, p.aim, p.hurtT > 0);
+    if (hel && info.anim.indexOf('death') < 0) drawHelmetOverlay(sxb, sy, info, hel, o.helmet);
     if (!back && hold) drawWeaponOverlay(sx, sy, w, p, info);
   } else drawHuman(sx, sy, o);
   if (p.buffs.adren > 0 || p.buffs.rapid > 0) {
