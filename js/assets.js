@@ -35,7 +35,7 @@ const ART = {
   handX: 0.1,      // 손이 몸 중심에서 앞으로 나온 정도 (플레이어 키 대비)
   // v1.7.7 무기를 든 몸 그림의 그룹: player[_방어구]_그룹 그림이 있으면 그 몸을 쓰고 무기를 따로 붙이지 않음 (근접 무기는 기존 방식)
   weaponGroup: { pistol: 'pistol', smg: 'long', shotgun: 'long', rifle: 'long', sniper: 'long', lmg: 'long',
-    pipe: 'heavy', axe: 'heavy', katana: 'blade' }, // v1.7.9 근접: 둔기·도끼(heavy) · 블레이드(blade)
+    pipe: 'heavy', axe: 'heavy', katana: 'heavy' }, // v1.7.9 근접 그룹 · v1.8.0 근접은 모두 둔기(도끼) 그림으로 통일
   handFromHead: { x: 0.1, y: 0.46 }, // v1.7.5 손 위치 = 이번 프레임 머리 꼭대기에서 (앞으로 x, 아래로 y) × 플레이어 키
   weaponThick: 1.7, // 코드로 그린 총의 세로 과장 배율 (작은 화면에서 실처럼 가늘어 보이지 않게)
   weaponThickArt: 1.0, // v1.7.6 무기 그림의 세로 배율 (그림은 원래 비율 그대로 — 1.7배였을 때 권총이 덩어리처럼 보였음)
@@ -103,5 +103,16 @@ const ART = {
     player_tactical_pistol: { file: 'player_tactical_pistol.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 3], death: [3, 5] }, headW: 19, heads: { idle: [[4,-98],[3,-98],[3,-102],[3,-102]], walk: [[2,-93],[-2,-93],[-2,-90],[1,-94],[2,-94],[-1,-94],[1,-94],[3,-94]], attack: [[1,-97],[8,-92],[1,-95]], death: [[7,-97],[-24,-88],[-54,-82],[-29,-65],[14,-56]] } },
     player_vest_long: { file: 'player_vest_long.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 3], hit: [3, 2], death: [4, 5] }, headW: 19, heads: { idle: [[5,-94],[6,-97],[6,-101],[6,-97]], walk: [[3,-91],[-1,-92],[1,-95],[2,-91],[4,-95],[-1,-92],[1,-95],[3,-95]], attack: [[3,-94],[5,-92],[2,-98]], hit: [[-11,-95],[-9,-90]], death: [[-4,-87],[-41,-81],[-58,-71],[-26,-83],[11,-57]] } },
     player_vest_pistol: { file: 'player_vest_pistol.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 3], death: [3, 5] }, headW: 20, heads: { idle: [[3,-98],[3,-98],[3,-102],[3,-98]], walk: [[4,-94],[-2,-97],[-1,-94],[2,-94],[2,-94],[-2,-94],[2,-94],[0,-94]], attack: [[-3,-98],[16,-95],[2,-92]], death: [[12,-77],[-49,-91],[-52,-70],[-53,-59],[-43,-50]] } },
+    // v1.8.0 Gemini 아트: 보스 7종 · 둔기 든 몸 3종
+    argos: { file: 'argos.png', cell: 128, w: 192, anims: { idle: [0, 4], attack: [1, 4], hit: [2, 2], death: [3, 5] } },
+    babel: { file: 'babel.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 3], hit: [3, 2], death: [4, 6] } },
+    goliath: { file: 'goliath.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 7], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    hawk: { file: 'hawk.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    raven: { file: 'raven.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    redfang: { file: 'redfang.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    viper: { file: 'viper.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 7], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    player_heavy: { file: 'player_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 5] }, headW: 19, heads: { idle: [[5,-102],[4,-98],[4,-98],[4,-102]], walk: [[2,-94],[-2,-94],[1,-94],[2,-97],[2,-97],[1,-94],[0,-94],[-1,-94]], attack: [[-10,-94],[7,-91],[5,-93],[9,-89],[23,-94]], hit: [[13,-95],[11,-94]], death: [[11,-94],[9,-90],[-52,-73],[-53,-54],[-35,-50]] } },
+    player_vest_heavy: { file: 'player_vest_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, headW: 20, heads: { idle: [[4,-98],[4,-98],[3,-98],[3,-102]], walk: [[5,-94],[-2,-97],[-1,-94],[2,-94],[2,-97],[-1,-94],[2,-94],[-1,-94]], attack: [[-9,-84],[-15,-96],[-14,-95],[6,-92]], hit: [[11,-96],[15,-89]], death: [[8,-105],[-29,-91],[-38,-80],[9,-56],[9,-56]] } },
+    player_tactical_heavy: { file: 'player_tactical_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, headW: 20, heads: { idle: [[3,-98],[4,-98],[3,-98],[3,-102]], walk: [[5,-94],[-2,-97],[-1,-94],[2,-94],[3,-94],[-1,-94],[2,-94],[0,-94]], attack: [[-9,-84],[-15,-97],[-14,-95],[6,-92]], hit: [[11,-96],[15,-89]], death: [[7,-101],[-29,-91],[-36,-76],[9,-56],[9,-56]] } },
   },
 };
