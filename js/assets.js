@@ -4,7 +4,7 @@
 // 등록되지 않았거나 파일을 못 읽으면 기존 도형 그래픽을 그대로 사용합니다.
 const ART = {
   dir: 'assets/',
-  title: null, // 타이틀 키아트 (예: 'title.png'). 없으면 코드로 그린 서울 야경
+  title: 'title.png', // 타이틀 키아트 (예: 'title.png'). 없으면 코드로 그린 서울 야경
   charFill: 0.78, // 가공 도구와 같은 값 (대기 자세 키 / 칸 높이)
   feetPad: 4,     // 가공 도구와 같은 값 (칸 바닥 ~ 발)
   fps: { idle: 6, walk: 10, attack: 16, hit: 12, death: 10 },
@@ -43,7 +43,13 @@ const ART = {
 
   // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
   landmarks: {
-    // cathedral: { file: 'cathedral.png' },
+    // v1.7.3 Gemini 아트 6채
+    cathedral: { file: 'cathedral.png' },
+    bosingak: { file: 'bosingak.png' },
+    base: { file: 'base.png' },
+    tower63: { file: 'tower63.png' },
+    coex: { file: 'coex.png' },
+    lotte: { file: 'lotte.png' },
   },
   sprites: {
     // 예시 (도구가 만들어 주는 형식):
@@ -55,5 +61,21 @@ const ART = {
     player_tactical: { file: 'player_tactical.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], hit: [2, 2], death: [3, 5] }, headW: 19, heads: { idle: [[4,-100],[3,-100],[4,-101],[4,-101]], walk: [[5,-94],[-1,-97],[-1,-95],[2,-94],[3,-95],[-2,-96],[2,-95],[0,-95]], hit: [[-4,-98],[14,-105]], death: [[3,-100],[-35,-86],[-49,-79],[-52,-57],[-36,-51]] } },
     player_military: { file: 'player_military.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], hit: [2, 2], death: [3, 5] }, headW: 19, heads: { idle: [[4,-100],[3,-100],[4,-100],[4,-101]], walk: [[5,-96],[-1,-99],[-1,-95],[3,-95],[3,-97],[-2,-96],[2,-95],[-1,-95]], hit: [[-5,-99],[13,-95]], death: [[3,-100],[-37,-89],[-52,-83],[-47,-51],[-36,-51]] } },
     player_exo: { file: 'player_exo.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], hit: [2, 2], death: [3, 5] }, headW: 19, heads: { idle: [[4,-100],[4,-101],[5,-101],[4,-100]], walk: [[5,-96],[-1,-99],[-2,-95],[3,-96],[4,-95],[-3,-96],[2,-95],[-1,-95]], hit: [[-9,-99],[14,-96]], death: [[11,-96],[-41,-88],[-53,-77],[-52,-58],[-54,-55]] } },
+    // v1.7.3 Gemini 아트: 적 12종 · NPC 3명
+    zombie: { file: 'zombie.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    dog: { file: 'dog.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    raider: { file: 'raider.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    brute: { file: 'brute.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    drone: { file: 'drone.png', cell: 128, w: 192, anims: { idle: [0, 4], attack: [1, 4], hit: [2, 2], death: [3, 6] } },
+    merc: { file: 'merc.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    subject: { file: 'subject.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    spitter: { file: 'spitter.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    sentry: { file: 'sentry.png', cell: 128, w: 192, anims: { idle: [0, 8], attack: [1, 8], hit: [2, 2], walk: [3, 4], death: [4, 6] } },
+    shield: { file: 'shield.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 10], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    stalker: { file: 'stalker.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 10], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    boss: { file: 'boss.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 6] } },
+    deploy: { file: 'deploy.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
+    medic: { file: 'medic.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
+    merchant: { file: 'merchant.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
   },
 };
