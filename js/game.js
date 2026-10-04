@@ -233,7 +233,7 @@ function playerDamageMul(melee) {
   if (perk('rollStrike') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1.5) m *= 1.3;
   if (!melee && perk('steadyAim') && G.time - (p.lastHurt || -9) > 2) m *= 1.15;
   if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) m *= 1.25;
-  return m;
+  return m * Camp.dmgMul(); // v1.13 사격장
 }
 
 function playerAttack() {
@@ -389,7 +389,7 @@ function addItem(it) {
     const ex = inv.find(i => i && i.kind === 'cons' && i.key === it.key);
     if (ex) { ex.count += it.count; UI.refreshInventory(); return true; }
   }
-  if (inv.length >= 24) return false;
+  if (inv.length >= Camp.bagSize()) return false;
   inv.push(it);
   UI.refreshInventory();
   return true;

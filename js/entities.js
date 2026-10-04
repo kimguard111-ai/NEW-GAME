@@ -145,8 +145,8 @@ function plusMul(it) { return 1 + (it.plus || 0) * ENHANCE.step; }
 function armorDef(arm) { return arm ? Math.round(arm.def * plusMul(arm)) : 0; }
 function itemSellPrice(it) { return Math.max(1, Math.floor((it.value || 0) * 0.3 * (1 + (it.plus || 0) * 0.25))) * (it.count || 1); }
 
-function enhanceCost(it) { return Math.round((20 + it.ilvl * 6) * Math.pow(it.plus + 1, 1.3) * (1 + it.rarity * 0.25)); }
-function enhanceRate(it) { return Math.min(1, ENHANCE.rates[it.plus] + (it.fails || 0) * ENHANCE.failBonus); }
+function enhanceCost(it) { return Math.round((20 + it.ilvl * 6) * Math.pow(it.plus + 1, 1.3) * (1 + it.rarity * 0.25) * Camp.enhanceMul()); } // v1.13 작업대
+function enhanceRate(it) { return Math.min(1, ENHANCE.rates[it.plus] + (it.fails || 0) * ENHANCE.failBonus + Camp.enhanceBonus()); }
 
 function itemReqLevel(it) {
   if (it.kind === 'weapon') return WEAPONS[it.key].lvl;
@@ -203,7 +203,8 @@ function newPlayer(name) {
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
-    perks: [], skillMods: {}, // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
+    perks: [], skillMods: {}, camp: {}, // v1.13 캠프 시설 단계
+    // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
     bossKills: 0, totalKills: 0, pity: 0, respecs: 0, found: [], radT: 0,
   };
@@ -227,7 +228,7 @@ function hasLegend(p, id) { const w = p.equip[p.active]; return !!(w && w.legend
 const perk = id => !!(G.player && G.player.perks && G.player.perks.includes(id));
 const smod = sid => (G.player && G.player.skillMods && G.player.skillMods[sid]) || null;
 const PlayerStats = {
-  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1) * (setOn('rad', 2) ? 1.08 : 1)),
+  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1) * (setOn('rad', 2) ? 1.08 : 1) * Camp.raidHpMul()),
   def: p => Math.round((armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5)) * (setOn('steel', 2) ? 1.15 : 1)),
   dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 40 + 8 * p.level); }, // v1.0: 고레벨일수록 같은 방어력의 효과 감소 (Lv5 기존과 동일)
   gunMul: p => 1 + (p.stats.dex - 5) * 0.04,

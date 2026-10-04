@@ -21,12 +21,7 @@ const RaidEvents = {
     this.list = []; this.alert = 0; this.huntT = 0;
     if (World.map === 'camp') return;
     const lab = !!(World.def && World.def.lab);
-    const pool = Object.keys(EVENT_DEFS).filter(k => lab ? EVENT_DEFS[k].lab : true);
-    const n = Math.random() < 0.5 ? 2 : 1;
-    for (let i = 0; i < n && pool.length; i++) {
-      const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-      this['make_' + k]();
-    }
+    for (const k of Camp.takePlan(World.map)) this['make_' + k](); // v1.13 미리 정해 둔 사건 (무전실에서 미리 보기)
     this.makeExit();
     const names = this.list.filter(e => !e.exitPart).map(e => EVENT_DEFS[e.kind].name);
     if (names.length) log(`${ICON('radio')} 무전: 이 구역에서 ${names.join(' · ')} 신호가 잡힌다. (미니맵 노란 ◆)`, '#ffd76a');
@@ -176,7 +171,7 @@ const RaidEvents = {
     const p = G.player;
     if (!p.raid || World.map === 'camp') return;
     // 경보 단계
-    const a = ALERT_AT.filter(t => p.raid.t >= t).length;
+    const a = ALERT_AT.filter(t => p.raid.t >= t + Camp.alertDelay()).length; // v1.13 무전실 2단계: 1분 늦게
     if (a > this.alert) {
       this.alert = a;
       const msg = ['', '감염자들이 소란을 알아챘다 — 적이 늘어난다.', '블랙선·약탈자 무전이 잡힌다 — 적이 더 강해진다.', '추적대가 투입됐다! 지금 나가는 게 좋다.'][a];
@@ -259,7 +254,7 @@ const RaidEvents = {
       else if (e.kind === 'generator') out.push('발전기 켜기 → 전원 탈출');
     }
     const s = out.filter(Boolean);
-    const al = this.alert ? ` · <b style="color:#ff8a5a">경보 ${this.alert}단계</b>` : ` · 경보까지 ${Math.max(0, Math.ceil((ALERT_AT[0] - p.raid.t) / 60))}분`;
+    const al = this.alert ? ` · <b style="color:#ff8a5a">경보 ${this.alert}단계</b>` : ` · 경보까지 ${Math.max(0, Math.ceil((ALERT_AT[0] + Camp.alertDelay() - p.raid.t) / 60))}분`;
     return `<br><span class="muted">${ICON('radio')} ${s.length ? s.join(' · ') : '사건 없음'}${al}</span>`;
   },
 

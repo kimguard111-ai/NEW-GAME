@@ -5,7 +5,7 @@
 
 const EXTRACT_TIME = 5;   // 탈출 지점에 머무는 시간 (초)
 const EXTRACT_R = 70;     // 탈출 지점 반경 (px)
-const STASH_SIZE = 48;
+const STASH_SIZE = 48; // 기본값 — v1.13부터 실제 크기는 Camp.stashSize() (창고 증축)
 
 const Raid = {
   unlocked(id) { const d = MAPS[id]; return !!d && (d.chapter === undefined || G.player.quest.ch >= d.chapter); },
@@ -15,13 +15,14 @@ const Raid = {
   openMap() {
     const p = G.player, btns = [], med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
     let h = '"어디로 나갈 건가? 탈출 지점까지 살아서 돌아와야 주운 걸 챙길 수 있어."<br>'
-      + `<div class="prep">출격 준비: ${ICON('medkit')} 구급상자 <b>${med}</b> · 예비 탄약 <b>${fmt(p.reserve)}</b> · 가방 <b>${p.inventory.length}/24</b> · ₵${fmt(p.credits)}</div>`;
+      + `<div class="prep">출격 준비: ${ICON('medkit')} 구급상자 <b>${med}</b> · 예비 탄약 <b>${fmt(p.reserve)}</b> · 가방 <b>${p.inventory.length}/${Camp.bagSize()}</b> · ₵${fmt(p.credits)}</div>`;
     btns.push([`${ICON('medkit')} +3 (120₵)`, () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
     btns.push([`${ICON('ammo')} 탄약 +120 (45₵)`, () => { if (p.credits < 45) return log('크레딧이 부족합니다.', '#f88'); p.reserve += 120; p.credits -= 45; SFX.play('ammo'); this.openMap(); }]);
     for (const id of MAP_ORDER) {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id);
       const gr = p.graves[id];
-      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}</div>`;
+      const ev = ok && Camp.lv('radio') >= 1 ? ` <span style="color:#ffd76a">${ICON('radio')} ${Camp.planFor(id).map(k => EVENT_DEFS[k].name).join(' · ')}</span>` : ''; // v1.13 무전실 미리 보기
+      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}${ev}</div>`;
       if (ok) btns.push([`${d.name} 출격`, () => { UI.close('dialog'); this.deploy(id); }]);
     }
     btns.push(['닫기', () => UI.close('dialog')]);
@@ -34,6 +35,7 @@ const Raid = {
     const med = p.inventory.find(i => i.key === 'medkit');
     if (!med && p.credits < 120 && addItem(makeConsumable('medkit', 2))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." — 비상 구급상자 2개', '#8cf');
     if (p.reserve < 60) { p.reserve += 120; log('작전 장교 윤씨: 비상 탄약 120발 지급', '#8cf'); }
+    if (Camp.medkits() && addItem(makeConsumable('medkit', Camp.medkits()))) log(`의무실: 구급상자 ${Camp.medkits()}개 지급`, '#8cf'); // v1.13
     saveGame();
     World.generate(id);
     this.resetWorld();
@@ -164,9 +166,9 @@ const Stash = {
         el.appendChild(c);
       }
     };
-    $('stash-bag-n').textContent = `${p.inventory.length} / 24`; $('stash-n').textContent = `${p.stash.length} / ${STASH_SIZE}`;
-    grid($('stash-bag'), p.inventory, 24, it => { if (p.stash.length >= STASH_SIZE) return log('창고가 가득 찼습니다.', '#f88'); removeItem(it); p.stash.push(it); this.after(); });
-    grid($('stash-grid'), p.stash, STASH_SIZE, it => { if (p.inventory.length >= 24) return log('가방이 가득 찼습니다.', '#f88'); p.stash.splice(p.stash.indexOf(it), 1); p.inventory.push(it); this.after(); });
+    $('stash-bag-n').textContent = `${p.inventory.length} / ${Camp.bagSize()}`; $('stash-n').textContent = `${p.stash.length} / ${Camp.stashSize()}`;
+    grid($('stash-bag'), p.inventory, Camp.bagSize(), it => { if (p.stash.length >= Camp.stashSize()) return log('창고가 가득 찼습니다.', '#f88'); removeItem(it); p.stash.push(it); this.after(); });
+    grid($('stash-grid'), p.stash, Camp.stashSize(), it => { if (p.inventory.length >= Camp.bagSize()) return log('가방이 가득 찼습니다.', '#f88'); p.stash.splice(p.stash.indexOf(it), 1); p.inventory.push(it); this.after(); });
   },
   after() { this.render(); UI.refreshInventory(); saveGame(); SFX.play('ui'); },
 };

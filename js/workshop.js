@@ -18,7 +18,8 @@ const Workshop = {
 
   salvageYield(it) {
     const r = it.rarity || 0, plus = it.plus || 0;
-    return { scrap: SALVAGE.scrap[r] + plus * 2, chip: SALVAGE.chip[r] + Math.floor(plus / 3) };
+    const m = Camp.salvageMul(); // v1.13 작업대 2단계
+    return { scrap: Math.round((SALVAGE.scrap[r] + plus * 2) * m), chip: Math.round((SALVAGE.chip[r] + Math.floor(plus / 3)) * m) };
   },
   // 옵션 재조정 비용. full: 옵션 종류까지 바꿈 / 아니면 수치만 다시 굴림
   rerollCost(it, full) {

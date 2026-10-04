@@ -57,6 +57,7 @@ const City = {
       C('crates', -175, -120, { n: 3 }); C('crates', 70, -190, { n: 4 }); C('crates', -60, -175, { n: 2 });
       C('bench', -200, 95); C('maptable', 205, 110); C('radio', 175, -120); C('generator', 255, 30);
       C('crates', 245, 160, { n: 2 });
+      for (const [fac, pos] of Object.entries(CAMP_FAC_POS)) C('facility', pos[0], pos[1], { fac }); // v1.13 캠프 시설
     }
     // 간판: 길가 건물의 남쪽·동쪽 벽 (화면에 보이는 면)
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
@@ -223,6 +224,7 @@ function drawCityProp(o) {
       if (o.burnt) { burnFx(Math.floor(o.x / TILE), Math.floor(o.y / TILE)); }
       break;
     }
+    case 'facility': drawFacility(o); break; // v1.13
     case 'campfire': { // 돌 테두리 + 장작 + 불꽃 + 연기
       for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; ctx.fillStyle = i % 2 ? '#5a5650' : '#6a665e'; ctx.beginPath(); ctx.ellipse(sx + Math.cos(a) * 12, sy + Math.sin(a) * 6, 4, 2.5, 0, 0, TAU); ctx.fill(); }
       ctx.strokeStyle = '#3a2618'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx - 8, sy + 2); ctx.lineTo(sx + 7, sy - 3); ctx.moveTo(sx - 7, sy - 3); ctx.lineTo(sx + 8, sy + 2); ctx.stroke(); ctx.lineWidth = 1;

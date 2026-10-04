@@ -21,6 +21,7 @@ const TIPS = {
   melee:     () => `근접 무기는 계속 휘두르면 3타째에 강한 마무리(쇠파이프 강타 · 도끼 회전 베기 · 블레이드 돌진 찌르기)가 나갑니다. ${tipKey('Space', '구르기')} 직후 바로 공격하면 곧장 마무리 일격!`,
   events:    () => '이번 출격에 사건이 있습니다 (미니맵 노란 ◆ · 목표 창). 보급 투하·금고·둥지는 좋은 보상, 오래 머물면 경보 단계가 올라 적이 늘어납니다. 주황 점선 ◎은 조건을 채우면 열리는 특수 탈출.',
   perk:      () => '특성을 고를 수 있습니다! 능력치 창(C) 가운데의 특성 칸에서 하나를 고르세요. 스킬마다 갈래(오른쪽 버튼 2개)도 캠프에서 고를 수 있습니다.',
+  camp:      () => '캠프 시설을 지을 수 있습니다! 생존자 대장 한씨 → 「캠프 시설」. 의무실·사격장·창고 증축·작업대·무전실 — 크레딧과 고철·전자 부품이 듭니다.',
   extract:   () => '이번 출격에서 주운 장비·크레딧은 맵 끝의 초록 ◎ 탈출 지점에 5초 머물러야 확정됩니다. 죽으면 그것만 잃어요.',
 };
 
@@ -44,6 +45,7 @@ const Tips = {
     if (!p || p.dead || !Settings.tips) return;
     const near = (e, r) => e.hp > 0 && dist(e, p) < r;
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
+    if (World.map === 'camp' && p.level >= 5 && p.credits >= FAC_COST[0].credits && !Object.values(p.camp || {}).some(Boolean) && !p.tips.includes('camp')) return this.show('camp');
     if (World.map === 'camp' && p.level >= 1) { this.show('deploy'); if (World.map === 'camp') return; }
     if (p.raid && p.raid.t > 4) this.show('extract');
     if (p.raid && p.raid.t > 14 && RaidEvents.list.length && !p.tips.includes('events')) return this.show('events');

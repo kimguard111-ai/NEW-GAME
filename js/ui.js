@@ -211,11 +211,11 @@ const UI = {
       $('doll-stats').innerHTML = `<b>Lv.${p.level}</b> ${p.name}<br><span class="muted">체력</span> ${Math.ceil(p.hp)} / ${PlayerStats.maxHp(p)}`
         + `<br><span class="muted">방어</span> ${PlayerStats.def(p)} (-${Math.round(PlayerStats.dmgReduce(p) * 100)}%)<br><span class="muted">DPS</span> ${w ? Math.round(weaponDps(p, w)) : 0}`
         + `<br><span class="muted">₵</span> ${fmt(p.credits)} · ${ICON('scrap')}${p.mats.scrap} ${ICON('chip')}${p.mats.chip}`;
-      $('bag-count').textContent = `${p.inventory.length} / 24`;
+      $('bag-count').textContent = `${p.inventory.length} / ${Camp.bagSize()}`;
     }
     const grid = $('inv-grid');
     grid.innerHTML = '';
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < Camp.bagSize(); i++) {
       const it = p.inventory[i];
       const c = document.createElement('div');
       c.className = 'inv-cell' + (it ? ' bc' + (it.rarity || 0) : '') + (it && UI.selected === it ? ' sel' : '');
@@ -293,7 +293,7 @@ const UI = {
 
   unequip(slot) {
     const p = G.player;
-    if (p.inventory.length >= 24) { log('인벤토리가 가득 찼습니다.', '#f88'); return; }
+    if (p.inventory.length >= Camp.bagSize()) { log('인벤토리가 가득 찼습니다.', '#f88'); return; }
     p.inventory.push(p.equip[slot]);
     p.equip[slot] = null;
     if (slot === p.active) { const o = slot === 'w1' ? 'w2' : 'w1'; if (p.equip[o]) p.active = o; }
@@ -563,18 +563,18 @@ const UI = {
   },
 
   captainDialog(npc) {
-    const p = G.player, c = Story.chapter(p), bye = ['닫기', () => UI.close('dialog')];
+    const p = G.player, c = Story.chapter(p), bye = ['닫기', () => UI.close('dialog')], fac = ['캠프 시설', () => Camp.open()]; // v1.13
     if (!c) {
-      UI.dialog(npc.name, '"자네 덕분에 서울에 다시 사람이 살 수 있게 됐어. 고맙네, 영웅."', [bye]);
+      UI.dialog(npc.name, '"자네 덕분에 서울에 다시 사람이 살 수 있게 됐어. 고맙네, 영웅."', [fac, bye]);
     } else if (p.quest.active) {
       const st = c.steps[p.quest.step];
-      UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${st.text}"<br><span class="muted">끝나면 무전으로 연락하지. 캠프로 돌아올 필요 없네.</span>`, [bye]);
+      UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${st.text}"<br><span class="muted">끝나면 무전으로 연락하지. 캠프로 돌아올 필요 없네.</span>`, [fac, bye]);
     } else if (p.level < c.minLevel) {
-      UI.dialog(npc.name, `"아직은 위험해. 좀 더 강해져서 오게."<br><span class="muted">${c.title} — Lv${c.minLevel} 이상</span>`, [bye]);
+      UI.dialog(npc.name, `"아직은 위험해. 좀 더 강해져서 오게."<br><span class="muted">${c.title} — Lv${c.minLevel} 이상</span>`, [fac, bye]);
     } else {
       UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${c.intro}"<br><br><span class="muted">${c.steps.map((st, i) => `${i + 1}. ${Story.objective(st)}`).join('<br>')}</span>`, [
         ['수락', () => { UI.close('dialog'); Story.start(p); }],
-        ['나중에', () => UI.close('dialog')]]);
+        fac, ['나중에', () => UI.close('dialog')]]);
     }
   },
 

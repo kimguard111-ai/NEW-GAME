@@ -421,3 +421,6 @@ body.touch #panel-stash.panel { width: 96vw !important; } body.touch .stash-body
 .ico { width: 1.25em; height: 1.25em; vertical-align: -0.28em; display: inline-block; image-rendering: auto; pointer-events: none; }
 .hot .icon .ico, .inv-cell .icon .ico, #menu-buttons .ic .ico { width: 1.15em; height: 1.15em; vertical-align: middle; }
 #log .ico, #tip .ico { width: 1.1em; height: 1.1em; }
+/* v1.13 캠프 시설 */
+.fac-row { margin: 6px 0; padding: 4px 6px; background: rgba(255,255,255,0.03); border-left: 2px solid #5a4a2e; font-size: 13px; }
+.fac-lv { color: #ffd76a; letter-spacing: 1px; margin-left: 4px; }
