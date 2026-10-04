@@ -12,7 +12,7 @@ const ART = {
   // player_vest 등 방어구별 몸 그림은 player 키를 따름
   height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44, deploy: 44, stash: 44,
     // v0.15 보스 전용 그림 (등록하면 기본 적 그림을 키워 쓰는 대신 이 그림 사용)
-    glutton: 66, panther: 56, argos: 46, redfang: 50, viper: 58, goliath: 118, warden: 100, butcher: 58, cerberus: 50, colony: 118, chimera: 120, merc: 44, shield: 48, stalker: 46,
+    glutton: { file: 'glutton.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 5], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     raven: 54, babel: 120, hawk: 54, shade: 66, anvil: 62, queen: 118 },
   // 플레이어 무기 그림 (옆모습 1장, 총구/날이 오른쪽). 플레이어 몸 그림은 무기 없이 만들고 이 그림을 손에 붙임
   // 없으면 코드로 그린 총·칼을 사용
