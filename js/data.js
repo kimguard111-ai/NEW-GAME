@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.7.7';
+const GAME_VERSION = 'v1.7.8';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
