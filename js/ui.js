@@ -157,7 +157,7 @@ const UI = {
     else $('interact-hint').classList.add('hidden');
 
     // 임무 추적 (챕터)
-    UI.html('quest-tracker', G.assault ? Assault.trackerHtml() : UI.trackerHtml(p) + Raid.trackerLine() + Bounty.trackerLine());
+    UI.html('quest-tracker', G.assault ? Assault.trackerHtml() : UI.trackerHtml(p) + Raid.trackerLine() + RaidEvents.trackerLine() + Bounty.trackerLine());
   },
 
   trackerHtml(p) {
@@ -425,6 +425,7 @@ const UI = {
 
   openNpc(npc) {
     const p = G.player, bye = ['닫기', () => UI.close('dialog')];
+    if (npc.id === 'trader') return RaidEvents.openTrader(npc); // v1.10 떠돌이 상인
     if (npc.id === 'merchant') {
       UI.dialog(npc.name, '"총알이든 약이든, 크레딧만 있으면 다 구해다 주지. 쓸만한 물건 있으면 사 주겠네."', [
         ['거래하기', () => { UI.close('dialog'); UI.openShop(); }], bye]);

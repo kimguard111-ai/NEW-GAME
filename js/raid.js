@@ -56,6 +56,7 @@ const Raid = {
     if (G.grave) log(`${ICON('skull')} 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
     UI.toast(`출격 — ${MAPS[id].name}`, `탈출 지점 ${G.exits.length}곳 (미니맵 초록 ◎) · 주운 것은 탈출해야 확정`);
     log(`${MAPS[id].name}에 진입했다. 탈출 지점: ${G.exits.map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(' · ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}`, '#8cf');
+    RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     if (World.def.lab) log('비상 전원만 남은 연구소다. 붉은 비상등 아래가 그나마 밝다. 격리실(미니맵 붉은 방)에 무언가 있다.', '#ff8a8a');
     saveGame();
   },
@@ -65,7 +66,7 @@ const Raid = {
     G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.corpses = [];
     G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
     G.labBoss = null; G.labBossDone = false; // v1.5
-    G.exits = []; G.extractT = 0; G.zone = World.zoneIndex(); G.bossT = Math.min(G.bossT, 0);
+    G.exits = []; RaidEvents.list = []; RaidEvents.alert = 0; G.extractT = 0; G.zone = World.zoneIndex(); G.bossT = Math.min(G.bossT, 0);
     if (World.map === 'camp') setupCampNpcs(); else G.npcs = [];
     GroundCache.map.clear(); Nav.dist = null; Nav.t = 0;
   },
@@ -75,11 +76,12 @@ const Raid = {
     const p = G.player;
     if (!this.inRaid() || p.dead || !p.raid) return;
     p.raid.t += dt;
-    const ex = G.exits.find(e => Math.hypot(p.x - e.x, p.y - e.y) < EXTRACT_R);
+    const ex = G.exits.find(e => !e.locked && Math.hypot(p.x - e.x, p.y - e.y) < EXTRACT_R); // v1.10 잠긴 특수 탈출은 안 됨
     if (!ex || G.assault) { if (G.extractT > 0) log('탈출이 취소되었다.', '#aaa'); G.extractT = 0; return; }
-    if (G.extractT === 0) log(`탈출 중... ${EXTRACT_TIME}초 동안 머무르세요.`, '#7fe08a');
+    const need = ex.time || EXTRACT_TIME; G.extractNeed = need;
+    if (G.extractT === 0) log(`탈출 중... ${need}초 동안 머무르세요.`, '#7fe08a');
     G.extractT += dt;
-    if (G.extractT >= EXTRACT_TIME) this.extract();
+    if (G.extractT >= need) this.extract();
   },
 
   // 주운 것 확정 후 캠프로
@@ -143,7 +145,7 @@ const Raid = {
   trackerLine() {
     const p = G.player;
     if (!p.raid) return '';
-    const n = this.allItems().filter(it => it.raid).length, ex = G.extractT > 0 ? ` · <b style="color:#7fe08a">탈출 ${Math.ceil(EXTRACT_TIME - G.extractT)}초</b>` : '';
+    const n = this.allItems().filter(it => it.raid).length, ex = G.extractT > 0 ? ` · <b style="color:#7fe08a">탈출 ${Math.ceil((G.extractNeed || EXTRACT_TIME) - G.extractT)}초</b>` : '';
     return `<br><span class="muted">${ICON('box')} 미확정 장비 ${n} · ₵${fmt(p.raid.credits)} — 탈출 지점 ◎${ex}</span>`;
   },
 };

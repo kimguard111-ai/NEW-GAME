@@ -38,16 +38,18 @@ const Scavenge = {
   near() {
     const p = G.player;
     if (G.grave && Math.hypot(p.x - G.grave.x, p.y - G.grave.y) < 50) return { grave: true };
+    const ev = RaidEvents.near(p); if (ev) return ev; // v1.10 사건
     let best = null, bd = 50;
     for (const c of this.list) { if (c.looted) continue; const d = Math.hypot(p.x - c.x, p.y - c.y); if (d < bd) { bd = d; best = c; } }
     return best;
   },
-  hint(t) { return t.grave ? '[E] 내 시체 가방 회수' : `[E] ${CACHES[t.type].name} 뒤지기`; },
+  hint(t) { return t.hint ? t.hint : t.grave ? '[E] 내 시체 가방 회수' : `[E] ${CACHES[t.type].name} 뒤지기`; },
 
   start(t) {
     const p = G.player;
     if (G.search) return;
-    G.search = { target: t, t: 0, dur: t.grave ? GRAVE_DUR : CACHES[t.type].dur, x: p.x, y: p.y };
+    if (t.hint && !RaidEvents.onStart(t)) return;
+    G.search = { target: t, t: 0, dur: t.hint ? t.dur : t.grave ? GRAVE_DUR : CACHES[t.type].dur, x: p.x, y: p.y };
     SFX.play('ui');
   },
 
@@ -58,7 +60,7 @@ const Scavenge = {
     s.t += dt;
     if (s.t < s.dur) return;
     G.search = null;
-    if (s.target.grave) this.recover(); else this.loot(s.target);
+    if (s.target.hint) RaidEvents.finish(s.target); else if (s.target.grave) this.recover(); else this.loot(s.target);
   },
 
   loot(c) {

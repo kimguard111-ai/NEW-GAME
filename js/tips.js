@@ -19,6 +19,7 @@ const TIPS = {
   cloak:     () => '은신 변이체는 가까이 오거나 맞기 전엔 공기가 일렁이는 윤곽만 보입니다. 보랏빛 눈과 일렁임을 찾고, 도약 예고선이 보이면 구르세요.',
   water:     () => '얕은 물에서는 사람도 적도 느려집니다. 쫓길 땐 물을 피하고, 근접형 적을 물가로 끌어들이세요.',
   melee:     () => `근접 무기는 계속 휘두르면 3타째에 강한 마무리(쇠파이프 강타 · 도끼 회전 베기 · 블레이드 돌진 찌르기)가 나갑니다. ${tipKey('Space', '구르기')} 직후 바로 공격하면 곧장 마무리 일격!`,
+  events:    () => '이번 출격에 사건이 있습니다 (미니맵 노란 ◆ · 목표 창). 보급 투하·금고·둥지는 좋은 보상, 오래 머물면 경보 단계가 올라 적이 늘어납니다. 주황 점선 ◎은 조건을 채우면 열리는 특수 탈출.',
   extract:   () => '이번 출격에서 주운 장비·크레딧은 맵 끝의 초록 ◎ 탈출 지점에 5초 머물러야 확정됩니다. 죽으면 그것만 잃어요.',
 };
 
@@ -44,6 +45,7 @@ const Tips = {
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
     if (World.map === 'camp' && p.level >= 1) { this.show('deploy'); if (World.map === 'camp') return; }
     if (p.raid && p.raid.t > 4) this.show('extract');
+    if (p.raid && p.raid.t > 14 && RaidEvents.list.length && !p.tips.includes('events')) return this.show('events');
     if (G.enemies.some(e => e.type === 'shield' && near(e, 450))) return this.show('shield');
     if (G.enemies.some(e => e.type === 'stalker' && near(e, 400))) return this.show('cloak');
     if (World.slow(p.x, p.y) < 1) return this.show('water');

@@ -582,6 +582,7 @@ function killEnemy(e) {
   if (e.minion) return;
   if (e.fieldBoss) Bosses.onFieldKill(e, dropAt);
   if (e.labBoss) Bosses.onLabKill(e, dropAt);
+  RaidEvents.onKill(e, dropAt); // v1.10 둥지
   if (e.elite) { // 네임드: 장비 확정 + 크레딧
     G.elite = null;
     log(`${ELITES[e.elite].name} 처치!`, '#ffa53a');
@@ -665,6 +666,7 @@ function updateEnemies(dt) {
   Monsters.auras();
   for (const e of G.enemies) {
     if (e.hp <= 0) continue;
+    if (e.nest) { RaidEvents.nestTick(e, dt, dist(e, p)); continue; } // v1.10 변이 둥지 (움직이지 않음)
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt; e.revealT = (e.revealT || 0) - dt;
     const d = dist(e, p);
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); Monsters.interrupt(e); continue; } // 경직: 이동·공격 불가, 준비 중인 공격 끊김
@@ -732,13 +734,14 @@ function spawnEnemies(dt) {
   G.spawnT -= dt;
   if (G.spawnT > 0 || G.assault || World.map === 'camp') return; // 어설트 중·캠프에는 일반 스폰 없음
   if (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 1100) return; // v1.7 타이탄과 싸우는 중엔 일반 스폰 없음 (소환수만) — 봇 측정 사망 원인 1위가 끼어든 변이 거한
-  G.spawnT = 0.35;
+  const al = RaidEvents.alert || 0; // v1.10 경보 단계: 출현 빨라지고 밀도 ↑
+  G.spawnT = 0.35 / (1 + al * 0.35);
   // 먼 적 정리
-  G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || e.fieldBoss || e.labBoss || dist(e, p) < 1800 || e.state === 'chase');
+  G.enemies = G.enemies.filter(e => e.def.boss || e.minion || e.elite || e.fieldBoss || e.labBoss || e.evGuard || e.keyCarrier || dist(e, p) < 1800 || e.state === 'chase');
   if (G.elite && G.elite.hp <= 0) G.elite = null;
   const z = World.zoneIndex(p.x, p.y);
-  const near = G.enemies.filter(e => !e.def.boss && dist(e, p) < 1300).length;
-  const target = z === 0 ? 8 : 18 + Math.min(z, 4) * 4; // v0.16 밀도 상향 (14+z·3 → 18+z·4) · v1.7 연구소·강남·잠실(z 5~7)은 여의도 밀도로 상한 (최대 46 → 34)
+  const near = G.enemies.filter(e => !e.def.boss && !e.nest && dist(e, p) < 1300).length;
+  const target = Math.round((z === 0 ? 8 : 18 + Math.min(z, 4) * 4) * (1 + al * 0.15)); // v0.16 밀도 상향 (14+z·3 → 18+z·4) · v1.7 연구소·강남·잠실(z 5~7)은 여의도 밀도로 상한 (최대 46 → 34)
   if (near >= target) return;
   for (let tries = 0; tries < 6; tries++) {
     const a = rand(0, TAU), r = rand(560, 950);
@@ -750,7 +753,7 @@ function spawnEnemies(dt) {
     const t = clamp(1 - Math.hypot(x / TILE - World.cx, y / TILE - World.cy) / (World.W * 0.55), 0, 1);
     const lvl = clamp(Math.round(lerp(zone.lvl[0], zone.lvl[1], t) + rand(-1, 1)), zone.lvl[0], zone.lvl[1]);
     const type = weighted(zone.spawns), e = makeEnemy(type, x, y, lvl);
-    if (Math.random() < Monsters.eliteChance(zi)) Monsters.makeElite(e, Monsters.rollAffix(type)); // v0.8 엘리트
+    if (Math.random() < Monsters.eliteChance(zi) + (al >= 2 ? 0.04 : 0)) Monsters.makeElite(e, Monsters.rollAffix(type)); // v0.8 엘리트 · v1.10 경보 2단계부터 +4%
     G.enemies.push(e);
     // 지역 특성: 무리 지어 출몰
     const pk = zone.packs && zone.packs[type];
@@ -963,6 +966,7 @@ function update(dt) {
   Interiors.update();
   Raid.update(dt);
   Scavenge.update(dt);
+  RaidEvents.update(dt); // v1.10
   Nav.update(dt);
   updateEnemies(dt);
   Assault.update(dt);

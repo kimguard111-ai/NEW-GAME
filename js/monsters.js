@@ -11,7 +11,7 @@ const ELITE_AFFIXES = {
 
 // 세력: 다른 세력끼리는 플레이어가 없을 때 서로 싸움
 const FACTION = { zombie: 'infected', dog: 'infected', brute: 'infected', boss: 'infected', raider: 'human', drone: 'machine',
-  subject: 'infected', spitter: 'infected', sentry: 'machine', merc: 'human', shield: 'human', stalker: 'infected' }; // v1.5 연구소: 실험체 ↔ 보안 장비
+  subject: 'infected', spitter: 'infected', sentry: 'machine', merc: 'human', shield: 'human', stalker: 'infected', nest: 'infected' }; // v1.5 연구소: 실험체 ↔ 보안 장비
 
 const Monsters = {
   // ---------------- 엘리트 ----------------

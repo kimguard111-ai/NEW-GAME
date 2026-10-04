@@ -52,25 +52,40 @@ function drawGroundTile(tx, ty, t) {
     if (ly === RW && lx < RW) for (let i = 0; i < 4; i++) ctx.fillRect(x + 2 + i * 8, y + 5, 4, 22);
     if (lx === RW && ly < RW) for (let i = 0; i < 4; i++) ctx.fillRect(x + 5, y + 2 + i * 8, 22, 4);
     if (h < 0.06) { ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x + h * 200, y + 10, 10, 6); }
-  } else if (t === T.WALK) {
-    ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
-  } else if (t === T.RUBBLE) {
-    ctx.fillStyle = '#58524a';
-    for (let i = 0; i < 3; i++) {
-      const hh = hash2(tx * 3 + i, ty * 7 - i);
-      ctx.fillRect(x + hh * 24, y + hash2(ty + i, tx) * 24, 4 + hh * 6, 3 + hh * 4);
+    roadWear(x, y, h, tx, ty);
+  } else if (t === T.WALK) { // v1.10 보도블록: 칸마다 조금씩 다른 색 · 깨진 블록 · 틈새 풀
+    const v = Math.floor((hash2(tx * 5 + 1, ty * 3 + 2) - 0.5) * 10);
+    ctx.fillStyle = `rgb(${69 + v},${70 + v},${75 + v})`; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+    ctx.beginPath(); ctx.moveTo(x + 16, y); ctx.lineTo(x + 16, y + TILE); ctx.moveTo(x, y + 16); ctx.lineTo(x + TILE, y + 16); ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.stroke();
+    if (h < 0.1) { ctx.fillStyle = 'rgba(25,25,28,0.55)'; ctx.beginPath(); ctx.moveTo(x + 16 * (h > 0.05), y + 16 * (h * 20 % 1 > 0.5)); ctx.lineTo(x + 16 * (h > 0.05) + 16, y + 16 * (h * 20 % 1 > 0.5) + 3); ctx.lineTo(x + 16 * (h > 0.05) + 9, y + 16 * (h * 20 % 1 > 0.5) + 16); ctx.fill(); } // 깨진 블록
+    else if (h > 0.9) { ctx.fillStyle = 'rgba(70,95,50,0.6)'; for (let i = 0; i < 4; i++) ctx.fillRect(x + 14 + i * 2 - 3, y + 15 - (i % 2) * 3, 1.5, 3 + (i % 2) * 2); } // 틈새 풀
+  } else if (t === T.RUBBLE) { // v1.10 잔해 바닥: 크기·색이 다른 콘크리트 조각 + 철근 + 먼지
+    ctx.fillStyle = 'rgba(80,72,62,0.5)'; ctx.beginPath(); ctx.ellipse(x + 16, y + 16, 14, 11, h * 6, 0, TAU); ctx.fill();
+    for (let i = 0; i < 6; i++) {
+      const hh = hash2(tx * 3 + i, ty * 7 - i), h3 = hash2(ty + i * 5, tx - i);
+      const c = 70 + Math.floor(hh * 40);
+      ctx.fillStyle = `rgb(${c},${c - 5},${c - 12})`;
+      const px = x + 2 + hh * 24, py = y + 2 + h3 * 24, w = 3 + hh * 7, hgt = 2 + h3 * 5;
+      ctx.beginPath(); ctx.moveTo(px, py + hgt); ctx.lineTo(px + w * 0.3, py); ctx.lineTo(px + w, py + hgt * 0.3); ctx.lineTo(px + w * 0.8, py + hgt); ctx.fill();
     }
-  } else if (t === T.GRASS) {
-    ctx.fillStyle = '#3a4a2c';
-    if (h < 0.5) ctx.fillRect(x + h * 50, y + 8, 3, 3);
-    if (h > 0.4) ctx.fillRect(x + 6, y + h * 26, 3, 3);
+    if (h < 0.25) { ctx.strokeStyle = '#6a3a22'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x + 6 + h * 40, y + 20); ctx.lineTo(x + 20 + h * 20, y + 8); ctx.stroke(); ctx.lineWidth = 1; } // 철근
+  } else if (t === T.GRASS) { // v1.10 풀밭: 색 얼룩 + 풀 포기
+    ctx.fillStyle = h < 0.5 ? 'rgba(60,78,44,0.6)' : 'rgba(36,46,30,0.6)'; ctx.beginPath(); ctx.ellipse(x + 8 + h * 16, y + 10 + h * 12, 9, 6, h * 5, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#4a6034'; ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) { const gx = x + 4 + hash2(tx + i, ty * 3) * 24, gy = y + 4 + hash2(ty + i * 7, tx) * 24; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx - 2, gy - 4); ctx.moveTo(gx, gy); ctx.lineTo(gx + 1, gy - 5); ctx.moveTo(gx, gy); ctx.lineTo(gx + 3, gy - 3); ctx.stroke(); }
   } else if (t === T.FLOOR || t === T.DOOR) { // 실내 바닥 (나무 마루)
     ctx.strokeStyle = 'rgba(0,0,0,0.25)';
     for (let i = 8; i < TILE; i += 8) { ctx.beginPath(); ctx.moveTo(x, y + i); ctx.lineTo(x + TILE, y + i); ctx.stroke(); }
     if (h < 0.15) { ctx.fillStyle = 'rgba(30,25,20,0.5)'; ctx.fillRect(x + h * 100, y + 6, 10, 8); } // 얼룩·잔해
     if (t === T.DOOR) { ctx.fillStyle = '#5a5048'; ctx.fillRect(x, y, TILE, TILE); }
-  } else if (t === T.CAMP) {
-    ctx.strokeStyle = 'rgba(120,150,190,0.14)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+  } else if (t === T.CAMP) { // v1.10 캠프 광장: 낡은 보도석 + 깔아 둔 판자·방수포
+    const v = Math.floor((hash2(tx * 7 + 3, ty * 11 + 5) - 0.5) * 8);
+    ctx.fillStyle = `rgb(${62 + v},${64 + v},${66 + v})`; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+    if (h < 0.07) { ctx.fillStyle = '#4a3a2a'; for (let i = 0; i < 3; i++) ctx.fillRect(x + 3, y + 4 + i * 9, TILE - 6, 7); ctx.fillStyle = 'rgba(0,0,0,0.3)'; for (let i = 0; i < 3; i++) ctx.fillRect(x + 3, y + 10 + i * 9, TILE - 6, 1); } // 판자
+    else if (h > 0.975) { ctx.fillStyle = 'rgba(50,70,90,0.4)'; ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4); } // 방수포
+    else if (h > 0.8) { ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(x + 16, y + 16, 10, 7, h * 9, 0, TAU); ctx.fill(); } // 얼룩
   } else if (t === T.WATER) { // v1.6 석촌호수: 잔물결 · 떠다니는 잔해
     ctx.strokeStyle = 'rgba(120,180,210,0.18)'; ctx.lineWidth = 1.5;
     for (let i = 0; i < 2; i++) { const yy = y + 8 + i * 14 + h * 6; ctx.beginPath(); ctx.moveTo(x + 4 + h * 8, yy); ctx.quadraticCurveTo(x + 14, yy - 3, x + 24 - h * 6, yy); ctx.stroke(); }
@@ -89,7 +104,44 @@ function drawGroundTile(tx, ty, t) {
   }
 }
 
+// v1.10 도로 마모: 갈라짐 · 움푹 팬 곳 · 기름 웅덩이 · 맨홀
+function roadWear(x, y, h, tx, ty) {
+  const h2 = hash2(tx * 13 + 5, ty * 7 + 1);
+  if (h2 < 0.12) { // 갈라진 금
+    ctx.strokeStyle = 'rgba(10,10,12,0.55)'; ctx.lineWidth = 1;
+    ctx.beginPath(); let px = x + h2 * 200 % 28, py = y + 2; ctx.moveTo(px, py);
+    for (let i = 1; i < 5; i++) { px += (hash2(tx + i, ty - i) - 0.5) * 14; py += 7; ctx.lineTo(px, py); }
+    ctx.stroke();
+  } else if (h2 < 0.16) { // 팬 곳
+    ctx.fillStyle = 'rgba(12,12,14,0.6)'; ctx.beginPath(); ctx.ellipse(x + 16, y + 16, 8 + h2 * 20, 5 + h2 * 10, h * 4, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(80,76,70,0.5)'; ctx.fillRect(x + 10, y + 12, 3, 2); ctx.fillRect(x + 20, y + 19, 2, 2);
+  } else if (h2 < 0.19) { // 물·기름 웅덩이 (살짝 반사)
+    ctx.fillStyle = 'rgba(40,50,64,0.7)'; ctx.beginPath(); ctx.ellipse(x + 15, y + 17, 11, 7, h * 3, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(140,120,170,0.25)'; ctx.beginPath(); ctx.ellipse(x + 13, y + 15, 6, 3, h * 3, 0, Math.PI); ctx.stroke();
+  } else if (h2 > 0.992) { // 맨홀
+    ctx.fillStyle = '#1c1d20'; ctx.beginPath(); ctx.arc(x + 16, y + 16, 7, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#3a3b40'; ctx.stroke(); ctx.beginPath(); ctx.moveTo(x + 11, y + 16); ctx.lineTo(x + 21, y + 16); ctx.stroke();
+  }
+}
+
+// v1.10 맵 바깥: 검은 허공 대신 무너진 도시가 이어지는 바닥 (멀어질수록 안개로 어두워짐)
+function drawOutsideTile(tx, ty) {
+  const x = tx * TILE, y = ty * TILE, h = hash2(tx + 911, ty + 377);
+  const d = Math.max(-tx, -ty, tx - World.W + 1, ty - World.H + 1); // 맵 경계에서 몇 칸 떨어졌나
+  const lab = World.def && World.def.lab;
+  ctx.fillStyle = lab ? '#060709' : h < 0.55 ? '#2c2a28' : '#33302c'; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
+  if (!lab) {
+    for (let i = 0; i < 4; i++) {
+      const hh = hash2(tx * 3 + i, ty * 5 - i), c = 52 + Math.floor(hh * 30);
+      ctx.fillStyle = `rgb(${c},${c - 4},${c - 9})`; ctx.fillRect(x + hh * 24, y + hash2(ty + i, tx * 2) * 24, 3 + hh * 8, 2 + hh * 5);
+    }
+    if (h < 0.08) { ctx.fillStyle = '#1a1816'; ctx.beginPath(); ctx.ellipse(x + 16, y + 16, 14, 10, h * 20, 0, TAU); ctx.fill(); } // 그을린 자국
+  }
+  ctx.fillStyle = `rgba(6,7,10,${Math.min(0.92, 0.25 + d * 0.09)})`; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
+}
+
 // 정적인 바닥을 청크 단위로 미리 그려 캐시 (LRU)
+const OUT_PAD = 14; // 맵 바깥으로 그리는 칸 수
 const GroundCache = {
   CH: 16, map: new Map(), LIMIT: 28,
   get(cx, cy) {
@@ -105,7 +157,7 @@ const GroundCache = {
     g.setTransform(ISO_K * z, ISO_K / 2 * z, -ISO_K * z, ISO_K / 2 * z, -left * z, -top * z);
     // 경계 이음매 방지를 위해 한 칸씩 더 그림
     for (let ty = cy * CH - 1; ty <= cy * CH + CH; ty++) for (let tx = cx * CH - 1; tx <= cx * CH + CH; tx++) {
-      if (tx < 0 || ty < 0 || tx >= World.W || ty >= World.H) continue;
+      if (tx < 0 || ty < 0 || tx >= World.W || ty >= World.H) { if (tx >= -OUT_PAD && ty >= -OUT_PAD && tx < World.W + OUT_PAD && ty < World.H + OUT_PAD) drawOutsideTile(tx, ty); continue; }
       drawGroundTile(tx, ty, World.tiles[ty * World.W + tx]);
     }
     ctx = saved;
@@ -186,11 +238,12 @@ function drawSolidTile(o) {
     const ruin = ht < 44, glass = World.def && World.def.tall && ht > FLOOR_H * 8; // v1.6 강남 유리 고층 빌딩: 푸른 유리 외벽
     const top = ruin ? `rgb(${b - 8},${b - 14},${b - 20})` : glass ? `rgb(${b - 22},${b - 10},${b + 6})` : `rgb(${b},${b - 3},${b - 8})`;
     const south = glass ? `rgb(${b - 52},${b - 40},${b - 22})` : `rgb(${b - 34},${b - 37},${b - 42})`, east = glass ? `rgb(${b - 40},${b - 28},${b - 10})` : `rgb(${b - 20},${b - 23},${b - 28})`;
-    drawBox(x0, y0, x1, y1, ht, top, south, east, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), ruin ? 0 : tx * 977 + ty);
-    if (!ruin) City.drawSign(tx, ty); // v1.2 한글 네온 간판
-    if (!ruin && h < 0.04) { // 옥상 환풍기
-      drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0);
-    }
+    if (ruin) { drawRuinTile(tx, ty, x0, y0, ht, b, h); ctx.globalAlpha = 1; return; } // v1.10 무너진 건물
+    const sz = tileHeight(tx, ty + 1), ez = tileHeight(tx + 1, ty);
+    drawBox(x0, y0, x1, y1, ht, top, south, east, sz, ez, tx * 977 + ty);
+    if (!glass) drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h); // v1.10 1층 셔터·때
+    City.drawSign(tx, ty); // v1.2 한글 네온 간판
+    drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass);
   } else if (t === T.PROP && insideBid(tx, ty)) { // 실내 소품 (v0.15)
     const bd = World.buildings[World.bid[ty * World.W + tx]], S = SHOP_STYLES[bd.style], ph = tileHeight(tx, ty);
     const ins = bd.style === 'table' || bd.style === 'washer' ? 5 : 2; // 식탁·세탁기는 한 칸 안에서 작게
@@ -247,10 +300,86 @@ function drawSolidTile(o) {
     const [ix, iy] = vertical ? [8, 2] : [2, 8];
     drawBox(x0 + ix, y0 + iy, x1 - ix, y1 - iy, 13, c[0], c[1], c[2], 0, 0, 0);
     drawBox(x0 + ix + 3, y0 + iy + 6, x1 - ix - 3, y1 - iy - 6, 21, '#1d2024', '#151719', '#1a1c1f', 13, 13, 0);
-  } else if (t === T.BARRICADE) {
-    drawBox(x0 + 1, y0 + 1, x1 - 1, y1 - 1, 18, '#9a7e52', '#6a5434', '#7e6640', 0, 0, 0);
+  } else if (t === T.BARRICADE) { // v1.10 모래주머니 3단 + 위에 철조망
+    const S = Iso.sx, Y = Iso.sy;
+    for (let r = 0; r < 3; r++) {
+      const z0 = r * 7, z1 = z0 + 7, off = r % 2 ? 4 : 0, sh = r === 2 ? 2 : 0;
+      drawBox(x0 + 1 + sh, y0 + 1 + sh, x1 - 1 - sh, y1 - 1 - sh, z1, r % 2 ? '#a08658' : '#958050', '#6a5434', '#7e6640', z0, z0, 0);
+      ctx.strokeStyle = 'rgba(40,30,18,0.55)'; ctx.lineWidth = 1; ctx.beginPath(); // 주머니 이음새
+      for (let k = 8 + off; k < TILE; k += 12) { ctx.moveTo(S(x0 + k, y1 - 1 - sh), Y(x0 + k, y1 - 1 - sh, z0)); ctx.lineTo(S(x0 + k, y1 - 1 - sh), Y(x0 + k, y1 - 1 - sh, z1)); ctx.moveTo(S(x1 - 1 - sh, y0 + k), Y(x1 - 1 - sh, y0 + k, z0)); ctx.lineTo(S(x1 - 1 - sh, y0 + k), Y(x1 - 1 - sh, y0 + k, z1)); }
+      ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(150,150,150,0.6)'; ctx.beginPath(); // 철조망
+    for (let k = 0; k <= TILE; k += 4) { const px = S(x0 + k, y0 + 16), py = Y(x0 + k, y0 + 16, 24 + (k % 8 ? 3 : 0)); k ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+    ctx.stroke();
+    if (h < 0.15) { ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, 21)); ctx.lineTo(S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, 34)); ctx.stroke(); ctx.lineWidth = 1; } // 말뚝
   }
   ctx.globalAlpha = 1;
+}
+
+// v1.10 무너진 건물: 한 칸을 2×2 조각으로 나눠 높이가 들쭉날쭉한 콘크리트 + 철근 + 꺾인 바닥판
+function drawRuinTile(tx, ty, x0, y0, ht, b, h) {
+  const q = TILE / 2;
+  const cols = (k) => { const c = b - 12 + Math.floor(k * 18); return [`rgb(${c},${c - 6},${c - 13})`, `rgb(${c - 38},${c - 42},${c - 48})`, `rgb(${c - 24},${c - 28},${c - 34})`]; };
+  const nb = (dx, dy) => tileHeight(tx + dx, ty + dy);
+  for (const [i, j] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { // 뒤 → 앞 순서
+    const k = hash2(tx * 4 + i * 17, ty * 4 + j * 29), hh = Math.max(6, ht * (0.35 + k * 0.75));
+    const ax = x0 + i * q, ay = y0 + j * q, c = cols(k);
+    const sz = j === 1 ? Math.min(hh, nb(0, 1)) : 0, ez = i === 1 ? Math.min(hh, nb(1, 0)) : 0;
+    drawBox(ax, ay, ax + q, ay + q, hh, c[0], c[1], c[2], j === 1 ? (nb(0, 1) >= hh ? -1 : sz) : 0, i === 1 ? (nb(1, 0) >= hh ? -1 : ez) : 0, 0);
+    if (k > 0.55) { // 부서진 창 구멍
+      const S = Iso.sx, Y = Iso.sy, zz = hh * 0.45;
+      if (j === 1) poly([S(ax + 4, ay + q), Y(ax + 4, ay + q, zz), S(ax + 11, ay + q), Y(ax + 11, ay + q, zz), S(ax + 11, ay + q), Y(ax + 11, ay + q, zz + 7), S(ax + 4, ay + q), Y(ax + 4, ay + q, zz + 7)], '#0d0e10');
+    }
+    if (k < 0.3) { // 철근
+      ctx.strokeStyle = '#7a4a2a'; ctx.lineWidth = 1.2; ctx.beginPath();
+      for (let r = 0; r < 3; r++) { const px = ax + 3 + r * 5, py = ay + 5 + r * 3; ctx.moveTo(Iso.sx(px, py), Iso.sy(px, py, hh)); ctx.lineTo(Iso.sx(px + (r - 1) * 2, py), Iso.sy(px, py, hh + 7 + r * 3)); }
+      ctx.stroke(); ctx.lineWidth = 1;
+    }
+  }
+  if (h < 0.2) { // 기울어진 바닥판
+    const S = Iso.sx, Y = Iso.sy, z = ht * 0.5;
+    poly([S(x0 + 2, y0 + 6), Y(x0 + 2, y0 + 6, z), S(x0 + 30, y0 + 2), Y(x0 + 30, y0 + 2, z + 10), S(x0 + 30, y0 + 20), Y(x0 + 30, y0 + 20, z + 6), S(x0 + 2, y0 + 24), Y(x0 + 2, y0 + 24, z - 4)], '#5c5650');
+  }
+}
+
+// v1.10 건물 1층: 길 쪽 벽 아래에 내려진 셔터(가끔) + 바닥 쪽 얼룩
+function drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h) {
+  const S = Iso.sx, Y = Iso.sy;
+  const face = (ax, ay, bx, by, z0, z1, c) => poly([S(ax, ay), Y(ax, ay, z0), S(bx, by), Y(bx, by, z0), S(bx, by), Y(bx, by, z1), S(ax, ay), Y(ax, ay, z1)], c);
+  const shutter = hash2(tx * 3 + 1, ty * 5 + 7);
+  if (sz === 0) {
+    face(x0, y1, x1, y1, 0, 6, 'rgba(0,0,0,0.25)');
+    if (shutter < 0.35) { face(x0 + 3, y1, x1 - 3, y1, 0, 22, shutter < 0.1 ? '#4a3e34' : '#5a5e64'); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); for (let z = 3; z < 22; z += 3) { ctx.moveTo(S(x0 + 3, y1), Y(x0 + 3, y1, z)); ctx.lineTo(S(x1 - 3, y1), Y(x1 - 3, y1, z)); } ctx.stroke(); }
+  }
+  if (ez === 0) {
+    face(x1, y0, x1, y1, 0, 6, 'rgba(0,0,0,0.25)');
+    if (shutter > 0.7) { face(x1, y0 + 3, x1, y1 - 3, 0, 22, '#565a60'); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); for (let z = 3; z < 22; z += 3) { ctx.moveTo(S(x1, y0 + 3), Y(x1, y0 + 3, z)); ctx.lineTo(S(x1, y1 - 3), Y(x1, y1 - 3, z)); } ctx.stroke(); }
+  }
+}
+
+// v1.10 옥상: 가장자리 난간(턱) · 실외기 · 물탱크 · 얼룩 · 안테나
+function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
+  const S = Iso.sx, Y = Iso.sy, lip = 3, rim = glass ? '#5a6878' : `rgb(${b + 12},${b + 8},${b + 2})`, rimS = glass ? '#2a3440' : `rgb(${b - 30},${b - 33},${b - 38})`;
+  const edge = (dx, dy) => tileHeight(tx + dx, ty + dy) < ht - 4;
+  // 얼룩·이끼 (난간보다 먼저)
+  if (h > 0.6 && h < 0.75) { ctx.fillStyle = h < 0.68 ? 'rgba(20,18,16,0.25)' : 'rgba(60,80,40,0.22)'; ctx.beginPath(); ctx.ellipse(S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht), 12, 6, 0, 0, TAU); ctx.fill(); }
+  if (edge(0, -1)) drawBox(x0, y0, x1, y0 + lip, ht + 4, rim, rimS, rimS, ht, edge(1, 0) ? ht : -1, 0);
+  if (edge(-1, 0)) drawBox(x0, y0, x0 + lip, y1, ht + 4, rim, rimS, rimS, -1, ht, 0);
+  if (edge(0, 1)) drawBox(x0, y1 - lip, x1, y1, ht + 4, rim, rimS, rimS, ht, -1, 0);
+  if (edge(1, 0)) drawBox(x1 - lip, y0, x1, y1, ht + 4, rim, rimS, rimS, -1, ht, 0);
+  if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 실외기
+  else if (h < 0.055 && !glass) { // 물탱크 (원통)
+    const cx = S(x0 + 16, y0 + 16), cy = Y(x0 + 16, y0 + 16, ht), r = 9, hh = 18 * ISO_K;
+    ctx.fillStyle = '#3a6a8a'; ctx.fillRect(cx - r, cy - hh, r * 2, hh);
+    ctx.beginPath(); ctx.ellipse(cx, cy, r, r / 2, 0, 0, Math.PI); ctx.fill();
+    ctx.fillStyle = '#5a8aaa'; ctx.beginPath(); ctx.ellipse(cx, cy - hh, r, r / 2, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(cx + r * 0.3, cy - hh, r * 0.7, hh);
+  } else if (h > 0.985) { // 안테나
+    const ax = S(x0 + 16, y0 + 16), ay = Y(x0 + 16, y0 + 16, ht);
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax, ay - 30); ctx.moveTo(ax - 6, ay - 22); ctx.lineTo(ax + 6, ay - 22); ctx.moveTo(ax - 4, ay - 27); ctx.lineTo(ax + 4, ay - 27); ctx.stroke(); ctx.lineWidth = 1;
+    if (Math.sin(G.time * 3 + tx) > 0.6) { ctx.fillStyle = '#ff3030'; ctx.fillRect(ax - 1.5, ay - 32, 3, 3); }
+  }
 }
 
 // ---------------- 스프라이트 (js/assets.js 에 등록된 그림) ----------------
@@ -569,6 +698,7 @@ function enemyCloaked(e) {
     && dist(e, G.player) > 150;
 }
 function drawEnemy(e) {
+  if (e.nest) return drawNest(e); // v1.10
   const sx = Iso.sx(e.x, e.y) + (e.stunT > 0 ? Math.sin(G.time * 70) * 2 : 0), sy = Iso.sy(e.x, e.y); // 경직 중 흔들림
   if (sx < -120 || sy < -160 || sx > VW + 120 || sy > VH + 80) return;
   const flash = e.hitT > 0, f = e.face || 0;
@@ -813,7 +943,11 @@ function render() {
   };
 
   // 1) 바닥 (캐시된 청크) + 바닥 위 효과 (변환 행렬 사용)
-  GroundCache.draw(tx0, ty0, tx1, ty1);
+  { // 바닥은 맵 바깥(OUT_PAD 칸)까지
+    const gx = c => Math.floor(c / TILE);
+    GroundCache.draw(Math.max(-OUT_PAD, gx(Math.min(...corners.map(c => c.x))) - 1), Math.max(-OUT_PAD, gx(Math.min(...corners.map(c => c.y))) - 1),
+      Math.min(World.W + OUT_PAD, gx(Math.max(...corners.map(c => c.x))) + 1), Math.min(World.H + OUT_PAD, gx(Math.max(...corners.map(c => c.y))) + 1));
+  }
   const solids = [];
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
     const t = World.tiles[ty * World.W + tx];
@@ -856,6 +990,11 @@ function render() {
   }
   for (const e of G.exits || []) { // v1.3 탈출 지점: 초록 원 + 맥박
     const k = (G.time * 0.8) % 1;
+    if (e.locked) { // v1.10 잠긴 특수 탈출: 주황 점선
+      ctx.strokeStyle = 'rgba(255,170,60,0.6)'; ctx.lineWidth = 3; ctx.setLineDash([14, 10]); ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
+      ctx.fillStyle = 'rgba(255,170,60,0.08)'; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.fill();
+      continue;
+    }
     ctx.strokeStyle = 'rgba(110,240,130,0.7)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.stroke();
     ctx.strokeStyle = `rgba(110,240,130,${0.6 * (1 - k)})`; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R * k, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
     ctx.fillStyle = 'rgba(110,240,130,0.12)'; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.fill();
@@ -926,7 +1065,7 @@ function render() {
   for (const d of G.drops) objs.push({ d: depth(d), draw: drawDrop, ent: d });
   for (const c of G.corpses) objs.push({ d: depth(c) - 0.3, draw: drawCorpse, ent: c });
   if (G.inside) for (const c of G.inside.crates) objs.push({ d: depth(c), draw: drawCrate, ent: c });
-  if (World.map !== 'camp') Scavenge.collect(objs); // v1.4 뒤질 곳 · 시체 가방
+  if (World.map !== 'camp') { Scavenge.collect(objs); RaidEvents.collect(objs); } // v1.4 뒤질 곳 · 시체 가방 · v1.10 사건
   City.collect(objs, (x, y) => { const sx = Iso.sx(x, y), sy = Iso.sy(x, y); return sx > -120 && sx < VW + 120 && sy > -40 && sy < VH + 140; });
   for (const l of World.landmarks) {
     const sx = Iso.sx(l.x, l.y);
@@ -1011,7 +1150,7 @@ function render() {
   if (p.recoilT > 0) addLight(psx + Math.cos(p.aim) * 20, psy - 6, 150, 0.9, 'rgba(255,200,110,A)');
   const cc = World.campCenter();
   if (World.map === 'camp') addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
-  for (const e of G.exits || []) addLight(Iso.sx(e.x, e.y), Iso.sy(e.x, e.y), 160, 0.9, 'rgba(110,240,130,A)'); // 탈출 지점
+  for (const e of G.exits || []) if (!e.locked) addLight(Iso.sx(e.x, e.y), Iso.sy(e.x, e.y), 160, 0.9, 'rgba(110,240,130,A)'); // 탈출 지점
   for (const ef of G.effects) if (ef.type === 'boom') addLight(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y), ef.r * 2.4 * (1 - ef.t / ef.life), 1, 'rgba(255,150,50,A)');
   for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(120,255,100,A)' : 'rgba(255,90,60,A)');
   for (const s of G.strikes) addLight(Iso.sx(s.x, s.y), Iso.sy(s.x, s.y), s.r * 1.8, 0.5 + 0.4 * s.t / s.delay, s.pool ? 'rgba(140,230,70,A)' : 'rgba(255,90,50,A)');
@@ -1235,7 +1374,8 @@ function drawMinimapIso(mm) {
   if (G.labBoss && G.labBoss.hp > 0) dot(G.labBoss.x, G.labBoss.y, '#ff3020', 7);
   for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 3 && d.landed && Math.sin(G.time * 7) > -0.2) dot(d.x, d.y, RARITIES[d.item.rarity].color, 5); // 영웅 이상 드랍 위치
   if (G.grave && Math.sin(G.time * 5) > -0.3) { g.fillStyle = '#ff3030'; g.fillRect(G.grave.x / TILE - 0.6, G.grave.y / TILE - 2.5, 1.2, 5); g.fillRect(G.grave.x / TILE - 2.5, G.grave.y / TILE - 0.6, 5, 1.2); } // 시체 가방
-  if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
+  RaidEvents.minimap(g); // v1.10 사건
+  if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = e.locked ? '#ffaa3c' : '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
   for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);
   for (const l of World.landmarks) dot(l.x, l.y, p.found.includes(l.id) ? '#ffd76a' : '#888', 5);
   const tg = Story.target(p); // 현재 목표 (깜빡임)

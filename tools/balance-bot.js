@@ -90,7 +90,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       // 이동 목표: 탈출 / 이야기(도착·네임드) / 전투 / 줍기 / 배회
       const st = Story.step(p), tg = Story.target(p);
       let goal = null;
-      if (leave) { const ex = G.exits.slice().sort((a, b2) => dist(a, p) - dist(b2, p))[0]; goal = ['ex', ex.x, ex.y]; }
+      if (leave) { const ex = G.exits.filter(q => !q.locked).sort((a, b2) => dist(a, p) - dist(b2, p))[0]; goal = ['ex', ex.x, ex.y]; }
       else if (tg && st && (st.type === 'reach' || st.type === 'hunt' || (st.type === 'kill' && st.target === 'boss')) && !(st.type === 'hunt' && G.elite && dist(G.elite, p) < 500) && !(st.target === 'boss' && G.boss && dist(G.boss, p) < 500)) goal = ['st' + st.type, tg.x, tg.y];
       // 목표(탈출·이야기)가 있으면 이동은 목표 쪽, 사격은 따로 (사람처럼 쏘면서 이동). 바로 붙은 적만 상대
       if (goal && !(best && bd < 140)) {
