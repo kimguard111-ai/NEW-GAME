@@ -60,6 +60,7 @@ const Raid = {
     log(`${MAPS[id].name}에 진입했다. 탈출 지점: ${G.exits.map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(' · ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}`, '#8cf');
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
+    G.fade = { t: 0, life: 1.4, text: MAPS[id].name, sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17
     if (World.def.lab) log('비상 전원만 남은 연구소다. 붉은 비상등 아래가 그나마 밝다. 격리실(미니맵 붉은 방)에 무언가 있다.', '#ff8a8a');
     saveGame();
   },
@@ -126,6 +127,7 @@ const Raid = {
     World.generate('camp');
     this.resetWorld();
     Object.assign(p, World.campCenter());
+    G.fade = { t: 0, life: 1.1, text: '시청역 생존자 캠프', sub: '' }; // v1.17
     p.dead = false; p.hp = PlayerStats.maxHp(p); p.stam = 100;
     UI.refreshAll();
   },

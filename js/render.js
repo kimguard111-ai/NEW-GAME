@@ -682,6 +682,21 @@ function drawHelmetOverlay(sx, sy, info, hel, color) {
   }
 }
 
+// v1.17 맞은 방향: 화면 가장자리 쪽 붉은 부채꼴 (0.9초)
+function drawHitDirs(psx, psy) {
+  const p = G.player;
+  G.hitDirs = (G.hitDirs || []).filter(h => G.time - h.t < 0.9);
+  for (const h of G.hitDirs) {
+    const dx = Iso.sx(h.x, h.y) - psx, dy = Iso.sy(h.x, h.y) - psy;
+    if (Math.abs(dx) < VW * 0.38 && Math.abs(dy) < VH * 0.38) continue; // 화면 안에서 보이는 적이면 표시 안 함
+    const a = Math.atan2(dy, dx), k = 1 - (G.time - h.t) / 0.9, r = Math.min(VW, VH) * 0.42;
+    ctx.save(); ctx.translate(psx, psy - 20); ctx.rotate(a);
+    ctx.fillStyle = `rgba(255,50,40,${0.55 * k})`;
+    ctx.beginPath(); ctx.moveTo(r + 26, 0); ctx.lineTo(r, -16); ctx.lineTo(r + 6, 0); ctx.lineTo(r, 16); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+}
+
 // v1.9 근접 휘두르기 각도 (2타는 반대로, 3타 회전 베기는 한 바퀴, 찌르기는 거의 정면)
 function meleeSwing(p, w) {
   if (!(p.swingT > 0)) return -0.5;
@@ -1223,12 +1238,11 @@ function render() {
     g3.addColorStop(0, 'rgba(160,0,0,0)'); g3.addColorStop(1, `rgba(160,0,0,${k})`);
     ctx.fillStyle = g3; ctx.fillRect(0, 0, VW, VH);
   }
-  const mh = PlayerStats.maxHp(p);
-  if (!p.dead && p.hp < mh * 0.3) {
-    const a = 0.25 + Math.sin(G.time * 6) * 0.1;
-    const g2 = ctx.createRadialGradient(VW / 2, VH / 2, VH * 0.3, VW / 2, VH / 2, VH * 0.8);
-    g2.addColorStop(0, 'rgba(120,0,0,0)'); g2.addColorStop(1, `rgba(140,0,0,${a})`);
-    ctx.fillStyle = g2; ctx.fillRect(0, 0, VW, VH);
+  drawHitDirs(psx, psy); // v1.17 화면 밖에서 맞은 방향
+
+  if (G.fade) { // v1.17 출격·귀환 화면 전환 (검게 → 밝게)
+    G.fade.t += 1 / 60; const k = G.fade.t / G.fade.life;
+    if (k >= 1) G.fade = null; else { ctx.fillStyle = `rgba(4,5,8,${1 - k})`; ctx.fillRect(0, 0, VW, VH); if (G.fade.text && k < 0.7) { ctx.globalAlpha = 1 - k / 0.7; ctx.fillStyle = '#e8dcc0'; ctx.font = 'bold 26px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(G.fade.text, VW / 2, VH / 2 - 10); ctx.font = '13px sans-serif'; ctx.fillStyle = '#a89c80'; ctx.fillText(G.fade.sub || '', VW / 2, VH / 2 + 16); ctx.globalAlpha = 1; } }
   }
 
   // 목표 방향 화살표 + 거리
@@ -1421,6 +1435,7 @@ function drawMinimapIso(mm) {
   for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 3 && d.landed && Math.sin(G.time * 7) > -0.2) dot(d.x, d.y, RARITIES[d.item.rarity].color, 5); // 영웅 이상 드랍 위치
   if (G.grave && Math.sin(G.time * 5) > -0.3) { g.fillStyle = '#ff3030'; g.fillRect(G.grave.x / TILE - 0.6, G.grave.y / TILE - 2.5, 1.2, 5); g.fillRect(G.grave.x / TILE - 2.5, G.grave.y / TILE - 0.6, 5, 1.2); } // 시체 가방
   RaidEvents.minimap(g); // v1.10 사건
+  Pop.minimap(g); // v1.17 마지막 적들
   if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = e.locked ? '#ffaa3c' : '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
   for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);
   for (const l of World.landmarks) dot(l.x, l.y, p.found.includes(l.id) ? '#ffd76a' : '#888', 5);

@@ -28,6 +28,7 @@ const ACHIEVEMENTS = [
   { id: 'tier5',  name: '위협 제압',       desc: '어설트 위협 5 클리어',  ok: p => Object.values(p.assaults || {}).some(a => (a.tier || 1) >= 5), r: { chip: 6 } },
   { id: 'tier10', name: '불가능한 작전',   desc: '어설트 위협 10 클리어', ok: p => Object.values(p.assaults || {}).some(a => (a.tier || 1) >= 10), r: { credits: 20000, chip: 20 } },
   { id: 'ev20',   name: '현장 대응',       desc: '출격 사건 20개 완료',   ok: p => (p.rec.events || 0) >= 20, r: { credits: 3000, chip: 3 } },
+  { id: 'clear1', name: '완전 소탕',       desc: '출격 맵의 적을 모두 처치', ok: p => (p.rec.clears || 0) >= 1, r: { credits: 3000, chip: 4 } },
   { id: 'perk6',  name: '완성된 생존자',   desc: '특성 6개 모두 선택',    ok: p => p.perks.filter(Boolean).length >= 6, r: { chip: 6 } },
 ];
 
@@ -125,7 +126,7 @@ const Journal = {
       const row = (k, v) => `<div class="stat-row"><span>${k}</span><b>${v}</b></div>`;
       return row('플레이 시간', `${Math.floor(pt / 3600)}시간 ${Math.floor(pt % 3600 / 60)}분`) + row('처치', fmt(p.totalKills)) + row('최대 연속 처치', p.bestCombo || 0)
         + row('사망', p.deaths || 0) + row('탈출 성공', r.extracts || 0) + row('가장 오래 버틴 출격', `${Math.floor((r.longRaid || 0) / 60)}분 ${(r.longRaid || 0) % 60}초`)
-        + row('한 출격 최대 크레딧', `₵${fmt(r.bestRaidCr || 0)}`) + row('한 출격 최대 처치', r.bestRaidKills || 0) + row('완료한 출격 사건', r.events || 0)
+        + row('한 출격 최대 크레딧', `₵${fmt(r.bestRaidCr || 0)}`) + row('한 출격 최대 처치', r.bestRaidKills || 0) + row('완료한 출격 사건', r.events || 0) + row('맵 완전 소탕', r.clears || 0)
         + row('필드 보스 / 타이탄 / 키메라', `${p.fieldBossKills || 0} / ${p.bossKills || 0} / ${p.labKills || 0}`)
         + row('고유 장비', `${Object.keys(p.codex.uniq).length} / ${Object.keys(UNIQUES).length}`) + row('업적', `${ACHIEVEMENTS.filter(a => p.ach[a.id]).length} / ${ACHIEVEMENTS.length}`);
     }

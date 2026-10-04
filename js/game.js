@@ -482,6 +482,11 @@ function damagePlayer(dmg, srcX, srcY) {
     if (d <= 0) { p.lastHurt = G.time; floatText(p.x, p.y - 20, '막음', '#7ab8ff', 12); return; }
   }
   p.hp -= d; p.hurtT = 0.15; p.lastHurt = G.time;
+  { // v1.17 맞은 방향 기록 (출처가 없으면 가장 가까운 쫓아오는 적)
+    let sx = srcX, sy = srcY;
+    if (sx === undefined) { let bd = 1e9; for (const e of G.enemies) { if (e.hp <= 0 || e.state !== 'chase') continue; const dd = dist(e, p); if (dd < bd) { bd = dd; sx = e.x; sy = e.y; } } }
+    if (sx !== undefined) { G.hitDirs = G.hitDirs || []; G.hitDirs.push({ x: sx, y: sy, t: G.time }); if (G.hitDirs.length > 6) G.hitDirs.shift(); }
+  }
   // v1.12 방어구 전설
   if (armorLegend('aegis') && G.time > (p.aegisCd || 0) && Math.random() < 0.2) { p.aegisCd = G.time + 10; p.buffs.shield = Math.max(p.buffs.shield || 0, 3); floatText(p.x, p.y - 44, '반응 장갑!', '#7ab8ff', 13); }
   if (armorLegend('thorns') && G.time > (p.thornCd || 0)) { p.thornCd = G.time + 0.3; for (const e of G.enemies) if (e.hp > 0 && dist(e, p) < 70 + e.r) damageEnemy(e, d * 0.8, false, angleTo(p, e), { knock: 6, noProc: true }); }
@@ -663,6 +668,7 @@ function killEnemy(e) {
   if (e.fieldBoss) Bosses.onFieldKill(e, dropAt);
   if (e.labBoss) Bosses.onLabKill(e, dropAt);
   RaidEvents.onKill(e, dropAt); // v1.10 둥지
+  Pop.onKill(e, dropAt); // v1.17 소탕
   if (e.elite) { // 네임드: 장비 확정 + 크레딧
     G.elite = null;
     log(`${ELITES[e.elite].name} 처치!`, '#ffa53a');
@@ -925,7 +931,7 @@ function updateBullets(dt) {
       } else {
         if (World.inSafe(b.x, b.y)) { b.life = 0; break; }
         if (!p.dead && (p.x - b.x) ** 2 + (p.y - b.y) ** 2 < (p.r + (b.r || 3)) ** 2) {
-          damagePlayer(b.dmg); b.life = 0; break;
+          damagePlayer(b.dmg, b.x - b.vx * 0.6, b.y - b.vy * 0.6); b.life = 0; break; // v1.17 날아온 방향
         }
       }
     }
@@ -1095,6 +1101,8 @@ function update(dt) {
   RaidEvents.update(dt); // v1.10
   Gadgets.update(dt); // v1.14 지뢰
   Journal.update(dt); // v1.15 업적
+  Music.update(dt); // v1.17 배경 음악
+  if (!p.dead && p.hp < PlayerStats.maxHp(p) * 0.3 && World.map !== 'camp' && (G.beatT = (G.beatT || 0) - dt) <= 0) { G.beatT = 0.4 + p.hp / PlayerStats.maxHp(p) * 2.2; SFX.play('heart'); } // v1.17 저체력 심장 박동
   Nav.update(dt);
   updateEnemies(dt);
   Assault.update(dt);

@@ -8,10 +8,10 @@ const POP_MIN_D = 520;        // 플레이어에게서 최소 이만큼 떨어�
 const POP_DENS = [0, 0.048, 0.05, 0.048, 0.05, 0.09, 0.045, 0.045]; // v1.16 봇 측정 후 ×1.5 // 구역 걷는 칸당 적 수 (지역별)
 
 const Pop = {
-  cells: [], t: 0, total: 0,
+  cells: [], t: 0, total: 0, killed: 0, half: false, done: false,
 
   generate(start) {
-    this.cells = []; this.total = 0;
+    this.cells = []; this.total = 0; this.killed = 0; this.half = false; this.done = false;
     if (World.map === 'camp') return;
     const W = World.W, H = World.H, z = World.zoneIndex(), dens = POP_DENS[z] || 0.03;
     const open = t => t === T.ROAD || t === T.WALK || t === T.RUBBLE || t === T.GRASS || t === T.LFLOOR || t === T.WATER;
@@ -24,14 +24,39 @@ const Pop = {
       if (start && Math.hypot(mx - start.x, my - start.y) < 650) n = 0; // 시작 지점 주변은 비움
       else if ((G.exits || []).some(e => Math.hypot(mx - e.x, my - e.y) < 300)) n = Math.round(n * 0.4); // 탈출 지점 근처는 적게
       if (n <= 0) continue;
-      this.cells.push({ x: mx, y: my, tiles, n });
+      this.cells.push({ x: mx, y: my, tiles, n, alive: 0 });
       this.total += n;
     }
   },
 
-  // 남은 적 (아직 안 나타난 수 + 살아 있는 일반 적)
-  remaining() {
-    return this.cells.reduce((a, c) => a + c.n, 0) + G.enemies.filter(e => e.hp > 0 && !e.def.boss && !e.minion && !e.nest && !e.assault).length;
+  // 남은 적 (아직 안 나타난 수 + 이 맵 인구로 나타나 살아 있는 적 — 증원·사건 적은 빼고)
+  remaining() { return Math.max(0, this.total - this.killed); },
+
+  // v1.17 처치: 구역 소탕 · 맵 절반 / 전부 소탕 보상
+  onKill(e, dropAt) {
+    const c = e.popCell; if (!c) return;
+    e.popCell = null; c.alive--; this.killed++;
+    const p = G.player, lvl = ZONES[World.zoneIndex()].lvl[1];
+    if (c.alive <= 0 && c.n <= 0 && !c.cleared) { c.cleared = true; dropAt('credits', { amount: lvl * 8 }); floatText(e.x, e.y - 50, '구역 소탕', '#9fd', 13); }
+    if (!this.half && this.killed >= this.total / 2) {
+      this.half = true; dropAt('credits', { amount: lvl * 40 }); dropAt('item', { item: makeConsumable(pick(['molotov', 'flash', 'plate', 'stim']), 1) });
+      UI.toast('맵 절반 소탕', `남은 적 약 ${this.remaining()} — 크레딧 · 소모품`); SFX.play('quest');
+    }
+    if (!this.done && this.killed >= this.total) {
+      this.done = true; RaidEvents.cleared = true; // 증원도 멈춤
+      dropAt('item', { item: randomGear(lvl, 1.5, 3, ZONES[World.zoneIndex()].gear) }); dropAt('credits', { amount: lvl * 120 }); Workshop.gain(6, 3, '맵 소탕');
+      p.rec = p.rec || {}; p.rec.clears = (p.rec.clears || 0) + 1;
+      UI.toast('★ 맵 소탕 완료 ★', '영웅 이상 장비 · 크레딧 · 재료 — 증원도 끊겼다. 천천히 뒤지고 나가자'); SFX.play('legend');
+      G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 1.2, color: '#ffd76a', r: 220 });
+    }
+  },
+  // 남은 적이 10 이하면 미니맵에 표시 (마지막 사냥)
+  minimap(g) {
+    if (!this.total || this.done || this.remaining() > 10 || Math.sin(G.time * 5) < -0.3) return;
+    g.fillStyle = 'rgba(255,120,60,0.9)';
+    for (const e of G.enemies) if (e.popCell && e.hp > 0) g.fillRect(e.x / TILE - 2, e.y / TILE - 2, 4, 4);
+    g.strokeStyle = 'rgba(255,120,60,0.6)'; g.lineWidth = 0.8;
+    for (const c of this.cells) if (c.n > 0) g.strokeRect(c.x / TILE - POP_CELL / 2, c.y / TILE - POP_CELL / 2, POP_CELL, POP_CELL);
   },
 
   update(dt) {
@@ -54,11 +79,11 @@ const Pop = {
         const lvl = clamp(Math.round(lerp(zone.lvl[0], zone.lvl[1], t) + rand(-1, 1)), zone.lvl[0], zone.lvl[1]);
         const type = weighted(zone.spawns), e = makeEnemy(type, x, y, lvl);
         if (Math.random() < Monsters.eliteChance(z) + ((RaidEvents.alert || 0) >= 2 ? 0.04 : 0)) Monsters.makeElite(e, Monsters.rollAffix(type));
-        G.enemies.push(e); c.n--; near++;
+        e.popCell = c; c.alive++; G.enemies.push(e); c.n--; near++;
         const pk = zone.packs && zone.packs[type]; // 무리 (예산에서 함께 뺌)
         if (pk) for (let i = 1, n = randInt(pk[0], pk[1]); i < n && c.n > 0; i++) {
           const ox = x + rand(-70, 70), oy = y + rand(-70, 70);
-          if (!World.circleBlocked(ox, oy, e.r) && !World.inSafe(ox, oy)) { G.enemies.push(makeEnemy(type, ox, oy, lvl)); c.n--; near++; }
+          if (!World.circleBlocked(ox, oy, e.r) && !World.inSafe(ox, oy)) { const m = makeEnemy(type, ox, oy, lvl); m.popCell = c; c.alive++; G.enemies.push(m); c.n--; near++; }
         }
       }
     }

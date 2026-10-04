@@ -82,6 +82,7 @@ const SFX = {
       case 'heal': this.tone(660, 0.2, 0.12, 'sine', 0, 1.5); this.tone(880, 0.25, 0.1, 'sine', 0.1, 1.5); break;
       case 'quest': [784, 988, 1175].forEach((f, i) => this.tone(f, 0.3, 0.15, 'triangle', i * 0.1)); break;
       case 'ui': this.tone(900, 0.03, 0.06, 'square'); break;
+      case 'heart': this.tone(62, 0.12, 0.35, 'sine', 0, 0.6); this.tone(55, 0.14, 0.28, 'sine', 0.16, 0.6); break; // v1.17 저체력
     }
   },
 };

@@ -421,6 +421,8 @@ const UI = {
       + opt('shake', '화면 흔들림', '타격·폭발 시 화면 흔들림')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
       + opt('sound', '효과음', '총소리·타격·획득 소리')
+      + opt('bgm', '배경 음악', '맵 분위기 음악 · 적이 쫓아오면 전투 음악 (v1.17)')
+      + `<div class="set-row"><b>음악 음량</b> <span id="mus-val">${Math.round((Settings.musicVol ?? 0.5) * 100)}%</span><br><input type="range" id="mus-range" min="0" max="1" step="0.05" value="${Settings.musicVol ?? 0.5}"></div>`
       + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
       + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="1.8" step="0.1" value="${ZOOM}"></div>`
       + opt('tips', '도움말 팁', '처음 겪는 상황에서 한 번씩 안내')
@@ -429,6 +431,7 @@ const UI = {
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
     $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.map.clear(); }; });
+    $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };
     $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
     $('btn-export').onclick = () => {
       saveGame(); const ta = $('save-code'), raw = localStorage.getItem(SAVE_KEY) || '';
