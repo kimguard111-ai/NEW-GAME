@@ -43,6 +43,7 @@
 | 8 | 랜드마크 6채 | 6 | cathedral · bosingak · base · tower63 · coex · lotte | 맵마다 상징 건물 |
 | 9 | 보스 전용 17종 (선택) | 17 | glutton … chimera | 없으면 기본 적을 키워서 씀 |
 | 10 | 타이틀 키아트 | 1 | (가공 없음) | 첫 화면 |
+| 11 | **무기를 든 플레이어 몸** (v1.7.7) | 2~10 | player_long · player_pistol · player_vest_long … | 손과 총이 붙어 보임 |
 
 > 아이콘: 무기·헬멧은 2·5번을 등록하면 자동으로 그 그림이 됩니다. 방어구·구급상자·메뉴 아이콘은 코드로 그린 아이콘(46종)이 이미 통일돼 있어 따로 만들지 않아도 됩니다.
 
@@ -345,6 +346,46 @@ Match the art style of the attached concept image. Create ONE sprite sheet image
 ```
 Match the art style of the attached concept image. Create ONE wide 16:9 cinematic key art image for a post-apocalyptic action RPG set in Seoul in the year 2049. A lone survivor with a backpack and a rifle stands on a broken rooftop on the left third of the image, seen from behind, looking over the ruined Seoul skyline at night: the broken N Seoul Tower on a dark hill, collapsed skyscrapers, a ruined glass supertall tower on the far horizon with a blinking red light, scattered fires and a few flickering Korean neon signs in the streets below, falling ash, a faint green radioactive glow near the river. Moody dark blue night sky with warm orange firelight. Keep the upper center and the bottom area darker and empty for the game title and menu. Detailed dark pixel art, desaturated colors with warm orange highlights. No text, no letters, no logo, no watermark, no border.
 ```
+
+---
+
+## 11. 무기를 든 플레이어 몸 (v1.7.7) · 🔢 모두 `idle 4, walk 6, attack 3, hit 2, death 5`
+
+빈손 몸 + 무기를 따로 붙이는 방식은 손과 총이 따로 놀아 보입니다. **총을 든 몸**을 그려 두면 게임이 그 그림을 쓰고 무기를 따로 붙이지 않습니다.
+
+| 그룹 | 쓰는 무기 | 그림 속 총 |
+|---|---|---|
+| **long** (장총) | 기관단총 · 산탄총 · 돌격소총 · 저격소총 · 기관총 | 검은 돌격소총 하나로 통일 |
+| **pistol** (권총) | 권총 | 검은 권총 |
+| (근접 무기) | 쇠파이프 · 도끼 · 블레이드 | 지금 방식 그대로 (빈손 몸 + 무기) |
+
+- 방어구마다 2장(장총·권총)씩 필요합니다. **올라온 것부터 바로 적용**되고, 없는 조합은 지금 방식으로 보입니다.
+- 추천 순서: **기본 몸 장총 → 기본 몸 권총** → 자주 입는 방어구 → 나머지
+- 📎 **반드시 같은 방어구의 빈손 몸 그림을 첨부**하세요 (art_raw의 `Player.png`, `player_best1~4.png`). 얼굴·옷·크기가 똑같아야 장비를 바꿀 때 어색하지 않습니다.
+- 총은 **항상 수평으로 오른쪽을 겨눈 자세**입니다 (왼쪽은 게임이 뒤집음). 위·아래 조준은 게임이 총알 방향으로 처리합니다.
+- 헬멧은 게임이 머리에 씌우므로 **맨머리**로 그립니다.
+
+| 🔧 도구 이름 = art_raw 파일 이름 | 방어구 | 📎 첨부할 빈손 몸 |
+|---|---|---|
+| `player_long` · `player_pistol` | 없음 (후드) | `Player.png` |
+| `player_vest_long` · `player_vest_pistol` | 방탄 조끼 | `player_best1.png` |
+| `player_tactical_long` · `player_tactical_pistol` | 전술 조끼 | `player_best2.png` |
+| `player_military_long` · `player_military_pistol` | 군용 강화복 | `player_best3.png` |
+| `player_exo_long` · `player_exo_pistol` | 외골격 | `player_best4.png` |
+
+### 11-1. 장총 든 몸 · 🔧 **player_long** (방어구 버전은 이름만 바꿔 같은 프롬프트)
+📎 해당 방어구의 빈손 몸 그림 + 콘셉트 아트
+```
+Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a black assault rifle with both hands in a firing stance: the stock tucked into the right shoulder, the left hand on the front grip, the barrel pointing straight to the RIGHT and level with the ground. The rifle stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while aiming the rifle forward; row 2: 6 frames of a walk cycle while keeping the rifle aimed forward; row 3: 3 frames of firing the rifle with a small recoil kick, no muzzle flash, no bullets; row 4: 2 frames of getting hit and flinching backward while still holding the rifle; row 5: 5 frames of a death animation, dropping the rifle, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 11-2. 권총 든 몸 · 🔧 **player_pistol** (방어구 버전은 이름만 바꿔 같은 프롬프트)
+📎 해당 방어구의 빈손 몸 그림 + 콘셉트 아트
+```
+Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a black M1911 pistol with both hands in a firing stance, arms extended forward at chest height, the pistol pointing straight to the RIGHT and level with the ground. The pistol stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while aiming the pistol forward; row 2: 6 frames of a walk cycle while keeping the pistol aimed forward; row 3: 3 frames of firing the pistol with a small recoil kick of the hands, no muzzle flash, no bullets; row 4: 2 frames of getting hit and flinching backward while still holding the pistol; row 5: 5 frames of a death animation, dropping the pistol, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+> 결과가 이상할 때: 총이 비스듬하면 "barrel perfectly horizontal" 을, 사람이 바뀌면 빈손 몸 그림을 다시 첨부했는지 확인하세요. 행이 섞이거나 공격·피격이 한 줄에 그려져도 괜찮습니다 (가공할 때 세어서 맞춥니다).
 
 ---
 

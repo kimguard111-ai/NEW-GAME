@@ -423,12 +423,15 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     o.gun = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 12 : w.key === 'lmg' ? 26 : w.key === 'shotgun' ? 22 : w.key === 'smg' ? 15 : 20;
     if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
   }
-  const [anim, at] = animState(moving, p.hurtT, p.lastAtk, 'player');
-  const bodyKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
+  const [anim, at] = animState(moving, p.hurtT, p.lastAtk, w && ART.weaponGroup[w.key] ? ((p.equip.armor && Sprites.get('player_' + p.equip.armor.key) ? 'player_' + p.equip.armor.key : 'player') + '_' + ART.weaponGroup[w.key]) : 'player');
+  const baseKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
+  // v1.7.7 무기를 든 몸 그림 (예: player_long, player_vest_pistol) 이 있으면 그걸 쓰고 무기를 따로 붙이지 않음
+  const grp = w ? ART.weaponGroup[w.key] : null, heldKey = grp && Sprites.get(baseKey + '_' + grp) ? baseKey + '_' + grp : null;
+  const bodyKey = heldKey || baseKey;
   if (Sprites.get(bodyKey)) {
     // 몸 그림(무기·헬멧 없음) + 헬멧을 머리에, 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
     // v1.7.5 무기는 이번 프레임의 머리 위치를 따라감 (걷기 흔들림·피격 젖힘과 함께 움직임) · 쓰러지는 중엔 손에서 놓음
-    const back = Iso.dir(p.aim).y < -0.15, fr = Sprites.frame(bodyKey, anim, at, p.aim), hold = w && !p.dead && fr.anim.indexOf('death') < 0;
+    const back = Iso.dir(p.aim).y < -0.15, fr = Sprites.frame(bodyKey, anim, at, p.aim), hold = w && !heldKey && !p.dead && fr.anim.indexOf('death') < 0;
     if (back && hold) drawWeaponOverlay(sx, sy, w, p, fr);
     const info = Sprites.draw(bodyKey, anim, at, sx, sy, p.aim, p.hurtT > 0);
     if (hel && info.anim.indexOf('death') < 0) drawHelmetOverlay(sx, sy, info, hel, o.helmet);
