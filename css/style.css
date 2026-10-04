@@ -428,3 +428,17 @@ body.touch #panel-stash.panel { width: 96vw !important; } body.touch .stash-body
 .hot.gad .cyc { position: absolute; top: 1px; right: 3px; font-size: 9px; color: #9fe0ff; background: rgba(0,0,0,0.5); border-radius: 3px; padding: 0 3px; }
 body.touch .hot.gad .cyc { font-size: 12px; padding: 0 4px; top: 0; right: 0; background: #1c2a3a; border: 1px solid #5aa8ff; }
 .hot.gad.empty .icon { opacity: 0.35; }
+/* v1.15 임무 창 탭 · 도감 · 업적 */
+.jtabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.jtab { flex: 1; padding: 4px 6px; font-size: 12px; background: #1c1f24; border: 1px solid #3a3f48; color: #aaa; border-radius: 4px; cursor: pointer; }
+.jtab.on { border-color: #ffd76a; color: #ffd76a; background: #2e2a1a; }
+.codex { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 3px; margin: 4px 0 10px; }
+.cx { font-size: 11px; padding: 3px 6px; background: rgba(255,255,255,0.04); border-radius: 3px; display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+.cx.no { color: #555; }
+.cx .ico { width: 16px; height: 16px; }
+.ach { font-size: 12px; padding: 3px 0; color: #777; }
+.ach.ok { color: #ffd76a; }
+.inv-cell .mark.lock { left: auto; right: 2px; bottom: 1px; top: auto; }
+.inv-cell .mark.lock .ico { width: 11px; height: 11px; }
+button.mini { font-size: 10px; padding: 1px 6px; margin-left: 6px; background: #1c1f24; border: 1px solid #3a3f48; color: #aaa; border-radius: 3px; cursor: pointer; }
+.welcome { font-size: 13px; line-height: 1.7; }

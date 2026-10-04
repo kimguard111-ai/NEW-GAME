@@ -31,6 +31,7 @@ const Bounty = {
 
   on(kind, v = 1) {
     const p = G.player;
+    if (typeof Weekly !== 'undefined' && kind !== 'assault') Weekly.on(kind, v); // v1.15 주간 도전도 같은 신호로
     if (!p || !p.bounty) return;
     for (const b of p.bounty.list) {
       if (b.done) continue;
@@ -81,6 +82,57 @@ const Bounty = {
     let h = '<hr style="border-color:#333"><b>오늘의 의뢰</b> <span class="muted">— 매일 갱신 · 하나마다 크레딧·재료·희귀 이상 장비, 모두 완료 시 영웅 장비</span>';
     for (const b of bt.list) h += `<div class="step-row${b.done ? '' : ' cur'}">${b.done ? '✓' : '▶'} ${BOUNTIES[b.k].text(b.need)} <b>${b.have} / ${b.need}</b></div>`;
     if (bt.bonus) h += '<div class="step-row">★ 보너스 수령 완료</div>';
+    return h;
+  },
+};
+
+// v1.15 주간 도전: 주(월요일)마다 3개 — 하나마다 영웅 장비, 셋 다 끝내면 전설 장비 확정
+const WEEKLIES = {
+  elite:    { text: n => `엘리트 몬스터 ${n}마리 처치`, n: [25, 35], minLv: 5 },
+  events:   { text: n => `출격 사건 ${n}개 완료 (보급·생존자·금고·둥지·발전기)`, n: [5, 7], minLv: 3 },
+  fieldBoss:{ text: n => `필드 보스 ${n}마리 처치`, n: [3, 4], minLv: 6 },
+  extract:  { text: n => `출격 후 탈출 ${n}회 성공`, n: [8, 10], minLv: 1 },
+  mutator:  { text: () => '위협 6 이상 어설트 클리어 (변형 규칙)', n: [1, 1], minLv: 22 },
+  kill:     { text: n => `적 ${n}마리 처치`, n: [600, 800], minLv: 1 },
+};
+const Weekly = {
+  refresh() {
+    const p = G.player, wk = weekNo();
+    if (p.weekly && p.weekly.week === wk) return;
+    const keys = Object.keys(WEEKLIES).filter(k => p.level >= WEEKLIES[k].minLv), list = [];
+    while (list.length < 3 && keys.length) { const k = keys.splice(Math.floor(Math.random() * keys.length), 1)[0], b = WEEKLIES[k]; list.push({ k, need: randInt(b.n[0], b.n[1]), have: 0, done: false }); }
+    p.weekly = { week: wk, list, bonus: false };
+    if (G.running) log(`${ICON('bounty')} 이번 주 도전이 갱신되었습니다. (임무 창 J)`, '#ffb07a');
+  },
+  on(kind, v = 1) {
+    const p = G.player; if (!p || !p.weekly) return;
+    for (const b of p.weekly.list) {
+      if (b.done || b.k !== kind) continue;
+      if (kind === 'mutator' && v < 6) continue;
+      b.have = Math.min(b.need, b.have + (kind === 'mutator' ? 1 : v));
+      if (b.have >= b.need) this.complete(b);
+    }
+  },
+  complete(b) {
+    const p = G.player, lv = p.level; b.done = true;
+    p.credits += lv * 300; Workshop.gain(10, 4);
+    const it = randomGear(lv, 1.5, 3); if (!addItem(it)) G.drops.push({ x: p.x, y: p.y, kind: 'item', t: 0, item: it });
+    UI.toast('주간 도전 완료', `${WEEKLIES[b.k].text(b.need)} · +${fmt(lv * 300)}₵ · ${itemName(it)}`);
+    log(`${ICON('bounty')} 주간 도전 완료: ${WEEKLIES[b.k].text(b.need)} → ${itemName(it)}`, '#ffb07a');
+    if (!p.weekly.bonus && p.weekly.list.every(x => x.done)) {
+      p.weekly.bonus = true;
+      const big = randomGear(lv, 2, 4); if (!addItem(big)) G.drops.push({ x: p.x, y: p.y, kind: 'item', t: 0, item: big });
+      Workshop.gain(20, 10); SFX.play('legend');
+      UI.toast('★ 주간 도전 전부 완료 ★', `전설 장비: ${itemName(big)}`);
+    }
+    saveGame();
+  },
+  panelHtml() {
+    const w = G.player.weekly; if (!w) return '';
+    const left = Math.ceil(((weekNo() + 1) * 7 - 3) - Date.now() / 864e5);
+    let h = `<hr style="border-color:#333"><b style="color:#ffb07a">이번 주 도전</b> <span class="muted">— ${left}일 남음 · 하나마다 영웅 장비, 모두 완료 시 전설 장비</span>`;
+    for (const b of w.list) h += `<div class="step-row${b.done ? '' : ' cur'}">${b.done ? '✓' : '▶'} ${WEEKLIES[b.k].text(b.need)} <b>${b.have} / ${b.need}</b></div>`;
+    if (w.bonus) h += '<div class="step-row">★ 전설 보상 수령 완료</div>';
     return h;
   },
 };

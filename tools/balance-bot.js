@@ -10,7 +10,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1280, height: 720 } });
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
   await pg.goto('file://' + require('path').resolve(__dirname, '../index.html')); await pg.evaluate(() => localStorage.clear()); await pg.reload();
-  await pg.click('#btn-new'); await pg.waitForTimeout(300);
+  await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
   await pg.evaluate(([DODGE, START, FIXMAP]) => {
     Settings.tips = false;
     const p = G.player;

@@ -132,6 +132,7 @@ function startGame(save, name) {
     G.player.hp = PlayerStats.maxHp(G.player);
     log('대붕괴 20년 후, 서울. 시청역 생존자 캠프에서 눈을 떴다.', '#e0b23a');
     G.autoStory = true; // v0.16: 1장을 바로 시작 (캠프 대화 없이)
+    G.welcome = true; // v1.15 첫 플레이 안내
   }
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
@@ -142,11 +143,14 @@ function startGame(save, name) {
       for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || [])]) if (it && it.kind === 'weapon' && R[it.key] && !it.v181) { it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v181 = true; } }
     P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
   Bounty.refresh(); // v0.14 일일 의뢰
+  Weekly.refresh(); // v1.15 주간 도전
+  Journal.ensure(P);
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
   UI.buildHotbar();
   UI.refreshAll();
+  if (G.welcome) { G.welcome = false; setTimeout(() => UI.welcome(), 600); }
   if (G.autoStory) { G.autoStory = false; Story.start(G.player); log('조작: WASD 이동 · 마우스 조준·사격 · Space 구르기(무적) · R 재장전 · 1~4 스킬', '#8cf'); }
   saveGame();
 }
@@ -397,7 +401,7 @@ function addItem(it) {
     if (ex) { ex.count += it.count; UI.refreshInventory(); return true; }
   }
   if (inv.length >= Camp.bagSize()) return false;
-  inv.push(it);
+  inv.push(it); Journal.onItem(it); // v1.15 도감
   UI.refreshInventory();
   return true;
 }
@@ -520,6 +524,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (perk('apex') && bigE) dmg *= 1.2; // v1.11
   if (setOn('rad', 3) && bigE) dmg *= 1.15; // v1.12 방사능 사냥꾼 3세트
   if ((e.markT || 0) > G.time) dmg *= 1.25; // v1.12 매의 표식
+  if (e.armorMut) dmg *= 0.8; // v1.15 변형 규칙: 장갑
   if (w && w.unique === 'hawk') e.markT = G.time + 5;
   if (w && w.unique === 'viper') e.slowT = G.time + 2;
   dmg = Math.max(1, Math.round(dmg));
@@ -625,9 +630,11 @@ function killEnemy(e) {
   G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.3, color: FACTION[e.type] === 'machine' ? '#cde' : '#fff', r: e.r * 2.5 });
   if (e.type === 'brute') hitstop(0.06);
   if (e.def.boss) hitstop(0.3);
+  if (e.volatile) Monsters.strike(e.x, e.y, 70, 0.8, e.dmg * 1.5, 'rgba(255,120,40,'); // v1.15 변형 규칙: 폭발
   killFx(e);
   // 퀘스트
   Story.onKill(e);
+  Journal.onKill(e); // v1.15 도감
   Bounty.onKill(e); // v0.14 일일 의뢰
   // 드랍
   const dropAt = (kind, extra) => G.drops.push({ x: e.x + rand(-14, 14), y: e.y + rand(-14, 14), kind, t: 0, ...extra });
@@ -734,6 +741,7 @@ function updateEnemies(dt) {
   for (const e of G.enemies) {
     if (e.hp <= 0) continue;
     if (e.nest) { RaidEvents.nestTick(e, dt, dist(e, p)); continue; } // v1.10 변이 둥지 (움직이지 않음)
+    if (e.regenMut) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.02 * dt); // v1.15 변형 규칙: 재생
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt; e.revealT = (e.revealT || 0) - dt;
     const d = dist(e, p);
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); Monsters.interrupt(e); continue; } // 경직: 이동·공격 불가, 준비 중인 공격 끊김
@@ -1077,6 +1085,7 @@ function update(dt) {
   Scavenge.update(dt);
   RaidEvents.update(dt); // v1.10
   Gadgets.update(dt); // v1.14 지뢰
+  Journal.update(dt); // v1.15 업적
   Nav.update(dt);
   updateEnemies(dt);
   Assault.update(dt);
@@ -1106,7 +1115,7 @@ function update(dt) {
     log(z === 0 ? `${zn.name} — 안전 지대` : `${zn.name} 진입 (권장 Lv${zn.lvl[0]}~${zn.lvl[1]})`, z === 0 ? '#8f8' : '#fc8');
     if (zn.desc) log(`  ${zn.desc} · 특산: ${zn.gearText}`, '#c9b27a');
   }
-  G.darkness = lerp(G.darkness, (ZONES[z].dark + (G.inside ? 0.15 : 0)) * (armorLegend('nightVision') ? 0.4 : 1), dt * 1.5); // v1.12 야간 투시 // 실내는 조금 어둡게
+  G.darkness = lerp(G.darkness, (ZONES[z].dark + (G.inside ? 0.15 : 0) + (G.assault && (G.assault.muts || []).includes('dark') ? 0.3 : 0)) * (armorLegend('nightVision') ? 0.4 : 1), dt * 1.5); // v1.12 야간 투시 // 실내는 조금 어둡게
 
   // 카메라
   G.shake *= Math.pow(0.002, dt);
@@ -1115,7 +1124,7 @@ function update(dt) {
   G.cam.y = (p.x + p.y) * ISO_K / 2 - VH / 2 - 20 + rand(-G.shake, G.shake);
 
   G.saveT += dt;
-  if (G.saveT > 20) { G.saveT = 0; Bounty.refresh(); saveGame(); } // 자정이 지나면 의뢰 갱신
+  if (G.saveT > 20) { G.saveT = 0; Bounty.refresh(); Weekly.refresh(); saveGame(); } // 자정이 지나면 의뢰 갱신
 }
 
 // ---------------- 루프 ----------------

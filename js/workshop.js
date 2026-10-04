@@ -105,6 +105,7 @@ const Workshop = {
   salvage(it) {
     const p = G.player;
     if (Object.values(p.equip).includes(it)) return;
+    if (it.locked) { log('잠긴 장비는 분해할 수 없습니다. (가방에서 잠금 해제)', '#f88'); return; } // v1.15
     if ((it.rarity >= 3 || it.plus >= 3) && !confirm(`${itemName(it)}을(를) 분해할까요? 되돌릴 수 없습니다.`)) return;
     const y = this.salvageYield(it);
     removeItem(it); this.gain(y.scrap, y.chip, `분해: ${itemName(it)}`);
@@ -112,7 +113,7 @@ const Workshop = {
   },
   // 일반·고급 일괄 분해 (▲ 표시·강화된 장비 제외, 상점 일괄 판매와 같은 기준)
   bulkSalvage() {
-    const p = G.player, junk = p.inventory.filter(it => it.kind !== 'cons' && it.rarity <= 1 && !it.plus && !isUpgrade(p, it));
+    const p = G.player, junk = p.inventory.filter(it => it.kind !== 'cons' && it.rarity <= 1 && !it.plus && !it.locked && !it.set && !isUpgrade(p, it));
     if (!junk.length) { log('분해할 일반·고급 장비가 없습니다. (▲ 표시·강화된 장비는 제외)', '#aaa'); return; }
     let s = 0, c = 0;
     for (const it of junk) { const y = this.salvageYield(it); s += y.scrap; c += y.chip; removeItem(it); }

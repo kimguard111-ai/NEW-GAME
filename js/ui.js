@@ -204,6 +204,7 @@ const UI = {
       if (it.isNew) mark += '<span class="mark new">N</span>';
     }
     const nc = it.unique ? ' style="color:#ff5aa0"' : it.set ? ` style="color:${SETS[it.set].color}"` : ''; // v1.12 고유 · 세트
+    if (it.locked) mark += `<span class="mark lock">${ICON('lock')}</span>`; // v1.15
     return `${mark}<span class="icon">${itemIcon(it)}</span><span class="r${r}"${nc}>${itemName(it)}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
   },
 
@@ -223,6 +224,7 @@ const UI = {
         + `<br><span class="muted">방어</span> ${PlayerStats.def(p)} (-${Math.round(PlayerStats.dmgReduce(p) * 100)}%)<br><span class="muted">DPS</span> ${w ? Math.round(weaponDps(p, w)) : 0}`
         + `<br><span class="muted">₵</span> ${fmt(p.credits)} · ${ICON('scrap')}${p.mats.scrap} ${ICON('chip')}${p.mats.chip}`;
       $('bag-count').textContent = `${p.inventory.length} / ${Camp.bagSize()}`;
+      $('btn-sort').onclick = () => UI.sortBag(); // v1.15
     }
     const grid = $('inv-grid');
     grid.innerHTML = '';
@@ -235,6 +237,13 @@ const UI = {
     }
     if (UI.selected && !p.inventory.includes(UI.selected) && !Object.values(p.equip).includes(UI.selected)) UI.selected = null;
     UI.renderDetail();
+  },
+
+  // v1.15 가방 정렬: 소모품 → 무기 → 방어구 → 헬멧, 각각 고유·세트 → 등급 → 강화 → 레벨 높은 순
+  sortBag() {
+    const p = G.player, ord = { cons: 0, weapon: 1, armor: 2, helmet: 3 };
+    p.inventory.sort((a, b) => (ord[a.kind] - ord[b.kind]) || ((b.unique ? 2 : b.set ? 1 : 0) - (a.unique ? 2 : a.set ? 1 : 0)) || ((b.rarity || 0) - (a.rarity || 0)) || ((b.plus || 0) - (a.plus || 0)) || ((b.ilvl || 0) - (a.ilvl || 0)) || String(a.key).localeCompare(String(b.key)));
+    SFX.play('ui'); UI.refreshInventory();
   },
 
   selectEquip(slot) {
@@ -273,6 +282,7 @@ const UI = {
       + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + `<br>${itemHtml(it)}${cmp}<div class="btns"></div>`;
     const btns = box.querySelector('.btns');
     const add = (label, fn) => { const b = document.createElement('button'); b.innerHTML = label; b.onclick = fn; btns.appendChild(b); };
+    if (it.kind !== 'cons') add(it.locked ? `${ICON('lock')} 잠금 해제` : `${ICON('lock')} 잠금`, () => { it.locked = !it.locked; SFX.play('ui'); UI.refreshInventory(); }); // v1.15 잠금: 판매·분해·버리기 막음
     if (equippedSlot) {
       add('장착 해제', () => UI.unequip(equippedSlot));
       return;
@@ -281,6 +291,7 @@ const UI = {
     if (it.kind === 'armor') add('장착', () => UI.equip(it, 'armor'));
     if (it.kind === 'helmet') add('장착', () => UI.equip(it, 'helmet'));
     if (it.kind === 'cons') add('사용', () => useItem(it));
+    if (it.locked) return; // 잠긴 장비는 판매·버리기 버튼 없음
     if (UI.shopOpen) add(`판매 (${fmt(sellPrice)}₵)`, () => UI.sell(it, sellPrice));
     add('버리기', () => { if (confirm(`${itemName(it)}을(를) 버릴까요?`)) { removeItem(it); UI.selected = null; UI.refreshInventory(); } });
   },
@@ -314,6 +325,7 @@ const UI = {
   },
 
   sell(it, price) {
+    if (it.locked) return; // v1.15
     removeItem(it);
     G.player.credits += price;
     log(`${itemName(it)} 판매: +${fmt(price)}₵`, '#ffd76a');
@@ -439,7 +451,9 @@ const UI = {
   refreshQuest() {
     if (!G.player) return;
     const p = G.player;
-    let h = '';
+    const jb = Journal.bodyHtml(); // v1.15 도감 · 업적 · 기록 탭
+    if (jb !== null) { $('quest-body').innerHTML = Journal.tabsHtml() + jb; Journal.bind($('quest-body')); return; }
+    let h = Journal.tabsHtml();
     CHAPTERS.forEach((c, i) => {
       const state = i < p.quest.ch ? '✓' : i === p.quest.ch ? (p.quest.active ? '▶' : p.level >= c.minLevel ? '!' : ICON('lock')) : ICON('lock');
       h += `<div class="ch-row${i === p.quest.ch ? ' cur' : ''}">${state} <b>${c.title}</b> <span class="muted">Lv${c.minLevel}+</span></div>`;
@@ -455,8 +469,8 @@ const UI = {
       });
     });
     if (Story.done(p)) h += '<hr style="border-color:#333">모든 장을 완료했습니다. 당신은 서울의 영웅입니다!<br><span class="muted">타이탄은 4분마다 부활합니다.</span>';
-    h += Bounty.panelHtml() + Assault.panelHtml(p);
-    $('quest-body').innerHTML = h;
+    h += Bounty.panelHtml() + Weekly.panelHtml() + Assault.panelHtml(p);
+    $('quest-body').innerHTML = h; Journal.bind($('quest-body'));
   },
 
   // ---------------- NPC ----------------
@@ -573,6 +587,19 @@ const UI = {
     UI.close('dialog'); UI.open('stats'); UI.buildHotbar(); UI.refreshInventory(); saveGame();
   },
 
+  // v1.15 첫 플레이 안내: 이 게임의 한 판 흐름 + 조작 (한 번만)
+  welcome() {
+    if (UI.anyOpen()) return;
+    const k = (pc, m) => IS_TOUCH ? m : pc;
+    UI.dialog('생존 수칙 — 시청역 캠프', `<div class="welcome">`
+      + `<b>1. 출격</b> 캠프의 <b>작전 장교 윤씨</b>에게서 맵을 골라 나간다.<br>`
+      + `<b>2. 뒤지고 싸운다</b> 노란 반짝임 = 뒤질 곳 ${k('[E]', '(E 버튼)')} · 미니맵 노란 ◆ = 사건 · 붉은 예고(「!」·원·선)가 보이면 ${k('Space', '구르기 버튼')}로 구르기.<br>`
+      + `<b>3. 탈출해야 내 것</b> 주운 장비·크레딧은 맵 끝 초록 ◎에 5초 머물러야 확정. 죽으면 그 자리에 시체 가방.<br>`
+      + `<b>4. 캠프에서 성장</b> 레벨 업 능력치·특성 ${k('(C)', '(능력치 버튼)')} · 정비공 강화 · 대장 한씨의 캠프 시설 · 창고에 귀중품 보관.<br><br>`
+      + `<span class="muted">${k('WASD 이동 · 마우스 조준·클릭 공격 · R 재장전 · Q 무기 교체 · 1~4 스킬 · 5 구급상자 · 6/7 소모품 · I 가방 · J 임무', '왼쪽 끌기 이동 · 오른쪽 끌기 조준·공격 · 아래 칸 스킬·소모품')}</span></div>`,
+      [['출발하자', () => UI.close('dialog')]]);
+  },
+
   captainDialog(npc) {
     const p = G.player, c = Story.chapter(p), bye = ['닫기', () => UI.close('dialog')], fac = ['캠프 시설', () => Camp.open()]; // v1.13
     if (!c) {
@@ -636,7 +663,7 @@ const UI = {
   // 일반·고급 장비 일괄 판매 (파밍 중 인벤토리 정리)
   sellJunk() {
     const p = G.player;
-    const junk = p.inventory.filter(it => it.kind !== 'cons' && it.rarity <= 1 && !it.plus && !isUpgrade(p, it));
+    const junk = p.inventory.filter(it => it.kind !== 'cons' && it.rarity <= 1 && !it.plus && !it.locked && !it.set && !isUpgrade(p, it));
     if (!junk.length) { log('판매할 일반·고급 장비가 없습니다. (▲ 표시·강화된 장비는 제외)', '#aaa'); return; }
     let total = 0;
     for (const it of junk) { total += itemSellPrice(it); removeItem(it); }

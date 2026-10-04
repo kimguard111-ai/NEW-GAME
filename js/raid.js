@@ -91,6 +91,7 @@ const Raid = {
     const p = G.player, r = p.raid;
     const items = this.allItems().filter(it => it.raid);
     for (const it of items) delete it.raid;
+    Journal.onExtract(r, r.credits); // v1.15 기록
     p.raid = null;
     this.toCamp();
     this.summary(true, r, items);

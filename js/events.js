@@ -163,7 +163,7 @@ const RaidEvents = {
       UI.toast('발전기 가동', '전원 탈출 지점이 열렸다 (미니맵 초록 ◎)');
     }
     SFX.play('item', 3); burst(e.x, e.y, '#ffd76a', 14, 140, 0.5);
-    Bounty.on('crate');
+    Bounty.on('crate'); Weekly.on('events'); Journal.onEvent(); // v1.15
   },
 
   // ---------- 매 프레임 ----------
@@ -218,6 +218,7 @@ const RaidEvents = {
   // 둥지 처치 보상 (killEnemy)
   onKill(e, dropAt) {
     if (!e.nest) return;
+    Weekly.on('events'); Journal.onEvent(); // v1.15
     dropAt('item', { item: randomGear(e.level, 1.2, 1, this.gearBias()) });
     dropAt('credits', { amount: e.level * 50 });
     for (const k of e.kids) if (k.hp > 0) { k.hp = 0; killFx(k); burst(k.x, k.y, '#6a1a2a', 10, 120, 0.4); }

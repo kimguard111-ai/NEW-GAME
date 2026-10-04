@@ -448,7 +448,12 @@ const Sprites = {
     const once = /attack|hit|death/.test(anim);
     const f = once ? Math.min(n - 1, Math.floor(t * fps)) : Math.floor(t * fps) % n;
     const sc = (ART.height[key] || ART.height[key.split('_')[0]] || 44) / (s.cell * ART.charFill);
-    const hd = s.heads && s.heads[anim] && s.heads[anim][f];
+    let hd = s.heads && s.heads[anim] && s.heads[anim][f];
+    // v1.15 무기를 머리 위로 휘두르는 프레임은 가공 도구가 무기 끝을 머리로 잡기도 함 → 기본 자세 머리에서 8px 넘게 벗어나면 기본 자세 x
+    if (hd && /attack|hit/.test(anim) && s.heads.idle) {
+      if (s.headRefX === undefined) { const xs = s.heads.idle.map(h => h[0]).concat((s.heads.walk || []).map(h => h[0])).sort((a, b) => a - b); s.headRefX = xs[xs.length >> 1]; }
+      if (Math.abs(hd[0] - s.headRefX) > 8) hd = [s.headRefX, hd[1]];
+    }
     return { s, d, anim, row, f, sc, flip: d.x < 0, head: hd ? { x: hd[0], y: hd[1], w: s.headW || 20 } : null };
   },
   draw(key, anim, t, sx, sy, faceA, flash) {
