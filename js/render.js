@@ -533,7 +533,7 @@ function drawWeaponOverlay(sx, sy, w, p, fr) {
   if (Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게
   if (art && art.ready) {
     const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height]; // rect: 한 장 안의 위치
-    const sc = len / rw, grip = art.grip ?? ART.weaponGrip[w.key] ?? 0.3, h = rh * sc * ART.weaponThick;
+    const sc = len / rw, grip = art.grip ?? ART.weaponGrip[w.key] ?? 0.3, h = rh * sc * (ART.weaponThickArt ?? 1); // v1.7.6 그림은 원래 두께 그대로 (과장은 코드 총용)
     ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 2; // 어두운 테두리로 몸·바닥과 구분
     ctx.drawImage(art.img, rx, ry, rw, rh, -rw * sc * grip, -h / 2, rw * sc, h);
   } else {
