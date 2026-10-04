@@ -4,7 +4,7 @@
 
 const ICON_PX = 96;
 const Icons = {
-  cache: {}, urls: {},
+  cache: {}, urls: {}, code: {},
   cv(key) {
     // v1.7.1 무기·헬멧 그림(assets.js)을 등록하면 아이콘도 그 그림으로 (읽히기 전엔 코드 아이콘)
     const art = typeof ART !== 'undefined' && (ART.weapons[key] || ART.helmets[key]);
@@ -15,15 +15,35 @@ const Icons = {
     const c = document.createElement('canvas'); c.width = c.height = ICON_PX; c.art = useArt;
     const g = c.getContext('2d');
     if (useArt) {
-      const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height], sc = Math.min(ICON_PX * 0.92 / rw, ICON_PX * 0.92 / rh);
-      g.drawImage(art.img, rx, ry, rw, rh, (ICON_PX - rw * sc) / 2, (ICON_PX - rh * sc) / 2, rw * sc, rh * sc);
+      const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height];
+      const tilt = rw > rh * 2 ? -0.6 : 0, cs = Math.abs(Math.cos(tilt)), sn = Math.abs(Math.sin(tilt)); // 긴 무기는 비스듬히 (칸을 넓게 씀)
+      const sc = Math.min(ICON_PX * 0.96 / (rw * cs + rh * sn), ICON_PX * 0.96 / (rw * sn + rh * cs));
+      g.translate(ICON_PX / 2, ICON_PX / 2); g.rotate(tilt);
+      g.drawImage(art.img, rx, ry, rw, rh, -rw * sc / 2, -rh * sc / 2, rw * sc, rh * sc);
     } else {
       g.scale(ICON_PX / 32, ICON_PX / 32); g.lineJoin = 'round'; g.lineCap = 'round';
       (ICON_DRAW[key] || ICON_DRAW.unknown)(icoKit(g));
     }
     return (this.cache[key] = c);
   },
-  url(key) { const c = this.cv(key); return (this.urls[key] && this.urls[key].art === c.art) ? this.urls[key].u : (this.urls[key] = { u: c.toDataURL(), art: c.art }).u; },
+  url(key) {
+    let c = this.cv(key);
+    if (c.art && this.noExport) c = this.codeCv(key);
+    if (this.urls[key] && this.urls[key].art === c.art) return this.urls[key].u;
+    let u;
+    try { u = c.toDataURL(); }
+    catch (e) { // file:// 로 열면 그림이 다른 출처로 취급돼 내보내기 금지 → HTML 아이콘은 코드 그림 (게임 화면은 그림 그대로)
+      this.noExport = true; c = this.codeCv(key); u = c.toDataURL();
+    }
+    return (this.urls[key] = { u, art: c.art }).u;
+  },
+  codeCv(key) { // 코드로 그린 아이콘만 (그림 무시)
+    if (this.code[key]) return this.code[key];
+    const c = document.createElement('canvas'); c.width = c.height = ICON_PX; c.art = false;
+    const g = c.getContext('2d'); g.scale(ICON_PX / 32, ICON_PX / 32); g.lineJoin = 'round'; g.lineCap = 'round';
+    (ICON_DRAW[key] || ICON_DRAW.unknown)(icoKit(g));
+    return (this.code[key] = c);
+  },
   // 정적 HTML 의 <span data-ico="key"> 를 아이콘으로 채움
   fill(root = document) { for (const el of root.querySelectorAll('[data-ico]')) if (!el.firstChild) el.innerHTML = ICON(el.dataset.ico); },
   // 게임 화면(캔버스)에 그리기: 중심 (x, y), 크기 s(px)
