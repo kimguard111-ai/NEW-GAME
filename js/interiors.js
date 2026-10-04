@@ -2,7 +2,7 @@
 // 모든 건물이 아니라 큰 단독 건물 일부(상가)만 입장 가능 — 출입문 위 간판으로 구분
 
 const CRATE_RESTOCK = 600; // 상자 재보급 (초)
-const SHOP_RESPAWN = 300;  // 실내 적 재등장 (초)
+const SHOP_RESPAWN = 300;  // (v1.16부터 쓰지 않음: 실내 적은 출격당 한 번)
 
 const Interiors = {
   // 플레이어가 지금 들어가 있는 건물 (실내 바닥·출입문 위)
@@ -16,8 +16,8 @@ const Interiors = {
   enter(b) {
     const p = G.player, z = World.zoneIndex(b.cx, b.cy), zone = ZONES[z];
     const ready = b.crates.filter(c => G.time - c.openT > CRATE_RESTOCK).length;
-    if (G.time - b.spawnT > SHOP_RESPAWN && zone.spawns.length) { // 실내 적 (출입문에서 먼 곳)
-      b.spawnT = G.time;
+    if (!b.spawned && zone.spawns.length) { // 실내 적 (출입문에서 먼 곳) · v1.16 출격당 한 번 (재등장 없음)
+      b.spawned = true; b.spawnT = G.time;
       const n = 2 + Math.floor(Math.random() * 3);
       for (let i = 0, tries = 0; i < n && tries < 40; tries++) {
         const tx = b.x0 + 1 + Math.floor(Math.random() * (b.x1 - b.x0 - 1)), ty = b.y0 + 1 + Math.floor(Math.random() * (b.y1 - b.y0 - 1));

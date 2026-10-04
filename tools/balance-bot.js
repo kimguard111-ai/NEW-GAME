@@ -45,6 +45,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     };
     // 캠프 정비: 장착·판매·보충·강화·능력치
     B.camp = () => {
+      for (const s of SKILLS) if (p.level >= s.lvl && !p.skills[s.id] && p.credits >= s.price + 200) { p.credits -= s.price; p.skills[s.id] = true; B.skillBuy = (B.skillBuy || 0) + s.price; } // v1.16 스킬은 상인에게서 삼
       UI.openShop(); // 상인 진열품 중 더 좋은 것 구매 (사람처럼)
       for (const it of G.shopStock) if (p.level >= itemReqLevel(it) && isUpgrade(p, it) && p.credits >= it.value + 300) { const c = JSON.parse(JSON.stringify(it)); c.id = nextItemId++; UI.buy(c, it.value); B.shop = (B.shop || 0) + it.value; }
       for (const it of [...p.inventory]) if (it.kind !== 'cons' && p.level >= itemReqLevel(it) && isUpgrade(p, it)) UI.equip(it, it.kind === 'weapon' ? (WEAPONS[it.key].melee ? 'w2' : 'w1') : it.kind);
@@ -54,6 +55,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       while (p.reserve < 400 && p.credits >= 45 + 50) { p.reserve += 120; p.credits -= 45; B.bought += 45; }
       for (const slot of ['w1', 'armor', 'helmet']) { const it = p.equip[slot]; let k = 0; while (it && it.plus < 6 && p.credits > enhanceCost(it) * 2 && k++ < 10) { UI.doEnhance(it); B.enh++; } }
       while (p.statPoints > 0) { p.stats[['dex', 'vit', 'agi'][p.statPoints % 3]]++; p.statPoints--; }
+      PERK_TIERS.forEach((t, i) => { if (p.level >= t.lvl && !p.perks[i]) p.perks[i] = ['thickSkin', 'runner', 'steadyAim', 'lastStand', 'secondWind', 'apex'][i]; }); // v1.16 봇도 특성 선택 (생존 위주)
       UI.closeAll();
     };
     B.deploy = () => {
@@ -104,7 +106,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
         const a = angleTo(p, best);
         if (!input.down) { if (!World.move(p, Math.cos(a) * sp, Math.sin(a) * sp)) World.move(p, Math.cos(a + 1.2) * sp, Math.sin(a + 1.2) * sp); }
         else if (bd < 120 && !W.melee) World.move(p, -Math.cos(a) * sp * 0.8, -Math.sin(a) * sp * 0.8);
-        for (let i = 0; i < 4; i++) if (p.level >= SKILLS[i].lvl && p.skillCd[i] <= 0 && bd < 320 && i !== 2) useSkill(i);
+        for (let i = 0; i < 4; i++) if (p.skills[SKILLS[i].id] && p.skillCd[i] <= 0 && bd < 320 && i !== 2) useSkill(i);
       } else {
         input.down = false;
         const dr = !leave && G.drops.filter(d => d.kind === 'item' && dist(d, p) < 450 && World.lineOfSight(p, d)).sort((a, b2) => dist(a, p) - dist(b2, p))[0];
@@ -118,12 +120,18 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
           else if (!G.search) { // 근처 안 뒤진 곳으로, 없으면 배회
             const cc = Scavenge.list.filter(q => !q.looted && dist(q, p) < 500)[0];
             if (cc) { const a = angleTo(p, cc); World.move(p, Math.cos(a) * sp, Math.sin(a) * sp); }
-            else { B.wa = (B.wa ?? rand(0, TAU)) + rand(-0.15, 0.15); if (!World.move(p, Math.cos(B.wa) * sp, Math.sin(B.wa) * sp)) B.wa += 1.5; }
+            else { // v1.16 맵 인구가 정해져 있으니 남은 적(가장 가까운 적 · 아직 안 깨어난 구역) 쪽으로
+              const fe = G.enemies.filter(e => e.hp > 0 && !e.def.boss).sort((a, b2) => dist(a, p) - dist(b2, p))[0];
+              const pc = Pop.cells.filter(c => c.n > 0).sort((a, b2) => dist(a, p) - dist(b2, p))[0];
+              const tgt = fe && (!pc || dist(fe, p) < dist(pc, p) + 300) ? fe : pc;
+              if (tgt) { const key = 'hunt' + Math.round(tgt.x / 200) + ',' + Math.round(tgt.y / 200); if (B.fieldKey !== key) { B.field = B.makeField(tgt.x, tgt.y); B.fieldKey = key; } B.goField(B.field, sp); }
+              else { B.wa = (B.wa ?? rand(0, TAU)) + rand(-0.15, 0.15); if (!World.move(p, Math.cos(B.wa) * sp, Math.sin(B.wa) * sp)) B.wa += 1.5; }
+            }
           }
         }
       }
       if (G.grave && dist(G.grave, p) < 45 && !G.search) Scavenge.start({ grave: true });
-      if (p.hp < mh * 0.4) { if (p.skillCd[2] <= 0 && p.level >= 6) useSkill(2); else quickMedkit(); }
+      if (p.hp < mh * 0.4) { if (p.skillCd[2] <= 0 && p.skills.heal) useSkill(2); else quickMedkit(); }
       while (p.statPoints > 0) { p.stats[['dex', 'vit', 'agi'][p.statPoints % 3]]++; p.statPoints--; }
       const L0 = p.level;
       update(1 / 30);
@@ -159,6 +167,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       p.level = START; p.statPoints = (START - 1) * 3; p.quest = { ch: 6, step: 0, active: false, progress: 0 }; p.finalEnd = p.ended = true;
       while (p.statPoints > 0) { p.stats[['dex', 'vit', 'agi'][p.statPoints % 3]]++; p.statPoints--; }
       p.credits = 1e7; G.shopLevel = -1; UI.openShop(); for (const it of G.shopStock) if (isUpgrade(p, it)) { const c = JSON.parse(JSON.stringify(it)); c.id = nextItemId++; c.plus = 4; addItem(c); UI.equip(c, c.kind === 'weapon' ? (WEAPONS[c.key].melee ? 'w2' : 'w1') : c.kind); }
+      for (const s of SKILLS) p.skills[s.id] = true; // v1.16 시나리오: 스킬 모두 배운 상태
       p.credits = 5000; UI.closeAll();
     }
     if (FIXMAP) B.mapFor = () => FIXMAP;

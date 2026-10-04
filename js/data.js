@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.15';
+const GAME_VERSION = 'v1.16';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -173,7 +173,7 @@ const ENEMIES = {
   sentry:  { name: '보안 포탑', hp: 160, dmg: 8, speed: 0, r: 14, exp: 38, weight: 99, color: '#9aa4b0', atkCd: 1.0, aggro: 520,
              ranged: true, range: 480, fireCd: 1.5, burst: 3, bulletSpeed: 520, turret: true },
   // v1.6 강남 · 잠실
-  merc:    { name: '블랙선 용병', hp: 110, dmg: 6, speed: 96, r: 12, exp: 40, weight: 1.1, color: '#2a2e36', atkCd: 1.0, aggro: 500,
+  merc:    { name: '블랙선 용병', hp: 110, dmg: 5, /* v1.16 6→5: 봇 측정 강남 사망률 90~100% (사망 원인 1위) */ speed: 96, r: 12, exp: 40, weight: 1.1, color: '#2a2e36', atkCd: 1.0, aggro: 500,
              ranged: true, range: 360, fireCd: 2.8, burst: 3, bulletSpeed: 480, nade: true }, // v1.7 하향: 피해 11→7 · 사격 간격 1.9→2.4 · 사거리 420→360 · 탄속 560→480  // 3점사 · 가끔 수류탄
   shield:  { name: '방패 돌격병', hp: 170, dmg: 14, speed: 78, r: 14, exp: 48, weight: 2.2, color: '#3a3e46', atkCd: 1.6, aggro: 460, shield: true }, // 정면 피해 65% 감소 · 느리게 돌아섬 · v1.7 하향 (체력 200→170 · 피해 20→14 · 공격 간격 1.3→1.6)
   stalker: { name: '은신 변이체', hp: 120, dmg: 16, /* v1.7 21→16: 위협은 은신, 피해까지 최고일 필요 없음 */ speed: 150, r: 12, exp: 46, weight: 0.9, color: '#4a3a5a', atkCd: 0.9, aggro: 420, pounce: true, cloak: true }, // 가까이 오거나 맞기 전엔 거의 안 보임
@@ -243,10 +243,11 @@ const LANDMARKS = [
 
 const SKILLS = [
 // stat: 스킬을 강화하는 능력치 (v0.3)
-  { id: 'rapid',   name: '집중 사격', icon: 'rapid', lvl: 1,  cd: 14, stat: 'agi' },
-  { id: 'grenade', name: '수류탄',   icon: 'grenade', lvl: 3,  cd: 8,  stat: 'dex' },
-  { id: 'heal',    name: '응급 처치', icon: 'heal',  lvl: 6,  cd: 22, stat: 'vit' },
-  { id: 'adren',   name: '아드레날린', icon: 'adren', lvl: 10, cd: 40, stat: 'str' },
+// v1.16 스킬은 레벨만 되면 생기지 않고 암시장 상인 박씨에게서 크레딧으로 배움 (price) · 갈래도 따로 삼 (modPrice)
+  { id: 'rapid',   name: '집중 사격', icon: 'rapid', lvl: 1,  cd: 14, stat: 'agi', price: 200,  modPrice: 2500 },
+  { id: 'grenade', name: '수류탄',   icon: 'grenade', lvl: 3,  cd: 11, /* v1.16 8→11 */ stat: 'dex', price: 1200, modPrice: 3500 },
+  { id: 'heal',    name: '응급 처치', icon: 'heal',  lvl: 6,  cd: 22, stat: 'vit', price: 2000, modPrice: 3500 },
+  { id: 'adren',   name: '아드레날린', icon: 'adren', lvl: 10, cd: 40, stat: 'str', price: 5000, modPrice: 5000 },
 ];
 
 // v1.11 특성: 이 레벨이 되면 3개 중 1개 선택 (총 6개). 의무병의 능력치 초기화 때 함께 초기화

@@ -23,6 +23,7 @@ const TIPS = {
   perk:      () => '특성을 고를 수 있습니다! 능력치 창(C) 가운데의 특성 칸에서 하나를 고르세요. 스킬마다 갈래(오른쪽 버튼 2개)도 캠프에서 고를 수 있습니다.',
   camp:      () => '캠프 시설을 지을 수 있습니다! 생존자 대장 한씨 → 「캠프 시설」. 의무실·사격장·창고 증축·작업대·무전실 — 크레딧과 고철·전자 부품이 듭니다.',
   gadget:    () => `투척물·보조 소모품을 얻었습니다! ${tipKey('6', '6번 칸')} 투척(화염병·섬광탄·지뢰) · ${tipKey('7', '7번 칸')} 보조(자극제·방탄판). 종류 바꾸기: ${tipKey('T / Y', '칸 모서리 ↻')}`,
+  skillshop: () => '스킬은 캠프의 암시장 상인 박씨 → 「스킬 교범」에서 크레딧으로 배웁니다. 레벨이 되면 새 스킬이 열리고, 스킬마다 갈래 2개도 따로 살 수 있어요.',
   extract:   () => '이번 출격에서 주운 장비·크레딧은 맵 끝의 초록 ◎ 탈출 지점에 5초 머물러야 확정됩니다. 죽으면 그것만 잃어요.',
 };
 
@@ -46,6 +47,7 @@ const Tips = {
     if (!p || p.dead || !Settings.tips) return;
     const near = (e, r) => e.hp > 0 && dist(e, p) < r;
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
+    if (World.map === 'camp' && !p.tips.includes('skillshop') && SKILLS.some(s => p.level >= s.lvl && !p.skills[s.id] && p.credits >= s.price)) return this.show('skillshop');
     if (World.map === 'camp' && p.level >= 5 && p.credits >= FAC_COST[0].credits && !Object.values(p.camp || {}).some(Boolean) && !p.tips.includes('camp')) return this.show('camp');
     if (World.map === 'camp' && p.level >= 1) { this.show('deploy'); if (World.map === 'camp') return; }
     if (p.raid && p.raid.t > 4) this.show('extract');

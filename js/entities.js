@@ -203,7 +203,7 @@ function newPlayer(name) {
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
-    perks: [], skillMods: {}, camp: {}, // v1.13 캠프 시설 단계
+    perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, // v1.16 배운 스킬 · 산 갈래 // v1.13 캠프 시설 단계
     // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
     bossKills: 0, totalKills: 0, pity: 0, respecs: 0, found: [], radT: 0,
@@ -256,7 +256,7 @@ const statUp = (p, k) => Math.max(0, p.stats[k] - 5);
 const SkillCalc = {
   rapidDur: p => (4 + Math.min(4, statUp(p, 'agi') * 0.1)) * (smod('rapid') === 'b' ? 0.75 : 1),
   grenadeR: p => (110 + Math.min(50, statUp(p, 'dex') * 2)) * (perk('demolition') ? 1.3 : 1),
-  grenadeDmg: p => (45 + p.level * 9) * PlayerStats.gunMul(p),
+  grenadeDmg: p => (30 + p.level * 6) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5), // v1.16 너프: 45+레벨×9 · 사격 능력치 전부 → 30+레벨×6 · 절반만
   healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006),
   adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.5 : 1),
 };

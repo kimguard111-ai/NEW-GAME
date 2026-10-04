@@ -145,6 +145,12 @@ function startGame(save, name) {
   Bounty.refresh(); // v0.14 일일 의뢰
   Weekly.refresh(); // v1.15 주간 도전
   Journal.ensure(P);
+  if (save && !save.p.skills) { // v1.16 이전 세이브: 지금 레벨로 쓰던 스킬·고른 갈래는 그대로 배운 것으로
+    P.skills = {}; P.smodOwned = {};
+    for (const s of SKILLS) if (P.level >= s.lvl) P.skills[s.id] = true;
+    for (const [k, v] of Object.entries(P.skillMods || {})) if (v) P.smodOwned[k + '_' + v] = true;
+  }
+  P.smodOwned = P.smodOwned || {};
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -347,7 +353,8 @@ function explode(x, y, dmg, r, opts = {}) {
 
 function useSkill(i) {
   const p = G.player, s = SKILLS[i];
-  if (p.level < s.lvl) { log(`${s.name}: Lv${s.lvl}에 습득합니다.`, '#aaa'); return; }
+  if (p.level < s.lvl) { log(`${s.name}: Lv${s.lvl}부터 배울 수 있습니다 (암시장 상인 박씨).`, '#aaa'); return; }
+  if (!p.skills[s.id]) { log(`${s.name}: 아직 배우지 않았습니다 — 캠프의 암시장 상인 박씨 「스킬 교범」 (${fmt(s.price)}₵)`, '#aaa'); SFX.play('empty'); return; } // v1.16
   if (p.skillCd[i] > 0) return;
   SFX.play(s.id === 'heal' ? 'heal' : 'skill');
   const m = smod(s.id); // v1.11 스킬 갈래
@@ -439,7 +446,7 @@ function gainExp(n) {
     log(`레벨 업! Lv${p.level} — 능력치 포인트 +3 (C)`, '#ffd76a');
     SFX.play('levelup');
     const sk = SKILLS.find(s => s.lvl === p.level);
-    if (sk) log(`새 스킬 습득: ${sk.name} [${SKILLS.indexOf(sk) + 1}]`, '#7fd');
+    if (sk) log(`새 스킬을 배울 수 있다: ${sk.name} — 캠프의 암시장 상인 박씨 「스킬 교범」 (${fmt(sk.price)}₵)`, '#7fd');
     const pt = PERK_TIERS.find(t => t.lvl === p.level); // v1.11 특성 선택
     if (pt) { UI.toast(`특성 선택 — Lv${pt.lvl}`, `능력치 창(C)에서 ${pt.perks.map(k => k.name).join(' · ')} 중 하나`); log(`특성을 고를 수 있다: ${pt.perks.map(k => k.name).join(' · ')} (능력치 창 C)`, '#ffd76a'); }
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.8, color: '#ffd76a', r: 80 });
@@ -615,7 +622,7 @@ function killEnemy(e) {
   if (p.buffs.adren > 0 && smod('adren') === 'a' && (p.adrenExt || 0) < 8) { p.buffs.adren += 1.5; p.adrenExt = (p.adrenExt || 0) + 1.5; } // 광폭
   const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
   SFX.play(e.def.boss || e.fieldBoss || e.elite ? 'roar' : 'kill', e.def.boss ? 1 : 0.8);
-  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul); // 엘리트 4배
+  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul * (p.raid ? 1.4 : 1)); // 엘리트 4배 · v1.16 출격 맵 처치 경험치 ×1.4 (적이 무한히 나오지 않는 만큼)
   gainExp(exp);
   floatText(e.x, e.y - 10, `+${fmt(exp)} EXP`, '#e0c040', 12);
   p.totalKills++;
@@ -640,7 +647,7 @@ function killEnemy(e) {
   const dropAt = (kind, extra) => G.drops.push({ x: e.x + rand(-14, 14), y: e.y + rand(-14, 14), kind, t: 0, ...extra });
   if (e.def.boss) {
     p.bossKills++;
-    G.boss = null; G.bossT = 240;
+    G.boss = null; G.bossT = p.raid ? 1e9 : 240; // v1.16 출격당 한 번
     log('방사능 군주 타이탄을 쓰러뜨렸다! 서울에 희망이 비친다.', '#ffa53a');
     G.shake = 20;
     dropAt('credits', { amount: 3000 + randInt(0, 2000) });
@@ -742,6 +749,7 @@ function updateEnemies(dt) {
     if (e.hp <= 0) continue;
     if (e.nest) { RaidEvents.nestTick(e, dt, dist(e, p)); continue; } // v1.10 변이 둥지 (움직이지 않음)
     if (e.regenMut) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.02 * dt); // v1.15 변형 규칙: 재생
+    if (e.state !== 'chase' && !e.def.boss && !e.fieldBoss && !e.labBoss && Math.abs(e.x - p.x) + Math.abs(e.y - p.y) > 2200) continue; // v1.16 멀리 있는 적은 쉼 (사라지지 않음)
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt; e.revealT = (e.revealT || 0) - dt;
     const d = dist(e, p);
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); Monsters.interrupt(e); continue; } // 경직: 이동·공격 불가, 준비 중인 공격 끊김
@@ -808,6 +816,7 @@ function spawnEnemies(dt) {
   const p = G.player;
   G.spawnT -= dt;
   if (G.spawnT > 0 || G.assault || World.map === 'camp') return; // 어설트 중·캠프에는 일반 스폰 없음
+  if (Pop.cells.length || p.raid) { Pop.update(dt + 0.35); G.spawnT = 0.35; return; } // v1.16 출격 맵: 정해진 인구만 (무한 스폰 없음)
   if (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 1100) return; // v1.7 타이탄과 싸우는 중엔 일반 스폰 없음 (소환수만) — 봇 측정 사망 원인 1위가 끼어든 변이 거한
   const al = RaidEvents.alert || 0; // v1.10 경보 단계: 출현 빨라지고 밀도 ↑
   G.spawnT = 0.35 / (1 + al * 0.35);

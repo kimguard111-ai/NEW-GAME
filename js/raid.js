@@ -59,6 +59,7 @@ const Raid = {
     UI.toast(`출격 — ${MAPS[id].name}`, `탈출 지점 ${G.exits.length}곳 (미니맵 초록 ◎) · 주운 것은 탈출해야 확정`);
     log(`${MAPS[id].name}에 진입했다. 탈출 지점: ${G.exits.map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(' · ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}`, '#8cf');
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
+    Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
     if (World.def.lab) log('비상 전원만 남은 연구소다. 붉은 비상등 아래가 그나마 밝다. 격리실(미니맵 붉은 방)에 무언가 있다.', '#ff8a8a');
     saveGame();
   },
@@ -68,7 +69,7 @@ const Raid = {
     G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.corpses = [];
     G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
     G.labBoss = null; G.labBossDone = false; // v1.5
-    G.exits = []; RaidEvents.list = []; RaidEvents.alert = 0; G.extractT = 0; G.zone = World.zoneIndex(); G.bossT = Math.min(G.bossT, 0);
+    G.exits = []; Pop.cells = []; RaidEvents.list = []; RaidEvents.alert = 0; G.extractT = 0; G.zone = World.zoneIndex(); G.bossT = Math.min(G.bossT, 0);
     if (World.map === 'camp') setupCampNpcs(); else G.npcs = [];
     GroundCache.map.clear(); Nav.dist = null; Nav.t = 0;
   },
@@ -149,7 +150,8 @@ const Raid = {
     const p = G.player;
     if (!p.raid) return '';
     const n = this.allItems().filter(it => it.raid).length, ex = G.extractT > 0 ? ` · <b style="color:#7fe08a">탈출 ${Math.ceil((G.extractNeed || EXTRACT_TIME) - G.extractT)}초</b>` : '';
-    return `<br><span class="muted">${ICON('box')} 미확정 장비 ${n} · ₵${fmt(p.raid.credits)} — 탈출 지점 ◎${ex}</span>`;
+    return `<br><span class="muted">${ICON('box')} 미확정 장비 ${n} · ₵${fmt(p.raid.credits)} — 탈출 지점 ◎${ex}</span>`
+      + (Pop.total ? `<br><span class="muted">${ICON('skull')} 남은 적 약 ${Pop.remaining()} / ${Pop.total}</span>` : ''); // v1.16
   },
 };
 

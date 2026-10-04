@@ -17,7 +17,7 @@ const Bosses = {
   updateField(dt) {
     const p = G.player, fb = G.fieldBoss;
     if (fb) {
-      if (fb.hp <= 0) { G.fieldBoss = null; G.fbT = FIELD_BOSS_CD; return; }
+      if (fb.hp <= 0) { G.fieldBoss = null; G.fbT = G.player.raid ? 1e9 : FIELD_BOSS_CD; return; } // v1.16 출격당 한 번
       // 멀리 떠나면 사라짐
       fb.awayT = dist(fb, p) > 2600 ? (fb.awayT || 0) + dt : 0;
       if (fb.awayT > 30) {

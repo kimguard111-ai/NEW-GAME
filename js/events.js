@@ -174,18 +174,19 @@ const RaidEvents = {
     const a = ALERT_AT.filter(t => p.raid.t >= t + Camp.alertDelay()).length; // v1.13 무전실 2단계: 1분 늦게
     if (a > this.alert) {
       this.alert = a;
-      const msg = ['', '감염자들이 소란을 알아챘다 — 적이 늘어난다.', '블랙선·약탈자 무전이 잡힌다 — 적이 더 강해진다.', '추적대가 투입됐다! 지금 나가는 게 좋다.'][a];
+      const msg = ['', '소란을 듣고 주변 무리가 몰려오기 시작했다 — 2분마다 증원.', '증원이 잦아지고 엘리트가 섞인다 — 75초마다.', '추적대가 투입됐다! 50초마다 — 지금 나가는 게 좋다.'][a];
       UI.toast(`경보 ${a}단계`, msg); log(`${ICON('warn')} 경보 ${a}단계: ${msg}`, '#ff8a5a'); SFX.play('roar', 0.6);
-      if (a === 3) this.huntT = 3;
+      this.huntT = 8;
     }
-    if (this.alert >= 3 && (this.huntT -= dt) <= 0) { // 추적대: 50초마다 플레이어 쪽에서 나타나 바로 추격
-      this.huntT = 50;
+    // v1.16 맵 인구는 정해져 있고(js/pop.js) 증원은 경보 때만: 1단계 120초마다 2명 · 2단계 75초 3명 · 3단계 50초 4명, 바로 추격
+    if (this.alert >= 1 && (this.huntT -= dt) <= 0) {
+      this.huntT = [0, 120, 75, 50][this.alert];
       for (let i = 0; i < 16; i++) { // 막히지 않은 방향을 찾아서
         const ang = rand(0, TAU), r = rand(560, 720), hx = p.x + Math.cos(ang) * r, hy = p.y + Math.sin(ang) * r;
         if (World.circleBlocked(hx, hy, 30) || World.buildingAt(hx, hy) || (Nav.dist && Nav.dist[Math.floor(hy / TILE) * World.W + Math.floor(hx / TILE)] < 0)) continue;
-        this.squad(hx, hy, 3 + Math.min(2, World.zoneIndex() >> 1), { r0: 0, r1: 90, chase: true }); break;
+        this.squad(hx, hy, 1 + this.alert, { r0: 0, r1: 90, chase: true }); break;
       }
-      log('추적대가 다가온다!', '#ff5a5a');
+      log(this.alert >= 3 ? '추적대가 다가온다!' : '증원이 다가온다!', '#ff5a5a');
     }
     for (const e of this.list) {
       if (e.kind === 'airdrop') {

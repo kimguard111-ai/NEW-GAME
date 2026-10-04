@@ -78,8 +78,8 @@ const UI = {
     hb.innerHTML = '';
     SKILLS.forEach((s, i) => {
       const d = document.createElement('div');
-      d.className = 'hot' + (p.level < s.lvl ? ' locked' : ''); d.dataset.act = 'sk' + i;
-      d.title = `${s.name} (Lv${s.lvl}) - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;
+      d.className = 'hot' + (p.level < s.lvl || !p.skills[s.id] ? ' locked' : ''); d.dataset.act = 'sk' + i;
+      d.title = `${s.name} (Lv${s.lvl}${p.skills[s.id] ? '' : ` · 상인에게서 배우기 ${fmt(s.price)}₵`}) - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;
       d.innerHTML = `<span class="key">${i + 1}</span><div class="icon">${ICON(s.icon)}</div>${s.name}<span class="sk-stat">${STAT_NAMES[s.stat]}</span><div class="cd" id="cd${i}"></div>`;
       hb.appendChild(d);
     });
@@ -366,9 +366,10 @@ const UI = {
     h += '<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐 · 갈래는 캠프에서 바꿀 수 있음)</div>';
     const inCamp = World.map === 'camp';
     for (const s of SKILLS) {
-      const locked = p.level < s.lvl, m = p.skillMods[s.id];
-      const mb = k => `<button class="smod${m === k ? ' sel' : ''}" ${!locked && inCamp ? `data-smod="${s.id}:${k}"` : 'disabled'} title="${SKILL_MODS[s.id][k].desc}">${SKILL_MODS[s.id][k].name}</button>`;
-      h += `<div class="skill-row${locked ? ' locked' : ''}">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">Lv${s.lvl} 습득</span>` : ''} <span class="smods">${mb('a')}${mb('b')}</span><br><span class="stat-eff">${skillDesc(s, p)}</span></div>`;
+      const locked = p.level < s.lvl || !p.skills[s.id], m = p.skillMods[s.id];
+      const own = k => p.smodOwned[s.id + '_' + k];
+      const mb = k => `<button class="smod${m === k ? ' sel' : ''}" ${!locked && inCamp && own(k) ? `data-smod="${s.id}:${k}"` : 'disabled'} title="${SKILL_MODS[s.id][k].desc}${own(k) ? '' : ` (상인에게서 ${fmt(s.modPrice)}₵)`}">${own(k) ? '' : ICON('lock')}${SKILL_MODS[s.id][k].name}</button>`;
+      h += `<div class="skill-row${locked ? ' locked' : ''}">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">${p.level < s.lvl ? `Lv${s.lvl}부터 · ` : ''}상인에게서 배우기 ${fmt(s.price)}₵</span>` : ''} <span class="smods">${mb('a')}${mb('b')}</span><br><span class="stat-eff">${skillDesc(s, p)}</span></div>`;
     }
     const sets = Object.keys(SETS).filter(k => setCount(p, k) > 0); // v1.12 착용 중인 세트
     if (sets.length) h += '<hr style="border-color:#333">' + sets.map(k => { const S = SETS[k], n = setCount(p, k); return `<div class="setname" style="color:${S.color}">▣ ${S.name} 세트 ${n}/3</div><div class="setb${n >= 2 ? ' on' : ''}">(2) ${S.b2}</div><div class="setb${n >= 3 ? ' on' : ''}">(3) ${S.b3}</div>`; }).join('');
@@ -396,6 +397,7 @@ const UI = {
     $('stats-body').querySelectorAll('button[data-smod]').forEach(b => {
       b.onclick = () => {
         const [id, k] = b.dataset.smod.split(':');
+        if (!p.smodOwned[id + '_' + k]) return;
         p.skillMods[id] = p.skillMods[id] === k ? null : k; // 다시 누르면 기본형
         SFX.play('ui'); UI.refreshStats(); UI.buildHotbar(); saveGame();
       };
@@ -489,8 +491,8 @@ const UI = {
     const p = G.player, bye = ['닫기', () => UI.close('dialog')];
     if (npc.id === 'trader') return RaidEvents.openTrader(npc); // v1.10 떠돌이 상인
     if (npc.id === 'merchant') {
-      UI.dialog(npc.name, '"총알이든 약이든, 크레딧만 있으면 다 구해다 주지. 쓸만한 물건 있으면 사 주겠네."', [
-        ['거래하기', () => { UI.close('dialog'); UI.openShop(); }], bye]);
+      UI.dialog(npc.name, '"총알이든 약이든, 크레딧만 있으면 다 구해다 주지. 쓸만한 물건 있으면 사 주겠네. 기술이 필요하면 교범도 있고."', [
+        ['거래하기', () => { UI.close('dialog'); UI.openShop(); }], ['스킬 교범', () => UI.skillShop()], bye]);
     } else if (npc.id === 'medic') {
       const mh = PlayerStats.maxHp(p);
       const cost = respecCost(p);
@@ -585,6 +587,30 @@ const UI = {
     p.hp = Math.min(p.hp, PlayerStats.maxHp(p));
     log(`능력치 초기화 완료: 포인트 ${spent} 반환. 능력치 창(C)에서 다시 분배하세요.`, '#8cf');
     UI.close('dialog'); UI.open('stats'); UI.buildHotbar(); UI.refreshInventory(); saveGame();
+  },
+
+  // v1.16 스킬 교범 (암시장 상인): 스킬 배우기 · 갈래 사기
+  skillShop() {
+    const p = G.player, btns = [];
+    let h = `"싸우는 법도 사고파는 시대야." <span class="muted">₵${fmt(p.credits)} 보유 · 갈래는 산 뒤 캠프에서 능력치 창(C)으로 바꿈</span>`;
+    for (const s of SKILLS) {
+      const has = p.skills[s.id], lv = p.level >= s.lvl;
+      h += `<div class="fac-row">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span> ${has ? '<span class="r1">배움</span>' : `<span class="muted">Lv${s.lvl}+ · ${fmt(s.price)}₵</span>`}<br><span class="stat-eff">${skillBaseDesc(s, p)} · 재사용 ${s.cd}초</span>`;
+      for (const k of ['a', 'b']) { const M = SKILL_MODS[s.id][k], o = p.smodOwned[s.id + '_' + k]; h += `<br><span class="muted">└ ${M.name}: ${M.desc}</span> ${o ? '<span class="r1">보유</span>' : `<span class="muted">${fmt(s.modPrice)}₵</span>`}`; }
+      h += '</div>';
+      if (!has && lv) btns.push([`${s.name} 배우기 (${fmt(s.price)}₵)`, () => this.buySkill(s)]);
+      if (has) for (const k of ['a', 'b']) if (!p.smodOwned[s.id + '_' + k]) btns.push([`${SKILL_MODS[s.id][k].name} (${fmt(s.modPrice)}₵)`, () => this.buySkill(s, k)]);
+    }
+    btns.push(['닫기', () => UI.close('dialog')]);
+    UI.dialog('암시장 상인 박씨 — 스킬 교범', h, btns);
+  },
+  buySkill(s, k) {
+    const p = G.player, price = k ? s.modPrice : s.price;
+    if (p.credits < price) { log('크레딧이 부족합니다.', '#f88'); SFX.play('empty'); return; }
+    p.credits -= price;
+    if (k) { p.smodOwned[s.id + '_' + k] = true; if (!p.skillMods[s.id]) p.skillMods[s.id] = k; log(`스킬 갈래 획득: ${s.name} — ${SKILL_MODS[s.id][k].name}`, '#7fd'); }
+    else { p.skills[s.id] = true; log(`스킬을 배웠다: ${s.name} [${SKILLS.indexOf(s) + 1}]`, '#7fd'); UI.toast('스킬 습득', `${s.name} — ${SKILLS.indexOf(s) + 1}번 키`); }
+    SFX.play('levelup'); UI.buildHotbar(); UI.refreshStats(); saveGame(); this.skillShop();
   },
 
   // v1.15 첫 플레이 안내: 이 게임의 한 판 흐름 + 조작 (한 번만)
