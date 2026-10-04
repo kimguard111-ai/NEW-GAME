@@ -192,7 +192,8 @@ const UI = {
       else if (isUpgrade(p, it)) mark = '<span class="mark up">▲</span>';
       if (it.isNew) mark += '<span class="mark new">N</span>';
     }
-    return `${mark}<span class="icon">${itemIcon(it)}</span><span class="r${r}">${itemName(it)}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
+    const nc = it.unique ? ' style="color:#ff5aa0"' : it.set ? ` style="color:${SETS[it.set].color}"` : ''; // v1.12 고유 · 세트
+    return `${mark}<span class="icon">${itemIcon(it)}</span><span class="r${r}"${nc}>${itemName(it)}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
   },
 
   refreshInventory() {
@@ -346,6 +347,8 @@ const UI = {
       const mb = k => `<button class="smod${m === k ? ' sel' : ''}" ${!locked && inCamp ? `data-smod="${s.id}:${k}"` : 'disabled'} title="${SKILL_MODS[s.id][k].desc}">${SKILL_MODS[s.id][k].name}</button>`;
       h += `<div class="skill-row${locked ? ' locked' : ''}">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">Lv${s.lvl} 습득</span>` : ''} <span class="smods">${mb('a')}${mb('b')}</span><br><span class="stat-eff">${skillDesc(s, p)}</span></div>`;
     }
+    const sets = Object.keys(SETS).filter(k => setCount(p, k) > 0); // v1.12 착용 중인 세트
+    if (sets.length) h += '<hr style="border-color:#333">' + sets.map(k => { const S = SETS[k], n = setCount(p, k); return `<div class="setname" style="color:${S.color}">▣ ${S.name} 세트 ${n}/3</div><div class="setb${n >= 2 ? ' on' : ''}">(2) ${S.b2}</div><div class="setb${n >= 3 ? ' on' : ''}">(3) ${S.b3}</div>`; }).join('');
     h += `<hr style="border-color:#333">${wline('w1')}${wline('w2')}
       <div class="stat-row"><span>최대 체력</span><span>${PlayerStats.maxHp(p)}</span></div>
       <div class="stat-row"><span>방어력</span><span>${PlayerStats.def(p)} (피해 -${(PlayerStats.dmgReduce(p) * 100).toFixed(0)}%)</span></div>

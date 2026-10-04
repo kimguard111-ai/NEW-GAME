@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.11';
+const GAME_VERSION = 'v1.12';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -75,6 +75,50 @@ const LEGENDARY = {
   thrift:  { name: '보급 장인', desc: '35% 확률로 탄약을 소모하지 않음', gun: true },
   quickload: { name: '속사 장전', desc: '적을 처치하면 탄창이 즉시 가득 참', gun: true },
   chain:   { name: '연쇄 타격', desc: '치명타가 근처 적 1명에게 50% 피해로 튐' },
+  // v1.12 방어구 전설 (slot: armor)
+  aegis:      { name: '반응 장갑', desc: '맞으면 20% 확률로 3초 방어막 (받는 피해 -40%, 재발동 10초)', slot: 'armor' },
+  thorns:     { name: '가시 갑옷', desc: '맞으면 가까운 적 모두에게 받은 피해의 80% 반사', slot: 'armor' },
+  afterimage: { name: '잔상', desc: '구르기가 끝난 자리에 충격파 (레벨×14 피해 · 경직)', slot: 'armor' },
+  survivor:   { name: '생존 본능', desc: '체력이 30% 아래로 떨어지면 아드레날린 자동 발동 (재발동 45초)', slot: 'armor' },
+  // v1.12 헬멧 전설 (slot: helmet)
+  nightVision:{ name: '야간 투시', desc: '어둠 -60% · 은신한 적이 항상 보임', slot: 'helmet' },
+  hunterEye:  { name: '사냥꾼의 눈', desc: '치명타 피해 +35%', slot: 'helmet' },
+  focus:      { name: '집중 장치', desc: '스킬 재사용 대기 -18%', slot: 'helmet' },
+  filter:     { name: '정화 필터', desc: '방사능·산성 장판 피해 없음 · 체력 재생 +2/초', slot: 'helmet' },
+};
+
+// v1.12 지역 세트 장비: 그 지역(zones)에서 나오는 희귀 이상 장비의 15%가 세트 조각. 무기(주·보조 중 하나) · 방어구 · 헬멧 3부위
+const SETS = {
+  vigil:    { name: '자경단', zones: [2], pieces: { weapon: 'smg', armor: 'tactical', helmet: 'tacHelmet' }, color: '#5ad8a8',
+              b2: '이동 속도 +6%', b3: '처치하면 3초 동안 공격 속도 +15%' },
+  steel:    { name: '강철 부대', zones: [3], pieces: { weapon: 'rifle', armor: 'military', helmet: 'gasmask' }, color: '#9ab4d8',
+              b2: '방어력 +15%', b3: '체력 50% 이상일 때 받는 피해 -20%' },
+  rad:      { name: '방사능 사냥꾼', zones: [4, 5], pieces: { weapon: 'lmg', armor: 'exo', helmet: 'exoHelm' }, color: '#9aff6a',
+              b2: '방사능 피해 없음 · 최대 체력 +8%', b3: '엘리트·보스·둥지 피해 +15% · 총알 12% 확률로 소형 폭발' },
+  blacksun: { name: '블랙선', zones: [6, 7], pieces: { weapon: 'sniper', armor: 'exo', helmet: 'exoHelm' }, color: '#ffd23b',
+              b2: '치명타 확률 +8%', b3: '치명타로 처치하면 탄창 +3발 · 2초 동안 치명타 피해 +50%' },
+};
+
+// v1.12 보스 고유 장비: 보스마다 하나, 처치 시 낮은 확률 (못 얻을 때마다 +3%). 고유 효과는 전설 효과 대신 붙음
+const UNIQUES = {
+  fang:    { from: 'redfang', boss: '붉은 이빨', key: 'pipe',    name: '「붉은 이빨」 송곳니 몽둥이', chance: 0.10,
+             desc: '근접으로 처치하면 다음 공격 피해 +100%' },
+  viper:   { from: 'viper',   boss: '독사',     key: 'shotgun', name: '「독사」의 독니 산탄총', chance: 0.10,
+             desc: '산탄 펠릿 +3 · 맞은 적 2초 동안 이동 속도 -35%' },
+  goliath: { from: 'goliath', boss: '골리앗',   key: 'axe',     name: '「골리앗」의 팔', chance: 0.10,
+             desc: '근접 마무리 범위 +40% · 마무리 피해 +50%' },
+  hawk:    { from: 'hawk',    boss: '매',       key: 'sniper',  name: '「매」의 눈 저격소총', chance: 0.10,
+             desc: '관통 +2 · 맞은 적 5초 동안 받는 피해 +25% (표식)' },
+  shade:   { from: 'shade',   boss: '그림자',   key: 'exo',     name: '「그림자」 은신 외피', chance: 0.10,
+             desc: '구르기 후 1.5초 동안 이동 속도 +40% · 받는 피해 -30%' },
+  chimera: { from: 'chimera', boss: '키메라',   key: 'military', name: '「키메라」 재생 조직 갑옷', chance: 0.15,
+             desc: '체력 재생 +3/초 · 체력 50% 이하에서 재생 3배' },
+  titan:   { from: 'titan',   boss: '타이탄',   key: 'lmg',     name: '「타이탄」 방사능 심장포', chance: 0.15,
+             desc: '25% 확률로 방사능 탄 (작은 초록 폭발) · 예열이 항상 최대' },
+  raven:   { from: 'raven',   boss: '레이븐',   key: 'rifle',   name: '「레이븐」 지휘 소총', chance: 0.20,
+             desc: '3발째마다 파편 폭발 (피해 60%)' },
+  babel:   { from: 'babel',   boss: '바벨',     key: 'katana',  name: '「바벨」 촉수 칼날', chance: 0.20,
+             desc: '근접 범위 +30% · 처치할 때마다 최대 체력 3% 회복' },
 };
 
 // 장비 강화 (v0.5). rates[현재 단계] = 성공 확률

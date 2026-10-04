@@ -43,7 +43,7 @@ function makeWeapon(key, ilvl, rarity) {
     affixes: rollAffixes('weapon', key, rarity, ilvl), isNew: true,
   };
   if (rarity === 4) {
-    const keys = Object.keys(LEGENDARY).filter(k => !LEGENDARY[k].gun || !b.melee);
+    const keys = Object.keys(LEGENDARY).filter(k => !LEGENDARY[k].slot && (!LEGENDARY[k].gun || !b.melee));
     it.legend = pick(keys);
   }
   if (!b.melee) it.loaded = b.mag;
@@ -58,7 +58,7 @@ function makeArmor(key, ilvl, rarity) {
     id: nextItemId++, kind: 'armor', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
     name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     def: Math.round(b.def * r.mul * (1 + (ilvl - 1) * 0.06)),
-    affixes, isNew: true,
+    affixes, isNew: true, legend: rarity === 4 ? slotLegend('armor') : undefined, // v1.12 방어구 전설
     value: Math.round(b.price * r.mul * (1 + ilvl * 0.15) * (1 + affixes.length * 0.15)),
   };
 }
@@ -70,10 +70,37 @@ function makeHelmet(key, ilvl, rarity) {
     id: nextItemId++, kind: 'helmet', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
     name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     def: Math.round(b.def * r.mul * (1 + (ilvl - 1) * 0.06)),
-    affixes, isNew: true,
+    affixes, isNew: true, legend: rarity === 4 ? slotLegend('helmet') : undefined, // v1.12 헬멧 전설
     value: Math.round(b.price * r.mul * (1 + ilvl * 0.15) * (1 + affixes.length * 0.15)),
   };
 }
+function slotLegend(slot) { return pick(Object.keys(LEGENDARY).filter(k => LEGENDARY[k].slot === slot)); }
+
+// v1.12 세트 조각: 그 세트의 부위 장비에 세트 표시 + 이름 앞에 세트 이름
+function makeSetPiece(sid, slot, level, rarity) {
+  const S = SETS[sid], it = makeGear(S.pieces[slot], level, Math.max(2, rarity));
+  it.set = sid; it.name = `${it.rarity > 0 ? RARITIES[it.rarity].name + ' ' : ''}${S.name} ${GEAR_DEFS(it.key).name}`;
+  it.value = Math.round(it.value * 1.4);
+  return it;
+}
+// v1.12 보스 고유 장비: 전설 등급 · 전설 효과 대신 고유 효과
+function makeUnique(uid, level) {
+  const U = UNIQUES[uid], it = makeGear(U.key, Math.max(level, GEAR_DEFS(U.key).lvl), 4);
+  it.unique = uid; it.legend = undefined; it.name = U.name; it.value = Math.round(it.value * 1.8);
+  return it;
+}
+// 장착한 세트 조각 수 (무기는 주·보조 중 하나만 셈)
+function setCount(p, sid) {
+  if (!p || !p.equip) return 0;
+  const e = p.equip;
+  return ((e.w1 && e.w1.set === sid) || (e.w2 && e.w2.set === sid) ? 1 : 0) + (e.armor && e.armor.set === sid ? 1 : 0) + (e.helmet && e.helmet.set === sid ? 1 : 0);
+}
+const setOn = (sid, n) => setCount(G.player, sid) >= n;
+// 방어구·헬멧 전설 / 고유 효과
+function armorLegend(id) { const e = G.player && G.player.equip; return !!e && ((e.armor && e.armor.legend === id) || (e.helmet && e.helmet.legend === id)); }
+function heldUnique(id) { const p = G.player, w = p && p.equip[p.active]; return !!(w && w.unique === id); }
+function wornUnique(id) { const e = G.player && G.player.equip; return !!e && ((e.armor && e.armor.unique === id) || (e.helmet && e.helmet.unique === id)); }
+
 const GEAR_DEFS = k => WEAPONS[k] || ARMORS[k] || HELMETS[k];
 function makeGear(k, level, r) { return WEAPONS[k] ? makeWeapon(k, level, r) : ARMORS[k] ? makeArmor(k, level, r) : makeHelmet(k, level, r); }
 
@@ -94,6 +121,11 @@ function makeConsumable(key, count = 1) {
 // bias: 지역 특산 장비 키 목록 (절반 확률로 이 중에서 고름)
 function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
   const r = Math.max(minRarity, rollRarity(rarityBonus));
+  // v1.12 세트: 출격 중 그 지역의 희귀 이상 장비 중 15%는 세트 조각
+  if (r >= 2 && typeof World !== 'undefined' && World.map !== 'camp' && Math.random() < 0.15) {
+    const z = World.zoneIndex(), sid = Object.keys(SETS).find(k => SETS[k].zones.includes(z));
+    if (sid) { const slot = pick(['weapon', 'weapon', 'armor', 'helmet']), key = SETS[sid].pieces[slot]; if (GEAR_DEFS(key).lvl <= level + 2) return makeSetPiece(sid, slot, level, r); }
+  }
   if (bias && Math.random() < 0.5) {
     const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2);
     if (keys.length) return makeGear(pick(keys), level, r);
@@ -148,6 +180,12 @@ function itemHtml(it) {
   if (it.kind === 'weapon') h += `<br><span class="role">${WEAPONS[it.key].role}</span>`;
   for (const a of it.affixes || []) h += `<br><span class="affix">◆ ${affixText(a)}</span>`;
   if (it.legend) h += `<br><span class="legend">★ ${LEGENDARY[it.legend].name}: ${LEGENDARY[it.legend].desc}</span>`;
+  if (it.unique) h += `<br><span class="unique">◈ 고유 (${UNIQUES[it.unique].boss}): ${UNIQUES[it.unique].desc}</span>`;
+  if (it.set) { // 세트 효과 (장착 수에 따라 켜짐)
+    const S = SETS[it.set], n = setCount(G.player, it.set);
+    h += `<br><span class="setname" style="color:${S.color}">▣ ${S.name} 세트 (${n}/3)</span>`
+      + `<br><span class="setb${n >= 2 ? ' on' : ''}">(2) ${S.b2}</span><br><span class="setb${n >= 3 ? ' on' : ''}">(3) ${S.b3}</span>`;
+  }
   return h;
 }
 
@@ -189,22 +227,22 @@ function hasLegend(p, id) { const w = p.equip[p.active]; return !!(w && w.legend
 const perk = id => !!(G.player && G.player.perks && G.player.perks.includes(id));
 const smod = sid => (G.player && G.player.skillMods && G.player.skillMods[sid]) || null;
 const PlayerStats = {
-  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1)),
-  def: p => armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5),
+  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1) * (setOn('rad', 2) ? 1.08 : 1)),
+  def: p => Math.round((armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5)) * (setOn('steel', 2) ? 1.15 : 1)),
   dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 40 + 8 * p.level); }, // v1.0: 고레벨일수록 같은 방어력의 효과 감소 (Lv5 기존과 동일)
   gunMul: p => 1 + (p.stats.dex - 5) * 0.04,
   meleeMul: p => 1 + (p.stats.str - 5) * 0.06,
-  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.25 : 0),
-  critMul: (p, w) => ((w && WEAPONS[w.key].critMul) || 1.8) + gearBonus(p, 'critDmg', w),
+  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.25 : 0) + (setOn('blacksun', 2) ? 0.08 : 0),
+  critMul: (p, w) => ((w && WEAPONS[w.key].critMul) || 1.8) + gearBonus(p, 'critDmg', w) + (armorLegend('hunterEye') ? 0.35 : 0) + ((p.bsT || 0) > G.time ? 0.5 : 0),
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {
     const w = p.equip[p.active];
-    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1);
+    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
-  rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1),
+  rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1),
   reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)) / (perk('bulletStorm') ? 1.2 : 1),
-  regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + gearBonus(p, 'regen'),
+  regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + gearBonus(p, 'regen') + (armorLegend('filter') ? 2 : 0) + (wornUnique('chimera') ? (p.hp < PlayerStats.maxHp(p) * 0.5 ? 9 : 3) : 0),
   expMul: p => 1 + gearBonus(p, 'exp'),
   // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
   // v1.7: 밸런스 봇 측정 결과 Lv30까지 너무 빠름 → Lv5부터 점점 더 많이 (Lv10 ×1.65 · Lv20 ×2.4 · Lv30 ×3.0)
@@ -240,8 +278,8 @@ function skillBaseDesc(s, p) {
 function respecCost(p) { return p.respecs ? p.level * 80 : 0; }
 
 // 계열 전용 옵션이 반영된 무기 수치
-function pelletCount(w) { return (WEAPONS[w.key].pellets || 1) + gearBonus(G.player, 'pellets', w); }
-function meleeReach(w) { const b = WEAPONS[w.key], r = gearBonus(G.player, 'reach', w); return { range: b.range * (1 + r), arc: b.arc * (1 + r) }; }
+function pelletCount(w) { return (WEAPONS[w.key].pellets || 1) + gearBonus(G.player, 'pellets', w) + (w.unique === 'viper' ? 3 : 0); }
+function meleeReach(w) { const b = WEAPONS[w.key], r = gearBonus(G.player, 'reach', w) + (w.unique === 'babel' ? 0.3 : 0); return { range: b.range * (1 + r), arc: b.arc * (1 + r) }; }
 
 function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w)) * (perk('bulletStorm') ? 1.3 : 1)); }
 function weaponDmg(w) { return w.dmg * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }

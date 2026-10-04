@@ -160,6 +160,10 @@ button:disabled { opacity: .4; cursor: default; }
 .role { color: #c9b27a; font-size: 12px; }
 .affix { color: #8fd0ff; font-size: 12px; }
 .legend { color: #ffa53a; font-size: 12px; font-weight: bold; }
+.unique { color: #ff5aa0; font-size: 12px; font-weight: bold; } /* v1.12 고유 · 세트 */
+.setname { font-size: 12px; font-weight: bold; }
+.setb { font-size: 11px; color: #6a727c; }
+.setb.on { color: #cfe8d8; }
 .cmp { margin-top: 6px; padding-top: 4px; border-top: 1px dashed #333; font-size: 12px; }
 .inv-cell .mark { position: absolute; left: 2px; top: 1px; font-size: 10px; font-weight: bold; }
 .inv-cell .mark.up { color: #4f4; }

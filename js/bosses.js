@@ -58,6 +58,7 @@ const Bosses = {
     dropAt('item', { item: randomGear(e.level + 1, 1.5, Math.random() < 0.3 ? 3 : 2, ZONES[e.fieldBoss].gear) });
     if (Math.random() < 0.25) dropAt('item', { item: randomGear(e.level + 1, 1, 1, ZONES[e.fieldBoss].gear) });
     dropAt('item', { item: makeConsumable('medkit', 2) });
+    rollUnique(e.art, e.level + 1, dropAt); // v1.12 보스 고유 장비
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0; // 부하 정리
     p.fieldBossKills = (p.fieldBossKills || 0) + 1;
     Workshop.gain(10, 2, '필드 보스 잔해 회수');
@@ -104,6 +105,7 @@ const Bosses = {
     dropAt('item', { item: randomGear(e.level, 2, Math.random() < 0.3 ? 4 : 3, ZONES[5].gear) });
     dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[5].gear) });
     dropAt('item', { item: makeConsumable('medkit', 3) });
+    rollUnique('chimera', e.level, dropAt); // v1.12
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0;
     p.labKills = (p.labKills || 0) + 1;
     Workshop.gain(14, 6, '실험 장비 잔해 회수');

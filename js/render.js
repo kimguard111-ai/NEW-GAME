@@ -725,7 +725,7 @@ function drawWeaponOverlay(sx, sy, w, p, fr) {
 
 // v1.6 은신 변이체: 가까이(150px) 오거나, 맞았거나(2.5초), 공격 준비·경직 중이면 보임
 function enemyCloaked(e) {
-  return e.def.cloak && !e.bossName && !e.elite && !e.affix && !(e.revealT > 0) && e.stunT <= 0 && !(e.pounceT > 0) && !(e.leapT > 0) && !(e.windT > 0)
+  return !armorLegend('nightVision') && e.def.cloak && !e.bossName && !e.elite && !e.affix && !(e.revealT > 0) && e.stunT <= 0 && !(e.pounceT > 0) && !(e.leapT > 0) && !(e.windT > 0)
     && dist(e, G.player) > 150;
 }
 function drawEnemy(e) {
@@ -1331,7 +1331,7 @@ function drawDropBeams() {
       G.particles.push({ x: d.x + rand(-10, 10), y: d.y + rand(-10, 10), vx: 0, vy: 0, z: 6, vz: rand(50, 90), t: 0, life: rand(0.8, 1.4), color: pick(['#ffa53a', '#ffd76a', '#fff3c0']), size: rand(2, 4) });
     const r = d.item.rarity, sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y), h = 60 + r * 30, pul = 0.7 + Math.sin(G.time * 4 + d.x) * 0.3;
     const g = ctx.createLinearGradient(0, sy, 0, sy - h);
-    const c = RARITIES[r].color;
+    const c = d.item.unique ? '#ff5aa0' : d.item.set ? SETS[d.item.set].color : RARITIES[r].color; // v1.12 고유 · 세트 색
     g.addColorStop(0, c + 'cc'); g.addColorStop(1, c + '00');
     ctx.globalAlpha = pul; ctx.fillStyle = g; ctx.fillRect(sx - 3 - r, sy - h, 6 + r * 2, h); ctx.globalAlpha = 1;
   }

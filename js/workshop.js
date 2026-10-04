@@ -128,6 +128,7 @@ const Workshop = {
         + `<button data-i="${i}" data-full="1" ${this.canPay(full) ? '' : 'disabled'}>옵션 변경 ${this.costText(full)}</button></div>`;
     });
     if (it.legend) h += `<span class="legend">★ ${LEGENDARY[it.legend].name}: ${LEGENDARY[it.legend].desc}</span> <span class="muted">(고유 효과는 바뀌지 않음)</span>`;
+    if (it.unique) h += `<span class="unique">◈ ${UNIQUES[it.unique].desc}</span> <span class="muted">(고유 효과는 바뀌지 않음)</span>`; // v1.12
     box.innerHTML = h;
     box.querySelectorAll('button[data-i]').forEach(b => { b.onclick = () => this.reroll(it, +b.dataset.i, b.dataset.full === '1'); });
   },

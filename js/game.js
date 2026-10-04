@@ -253,12 +253,13 @@ function playerAttack() {
     if (rolled) p.rollAtk = p.lastRoll;
     const fin = p.mStep === 2, M = fin ? MELEE_FINISH[w.key] : MELEE_COMBO;
     p.atkT = b.rate * M.rate * PlayerStats.rateMul(p);
-    const reach = meleeReach(w), range = reach.range * M.range, arc = M.arc ? M.arc : reach.arc * (M.arcMul || 1);
+    const reach = meleeReach(w), range = reach.range * M.range * (fin && w.unique === 'goliath' ? 1.4 : 1), arc = M.arc ? M.arc : reach.arc * (M.arcMul || 1);
     p.swingT = p.swingMax = fin ? 0.26 : 0.18; p.swingArc = arc; p.swingRange = range; p.swingFin = fin ? w.key : null;
     p.swingDir = p.mStep === 1 ? -1 : 1; // 2타는 반대 방향으로
     World.move(p, Math.cos(p.aim) * M.lunge * (rolled ? 1.5 : 1), Math.sin(p.aim) * M.lunge * (rolled ? 1.5 : 1)); // 휘두르며 전진
     if (fin) { SFX.play('heavy'); if (rolled) floatText(p.x, p.y - 34, '구르기 베기!', '#ffd27a', 13); }
-    const dmg = weaponDmg(w) * playerDamageMul(true) * M.dmg * (fin && perk('executioner') ? 1.4 : 1);
+    const dmg = weaponDmg(w) * playerDamageMul(true) * M.dmg * (fin && perk('executioner') ? 1.4 : 1) * (fin && w.unique === 'goliath' ? 1.5 : 1) * (p.fangBuff ? 2 : 1);
+    if (p.fangBuff) { p.fangBuff = false; floatText(p.x, p.y - 36, '굶주린 송곳니!', '#ff6a5a', 13); } // v1.12 붉은 이빨
     let hits = 0, anyCrit = false;
     for (const e of G.enemies) {
       if (e.hp <= 0) continue;
@@ -296,9 +297,10 @@ function playerAttack() {
   const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false);
   // v1.9 무기 손맛: 기관총 예열(연사할수록 정확·빨라짐) · 소총 첫 발 정조준(잠깐 쉬었다 쏘면 정확 + 치명타)
   const first = w.key === 'rifle' && G.time - (p.lastShot || -9) > 0.35;
-  if (w.key === 'lmg') p.heat = Math.min(1, (p.heat || 0) + 0.04);
+  if (w.key === 'lmg') p.heat = w.unique === 'titan' ? 1 : Math.min(1, (p.heat || 0) + 0.04); // v1.12 타이탄 심장포: 항상 예열
+  const frag = w.unique === 'raven' && (p.ravenN = (p.ravenN || 0) + 1) % 3 === 0; // v1.12 레이븐: 3발째 파편
   p.lastShot = G.time;
-  const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w);
+  const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
   const mz = gunMuzzle(p, w), mx = mz.x, my = mz.y, aim0 = mz.a;
   const life = b.range / b.speed;
   for (let i = 0; i < pellets; i++) {
@@ -307,7 +309,7 @@ function playerAttack() {
     const crit = Math.random() < cc + (first ? 0.1 : 0);
     G.bullets.push({
       x: mx, y: my, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, falloff: b.falloff,
-      dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w,
+      dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w, frag: frag && i === 0,
       color: crit ? '#ffef7a' : w.legend === 'boom' ? '#ff8a3a' : '#ffd27a',
     });
   }
@@ -356,7 +358,7 @@ function useSkill(i) {
     if (m === 'b') { p.buffs.shield = 4; G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.4, color: '#7ab8ff', r: 60 }); }
     floatText(p.x, p.y - 30, '+' + now, '#6f6', 16); burst(p.x, p.y, '#6f6', 16, 80);
   } else if (s.id === 'adren') { p.buffs.adren = 8; p.adrenExt = 0; floatText(p.x, p.y - 30, m === 'a' ? '광폭!' : m === 'b' ? '진통제!' : '아드레날린!', '#f84'); }
-  p.skillCd[i] = s.cd * (perk('warlord') ? 0.75 : 1) * (s.id === 'heal' && perk('fieldMedic') ? 0.7 : 1);
+  p.skillCd[i] = s.cd * (perk('warlord') ? 0.75 : 1) * (s.id === 'heal' && perk('fieldMedic') ? 0.7 : 1) * (armorLegend('focus') ? 0.82 : 1);
 }
 
 function quickMedkit() {
@@ -452,8 +454,14 @@ function damagePlayer(dmg, srcX, srcY) {
   if (perk('ghost') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1) tk *= 0.5;
   if (p.buffs.shield > 0) tk *= 0.6;
   if (p.buffs.adren > 0 && smod('adren') === 'b') tk *= 0.7;
+  if (setOn('steel', 3) && p.hp >= PlayerStats.maxHp(p) * 0.5) tk *= 0.8; // v1.12 강철 부대 3세트
+  if (wornUnique('shade') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1.5) tk *= 0.7; // 그림자 외피
   const d = Math.max(1, Math.round(dmg * tk * (1 - PlayerStats.dmgReduce(p))));
   p.hp -= d; p.hurtT = 0.15; p.lastHurt = G.time;
+  // v1.12 방어구 전설
+  if (armorLegend('aegis') && G.time > (p.aegisCd || 0) && Math.random() < 0.2) { p.aegisCd = G.time + 10; p.buffs.shield = Math.max(p.buffs.shield || 0, 3); floatText(p.x, p.y - 44, '반응 장갑!', '#7ab8ff', 13); }
+  if (armorLegend('thorns') && G.time > (p.thornCd || 0)) { p.thornCd = G.time + 0.3; for (const e of G.enemies) if (e.hp > 0 && dist(e, p) < 70 + e.r) damageEnemy(e, d * 0.8, false, angleTo(p, e), { knock: 6, noProc: true }); }
+  if (armorLegend('survivor') && p.hp > 0 && p.hp < PlayerStats.maxHp(p) * 0.3 && G.time > (p.survCd || 0)) { p.survCd = G.time + 45; p.buffs.adren = Math.max(p.buffs.adren, 8); floatText(p.x, p.y - 44, '생존 본능!', '#f84', 14); SFX.play('skill'); }
   if (p.hp <= 0 && perk('secondWind') && p.raid && !p.raid.sw) { // 출격마다 한 번
     p.raid.sw = true; p.hp = Math.round(PlayerStats.maxHp(p) * 0.3); p.invT = 2;
     floatText(p.x, p.y - 40, '두 번째 숨!', '#9fe0ff', 18); SFX.play('levelup'); G.flash = 0.3; hitstop(0.15);
@@ -495,7 +503,12 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (e.invulnT > 0) { if (Math.random() < 0.15) floatText(e.x, e.y - e.r - 6, '무적', '#aaa', 12); return; } // 타이탄 페이즈 전환
   const p = G.player, w = hit.w;
   if (w && w.legend === 'execute' && e.hp < e.maxHp * 0.3) dmg *= 1.6;
-  if (perk('apex') && (e.elite || e.affix || e.fieldBoss || e.labBoss || e.nest || e.def.boss)) dmg *= 1.2; // v1.11
+  const bigE = e.elite || e.affix || e.fieldBoss || e.labBoss || e.nest || e.def.boss;
+  if (perk('apex') && bigE) dmg *= 1.2; // v1.11
+  if (setOn('rad', 3) && bigE) dmg *= 1.15; // v1.12 방사능 사냥꾼 3세트
+  if ((e.markT || 0) > G.time) dmg *= 1.25; // v1.12 매의 표식
+  if (w && w.unique === 'hawk') e.markT = G.time + 5;
+  if (w && w.unique === 'viper') e.slowT = G.time + 2;
   dmg = Math.max(1, Math.round(dmg));
   // v1.6 방패병: 정면(방패가 향한 쪽)에서 맞으면 피해 감소 (v1.7 80% → 65%). 폭발·경직 중·뒤/옆은 그대로
   if (e.def.shield && !hit.blast && angle !== undefined && e.stunT <= 0 && Math.abs(angDiff(angle, (e.face || 0) + Math.PI)) < 1.05) {
@@ -524,6 +537,8 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (e.def.boss && (crit || (hit.stagger || 0) >= 0.5)) { G.shake = Math.max(G.shake, 5); hitstop(0.035); }
   if (w && !hit.noProc) {
     if (w.legend === 'leech') p.hp = Math.min(PlayerStats.maxHp(p), p.hp + dmg * 0.04);
+    const gun = !WEAPONS[w.key].melee; // v1.12 방사능 탄 (타이탄) · 방사능 사냥꾼 3세트
+    if (gun && ((w.unique === 'titan' && Math.random() < 0.25) || (setOn('rad', 3) && Math.random() < 0.12))) { explode(e.x, e.y, dmg * 0.5, 48, { small: true, knock: 6, stagger: 0.1 }); burst(e.x, e.y, '#7fff6a', 8, 120, 0.3); }
     if (w.legend === 'boom' && Math.random() < 0.2) explode(e.x, e.y, dmg * 0.6 * (perk('demolition') ? 1.3 : 1), 55, { small: true, knock: 10, stagger: 0.15 });
     if (w.legend === 'chain' && crit) {
       let t = null, bd = 170;
@@ -571,6 +586,13 @@ function killEnemy(e) {
     if (G.combo > p.bestCombo) p.bestCombo = G.combo;
     if (G.combo === 10 || G.combo === 25 || G.combo === 50) { UI.toast(`${G.combo} 연속 처치!`, `보너스 +${G.combo * p.level}₵`); p.credits += G.combo * p.level; }
   }
+  { // v1.12 세트 · 고유 처치 효과
+    const h = e.lastHit || {}, cw = curWeapon();
+    if (setOn('vigil', 3)) p.vigilT = G.time + 3;
+    if (h.crit && setOn('blacksun', 3)) { p.bsT = G.time + 2; if (cw && !WEAPONS[cw.key].melee) cw.loaded = Math.min(magSize(cw), (cw.loaded || 0) + 3); }
+    if (h.melee && heldUnique('fang')) p.fangBuff = true;
+    if (heldUnique('babel')) { const mh = PlayerStats.maxHp(p); p.hp = Math.min(mh, p.hp + mh * 0.03); }
+  }
   if (e.lastHit && e.lastHit.melee && perk('brawler')) { const mh = PlayerStats.maxHp(p); p.hp = Math.min(mh, p.hp + mh * 0.04); } // v1.11 싸움꾼
   if (p.buffs.adren > 0 && smod('adren') === 'a' && (p.adrenExt || 0) < 8) { p.buffs.adren += 1.5; p.adrenExt = (p.adrenExt || 0) + 1.5; } // 광폭
   const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
@@ -603,6 +625,7 @@ function killEnemy(e) {
     G.shake = 20;
     dropAt('credits', { amount: 3000 + randInt(0, 2000) });
     for (let i = 0; i < 3; i++) dropAt('item', { item: randomGear(20, 2.5) });
+    rollUnique('titan', 20, dropAt); // v1.12
     dropAt('item', { item: makeConsumable('medkit', 5) });
     Workshop.gain(30, 8, '타이탄 잔해 회수');
     // 보스 소환수 정리
@@ -618,6 +641,7 @@ function killEnemy(e) {
     log(`${ELITES[e.elite].name} 처치!`, '#ffa53a');
     dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) });
     dropAt('credits', { amount: e.level * 40 });
+    rollUnique(e.elite, e.level, dropAt); // v1.12 레이븐 · 바벨
     hitstop(0.12); G.shake = Math.max(G.shake, 10);
   }
   if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
@@ -722,7 +746,7 @@ function updateEnemies(dt) {
       const a = angleTo(e, p);
       if (e.def.shield && !e.bossName) { const df = angDiff(a, e.face || 0), tr = 2.2 * dt; e.face = (e.face || 0) + clamp(df, -tr, tr); } // v1.6 방패병은 천천히 돌아섬 → 구르기로 뒤를 잡을 수 있음
       else e.face = a;
-      let moveA = a, spd = e.speed * Monsters.buff(e);
+      let moveA = a, spd = e.speed * Monsters.buff(e) * ((e.slowT || 0) > G.time ? 0.65 : 1); // v1.12 독사 둔화
       const hold = !e.def.boss && Monsters.attack(e, dt, d, a); // v0.16 예고 공격 (예고·도약 중엔 정지)
       // 시야가 막혔으면 길찾기 지도를 따라 건물을 돌아서 접근 (드론은 날아서 직선)
       const seen = e.def.flying || d < 70 || World.lineOfSight(e, p);
@@ -833,6 +857,7 @@ function updateRadiation(dt) {
   p.radT -= dt;
   if (p.radT > 0) return;
   p.radT = 0.5;
+  if (armorLegend('filter') || setOn('rad', 2)) return; // v1.12 정화 필터 · 방사능 사냥꾼 2세트
   const hel = p.equip.helmet, res = hel ? HELMETS[hel.key].radRes || 0 : 0; // 방독면
   const d = Math.max(1, Math.round(PlayerStats.maxHp(p) * 0.015 * (1 - res)));
   p.hp -= d;
@@ -863,6 +888,7 @@ function updateBullets(dt) {
             const pb = wb && wb.pellets && b.maxLife - b.life < 0.1;
             damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb });
             if (wb && wb.key === 'sniper') hitstop(0.035);
+            if (b.frag) explode(e.x, e.y, b.dmg * 0.6, 50, { small: true, knock: 8, stagger: 0.1 }); // v1.12 레이븐 파편
             if (b.pierce-- <= 0) { b.life = 0; break; }
           }
         }
@@ -906,13 +932,34 @@ function updateGrenades(dt) {
 }
 
 // v1.7.1 장비가 땅에 닿는 순간의 연출 — 드랍이 귀해진 만큼 등급별로 확실하게
+// v1.12 보스 고유 장비 굴림: 기본 확률 + 못 얻을 때마다 +3% (얻으면 초기화)
+function rollUnique(from, level, dropAt) {
+  const uid = Object.keys(UNIQUES).find(k => UNIQUES[k].from === from), p = G.player;
+  if (!uid) return;
+  p.uniqPity = p.uniqPity || {};
+  const ch = UNIQUES[uid].chance + (p.uniqPity[uid] || 0) * 0.03;
+  if (Math.random() < ch) { p.uniqPity[uid] = 0; dropAt('item', { item: makeUnique(uid, level) }); }
+  else p.uniqPity[uid] = (p.uniqPity[uid] || 0) + 1;
+}
+
 function dropReveal(d, r) {
   const c = RARITIES[r].color, p = G.player;
+  if (d.kind === 'item' && d.item.unique) { // v1.12 고유 장비: 분홍 빛기둥 + 긴 멈춤
+    const uc = '#ff5aa0';
+    SFX.play('legend', 4); burst(d.x, d.y, uc, 50, 260, 0.9, 4); burst(d.x, d.y, '#ffd76a', 20, 180, 0.6, 3);
+    G.effects.push({ type: 'ring', x: d.x, y: d.y, t: 0, life: 1.1, color: uc, r: 200 });
+    floatText(d.x, d.y - 52, '◈ 고유 장비 ◈', uc, 22);
+    hitstop(0.2); G.shake = Math.max(G.shake, 12); G.flash = { color: uc, t: 0, life: 0.9, a: 0.5 };
+    UI.toast('◈ 고유 장비 ◈', `${itemName(d.item)} — ${UNIQUES[d.item.unique].desc}`);
+    log(`고유 장비가 떨어졌다: ${itemName(d.item)}`, uc);
+    return;
+  }
   if (r < 2) { if (d.kind === 'item' && d.item.kind !== 'cons') { SFX.play('item', r); burst(d.x, d.y, c, 6, 70, 0.3, 2); } return; }
   SFX.play(r >= 4 ? 'legend' : 'item', r);
   burst(d.x, d.y, c, 10 + r * 8, 120 + r * 40, 0.6, 3);
   G.effects.push({ type: 'ring', x: d.x, y: d.y, t: 0, life: 0.6 + r * 0.1, color: c, r: 50 + r * 25 });
-  floatText(d.x, d.y - 46, r >= 4 ? `★ ${RARITIES[r].name} ★` : `${RARITIES[r].name}!`, c, 15 + r * 3);
+  if (d.kind === 'item' && d.item.set) { const S = SETS[d.item.set]; floatText(d.x, d.y - 46, `▣ ${S.name} 세트`, S.color, 17 + r * 2); log(`세트 장비가 떨어졌다: ${itemName(d.item)}`, S.color); } // v1.12
+  else floatText(d.x, d.y - 46, r >= 4 ? `★ ${RARITIES[r].name} ★` : `${RARITIES[r].name}!`, c, 15 + r * 3);
   if (r >= 3) { // 영웅 이상: 화면이 잠깐 멈추고 번쩍
     hitstop(r >= 4 ? 0.14 : 0.06); G.shake = Math.max(G.shake, r >= 4 ? 10 : 5);
     G.flash = { color: c, t: 0, life: r >= 4 ? 0.7 : 0.35, a: r >= 4 ? 0.45 : 0.22 };
@@ -980,6 +1027,7 @@ function update(dt) {
     if (p.rollT > 0) { // 구르는 중: 정해진 방향으로 빠르게
       p.rollT -= dt;
       World.move(p, Math.cos(p.rollA) * ROLL.speed * dt, Math.sin(p.rollA) * ROLL.speed * dt);
+      if (p.rollT <= 0 && armorLegend('afterimage')) { explode(p.x, p.y, p.level * 14 * playerDamageMul(true), 80, { small: true, knock: 18, stagger: 0.5 }); G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.35, color: '#c9a0ff', r: 90 }); } // v1.12 잔상
       if (Math.random() < 0.5) G.particles.push({ x: p.x, y: p.y, vx: 0, vy: 0, t: 0, life: 0.35, color: 'rgba(150,140,120,0.6)', size: 6, z: 4 });
     } else if (mv) {
       const { wx, wy, amt } = mv;
@@ -1042,7 +1090,7 @@ function update(dt) {
     log(z === 0 ? `${zn.name} — 안전 지대` : `${zn.name} 진입 (권장 Lv${zn.lvl[0]}~${zn.lvl[1]})`, z === 0 ? '#8f8' : '#fc8');
     if (zn.desc) log(`  ${zn.desc} · 특산: ${zn.gearText}`, '#c9b27a');
   }
-  G.darkness = lerp(G.darkness, ZONES[z].dark + (G.inside ? 0.15 : 0), dt * 1.5); // 실내는 조금 어둡게
+  G.darkness = lerp(G.darkness, (ZONES[z].dark + (G.inside ? 0.15 : 0)) * (armorLegend('nightVision') ? 0.4 : 1), dt * 1.5); // v1.12 야간 투시 // 실내는 조금 어둡게
 
   // 카메라
   G.shake *= Math.pow(0.002, dt);

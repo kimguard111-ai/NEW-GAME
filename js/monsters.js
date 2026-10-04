@@ -76,7 +76,7 @@ const Monsters = {
     for (const pl of G.pools) { pl.t += dt; if (Math.hypot(p.x - pl.x, p.y - pl.y) < pl.r) inPool = pl; }
     G.pools = G.pools.filter(pl => pl.t < pl.life);
     p.poolT = (p.poolT || 0) - dt;
-    if (inPool && !p.dead && p.poolT <= 0) { p.poolT = 0.5; damagePlayer(inPool.dps * 0.5); }
+    if (inPool && !p.dead && p.poolT <= 0 && !armorLegend('filter')) { p.poolT = 0.5; damagePlayer(inPool.dps * 0.5); }
   },
 
   // ---------------- 네임드 고유 패턴 ----------------
