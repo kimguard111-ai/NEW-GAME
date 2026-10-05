@@ -614,7 +614,7 @@ Match the art style of the attached concept image. ONE single Korean street lamp
 Match the art style of the attached concept image. ONE flat building wall texture panel, a TALL RECTANGLE (width to height about 3:5), seen perfectly FRONT-ON (orthographic, no perspective): one storey of a grey concrete wall overgrown with dark green ivy vines around a single broken window, filling the image edge to edge, left and right edges continuing seamlessly. Evenly lit. Detailed dark pixel art, desaturated colors with warm orange highlights. No text, no letters, no numbers, no logos, no border.
 ```
 
-> 15번 4장은 v1.31.2에 연결됨. Gemini가 이번에도 **정사각형에 가깝게** 그려서 외벽이 조금 옆으로 눌려 보입니다 — 신경 쓰이면 「**세로 그림 한 장씩**」(16-4처럼 3:5 한 장) 으로 다시 받는 게 확실합니다.
+> 16번 4장은 v1.31.3에 연결됨. 15번 4장은 v1.31.2에 연결됨. Gemini가 이번에도 **정사각형에 가깝게** 그려서 외벽이 조금 옆으로 눌려 보입니다 — 신경 쓰이면 「**세로 그림 한 장씩**」(16-4처럼 3:5 한 장) 으로 다시 받는 게 확실합니다.
 
 ---
 

@@ -181,7 +181,7 @@ function subwaySign(o) {
 // 그림 위에 계속 코드로 얹는 것: 불빛 · 불꽃 · 경광등
 function cityArtExtras(o, sx, sy) {
   const K = ISO_K, L = Settings.light && Light.list.length < LIGHT_CAP;
-  if (o.type === 'lamp') { const lit = !o.broken || Math.sin(G.time * 17 + o.x) > 0.7; if (lit && L) addLight(sx + (o.side === 'x' ? -22 : 22), sy + 6, 140, 0.75, 'rgba(255,220,150,A)'); }
+  if (o.type === 'lamp') { const lit = !o.broken || Math.sin(G.time * 17 + o.x) > 0.7; if (lit && L) { const dx = (o.side === 'x' ? -1 : 1) * (propArt('lamp') ? 48 : 22); addLight(sx + dx, sy + 6, 140, 0.75, 'rgba(255,220,150,A)'); if (propArt('lamp')) addLight(sx + dx, sy - 78, 26, 0.9, 'rgba(255,230,170,A)'); } }
   else if (o.type === 'barrel' || o.type === 'campfire') {
     const top = o.type === 'barrel' ? sy - 20 * K : sy - 4;
     for (let i = 0; i < 4; i++) { const k = (G.time * 2 + i / 4 + o.x * 0.01) % 1; ctx.fillStyle = `rgba(255,${110 + i * 35},40,${1 - k})`; ctx.beginPath(); ctx.arc(sx + Math.sin(G.time * 5 + i) * 3, top - k * 20, 4.5 * (1 - k) + 2, 0, TAU); ctx.fill(); }
@@ -203,7 +203,7 @@ function drawCityProp(o) {
     let px = sx, py = sy;
     if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
     drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
-    drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
+    drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
     if (o.type === 'car' && o.burnt) burnFx(o.tx, o.ty);
     if (o.type === 'bus' && o.burnt) burnFx(Math.floor(o.x / TILE), Math.floor(o.y / TILE));
     cityArtExtras(o, sx, sy);

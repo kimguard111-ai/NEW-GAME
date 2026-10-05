@@ -62,7 +62,7 @@ const ART = {
     cone: { file: 'props_street.png', rect: [383, 4, 102, 130] },
     deadtree: { file: 'props_street.png', rect: [126, 4, 96, 158] },
     hydrant: { file: 'props_street.png', rect: [671, 4, 72, 137] },
-    // lamp: Gemini 그림에 신호등이 붙어 있어 보류 (코드 가로등 사용) — 다시 그리면 연결
+    lamp: { file: 'props_lamp.png', rect: [4, 200, 313, 518], ax: 0.093 }, // v1.31.2 다시 그린 가로등 (기둥이 그림 왼쪽 → ax = 기둥 위치)
     signal: { file: 'props_street.png', rect: [476, 184, 251, 178] },
     trash: { file: 'props_street.png', rect: [226, 4, 153, 122] },
     tree: { file: 'props_street.png', rect: [4, 4, 118, 176] },
@@ -130,10 +130,12 @@ const ART = {
     in_debris: { file: 'props_interior2.png', rect: [784, 185, 184, 97] },
     in_hosp: { file: 'props_interior2.png', rect: [4, 4, 193, 158] },
     in_police: { file: 'props_interior2.png', rect: [363, 4, 158, 148] },
+    // props_turret.png (v1.31.2 · 윗줄 3개 사용)
+    turret: { file: 'props_turret.png', rect: [4, 4, 258, 231] }, turret_flame: { file: 'props_turret.png', rect: [266, 4, 271, 246] }, turret_mortar: { file: 'props_turret.png', rect: [541, 4, 256, 230] },
   },
   // 소품 그림을 화면에 놓는 크기: w = 화면 가로(px, 확대 1배 기준) · y = 그림 아래쪽을 바닥 점보다 얼마나 아래에 둘지
   propFit: {
-    lamp: { w: 48, y: 2 }, tree: { w: 92, y: 4 }, deadtree: { w: 78, y: 4 }, /* v1.21 실제 스케일 */ trash: { w: 34, y: 4 }, cone: { w: 13, y: 2 }, barrel: { w: 19, y: 3 },
+    lamp: { w: 66, y: 2 }, tree: { w: 92, y: 4 }, deadtree: { w: 78, y: 4 }, /* v1.21 실제 스케일 */ trash: { w: 34, y: 4 }, cone: { w: 13, y: 2 }, barrel: { w: 19, y: 3 },
     hydrant: { w: 15, y: 2 }, bench: { w: 40, y: 6 }, signal: { w: 64, y: 2 },
     car_a: { w: 92, y: 18 }, car_b: { w: 96, y: 18 }, car_c: { w: 92, y: 18 }, police: { w: 92, y: 18 }, bus: { w: 210, y: 40 }, car_burnt: { w: 92, y: 18 }, /* v1.21 2칸 승용차 · 5칸 버스 */
     dumpster: { w: 38, y: 8 }, locker: { w: 24, y: 6 }, labcase: { w: 26, y: 6 }, bag: { w: 20, y: 3 }, safe: { w: 34, y: 8 }, airdrop: { w: 38, y: 8 }, generator: { w: 40, y: 8 }, nest: { w: 96, y: 12 }, mine: { w: 18, y: 3 },
@@ -144,7 +146,7 @@ const ART = {
     in_food: { w: 30, y: 6 }, in_washer: { w: 26, y: 5 }, in_pc: { w: 32, y: 6 },
     in_bank: { w: 34, y: 6 }, in_hosp: { w: 34, y: 6 }, in_police: { w: 34, y: 6 }, in_crate: { w: 26, y: 5 }, in_crate_open: { w: 26, y: 5 },
     in_chair: { w: 18, y: 3 }, in_boxes: { w: 24, y: 4 }, in_debris: { w: 30, y: 4 }, in_bed: { w: 40, y: 7 },
-    turret: { w: 34, y: 4 }, turret_flame: { w: 34, y: 4 }, turret_mortar: { w: 34, y: 4 }, /* v1.31.2 포탑 */
+    turret: { w: 40, y: 5 }, turret_flame: { w: 40, y: 5 }, turret_mortar: { w: 42, y: 5 }, /* v1.31.2 포탑 */
     pole: { w: 30, y: 2 }, busstop: { w: 72, y: 10 }, pocha: { w: 74, y: 12 }, scooter: { w: 30, y: 4 }, subway: { w: 84, y: 14 }, cross: { w: 22, y: 2 }, /* v1.22 서울 거리 소품 */
   },
 
@@ -175,6 +177,12 @@ const ART = {
     fl_carpet: { file: 'tex_floor.png', rect: [7, 291, 270, 275] },
     fl_marble: { file: 'tex_floor.png', rect: [287, 291, 265, 275] },
     fl_concrete: { file: 'tex_floor.png', rect: [562, 291, 280, 274] },
+    // tex_street.png (v1.31.2 바닥 · 4×4칸에 나눠 펼침) — 아스팔트는 가장자리 차선을 잘라 냄
+    gr_asphalt: { file: 'tex_street.png', rect: [28, 8, 198, 262] }, gr_sidewalk: { file: 'tex_street.png', rect: [263, 5, 243, 269] }, gr_grass: { file: 'tex_street.png', rect: [518, 5, 243, 269] },
+    gr_grass2: { file: 'tex_street.png', rect: [773, 5, 244, 269] }, gr_dirt: { file: 'tex_street.png', rect: [7, 286, 244, 270] }, gr_water: { file: 'tex_street.png', rect: [263, 286, 243, 270] },
+    gr_plaza: { file: 'tex_street.png', rect: [519, 286, 242, 270] },
+    // tex_vines.png (v1.31.2 · 가운데 칸만)
+    f_vines: { file: 'tex_vines.png', rect: [178, 2, 668, 1020] },
     // tex_ground.png (v1.31.2)
     g_shutter: { file: 'tex_ground.png', rect: [7, 5, 191, 268] }, g_glass: { file: 'tex_ground.png', rect: [212, 4, 190, 269] }, g_awning: { file: 'tex_ground.png', rect: [417, 5, 190, 268] },
     g_awning2: { file: 'tex_ground.png', rect: [622, 5, 190, 268] }, g_realty: { file: 'tex_ground.png', rect: [827, 5, 189, 267] }, g_salon: { file: 'tex_ground.png', rect: [7, 286, 191, 270] },

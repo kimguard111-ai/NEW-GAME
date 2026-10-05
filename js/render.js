@@ -36,9 +36,10 @@ const TILE_COLORS = {
 
 // ---------------- 바닥 ----------------
 // v1.31.2 바닥 질감 (프롬프트 16번): 있으면 바탕색 대신 그림 — 그림 하나를 4×4칸에 걸쳐 펼침. 차선·횡단보도·풀 포기 같은 코드 디테일은 그 위에 그대로
-const GROUND_TEX = { [T.ROAD]: 'gr_asphalt', [T.CAR]: 'gr_asphalt', [T.WALK]: 'gr_sidewalk', [T.GRASS]: 'gr_grass', [T.RUBBLE]: 'gr_dirt', [T.WATER]: 'gr_water', [T.CAMP]: 'gr_plaza', [T.BARRICADE]: 'gr_plaza', [T.LANDMARK]: 'gr_dirt' };
+const GROUND_TEX = { [T.ROAD]: 'gr_asphalt', [T.CAR]: 'gr_asphalt', [T.WALK]: 'gr_sidewalk', [T.GRASS]: ['gr_grass', 'gr_grass2'], [T.RUBBLE]: 'gr_dirt', [T.WATER]: 'gr_water', [T.CAMP]: 'gr_plaza', [T.BARRICADE]: 'gr_plaza', [T.LANDMARK]: 'gr_dirt' };
 function groundTex(tx, ty, t, x, y) {
-  const a = ART.tex && ART.tex[GROUND_TEX[t]]; if (!a || !a.ready) return false;
+  let k = GROUND_TEX[t]; if (Array.isArray(k)) { const v = k.filter(q => ART.tex[q] && ART.tex[q].ready); k = v[Math.floor(hash2(tx >> 2, ty >> 2) * v.length)]; } // 변형: 4×4칸 덩어리마다
+  const a = ART.tex && ART.tex[k]; if (!a || !a.ready) return false;
   const [rx, ry, rw, rh] = a.rect || [0, 0, a.img.width, a.img.height], q = 4;
   ctx.drawImage(a.img, rx + (((tx % q) + q) % q) * rw / q, ry + (((ty % q) + q) % q) * rh / q, rw / q, rh / q, x, y, TILE + 0.6, TILE + 0.6);
   return true;
@@ -821,7 +822,7 @@ function drawPropArt(key, sx, sy, flip = false, k = 1) {
   const [rx, ry, rw, rh] = a.rect || [0, 0, a.img.width, a.img.height], fit = ART.propFit[key] || { w: 40, y: 4 };
   const w = fit.w * k, h = rh * w / rw;
   ctx.save(); ctx.translate(sx, sy + fit.y * k); if (flip !== !!a.mirror) ctx.scale(-1, 1); // v1.31 mirror: 반대 방향으로 그려진 그림
-  ctx.drawImage(a.img, rx, ry, rw, rh, -w / 2, -h, w, h);
+  ctx.drawImage(a.img, rx, ry, rw, rh, -w * (a.ax ?? 0.5), -h, w, h); // ax = 바닥 점이 그림 가로 어디인지 (기본 가운데)
   ctx.restore();
   return true;
 }
