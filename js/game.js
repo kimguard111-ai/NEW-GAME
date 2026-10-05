@@ -1188,6 +1188,7 @@ function update(dt) {
   if (!p.dead && p.hp < PlayerStats.maxHp(p) * 0.3 && World.map !== 'camp' && (G.beatT = (G.beatT || 0) - dt) <= 0) { G.beatT = 0.4 + p.hp / PlayerStats.maxHp(p) * 2.2; SFX.play('heart'); } // v1.17 저체력 심장 박동
   Nav.update(dt);
   updateEnemies(dt);
+  Companion.update(dt); // v1.41 동료
   Assault.update(dt);
   Bosses.updateField(dt);
   Bosses.updateLab(dt); // v1.5 연구소 키메라

@@ -266,7 +266,7 @@ const RaidEvents = {
     }
     const s = out.filter(Boolean);
     const al = this.alert ? ` · <b style="color:#ff8a5a">경보 ${this.alert}단계</b>` : ` · 경보까지 ${Math.max(0, Math.ceil((ALERT_AT[0] + Camp.alertDelay() - p.raid.t) / 60))}분`;
-    return Contracts.trackerLine() + `<br><span class="muted">${ICON('radio')} ${s.length ? s.join(' · ') : '사건 없음'}${al}${Heli.line()}</span>`;
+    return Contracts.trackerLine() + Companion.trackerLine() + `<br><span class="muted">${ICON('radio')} ${s.length ? s.join(' · ') : '사건 없음'}${al}${Heli.line()}</span>`;
   },
 
   // 미니맵 표시

@@ -1320,6 +1320,7 @@ function render() {
   for (const n of G.npcs) objs.push({ d: depth(n), draw: drawNpc, ent: n });
   for (const e of G.enemies) objs.push({ d: depth(e) + (e.def.flying ? 0.5 : 0), draw: drawEnemy, ent: e });
   for (const t of G.turrets) objs.push({ d: depth(t), draw: Turrets.drawOne, ent: t }); // v1.26 포탑
+  Companion.collect(objs); // v1.41 동료
   for (const d of G.drops) objs.push({ d: depth(d), draw: drawDrop, ent: d });
   for (const c of G.corpses) objs.push({ d: depth(c) - 0.3, draw: drawCorpse, ent: c });
   if (G.inside) { for (const c of G.inside.crates) objs.push({ d: depth(c), draw: drawCrate, ent: c }); for (const o of interiorDeco(G.inside)) objs.push({ d: depth(o), draw: q => drawPropArt(q.key, Iso.sx(q.x, q.y), Iso.sy(q.x, q.y), q.flip), ent: o }); } // v1.25 실내 장식 (그림이 있을 때만)
