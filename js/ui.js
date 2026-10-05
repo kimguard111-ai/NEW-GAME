@@ -354,7 +354,7 @@ const UI = {
     }
     const wline = sl => { const w = p.equip[sl]; return w ? `<div class="stat-row"><span>${sl === 'w1' ? '주무기' : '보조무기'} DPS <span class="muted">${itemName(w)}</span></span><b>${Math.round(weaponDps(p, w))}</b></div>` : ''; };
     // v1.11 특성: 단계마다 3개 중 1개
-    h += '<hr style="border-color:#333"><div class="muted">특성 (5레벨마다 하나 선택 · 의무병의 능력치 초기화 때 함께 초기화)</div>';
+    h += '<hr style="border-color:#333"><div class="muted">특성 (5레벨마다 하나 선택 · 의무병의 능력치 초기화 때 함께 초기화) <button id="btn-ptree" class="smod">패시브 트리</button></div>';
     PERK_TIERS.forEach((t, i) => {
       const got = p.perks[i], open = p.level >= t.lvl;
       h += `<div class="perk-tier${open ? '' : ' locked'}"><span class="tag">Lv${t.lvl}</span>`;
@@ -364,6 +364,10 @@ const UI = {
       }
       h += '</div>';
     });
+    { // v1.23 단련 · 갈래 보너스 요약
+      const own = Object.values(PASSIVES).flat().filter(n => pas(n.id)).map(n => n.name), bon = Object.keys(PASSIVE_BRANCHES).filter(branchOn).map(b => `<span style="color:${PASSIVE_BRANCHES[b].color}">★ ${PASSIVE_BRANCHES[b].name}: ${PASSIVE_BRANCHES[b].bonus}</span>`);
+      if (own.length || bon.length) h += `<div class="stat-eff">${own.length ? '단련: ' + own.join(' · ') : ''}${bon.length ? (own.length ? '<br>' : '') + bon.join('<br>') : ''}</div>`;
+    }
     h += '<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐 · 갈래는 캠프에서 바꿀 수 있음) <button id="btn-stree" class="smod">스킬 트리</button></div>';
     const inCamp = World.map === 'camp';
     for (const s of SKILLS) {
@@ -390,12 +394,11 @@ const UI = {
         const [i, id] = b.dataset.perk.split(':'), t = PERK_TIERS[+i], k = t.perks.find(q => q.id === id);
         if (p.perks[+i] || p.level < t.lvl) return;
         if (!confirm(`특성 「${k.name}」 — ${k.desc}\n선택할까요? (의무병에게서 초기화 가능)`)) return;
-        const before = PlayerStats.maxHp(p); p.perks[+i] = id; p.hp += Math.max(0, PlayerStats.maxHp(p) - before);
-        log(`특성 획득: ${k.name} — ${k.desc}`, '#ffd76a'); SFX.play('levelup');
-        UI.refreshStats(); UI.refreshInventory(); saveGame();
+        UI.choosePerk(+i, id);
       };
     });
     $('btn-stree').onclick = () => UI.skillTree(); // v1.22
+    $('btn-ptree').onclick = () => UI.passiveTree(); // v1.23
     $('stats-body').querySelectorAll('button[data-smod]').forEach(b => {
       b.onclick = () => {
         const [id, k] = b.dataset.smod.split(':');
@@ -626,7 +629,8 @@ const UI = {
       if (!why) btns.push([`${n.name} 구입 (${fmt(n.price)}₵)`, () => this.buyNode(s, k)]);
     }
     btns.push(['닫기', () => { this.treeSel = null; UI.close('dialog'); }]);
-    UI.dialog('스킬 트리 — 암시장 상인 박씨의 교범', h, btns);
+    const keep = $('dialog-text').scrollTop, same = $('dialog-name').textContent.startsWith('스킬 트리');
+    UI.dialog('스킬 트리 — 암시장 상인 박씨의 교범', h, btns); if (same) $('dialog-text').scrollTop = keep;
     $('dialog-text').querySelectorAll('[data-tn]').forEach(b => { b.onclick = () => { this.treeSel = b.dataset.tn; SFX.play('ui'); this.skillTree(); }; });
   },
   buyNode(s, k) {
@@ -638,6 +642,65 @@ const UI = {
     p.credits -= n.price; p.stree[s.id + '_' + k] = true;
     log(`스킬 트리: ${s.name} — ${n.name} (${n.desc})`, '#7fd'); UI.toast(k === 'cap' ? '궁극 기술' : '스킬 강화', `${s.name} — ${n.name}`);
     SFX.play('levelup'); UI.refreshStats(); saveGame(); this.skillTree();
+  },
+  // v1.23 특성 고르기 (능력치 창 · 패시브 트리 공용)
+  choosePerk(i, id) {
+    const p = G.player, t = PERK_TIERS[i], k = t.perks.find(q => q.id === id);
+    if (!k || p.perks[i] || p.level < t.lvl) return;
+    const before = PlayerStats.maxHp(p); p.perks[i] = id; p.hp += Math.max(0, PlayerStats.maxHp(p) - before);
+    log(`특성 획득: ${k.name} — ${k.desc}`, '#ffd76a'); SFX.play('levelup');
+    const b = PERK_BRANCH[id]; if (branchOn(b) && p.perks.filter(q => q && PERK_BRANCH[q] === b).length === 3) UI.toast('갈래 보너스', `${PASSIVE_BRANCHES[b].name} — ${PASSIVE_BRANCHES[b].bonus}`);
+    UI.refreshStats(); UI.refreshInventory(); saveGame();
+  },
+  // v1.23 패시브 트리: 세 갈래(공격 · 전술 · 생존). 특성(Lv5마다 한 단계에서 1개, 무료) 사이에 단련 노드(크레딧, 캠프에서)
+  ptNode(b, kind, i) {
+    const p = G.player;
+    if (kind === 'k') {
+      const t = PERK_TIERS[i], k = t.perks.find(q => PERK_BRANCH[q.id] === b), got = p.perks[i];
+      const st = got === k.id ? 'own' : got ? 'lock' : p.level < t.lvl ? 'lvl' : 'avail';
+      return { name: k.name, desc: k.desc, lvl: t.lvl, st, label: st === 'own' ? '선택함' : st === 'lock' ? '다른 특성' : st === 'lvl' ? 'Lv' + t.lvl : '선택 (무료)', why: st === 'lock' ? `이 단계는 「${t.perks.find(q => q.id === got).name}」을(를) 골랐음 · 의무병에게서 초기화` : st === 'lvl' ? `Lv${t.lvl}부터` : st === 'own' ? '선택함' : '', perk: k.id };
+    }
+    const n = PASSIVES[b][i], own = pas(n.id), pre = i === 0 || pas(PASSIVES[b][i - 1].id);
+    const st = own ? 'own' : !pre ? 'lock' : p.level < n.lvl ? 'lvl' : 'avail';
+    return { name: n.name, desc: n.desc, lvl: n.lvl, price: n.price, st, label: st === 'own' ? '보유' : st === 'lock' ? ICON('lock') : st === 'lvl' ? 'Lv' + n.lvl : fmt(n.price) + '₵',
+      why: st === 'own' ? '보유 중' : st === 'lock' ? `먼저 「${PASSIVES[b][i - 1].name}」` : st === 'lvl' ? `Lv${n.lvl}부터` : p.credits < n.price ? `크레딧 부족 (${fmt(n.price)}₵)` : World.map !== 'camp' ? '캠프에서 구입' : '' };
+  },
+  ptSel: null,
+  passiveTree() {
+    const p = G.player;
+    let h = `<div class="st-head"><span class="muted">₵${fmt(p.credits)} 보유 · <b>큰 칸 = 특성</b> (Lv5마다 한 단계에서 하나, 무료) · <b>작은 칸 = 단련</b> (크레딧, 캠프에서 위부터) · 같은 갈래 특성 3개 → 갈래 보너스</span></div><div class="stree pt">`;
+    for (const b of Object.keys(PASSIVE_BRANCHES)) {
+      const B = PASSIVE_BRANCHES[b], n = p.perks.filter(id => id && PERK_BRANCH[id] === b).length;
+      h += `<div class="st-col"><div class="st-title" style="color:${B.color}"><b>${B.name}</b> · 특성 ${n}/6</div><div class="pt-bonus${n >= 3 ? ' on' : ''}" title="같은 갈래 특성 3개">${n >= 3 ? '★' : '☆'} ${B.bonus}</div>`;
+      for (let i = 0; i < PERK_TIERS.length; i++) {
+        for (const kind of i < PASSIVES[b].length ? ['k', 'm'] : ['k']) {
+          const o = this.ptNode(b, kind, i), key = `${b}:${kind}:${i}`;
+          if (i || kind === 'm') h += `<i class="tl${o.st === 'own' ? ' on' : ''}"></i>`;
+          h += `<button class="tn ${o.st}${kind === 'k' ? ' key' : ' minor'}${this.ptSel === key ? ' sel' : ''}" data-pt="${key}"><b>${o.name}</b><span>${o.label}</span></button>`;
+        }
+      }
+      h += '</div>';
+    }
+    h += '</div>';
+    const btns = [];
+    if (this.ptSel) {
+      const [b, kind, si] = this.ptSel.split(':'), i = +si, o = this.ptNode(b, kind, i);
+      h += `<div class="st-detail"><b style="color:${PASSIVE_BRANCHES[b].color}">${o.name}</b> <span class="muted">${PASSIVE_BRANCHES[b].name} · ${kind === 'k' ? '특성' : '단련'} · Lv${o.lvl}${o.price ? ' · ' + fmt(o.price) + '₵' : ''}</span><br>${o.desc}${o.why ? `<br><span class="muted">${o.why}</span>` : ''}</div>`;
+      if (kind === 'k' && o.st === 'avail') btns.push([`특성 「${o.name}」 선택`, () => { UI.choosePerk(i, o.perk); this.passiveTree(); }]);
+      if (kind === 'm' && !o.why) btns.push([`${o.name} 구입 (${fmt(o.price)}₵)`, () => this.buyPassive(b, i)]);
+    }
+    btns.push(['닫기', () => { this.ptSel = null; UI.close('dialog'); }]);
+    const keep = $('dialog-text').scrollTop, same = $('dialog-name').textContent.startsWith('패시브 트리'); // 노드를 누를 때 스크롤 위치 유지
+    UI.dialog('패시브 트리 — 특성 · 단련', h, btns); if (same) $('dialog-text').scrollTop = keep;
+    $('dialog-text').querySelectorAll('[data-pt]').forEach(el => { el.onclick = () => { this.ptSel = el.dataset.pt; SFX.play('ui'); this.passiveTree(); }; });
+  },
+  buyPassive(b, i) {
+    const p = G.player, n = PASSIVES[b][i];
+    if (p.credits < n.price) { log('크레딧이 부족합니다.', '#f88'); SFX.play('empty'); return; }
+    const before = PlayerStats.maxHp(p);
+    p.credits -= n.price; p.passive[n.id] = true; p.hp += Math.max(0, PlayerStats.maxHp(p) - before);
+    log(`단련: ${n.name} — ${n.desc}`, '#7fd'); UI.toast('패시브 단련', `${PASSIVE_BRANCHES[b].name} — ${n.name}`);
+    SFX.play('levelup'); UI.refreshStats(); saveGame(); this.passiveTree();
   },
   buySkill(s, k) {
     const p = G.player, price = k ? s.modPrice : s.price;

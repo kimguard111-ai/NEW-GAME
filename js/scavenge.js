@@ -49,7 +49,7 @@ const Scavenge = {
     const p = G.player;
     if (G.search) return;
     if (t.hint && !RaidEvents.onStart(t)) return;
-    G.search = { target: t, t: 0, dur: t.hint ? t.dur : t.grave ? GRAVE_DUR : CACHES[t.type].dur * (perk('scavenger') ? 0.6 : 1), x: p.x, y: p.y };
+    G.search = { target: t, t: 0, dur: t.hint ? t.dur : t.grave ? GRAVE_DUR : CACHES[t.type].dur * (perk('scavenger') ? 0.6 : 1) * (pas('t5') ? 0.8 : 1), x: p.x, y: p.y };
     SFX.play('ui');
   },
 

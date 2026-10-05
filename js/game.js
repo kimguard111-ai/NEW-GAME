@@ -150,7 +150,7 @@ function startGame(save, name) {
     for (const s of SKILLS) if (P.level >= s.lvl) P.skills[s.id] = true;
     for (const [k, v] of Object.entries(P.skillMods || {})) if (v) P.smodOwned[k + '_' + v] = true;
   }
-  P.smodOwned = P.smodOwned || {}; P.stree = P.stree || {}; // v1.22 스킬 트리
+  P.smodOwned = P.smodOwned || {}; P.stree = P.stree || {}; P.passive = P.passive || {}; // v1.22 스킬 트리
   if (save && !save.p.skillsV120) { // v1.20 기존 세이브도 스킬은 돈 주고 배우기: 배운 스킬·갈래를 초기화하고 그 값을 크레딧으로 돌려줌 (손해 없음)
     let refund = 0;
     for (const s of SKILLS) { if (P.skills[s.id]) refund += s.price; for (const k of ['a', 'b']) if (P.smodOwned[s.id + '_' + k]) refund += s.modPrice; }
@@ -192,12 +192,13 @@ function gunMuzzle(p, w) {
 function dodge() {
   const p = G.player;
   if (p.dead || p.rollT > 0 || (p.rollCd || 0) > 0) return;
-  if (p.stam < ROLL.cost * (perk('runner') ? 0.75 : 1)) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, '기력 부족', '#7ab8ff', 12); } return; }
-  p.stam -= ROLL.cost * (perk('runner') ? 0.75 : 1); p.stamT = 0.5;
+  const rollCost = ROLL.cost * (perk('runner') ? 0.75 : 1) * (pas('t2') ? 0.85 : 1); // v1.23 호흡 조절
+  if (p.stam < rollCost) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, '기력 부족', '#7ab8ff', 12); } return; }
+  p.stam -= rollCost; p.stamT = 0.5;
   let a = p.aim;
   const m = moveInput();
   if (m) a = Math.atan2(m.wy, m.wx);
-  p.rollT = ROLL.dur; p.rollCd = ROLL.cd * (perk('ghost') ? 0.6 : 1); p.rollA = a; p.lastRoll = G.time;
+  p.rollT = ROLL.dur; p.rollCd = ROLL.cd * (perk('ghost') ? 0.6 : 1) * (branchOn('tac') ? 0.8 : 1); p.rollA = a; p.lastRoll = G.time;
   SFX.play('dodge'); burst(p.x, p.y, '#8a8070', 6, 80, 0.3, 3);
 }
 // 현재 이동 입력 (월드 방향, 정규화 안 됨). 없으면 null
@@ -254,6 +255,7 @@ function playerDamageMul(melee) {
   if (perk('rollStrike') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1.5) m *= 1.3;
   if (!melee && perk('steadyAim') && G.time - (p.lastHurt || -9) > 2) m *= 1.15;
   if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) m *= 1.25;
+  if (pas('a5')) m *= 1.05; if (branchOn('atk')) m *= 1.08; // v1.23 패시브 트리
   return m * Camp.dmgMul(); // v1.13 사격장
 }
 
@@ -405,7 +407,7 @@ function useItem(it) {
   if (it.key === 'medkit') {
     const mh = PlayerStats.maxHp(p);
     if (p.hp >= mh) { log('체력이 이미 가득합니다.', '#aaa'); return; }
-    const amt = Math.round(mh * 0.4 * (perk('fieldMedic') ? 1.5 : 1));
+    const amt = Math.round(mh * 0.4 * (perk('fieldMedic') ? 1.5 : 1) * (pas('s4') ? 1.2 : 1));
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
   } else if (it.key === 'ammo') {
@@ -490,6 +492,7 @@ function damagePlayer(dmg, srcX, srcY) {
   if (perk('ghost') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1) tk *= 0.5;
   if (p.buffs.shield > 0) tk *= 0.6;
   if (p.buffs.adren > 0 && smod('adren') === 'b') tk *= 0.7;
+  if (pas('s5')) tk *= 0.95; // v1.23 철벽
   if (p.buffs.stim > 0) tk *= 0.9; // v1.14 전투 자극제
   if (setOn('steel', 3) && p.hp >= PlayerStats.maxHp(p) * 0.5) tk *= 0.8; // v1.12 강철 부대 3세트
   if (wornUnique('shade') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1.5) tk *= 0.7; // 그림자 외피

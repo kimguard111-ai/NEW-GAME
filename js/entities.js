@@ -203,7 +203,7 @@ function newPlayer(name) {
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
-    perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, stree: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
+    perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, stree: {}, passive: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
     // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
     bossKills: 0, totalKills: 0, pity: 0, respecs: 0, found: [], radT: 0,
@@ -226,25 +226,27 @@ function hasLegend(p, id) { const w = p.equip[p.active]; return !!(w && w.legend
 //  민첩: 이동·공격속도 +0.8%, 치명타 +0.8% → 기동형
 // v1.11 특성 · 스킬 갈래 확인
 const perk = id => !!(G.player && G.player.perks && G.player.perks.includes(id));
+const pas = id => !!(G.player && G.player.passive && G.player.passive[id]); // v1.23 패시브 트리 단련
+const branchOn = b => !!(G.player && G.player.perks && G.player.perks.filter(id => id && PERK_BRANCH[id] === b).length >= 3); // 같은 갈래 특성 3개 → 갈래 보너스
 const smod = sid => (G.player && G.player.skillMods && G.player.skillMods[sid]) || null;
 const PlayerStats = {
-  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1) * (setOn('rad', 2) ? 1.08 : 1) * Camp.raidHpMul()),
-  def: p => Math.round((armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5)) * (setOn('steel', 2) ? 1.15 : 1)),
+  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1) * (pas('s1') ? 1.05 : 1) * (branchOn('sur') ? 1.1 : 1) * (setOn('rad', 2) ? 1.08 : 1) * Camp.raidHpMul()),
+  def: p => Math.round((armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5)) * (setOn('steel', 2) ? 1.15 : 1) * (pas('s2') ? 1.08 : 1)),
   dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 40 + 8 * p.level); }, // v1.0: 고레벨일수록 같은 방어력의 효과 감소 (Lv5 기존과 동일)
-  gunMul: p => 1 + (p.stats.dex - 5) * 0.04,
-  meleeMul: p => 1 + (p.stats.str - 5) * 0.06,
-  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.25 : 0) + (setOn('blacksun', 2) ? 0.08 : 0),
-  critMul: (p, w) => ((w && WEAPONS[w.key].critMul) || 1.8) + gearBonus(p, 'critDmg', w) + (armorLegend('hunterEye') ? 0.35 : 0) + ((p.bsT || 0) > G.time ? 0.5 : 0),
+  gunMul: p => (1 + (p.stats.dex - 5) * 0.04) * (pas('a2') ? 1.06 : 1),
+  meleeMul: p => (1 + (p.stats.str - 5) * 0.06) * (pas('a1') ? 1.06 : 1),
+  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.25 : 0) + (setOn('blacksun', 2) ? 0.08 : 0) + (pas('a3') ? 0.03 : 0),
+  critMul: (p, w) => ((w && WEAPONS[w.key].critMul) || 1.8) + gearBonus(p, 'critDmg', w) + (armorLegend('hunterEye') ? 0.35 : 0) + ((p.bsT || 0) > G.time ? 0.5 : 0) + (pas('a4') ? 0.15 : 0),
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {
     const w = p.equip[p.active];
-    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
+    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (pas('t4') ? 1.04 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
   rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1) / (p.buffs.stim > 0 ? 1.15 : 1),
-  reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)) / (perk('bulletStorm') ? 1.2 : 1),
-  regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + gearBonus(p, 'regen') + (armorLegend('filter') ? 2 : 0) + (wornUnique('chimera') ? (p.hp < PlayerStats.maxHp(p) * 0.5 ? 9 : 3) : 0),
-  expMul: p => 1 + gearBonus(p, 'exp'),
+  reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)) / (perk('bulletStorm') ? 1.2 : 1) / (pas('t1') ? 1.1 : 1),
+  regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + (pas('s3') ? 1 : 0) + gearBonus(p, 'regen') + (armorLegend('filter') ? 2 : 0) + (wornUnique('chimera') ? (p.hp < PlayerStats.maxHp(p) * 0.5 ? 9 : 3) : 0),
+  expMul: p => 1 + gearBonus(p, 'exp') + (pas('t5') ? 0.05 : 0),
   // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
   // v1.7: 밸런스 봇 측정 결과 Lv30까지 너무 빠름 → Lv5부터 점점 더 많이 (Lv10 ×1.65 · Lv20 ×2.4 · Lv30 ×3.0)
   expNext: lvl => Math.floor(70 * lvl * lvl * Math.max(1, Math.pow(lvl / 4, 0.55))),
@@ -259,7 +261,7 @@ const SkillCalc = {
   grenadeDmg: p => (30 + p.level * 6) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5), // v1.16 너프: 45+레벨×9 · 사격 능력치 전부 → 30+레벨×6 · 절반만
   healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006) + (stree('heal', 'r1') ? 0.1 : 0),
   adrenDur: p => 8 + (stree('adren', 'r1') ? 2 : 0), // v1.22
-  cdMul: id => stree(id, 'r2') ? 0.85 : 1, // v1.22 숙달
+  cdMul: id => (stree(id, 'r2') ? 0.85 : 1) * (pas('t3') ? 0.94 : 1) * (branchOn('tac') ? 0.9 : 1), // v1.22 숙달 · v1.23 전술 단련·갈래 보너스
   adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.5 : 1),
 };
 const stree = (id, k) => !!(G.player && G.player.stree && G.player.stree[id + '_' + k]); // v1.22 스킬 트리

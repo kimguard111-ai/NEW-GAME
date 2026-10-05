@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.22';
+const GAME_VERSION = 'v1.23';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -277,6 +277,29 @@ const PERK_TIERS = [
     { id: 'ghost', name: '그림자 걸음', desc: '구르기 재사용 -40% · 구르기 후 1초 동안 받는 피해 -50%' },
     { id: 'warlord', name: '전쟁군주', desc: '모든 스킬 재사용 대기 -25%' } ] },
 ];
+
+// v1.23 패시브 트리: 특성(위 PERK_TIERS)을 세 갈래로 나눠 트리로 보여 줌. 단계마다 고르는 규칙은 그대로 (3개 중 1개, 무료)
+// 특성 사이의 「단련」 노드는 크레딧으로 삼 (캠프에서, 위에서부터 차례로, 되돌리기 없음)
+// 같은 갈래 특성을 3개 이상 고르면 갈래 보너스
+const PERK_BRANCH = { rollStrike: 'atk', scavenger: 'tac', thickSkin: 'sur', lastRounds: 'atk', runner: 'tac', brawler: 'sur',
+  executioner: 'atk', steadyAim: 'tac', fieldMedic: 'sur', killStreak: 'atk', demolition: 'tac', lastStand: 'sur',
+  bulletStorm: 'atk', treasure: 'tac', secondWind: 'sur', apex: 'atk', warlord: 'tac', ghost: 'sur' };
+const PASSIVE_BRANCHES = {
+  atk: { name: '공격', color: '#ff8a6a', bonus: '모든 피해 +8%' },
+  tac: { name: '전술', color: '#6ab4ff', bonus: '스킬 재사용 대기 -10% · 구르기 재사용 -20%' },
+  sur: { name: '생존', color: '#6fdc6f', bonus: '최대 체력 +10%' },
+};
+const PASSIVES = {
+  atk: [ { id: 'a1', name: '근접 단련', desc: '근접 피해 +6%', lvl: 7, price: 1500 }, { id: 'a2', name: '사격 단련', desc: '총기 피해 +6%', lvl: 12, price: 3000 },
+         { id: 'a3', name: '급소 노리기', desc: '치명타 확률 +3%', lvl: 17, price: 5000 }, { id: 'a4', name: '치명상', desc: '치명타 피해 +15%', lvl: 22, price: 8000 },
+         { id: 'a5', name: '살육', desc: '모든 피해 +5%', lvl: 27, price: 12000 } ],
+  tac: [ { id: 't1', name: '빠른 손', desc: '재장전 속도 +10%', lvl: 7, price: 1500 }, { id: 't2', name: '호흡 조절', desc: '구르기 기력 소모 -15%', lvl: 12, price: 3000 },
+         { id: 't3', name: '전술 훈련', desc: '스킬 재사용 대기 -6%', lvl: 17, price: 5000 }, { id: 't4', name: '경량 장비', desc: '이동 속도 +4%', lvl: 22, price: 8000 },
+         { id: 't5', name: '현장 감각', desc: '뒤지기 속도 +25% · 경험치 +5%', lvl: 27, price: 12000 } ],
+  sur: [ { id: 's1', name: '강골', desc: '최대 체력 +5%', lvl: 7, price: 1500 }, { id: 's2', name: '보호대', desc: '방어력 +8%', lvl: 12, price: 3000 },
+         { id: 's3', name: '회복력', desc: '체력 재생 +1/초', lvl: 17, price: 5000 }, { id: 's4', name: '응급 훈련', desc: '구급상자 회복량 +20%', lvl: 22, price: 8000 },
+         { id: 's5', name: '철벽', desc: '받는 피해 -5%', lvl: 27, price: 12000 } ],
+};
 
 // v1.11 스킬 갈래: 스킬마다 2개 중 하나 (캠프에서 자유롭게 바꿈). 고르지 않으면 기본형
 const SKILL_MODS = {
