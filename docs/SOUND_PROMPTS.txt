@@ -1,0 +1,92 @@
+SEOUL 2049 효과음 프롬프트 (순수 글 버전)
+한 줄 = 파일 하나. 「:」 앞이 저장할 파일 이름, 뒤가 그대로 복사해서 넣을 문장.
+「_1~3」은 같은 문장으로 3번 만들어 _1, _2, _3 으로 저장. 길이는 문장 안에 넣어 둠 (안 맞아도 제가 자름).
+
+
+[1. 총 ★]
+pistol_1~3: Single 1911 pistol gunshot, close range, sharp crack with a short punchy low thump, dry recording, no reverb, no echo, no music, about 0.6 seconds long
+smg_1~3: Single shot from a compact 9mm submachine gun, tight snappy crack, light body, very short, dry, no reverb, no music, about 0.35 seconds long
+rifle_1~3: Single assault rifle gunshot, loud supersonic crack with a deep chest-hitting thump, close mic, dry, no reverb, no music, about 0.6 seconds long
+lmg_1~3: Single shot from a heavy belt-fed machine gun, deep powerful boom with a metallic mechanical clank, dry, no reverb, no music, about 0.5 seconds long
+shotgun_1~2: Pump-action shotgun blast, huge heavy boom, then a quick pump rack chk-chk, close, dry, no reverb, no music, about 1.0 seconds long
+sniper_1~2: Bolt-action sniper rifle shot, massive sharp crack with a heavy low boom, followed by the metallic bolt being cycled, dry, no reverb, no music, about 1.3 seconds long
+eshot_1~3: Single rifle gunshot heard from about 30 meters away, thinner and less bassy, slightly muffled, dry, no music, about 0.4 seconds long
+empty: Dry fire click of an empty gun, single small metallic click, no reverb, no music, about 0.2 seconds long
+
+[2. 장전]
+reload_pistol: Pistol reload: magazine released and dropping, new magazine inserted, slide racked, crisp metallic foley, dry, no music, about 1.0 seconds long
+reload_smg: Submachine gun reload: magazine out, magazine in, charging handle pulled, metallic foley, dry, no music, about 1.5 seconds long
+reload_rifle: Assault rifle reload: magazine out, fresh magazine slapped in, bolt release clack, metallic foley, dry, no music, about 1.8 seconds long
+reload_shotgun: Shotgun reload: four shells pushed one by one into the tube, then a pump rack, foley, dry, no music, about 1.8 seconds long
+reload_sniper: Bolt-action rifle reload: bolt pulled back, magazine swapped, bolt pushed forward and locked, metallic foley, dry, no music, about 2.4 seconds long
+reload_lmg: Light machine gun reload: top cover opened, ammo belt laid in with rattling links, cover slammed shut, charging handle pulled, dry, no music, about 4.0 seconds long
+
+[3. 근접]
+swing_pipe_1~2: Fast whoosh of a heavy steel pipe swung through the air, short, dry, no music, about 0.4 seconds long
+swing_axe_1~2: Heavy fire axe swung hard through the air, deep whoosh, dry, no music, about 0.5 seconds long
+swing_katana_1~2: Sharp high-pitched sword slash whoosh with a faint ringing blade, dry, no music, about 0.4 seconds long
+heavy: Brutal heavy melee impact on a body, deep thud with a crunch, dry, no music, about 0.5 seconds long
+
+[4. 맞는 소리 ★]
+impact_1~4: Bullet hitting flesh, short wet punchy thwack, close, dry, no scream, no music, about 0.25 seconds long
+impactCrit_1~2: Powerful bullet impact on a body with a sharp crack and a heavy thud, critical hit, dry, no music, about 0.3 seconds long
+metal_1~3: Bullet hitting a metal robot, sharp metallic ping with a short ring, dry, no music, about 0.3 seconds long
+ricochet_1~2: Bullet ricochet off concrete, small spark ping whizzing away, dry, no music, about 0.4 seconds long
+kill_1~3: A body collapsing to the ground, heavy dull thud with cloth rustle, dry, no voice, no music, about 0.6 seconds long
+ehit_1~3: Player getting hit, muffled body impact with a short grunt, no words, dry, no music, about 0.3 seconds long
+boom_1~2: Grenade explosion, sharp blast with deep low rumble and debris falling, close, no music, about 2.0 seconds long
+
+[5. 적]
+growl_1~3: Zombie growl, raspy wet guttural snarl, short, dry, no words, no music, about 0.8 seconds long
+roar_1~2: Huge mutant monster roar, deep and terrifying, dry, no music, about 1.5 seconds long
+shout_1~3: Short aggressive male shout of alarm, like "hey!", no clear words, dry, no music, about 0.5 seconds long
+beep_1: Security drone alert, two quick electronic beeps, dry, no music, about 0.4 seconds long
+
+[6. 발소리 (한 걸음씩) ★]
+
+[7. 플레이어 · 획득]
+dodge_1~2: Quick slide across a concrete floor, fabric and boots scraping, short, dry, no music, about 0.5 seconds long
+heal: Medical bandage being wrapped quickly and a soft relieved breath, no words, dry, no music, about 1.0 seconds long
+ammo: Picking up a box of ammunition, rounds rattling, short, dry, no music, about 0.4 seconds long
+coin: Picking up a few metal coins and scrap tokens, short jingle, dry, no music, about 0.3 seconds long
+item: Picking up a piece of gear, cloth rustle and a light metallic clink, short, dry, no music, about 0.6 seconds long
+levelup: Short gritty rising synth stinger for leveling up, dark post-apocalyptic tone, no melody longer than one second, about 1.2 seconds long
+quest: Short low brass and radio static stinger for mission complete, gritty, post-apocalyptic, no voice, about 1.2 seconds long
+
+[8. 맵 환경음]
+amb_wind: Seamless loop of cold wind blowing through an empty ruined city, low and steady, no music, no voices, loopable, about 15 seconds long, seamless loop
+amb_gun_1~3: Distant gunfire far away in a ruined city, a short burst of 2 to 5 shots, muffled, no music, about 2 seconds long
+amb_siren: Distant air raid siren wailing far away, muffled, no music, about 8 seconds long
+amb_crow_1~2: A few crow caws in the distance, no music, about 2 seconds long
+amb_moan_1~2: Distant zombie moan echoing far away, no words, no music, about 2 seconds long
+amb_creak_1~2: Slow creak of a twisted metal beam in the wind, no music, about 2 seconds long
+amb_dog_1~2: A stray dog barking far away, three barks, no music, about 2 seconds long
+amb_geiger_1~2: Geiger counter crackling irregularly, no music, about 3 seconds long
+amb_drip_1~3: Single water drip in an underground tunnel, no music, about 1 seconds long
+amb_alarm: Distant facility alarm beeping in an underground lab, muffled, no music, about 3 seconds long
+amb_heli: Military helicopter passing far away, rotor thumping fading in and out, no music, about 8 seconds long
+amb_glass_1~2: Glass shards falling and tinkling from a broken window, no music, about 1.5 seconds long
+amb_water: Gentle water lapping against a concrete lake shore, no music, about 4 seconds long
+amb_insects: Night insects chirping in overgrown grass, no music, about 3 seconds long
+amb_roar: Huge creature roaring far away in the distance, muffled, no music, about 3 seconds long
+amb_fire_1~3: Campfire crackle and pop, close, no music, about 1 seconds long
+amb_radio_1~2: Old military radio static with garbled unintelligible chatter, no clear words, no music, about 2 seconds long
+
+[9. UI]
+click: Small dry mechanical switch click, no music, about 0.1 seconds long
+open: Canvas bag flap opened with a short zipper pull, dry, no music, about 0.3 seconds long
+close: Canvas bag flap closed, soft thump, dry, no music, about 0.3 seconds long
+error: Short low negative buzzer from an old military device, dry, no music, about 0.3 seconds long
+equip: Gear being strapped on, buckle click and fabric, dry, no music, about 0.5 seconds long
+buy: Old cash register drawer opening with coins, short, dry, no music, about 0.5 seconds long
+
+[6. 발소리 — 각각 4개씩]
+step_asphalt_1~4: Single footstep of a combat boot on asphalt, one step only, dry, no music, about 0.3 seconds long
+step_concrete_1~4: Single footstep of a combat boot on dusty concrete, one step only, dry, no music, about 0.3 seconds long
+step_gravel_1~4: Single footstep on gravel and broken rubble, crunchy, one step only, dry, no music, about 0.3 seconds long
+step_grass_1~4: Single footstep on dry grass, soft rustle, one step only, dry, no music, about 0.3 seconds long
+step_water_1~4: Single footstep splashing in shallow water, one step only, dry, no music, about 0.3 seconds long
+step_wood_1~4: Single footstep on an old wooden floor, hollow thud, one step only, dry, no music, about 0.3 seconds long
+step_tile_1~4: Single footstep on ceramic floor tiles, crisp tap, one step only, dry, no music, about 0.3 seconds long
+step_metal_1~4: Single footstep on a metal grate floor, clanky, one step only, dry, no music, about 0.3 seconds long
+step_carpet_1~4: Single footstep on carpet, very soft muffled, one step only, dry, no music, about 0.3 seconds long

@@ -761,7 +761,7 @@ function shopFront(i) {
   const nd = bd.door ? Math.min(...bd.door.map(([dx, dy]) => Math.max(Math.abs(dx - tx), Math.abs(dy - ty)))) : 0;
   return { front: nd <= 2 ? fk : null, upper }; // v1.32 가게 앞모습은 문 양옆 2칸까지만 (건물 둘레 전체가 같은 진열창이던 것) — 나머지는 일반 1층
 }
-const LOW_ONLY = new Set(['f_vines', 'f_scaffold', 'f_motel', 'f_villa']); // v1.32 담쟁이·비계·모텔·빌라는 4층 이하에만 (고층 전체를 덮으면 인위적)
+const LOW_ONLY = new Set(['f_vines', 'f_scaffold', 'f_motel', 'f_villa', 'f_burnt']); // v1.40.2 불탄 벽(구멍)도 낮은 건물에만 // v1.32 담쟁이·비계·모텔·빌라는 4층 이하에만 (고층 전체를 덮으면 인위적)
 function facadeVariant(tx, ty, glass, ht = 0) {
   if (!ART.tex) return null;
   const ok = k => { const a = ART.tex[k]; return a && a.ready ? k : null; };

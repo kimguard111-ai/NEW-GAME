@@ -38,7 +38,7 @@ function makeWeapon(key, ilvl, rarity) {
   const b = WEAPONS[key], r = RARITIES[rarity];
   const scale = r.mul * (1 + (ilvl - 1) * 0.07);
   const it = {
-    id: nextItemId++, kind: 'weapon', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0, v181: true, v127: true, // v181: 근접 피해 보정이 이미 반영된 새 수치
+    id: nextItemId++, kind: 'weapon', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0, v181: true, v127: true, v1402: true, // v181: 근접 피해 보정이 이미 반영된 새 수치
     name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     dmg: Math.round(b.dmg * scale * 10) / 10,
     affixes: rollAffixes('weapon', key, rarity, ilvl), isNew: true,

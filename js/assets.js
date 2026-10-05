@@ -220,10 +220,10 @@ const ART = {
   texZones: { 0: ['f_apartment', 'f_brick', 'f_apartment2', 'f_villa', 'f_tile'],
     1: ['f_brick', 'f_apartment', 'f_office', 'f_brick2', 'f_apartment2', 'f_signframe', 'f_tile', 'f_motel'],
     2: ['f_brick', 'f_apartment', 'f_brick2', 'f_apartment2', 'f_tile', 'f_villa', 'f_vines', 'f_signframe'],
-    3: ['f_office', 'f_burnt', 'f_apartment', 'f_office2', 'f_burnt2', 'f_military', 'f_scaffold'],
-    4: ['f_office', 'f_glass', 'f_burnt', 'f_office2', 'f_burnt2', 'f_stone', 'f_scaffold'],
+    3: ['f_office', 'f_burnt', 'f_apartment', 'f_office2', 'f_military', 'f_scaffold', 'f_signframe'], // v1.40.2 f_burnt2(무너진 벽 구멍)는 건물 전체에 줄지어 기괴해서 뺌
+    4: ['f_office', 'f_glass', 'f_burnt', 'f_office2', 'f_stone', 'f_scaffold'],
     6: ['f_glass', 'f_office', 'f_glass2', 'f_office2', 'f_stone'],
-    7: ['f_apartment', 'f_burnt', 'f_brick', 'f_apartment2', 'f_burnt2', 'f_corridor', 'f_villa', 'f_vines'] },
+    7: ['f_apartment', 'f_burnt', 'f_brick', 'f_apartment2', 'f_corridor', 'f_villa', 'f_vines'] },
   // v1.31.1 일반 건물 1층 상가: 칸·면마다 이 중 하나 (f_shop + 프롬프트 15-1의 9종)
   groundSet: ['f_shop', 'g_shutter', 'g_glass', 'g_awning', 'g_awning2', 'g_phone', 'g_grille', 'g_salon', 'g_salon2', 'g_realty', 'g_karaoke', 'g_empty'], // v1.31 변형(…2) 섞어 반복 줄이기
 
