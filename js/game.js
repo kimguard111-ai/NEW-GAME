@@ -161,6 +161,11 @@ function startGame(save, name) {
     if (!P.equip.belt) P.equip.belt = makeBelt(Math.min(3, Math.ceil(acts.length / 2) - 1));
   }
   if (!('belt' in P.equip)) P.equip.belt = null;
+  if (save && !save.p.spV125) { // v1.25 기존 세이브: 배운 것은 그대로 두고, 지금까지 받았을 SP에서 쓴 만큼 빼서 남은 SP를 줌 (크레딧 반환 없음)
+    let spent = 0;
+    for (const s of SKILLS) { if (P.skills[s.id]) spent += SKILL_SP.root; for (const k of ['a', 'b']) if (P.smodOwned[s.id + '_' + k]) spent += SKILL_SP[k]; for (const k of ['r1', 'r2', 'cap']) if (P.stree[s.id + '_' + k]) spent += SKILL_SP[k]; }
+    P.sp = Math.max(0, 1 + (P.level - 1) + (P.quest.ch || 0) - spent); P.spV125 = true;
+  }
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -196,7 +201,7 @@ function gunMuzzle(p, w) {
 function dodge() {
   const p = G.player;
   if (p.dead || p.rollT > 0 || (p.rollCd || 0) > 0) return;
-  const rollCost = ROLL.cost * (perk('runner') ? 0.75 : 1) * (pas('t2') ? 0.85 : 1); // v1.23 호흡 조절
+  const rollCost = ROLL.cost * (perk('runner') ? 0.75 : 1) * (pas('t2') ? 0.85 : 1) * (1 - gearBonus(p, 'rollStam')); // v1.23 호흡 조절 · v1.25 벨트
   if (p.stam < rollCost) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, '기력 부족', '#7ab8ff', 12); } return; }
   p.stam -= rollCost; p.stamT = 0.5;
   let a = p.aim;
@@ -367,7 +372,7 @@ function explode(x, y, dmg, r, opts = {}) {
 function useSkill(i) {
   const p = G.player, s = SKILLS[i];
   if (p.level < s.lvl) { log(`${s.name}: Lv${s.lvl}부터 배울 수 있습니다 (암시장 상인 박씨).`, '#aaa'); return; }
-  if (!p.skills[s.id]) { log(`${s.name}: 아직 배우지 않았습니다 — 캠프의 암시장 상인 박씨 「스킬 교범」 (${fmt(s.price)}₵)`, '#aaa'); SFX.play('empty'); return; } // v1.16
+  if (!p.skills[s.id]) { log(`${s.name}: 아직 배우지 않았습니다 — 스킬 트리에서 스킬 포인트로 (능력치 창 C)`, '#aaa'); SFX.play('empty'); return; } // v1.16
   if (p.skillCd[i] > 0) return;
   SFX.play(s.id === 'heal' ? 'heal' : 'skill');
   const m = smod(s.id); // v1.11 스킬 갈래
@@ -411,7 +416,7 @@ function useItem(it) {
   if (it.key === 'medkit') {
     const mh = PlayerStats.maxHp(p);
     if (p.hp >= mh) { log('체력이 이미 가득합니다.', '#aaa'); return; }
-    const amt = Math.round(mh * 0.4 * (perk('fieldMedic') ? 1.5 : 1) * (pas('s4') ? 1.2 : 1));
+    const amt = Math.round(mh * 0.4 * (perk('fieldMedic') ? 1.5 : 1) * (pas('s4') ? 1.2 : 1) * (1 + gearBonus(p, 'medHeal')));
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
   } else if (it.key === 'ammo') {
@@ -420,6 +425,7 @@ function useItem(it) {
     const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
     const on = Hotbar.autoAdd(slot), k = G.player.hotbar.indexOf(slot) + 1; log(`${it.name}을(를) ${slot === 'throw' ? '투척' : '보조'} 칸${on ? `(${k}번)` : ''}에 올렸다.${on ? '' : ' 벨트 칸이 가득 — B로 등록'}`, '#cfe'); UI.buildHotbar(); return; // v1.24
   } else return;
+  if (Math.random() < gearBonus(p, 'gadSave')) { floatText(p.x, p.y - 44, '절약', '#9fe0ff', 12); UI.refreshInventory(); return; } // v1.25 벨트 옵션
   it.count--;
   if (it.count <= 0) removeItem(it);
   UI.refreshInventory();
@@ -467,10 +473,11 @@ function gainExp(n) {
     p.level++;
     p.statPoints += 3;
     p.hp = PlayerStats.maxHp(p);
-    log(`레벨 업! Lv${p.level} — 능력치 포인트 +3 (C)`, '#ffd76a');
+    p.sp = (p.sp || 0) + 1; // v1.25 스킬 포인트
+    log(`레벨 업! Lv${p.level} — 능력치 포인트 +3 · 스킬 포인트 +1 (C)`, '#ffd76a');
     SFX.play('levelup');
     const sk = SKILLS.find(s => s.lvl === p.level);
-    if (sk) log(`새 스킬을 배울 수 있다: ${sk.name} — 캠프의 암시장 상인 박씨 「스킬 교범」 (${fmt(sk.price)}₵)`, '#7fd');
+    if (sk) log(`새 스킬을 배울 수 있다: ${sk.name} — 스킬 트리 (능력치 창 C · ${SKILL_SP.root} SP)`, '#7fd');
     const pt = PERK_TIERS.find(t => t.lvl === p.level); // v1.11 특성 선택
     if (pt) { UI.toast(`특성 선택 — Lv${pt.lvl}`, `능력치 창(C)에서 ${pt.perks.map(k => k.name).join(' · ')} 중 하나`); log(`특성을 고를 수 있다: ${pt.perks.map(k => k.name).join(' · ')} (능력치 창 C)`, '#ffd76a'); }
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.8, color: '#ffd76a', r: 80 });
@@ -698,7 +705,7 @@ function killEnemy(e) {
   if (e.elite) { // 네임드: 장비 확정 + 크레딧
     G.elite = null;
     log(`${ELITES[e.elite].name} 처치!`, '#ffa53a');
-    dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) });
+    if (Math.random() < 0.5) dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) }); // v1.25 확정 → 50%
     dropAt('credits', { amount: e.level * 40 });
     rollUnique(e.elite, e.level, dropAt); // v1.12 레이븐 · 바벨
     hitstop(0.12); G.shake = Math.max(G.shake, 10);
@@ -706,7 +713,7 @@ function killEnemy(e) {
   if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
     Monsters.onDeath(e);
     dropAt('credits', { amount: e.level * 12 });
-    if (Math.random() < 0.12) dropAt('item', { item: randomGear(e.level, 1.2, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
+    if (Math.random() < 0.12 * ECON.gear) dropAt('item', { item: randomGear(e.level, 1.2, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
   }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
@@ -714,7 +721,7 @@ function killEnemy(e) {
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
   const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
-  if (Math.random() < gearChance * (perk('treasure') ? 1.25 : 1)) {
+  if (Math.random() < gearChance * ECON.gear * (perk('treasure') ? 1.25 : 1)) { // v1.25 ×0.3
     const it = randomGear(e.level, 0.4 + zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
     p.pity = it.rarity >= 3 ? 0 : p.pity + 1;
     dropAt('item', { item: it });
@@ -1035,6 +1042,7 @@ function dropReveal(d, r) {
 function updateDrops(dt) {
   const p = G.player;
   for (const d of G.drops) {
+    if (d.kind === 'credits' && !d.econ) { d.econ = true; d.amount = Math.max(1, Math.round(d.amount * ECON.cr)); } // v1.25 땅에 떨어지는 크레딧 절반
     const r = d.kind === 'item' && d.item.kind !== 'cons' ? d.item.rarity || 0 : 0;
     if (d.z === undefined) { // v1.7.1 튀어나오기: 적 자리에서 포물선으로 솟았다가 한 번 튕기고 착지
       const a = rand(0, TAU), s = rand(30, 70);

@@ -197,6 +197,7 @@ const Story = {
       radio(c.outro);
       UI.toast(`${c.title} 완료!`, CHAPTERS[p.quest.ch + 1] ? `다음 장: Lv${CHAPTERS[p.quest.ch + 1].minLevel} 이상 · 캠프의 한씨` : '모든 장을 완료했습니다');
       p.quest.ch++; p.quest.step = 0; p.quest.active = false;
+      p.sp = (p.sp || 0) + 1; log('장 완료 보상: 스킬 포인트 +1', '#7fd'); // v1.25
       if (!CHAPTERS[p.quest.ch] && !p.finalEnd) { p.ended = p.finalEnd = true; setTimeout(() => Pause.ending(), 2500); } // v1.0 엔딩 · v1.6 제6장 뒤로 (4장에서 본 사람도 다시 봄)
     } else {
       const next = c.steps[p.quest.step];

@@ -86,6 +86,9 @@
           <option value="props_camp">v1.18 캠프 소품 9종 (3×3)</option>
           <option value="props_deco">v1.18 잔해·옥상 장식 9종 (3×3)</option>
           <option value="props_seoul">v1.22 서울 거리 소품 6종 (3×2)</option>
+          <option value="props_interior1">v1.25 실내 소품 9종 — 상가 (3×3)</option>
+          <option value="props_interior2">v1.25 실내 소품 9종 — 창구·상자·장식 (3×3)</option>
+          <option value="tex_floor">v1.25 실내 바닥 질감 6종 (3×2)</option>
           <option value="tex_facade">v1.19 건물 외벽 질감 6종 (3×2)</option>
           <option value="tex_roof">v1.19 옥상 질감 3종 (3×1)</option>
         </optgroup>
@@ -338,6 +341,9 @@ const ATLAS = {
   props_seoul:   { file: 'props_seoul.png', cols: 3, rows: 2, target: 'props', keys: ['pole', 'busstop', 'pocha', 'scooter', 'subway', 'cross'] }, // v1.22
   props_camp:    { file: 'props_camp.png', cols: 3, rows: 3, target: 'props', keys: ['tent', 'tent_medic', 'crates', 'workbench', 'maptable', 'radio', 'campfire', 'container', 'sandbags'] },
   // v1.19 건물 질감 (js/assets.js 의 tex 안에 붙여넣기): 게임이 건물 벽·옥상 면에 기울여 붙임
+  props_interior1: { file: 'props_interior1.png', cols: 3, rows: 3, target: 'props', keys: ['in_snack', 'in_pharma', 'in_books', 'in_elec', 'in_mart', 'in_cafe', 'in_food', 'in_washer', 'in_pc'] }, // v1.25
+  props_interior2: { file: 'props_interior2.png', cols: 3, rows: 3, target: 'props', keys: ['in_bank', 'in_hosp', 'in_police', 'in_crate', 'in_crate_open', 'in_chair', 'in_boxes', 'in_debris', 'in_bed'] },
+  tex_floor:     { file: 'tex_floor.png', cols: 3, rows: 2, target: 'tex', keys: ['fl_tile', 'fl_wood', 'fl_lino', 'fl_carpet', 'fl_marble', 'fl_concrete'] },
   tex_facade:    { file: 'tex_facade.png', cols: 3, rows: 2, target: 'tex', keys: ['f_apartment', 'f_brick', 'f_office', 'f_glass', 'f_burnt', 'f_shop'] },
   tex_roof:      { file: 'tex_roof.png', cols: 3, rows: 1, target: 'tex', keys: ['r_concrete', 'r_gravel', 'r_tar'] },
   props_deco:    { file: 'props_deco.png', cols: 3, rows: 3, target: 'props', keys: ['rubble_a', 'rubble_b', 'slab', 'watertank', 'acunit', 'antenna', 'tires', 'cart', 'debris'] },

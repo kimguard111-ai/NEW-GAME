@@ -71,10 +71,10 @@ const Scavenge = {
     drop('credits', { amount: Math.round(lvl * C.cr * rand(0.6, 1.4) * (perk('scavenger') ? 1.5 : 1)) });
     if (Math.random() < C.ammo) drop('ammo', { amount: randInt(15, 40) });
     if (Math.random() < C.med) drop('item', { item: makeConsumable('medkit', 1) });
-    if (Math.random() < C.gear * (perk('treasure') ? 1.25 : 1)) drop('item', { item: randomGear(lvl, (C.bonus || 0.3) + 0.3, 0, z.gear) });
+    if (Math.random() < C.gear * ECON.gear * (perk('treasure') ? 1.25 : 1)) drop('item', { item: randomGear(lvl, (C.bonus || 0.3) + 0.3, 0, z.gear) });
     if (Math.random() < (c.type === 'locker' ? 0.06 : c.type === 'bag' ? 0.05 : 0.02)) { // v1.24 벨트: 지역이 깊을수록 좋은 벨트
       const r = Math.random(), t = lvl >= 18 && r < 0.15 ? 3 : lvl >= 10 && r < 0.45 ? 2 : 1;
-      drop('item', { item: makeBelt(t) });
+      drop('item', { item: makeBelt(t, lvl) });
     }
     if (Math.random() < (C.gad || 0.15)) { // v1.14 투척물·보조 소모품
       const k = c.type === 'locker' ? pick(['mine', 'flash', 'plate', 'molotov']) : c.type === 'labcase' ? pick(['stim', 'flash', 'plate']) : c.type === 'trunk' ? pick(['molotov', 'plate', 'molotov']) : pick(['molotov', 'flash', 'stim', 'plate', 'mine']);

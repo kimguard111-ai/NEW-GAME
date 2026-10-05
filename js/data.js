@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.24';
+const GAME_VERSION = 'v1.25';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -12,7 +12,9 @@ const RARITIES = [
   { name: '전설', mul: 2.0, color: '#ffa53a', weight: 1.0 },
 ];
 // 천장: 몬스터 장비 드랍이 이 횟수만큼 영웅 미만이면 다음 드랍은 영웅 이상 확정
-const PITY_DROPS = 15; // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 → 25 · v1.7.1 → 15 (드랍이 더 귀해진 만큼)
+// v1.25 파밍 경제: 장비가 귀하고 돈이 덜 벌리게 (확률 드랍 · 땅에 떨어지는 크레딧 · 판매가에 곱함)
+const ECON = { gear: 0.3, cr: 0.5, sell: 0.2 };
+const PITY_DROPS = 10; // v1.25 드랍 자체가 귀해진 만큼 15 → 10 // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 → 25 · v1.7.1 → 15 (드랍이 더 귀해진 만큼)
 
 // 무기 기본 정보
 // range: 사거리(px) · knock: 넉백 · stagger: 경직(초) · move: 장착 시 이동속도 배율
@@ -65,6 +67,12 @@ const AFFIXES = {
   move:    { name: '이동 속도',   slot: 'armor',  min: 0.03, max: 0.08, pct: true },
   regen:   { name: '체력 재생',   slot: 'armor',  min: 1, max: 3, perLvl: 0.15, unit: '/초' },
   exp:     { name: '경험치 획득', slot: 'armor',  min: 0.05, max: 0.15, pct: true },
+  // v1.25 벨트 전용 옵션
+  medHeal: { name: '구급상자 회복', slot: 'belt', min: 0.10, max: 0.30, pct: true },
+  gadDmg:  { name: '투척물 피해',   slot: 'belt', min: 0.10, max: 0.35, pct: true },
+  cdr:     { name: '스킬 재사용 단축', slot: 'belt', min: 0.04, max: 0.10, pct: true },
+  rollStam:{ name: '구르기 기력 절약', slot: 'belt', min: 0.08, max: 0.20, pct: true },
+  gadSave: { name: '소모품 절약 확률', slot: 'belt', min: 0.08, max: 0.20, pct: true },
 };
 
 // 전설 무기 고유 효과 (무기를 들고 있을 때만 발동)
@@ -129,7 +137,7 @@ const ENHANCE = {
 };
 
 // 등급별 추가 옵션 개수
-const AFFIX_COUNT = { weapon: [0, 1, 2, 3, 3], armor: [0, 1, 2, 3, 4], helmet: [0, 1, 2, 3, 4] };
+const AFFIX_COUNT = { weapon: [0, 1, 2, 3, 3], armor: [0, 1, 2, 3, 4], helmet: [0, 1, 2, 3, 4], belt: [0, 1, 2, 3] }; // v1.25 벨트
 
 const ARMORS = {
   vest:     { name: '방탄 조끼',     icon: 'vest', def: 8, lvl: 1, price: 120 },
@@ -322,6 +330,11 @@ const SKILL_MODS = {
   adren:   { a: { name: '광폭', desc: '지속 중 처치할 때마다 지속 +1.5초 (최대 +8초)' },
              b: { name: '진통제', desc: '지속 중 받는 피해 -30% (피해 증가는 절반)' } },
 };
+
+// v1.25 스킬은 스킬 포인트(SP)로 배움: 시작 1 · 레벨 업마다 +1 · 장(챕터) 완료마다 +1 (Lv30까지 약 35) — 전부 배우려면 44라 골라야 함
+// price · modPrice (크레딧)는 v1.16~1.24 기록용으로 남김
+const SKILL_SP = { root: 1, r1: 1, r2: 2, a: 2, b: 2, cap: 3 };
+const skillResetCost = p => 300 + p.level * 120; // 캠프 상인 박씨: 스킬 초기화 (SP 전부 돌려받음)
 
 // v1.22 스킬 트리: 스킬마다 한 갈래 (배우기 → 숙련 → 숙달 → 갈래 a/b → 궁극). 모두 박씨에게서 크레딧으로 삼 · 되돌리기 없음
 // 선행: 숙련 ← 배우기 · 숙달 ← 숙련 · 갈래 ← 배우기 · 궁극 ← 숙달 + 갈래 하나

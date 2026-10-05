@@ -56,7 +56,7 @@ const Bosses = {
     UI.toast('필드 보스 처치', e.bossName);
     dropAt('credits', { amount: e.level * 60 });
     dropAt('item', { item: randomGear(e.level + 1, 1.5, Math.random() < 0.3 ? 3 : 2, ZONES[e.fieldBoss].gear) });
-    if (Math.random() < 0.25) dropAt('item', { item: randomGear(e.level + 1, 1, 1, ZONES[e.fieldBoss].gear) });
+    if (Math.random() < 0.25 * ECON.gear) dropAt('item', { item: randomGear(e.level + 1, 1, 1, ZONES[e.fieldBoss].gear) });
     dropAt('item', { item: makeConsumable('medkit', 2) });
     rollUnique(e.art, e.level + 1, dropAt); // v1.12 보스 고유 장비
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0; // 부하 정리

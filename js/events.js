@@ -140,13 +140,13 @@ const RaidEvents = {
     e.done = true;
     if (e.kind === 'airdrop') {
       drop('item', { item: randomGear(lvl, 1.2, 2, bias) });
-      if (Math.random() < 0.5) drop('item', { item: randomGear(lvl, 0.8, 0, bias) });
+      if (Math.random() < 0.5 * ECON.gear) drop('item', { item: randomGear(lvl, 0.8, 0, bias) });
       drop('item', { item: makeConsumable('medkit', 2) }); drop('ammo', { amount: randInt(60, 100) }); drop('credits', { amount: lvl * 60 });
       Workshop.gain(randInt(2, 4), 1, '보급 상자');
       UI.toast('보급 상자 확보', '희귀 이상 장비 — 탈출해야 확정');
     } else if (e.kind === 'survivor') {
       drop('credits', { amount: lvl * 45 }); drop('item', { item: makeConsumable('medkit', 2) });
-      if (Math.random() < 0.6) drop('item', { item: randomGear(lvl, 1.0, 1, bias) });
+      if (Math.random() < 0.6 * ECON.gear) drop('item', { item: randomGear(lvl, 1.0, 1, bias) });
       gainExp(Math.round(PlayerStats.expNext(p.level) * 0.06));
       // 보답: 근처 뒤질 곳 3곳을 미니맵에 표시
       const near = Scavenge.list.filter(c => !c.looted).sort((a, b) => dist(a, p) - dist(b, p)).slice(0, 3);
@@ -155,7 +155,7 @@ const RaidEvents = {
       log('생존자: "고마워요. 이 근처에 숨겨 둔 물건이 있어요."', '#8cf');
     } else if (e.kind === 'safe') {
       drop('item', { item: randomGear(lvl, 1.5, 2, bias) }); drop('credits', { amount: lvl * 90 });
-      if (Math.random() < 0.35) drop('item', { item: randomGear(lvl, 1.0, 1, bias) });
+      if (Math.random() < 0.35 * ECON.gear) drop('item', { item: randomGear(lvl, 1.0, 1, bias) });
       Workshop.gain(1, 2, '금고');
       UI.toast('금고를 열었다', '희귀 이상 장비 · 크레딧 · 전자 부품');
     } else if (e.kind === 'generator') {
@@ -220,7 +220,7 @@ const RaidEvents = {
   onKill(e, dropAt) {
     if (!e.nest) return;
     Weekly.on('events'); Journal.onEvent(); // v1.15
-    dropAt('item', { item: randomGear(e.level, 1.2, 1, this.gearBias()) });
+    if (Math.random() < 0.5) dropAt('item', { item: randomGear(e.level, 1.2, 1, this.gearBias()) }); // v1.25 확정 → 50%
     dropAt('credits', { amount: e.level * 50 });
     for (const k of e.kids) if (k.hp > 0) { k.hp = 0; killFx(k); burst(k.x, k.y, '#6a1a2a', 10, 120, 0.4); }
     UI.toast(`${e.def.name} 파괴`, '근처에서 태어난 것들도 함께 쓰러졌다');

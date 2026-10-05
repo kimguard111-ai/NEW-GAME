@@ -75,6 +75,7 @@ function drawGroundTile(tx, ty, t) {
     ctx.fillStyle = h < 0.5 ? 'rgba(60,78,44,0.6)' : 'rgba(36,46,30,0.6)'; ctx.beginPath(); ctx.ellipse(x + 8 + h * 16, y + 10 + h * 12, 9, 6, h * 5, 0, TAU); ctx.fill();
     ctx.strokeStyle = '#4a6034'; ctx.lineWidth = 1;
     for (let i = 0; i < 4; i++) { const gx = x + 4 + hash2(tx + i, ty * 3) * 24, gy = y + 4 + hash2(ty + i * 7, tx) * 24; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx - 2, gy - 4); ctx.moveTo(gx, gy); ctx.lineTo(gx + 1, gy - 5); ctx.moveTo(gx, gy); ctx.lineTo(gx + 3, gy - 3); ctx.stroke(); }
+  } else if ((t === T.FLOOR || t === T.PROP) && floorTex(tx, ty, x, y)) { // v1.25 실내 바닥 질감 그림
   } else if (t === T.FLOOR || t === T.DOOR) { // 실내 바닥 (나무 마루)
     ctx.strokeStyle = 'rgba(0,0,0,0.25)';
     for (let i = 8; i < TILE; i += 8) { ctx.beginPath(); ctx.moveTo(x, y + i); ctx.lineTo(x + TILE, y + i); ctx.stroke(); }
@@ -253,6 +254,12 @@ function drawSolidTile(o) {
     else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 환풍기
   } else if (t === T.PROP && insideBid(tx, ty)) { // 실내 소품 (v0.15)
     const bd = World.buildings[World.bid[ty * World.W + tx]], S = SHOP_STYLES[bd.style], ph = tileHeight(tx, ty);
+    const ak = ART.shopArt[bd.name] && ART.shopArt[bd.name].obj;
+    if (ak && propArt(ak)) { // v1.25 실내 소품 그림: 같은 건물 소품이 좌우(x)로 이어지면 그대로, 위아래(y)로 이어지면 뒤집음
+      const runY = World.tileAt(tx, ty - 1) === T.PROP || World.tileAt(tx, ty + 1) === T.PROP, runX = World.tileAt(tx - 1, ty) === T.PROP || World.tileAt(tx + 1, ty) === T.PROP;
+      drawPropArt(ak, Iso.sx(x0 + 16, y0 + 16), Iso.sy(x0 + 16, y0 + 16), runY && !runX);
+      ctx.globalAlpha = 1; return;
+    }
     const ins = bd.style === 'table' || bd.style === 'washer' ? 5 : 2; // 식탁·세탁기는 한 칸 안에서 작게
     drawBox(x0 + ins, y0 + ins, x1 - ins, y1 - ins, ph, S.c[0], S.c[1], S.c[2], 0, 0, 0);
     if (bd.style === 'shelf') { // 진열 상품 (색 점)
@@ -460,7 +467,7 @@ const Sprites = {
       let im = cache[s.file];
       if (!im) {
         im = cache[s.file] = new Image(); im.users = [];
-        im.onload = () => im.users.forEach(u => { u.ready = true; });
+        im.onload = () => { im.users.forEach(u => { u.ready = true; }); if (typeof GroundCache !== 'undefined') GroundCache.map.clear(); }; // v1.25 바닥 질감이 늦게 읽혀도 다시 그림
         im.onerror = () => console.warn('무기·헬멧 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
         im.src = ART.dir + s.file;
       }
@@ -1225,7 +1232,7 @@ function render() {
   for (const e of G.enemies) objs.push({ d: depth(e) + (e.def.flying ? 0.5 : 0), draw: drawEnemy, ent: e });
   for (const d of G.drops) objs.push({ d: depth(d), draw: drawDrop, ent: d });
   for (const c of G.corpses) objs.push({ d: depth(c) - 0.3, draw: drawCorpse, ent: c });
-  if (G.inside) for (const c of G.inside.crates) objs.push({ d: depth(c), draw: drawCrate, ent: c });
+  if (G.inside) { for (const c of G.inside.crates) objs.push({ d: depth(c), draw: drawCrate, ent: c }); for (const o of interiorDeco(G.inside)) objs.push({ d: depth(o), draw: q => drawPropArt(q.key, Iso.sx(q.x, q.y), Iso.sy(q.x, q.y), q.flip), ent: o }); } // v1.25 실내 장식 (그림이 있을 때만)
   if (World.map !== 'camp') { Scavenge.collect(objs); RaidEvents.collect(objs); } // v1.4 뒤질 곳 · 시체 가방 · v1.10 사건
   City.collect(objs, (x, y) => { const sx = Iso.sx(x, y), sy = Iso.sy(x, y); return sx > -120 && sx < VW + 120 && sy > -40 && sy < VH + 140; });
   for (const l of World.landmarks) {
@@ -1464,9 +1471,36 @@ function drawDropBeams() {
 }
 
 // 보급 상자 (건물 안)
+// v1.25 실내 바닥 질감: 상가 이름에 맞는 질감(2×2칸에 한 장) — 그림이 없으면 false (코드 마루)
+function floorTex(tx, ty, x, y) {
+  const bi = World.bid && World.bid[ty * World.W + tx]; if (bi === undefined || bi < 0) return false;
+  const bd = World.buildings[bi], sa = bd && ART.shopArt[bd.name], tex = sa && ART.tex[sa.floor];
+  if (!tex || !tex.ready) return false;
+  const [rx, ry, rw, rh] = tex.rect || [0, 0, tex.img.width, tex.img.height], hw = rw / 2, hh = rh / 2;
+  ctx.drawImage(tex.img, rx + (tx & 1) * hw, ry + (ty & 1) * hh, hw, hh, x, y, TILE + 0.6, TILE + 0.6);
+  return true;
+}
+// v1.25 실내 장식: 바닥 칸에 드물게 (넘어진 의자 · 상자 · 잔해 · 상가별 장식). 그림이 있는 것만 · 충돌 없음
+function interiorDeco(b) {
+  if (!b.deco) {
+    b.deco = []; const extra = ART.shopArt[b.name] && ART.shopArt[b.name].deco;
+    for (let ty = b.y0 + 1; ty < b.y1; ty++) for (let tx = b.x0 + 1; tx < b.x1; tx++) {
+      if (World.tileAt(tx, ty) !== T.FLOOR || b.crates.some(c => c.tx === tx && c.ty === ty)) continue;
+      const h = hash2(tx * 31 + 7, ty * 17 + 3);
+      const key = extra && h < 0.04 ? extra : h < 0.07 ? 'in_chair' : h < 0.1 ? 'in_boxes' : h < 0.13 ? 'in_debris' : null;
+      if (key) b.deco.push({ key, x: tx * TILE + 16, y: ty * TILE + 16, flip: h * 1000 % 2 < 1 });
+    }
+  }
+  return b.deco.filter(o => propArt(o.key));
+}
+
 function drawCrate(c) {
   const x0 = c.x - 11, y0 = c.y - 9, x1 = c.x + 11, y1 = c.y + 9, open = G.time - c.openT <= CRATE_RESTOCK;
   drawShadow(Iso.sx(c.x, c.y), Iso.sy(c.x, c.y), 14);
+  if (drawPropArt(open ? 'in_crate_open' : 'in_crate', Iso.sx(c.x, c.y), Iso.sy(c.x, c.y))) { // v1.25 그림
+    if (!open) { ctx.fillStyle = '#e0c070'; ctx.globalAlpha = 0.5 + Math.sin(G.time * 4) * 0.3; ctx.beginPath(); ctx.arc(Iso.sx(c.x, c.y), Iso.sy(c.x, c.y, 26), 3, 0, TAU); ctx.fill(); ctx.globalAlpha = 1; }
+    return;
+  }
   drawBox(x0, y0, x1, y1, 16, open ? '#3a3024' : '#8a6a3a', '#5a4424', '#6e5430', 0, 0, 0);
   if (!open) {
     ctx.fillStyle = '#e0c070'; ctx.globalAlpha = 0.5 + Math.sin(G.time * 4) * 0.3;

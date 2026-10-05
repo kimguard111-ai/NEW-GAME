@@ -21,6 +21,7 @@ const Gadgets = {
     UI.buildHotbar();
   },
   take(k) {
+    if (Math.random() < gearBonus(G.player, 'gadSave')) { floatText(G.player.x, G.player.y - 44, '절약', '#9fe0ff', 12); return true; } // v1.25 벨트 옵션
     const it = G.player.inventory.find(i => i && i.kind === 'cons' && i.key === k);
     if (!it) return false;
     if (--it.count <= 0) removeItem(it);
@@ -58,7 +59,7 @@ const Gadgets = {
   land(g) {
     const p = G.player, demo = perk('demolition') ? 1.3 : 1;
     if (g.kind === 'molotov') {
-      G.fires.push({ x: g.x, y: g.y, r: 95, t: 0, life: 5, tick: 0, dmg: (10 + p.level * 5) * 0.5 * demo * Camp.dmgMul() });
+      G.fires.push({ x: g.x, y: g.y, r: 95, t: 0, life: 5, tick: 0, dmg: (10 + p.level * 5) * 0.5 * demo * Camp.dmgMul() * (1 + gearBonus(p, 'gadDmg')) });
       burst(g.x, g.y, '#ff8a2a', 20, 160, 0.5, 3); SFX.play('boom', 0.4);
     } else if (g.kind === 'flash') {
       const R = 170;
@@ -82,7 +83,7 @@ const Gadgets = {
       m.t += dt; if (m.arm > 0) { m.arm -= dt; continue; }
       if (G.enemies.some(e => e.hp > 0 && !e.def.flying && Math.hypot(e.x - m.x, e.y - m.y) < 30 + e.r)) {
         m.done = true;
-        explode(m.x, m.y, (40 + p.level * 32) * (perk('demolition') ? 1.3 : 1) * Camp.dmgMul(), 120 * (perk('demolition') ? 1.3 : 1), { knock: 36, stagger: 0.8 });
+        explode(m.x, m.y, (40 + p.level * 32) * (perk('demolition') ? 1.3 : 1) * Camp.dmgMul() * (1 + gearBonus(p, 'gadDmg')), 120 * (perk('demolition') ? 1.3 : 1), { knock: 36, stagger: 0.8 });
         hitstop(0.06); G.shake = Math.max(G.shake, 8);
       }
     }

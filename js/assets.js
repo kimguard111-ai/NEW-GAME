@@ -65,6 +65,11 @@ const ART = {
     dumpster: { w: 38, y: 8 }, locker: { w: 24, y: 6 }, labcase: { w: 26, y: 6 }, bag: { w: 20, y: 3 }, safe: { w: 34, y: 8 }, airdrop: { w: 38, y: 8 }, generator: { w: 40, y: 8 }, nest: { w: 96, y: 12 }, mine: { w: 18, y: 3 },
     tent: { w: 86, y: 18 }, tent_medic: { w: 86, y: 18 }, crates: { w: 48, y: 10 }, workbench: { w: 56, y: 10 }, maptable: { w: 50, y: 10 }, radio: { w: 40, y: 8 }, campfire: { w: 36, y: 6 }, container: { w: 70, y: 16 }, sandbags: { w: 54, y: 8 },
     rubble_a: { w: 60, y: 10 }, rubble_b: { w: 56, y: 10 }, slab: { w: 64, y: 12 }, watertank: { w: 26, y: 6 }, acunit: { w: 24, y: 6 }, antenna: { w: 22, y: 2 }, tires: { w: 30, y: 5 }, cart: { w: 30, y: 5 }, debris: { w: 46, y: 8 },
+    // v1.25 건물 내부 (상가마다 진열대·탁자 등 한 칸짜리 · 장식은 그림이 있을 때만 바닥에 흩어 놓음)
+    in_snack: { w: 34, y: 6 }, in_pharma: { w: 34, y: 6 }, in_books: { w: 34, y: 6 }, in_elec: { w: 34, y: 6 }, in_mart: { w: 34, y: 6 }, in_cafe: { w: 30, y: 6 },
+    in_food: { w: 30, y: 6 }, in_washer: { w: 26, y: 5 }, in_pc: { w: 32, y: 6 },
+    in_bank: { w: 34, y: 6 }, in_hosp: { w: 34, y: 6 }, in_police: { w: 34, y: 6 }, in_crate: { w: 26, y: 5 }, in_crate_open: { w: 26, y: 5 },
+    in_chair: { w: 18, y: 3 }, in_boxes: { w: 24, y: 4 }, in_debris: { w: 30, y: 4 }, in_bed: { w: 40, y: 7 },
     pole: { w: 30, y: 2 }, busstop: { w: 72, y: 10 }, pocha: { w: 74, y: 12 }, scooter: { w: 30, y: 4 }, subway: { w: 84, y: 14 }, cross: { w: 22, y: 2 }, /* v1.22 서울 거리 소품 */
   },
 
@@ -73,6 +78,14 @@ const ART = {
   tex: {
   },
   // 지역마다 쓰는 외벽 (zone 번호 → 후보). 1층은 f_shop. 강남 유리 고층은 항상 f_glass
+  // v1.25 실내 바닥 질감 (가공 도구 「v1.25 실내 바닥 질감 6종」 → tex 안에 붙여넣기). 2×2칸에 한 장을 펼침
+  // 상가 이름 → 소품 그림 · 바닥 질감 · 장식 (없는 그림은 지금처럼 코드로 그림)
+  shopArt: {
+    편의점: { obj: 'in_snack', floor: 'fl_tile' }, 약국: { obj: 'in_pharma', floor: 'fl_lino' }, 마트: { obj: 'in_mart', floor: 'fl_tile' },
+    서점: { obj: 'in_books', floor: 'fl_wood' }, 전자상가: { obj: 'in_elec', floor: 'fl_tile' }, 카페: { obj: 'in_cafe', floor: 'fl_wood' },
+    분식집: { obj: 'in_food', floor: 'fl_concrete' }, 은행: { obj: 'in_bank', floor: 'fl_marble' }, 병원: { obj: 'in_hosp', floor: 'fl_lino', deco: 'in_bed' },
+    파출소: { obj: 'in_police', floor: 'fl_marble' }, PC방: { obj: 'in_pc', floor: 'fl_carpet' }, 세탁소: { obj: 'in_washer', floor: 'fl_concrete' },
+  },
   texZones: { 0: ['f_apartment', 'f_brick'], 1: ['f_brick', 'f_apartment', 'f_office'], 2: ['f_brick', 'f_apartment'], 3: ['f_office', 'f_burnt', 'f_apartment'],
     4: ['f_office', 'f_glass', 'f_burnt'], 6: ['f_glass', 'f_office'], 7: ['f_apartment', 'f_burnt', 'f_brick'] },
 

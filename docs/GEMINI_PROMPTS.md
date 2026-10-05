@@ -497,6 +497,44 @@ Match the art style of the attached concept image. Create ONE image with 3 separ
 
 ---
 
+## 14. 건물 내부 꾸미기 (v1.25) · 한 장에 여러 개 (격자)
+
+들어갈 수 있는 상가 12종(편의점 · 약국 · 마트 · 서점 · 전자상가 · 카페 · 분식집 · 은행 · 병원 · 파출소 · PC방 · 세탁소)의 실내입니다.
+아래 3장을 `art_raw/`에 올리면 **등록한 것부터 바로 그림으로 바뀝니다** (없는 건 지금 코드 그림 그대로).
+
+| 장 | 🔧 도구 이름 | 격자 | 파일 이름 | 들어가는 곳 |
+|---|---|---|---|---|
+| 14-1 | **v1.25 실내 소품 9종 — 상가** | 3×3 | `props_interior1.png` | 상가마다 진열대·탁자 (한 칸짜리, 줄지어 반복) |
+| 14-2 | **v1.25 실내 소품 9종 — 창구·상자·장식** | 3×3 | `props_interior2.png` | 은행·병원·파출소 창구 · 보급 상자(닫힘/열림) · 바닥 장식 4종 |
+| 14-3 | **v1.25 실내 바닥 질감 6종** | 3×2 | `tex_floor.png` | 상가 바닥 (2×2칸에 한 장을 펼침) |
+
+- 진열대·창구는 **게임이 한 칸에 하나씩 줄지어 놓습니다** → 한 칸(약 1.6m) 크기의 **한 단위**만 그리면 됩니다. 길게 이어 그리지 마세요.
+- **긴 쪽이 왼쪽 위 → 오른쪽 아래**로 놓이게 (벤치·정류장과 같은 방향). 반대 방향 줄은 게임이 뒤집어 씁니다.
+- 넘어진 의자 · 상자 · 잔해 · 병원 침대는 **장식**: 그림이 있을 때만 바닥에 드물게 흩어 놓고, 부딪히지 않습니다.
+- 어느 상가에 어느 그림이 들어가는지는 `js/assets.js`의 `shopArt`에서 바꿀 수 있습니다.
+
+### 14-1. 상가 소품 9종 · 🔧 **v1.25 실내 소품 9종 — 상가 (3×3)** · `props_interior1.png`
+📎 콘셉트 아트
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate interior furniture pieces from abandoned shops in post-apocalyptic Seoul, each centered in its own equal cell with wide empty space between them, every piece standing on its base at the bottom of its cell. Each piece is ONE short unit about as wide as a person is tall, with its long side running diagonally toward the bottom-right. In order, left to right, top to bottom: 1) a Korean convenience store snack shelf, metal, half-empty with colorful chip bags and ramen cups, some fallen; 2) a white pharmacy shelf with small medicine boxes and bottles, mostly looted; 3) a wooden bookstore bookshelf with dusty books, some fallen; 4) an electronics store display shelf with old TVs, phones and boxes, glass cracked; 5) a supermarket refrigerated drink cooler with a glass door, dark and dirty, a few bottles inside; 6) a small round cafe table with two wooden chairs; 7) a stainless steel Korean snack-bar (bunsik) table with two round stools; 8) a white front-loading washing machine from a laundromat, dirty; 9) a PC-bang gaming desk with a dark monitor, keyboard and a reclining gaming chair. All in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no floor, no walls, no people, no text, no letters, no logos, no numbers, no grid lines, no border. Do not use pink or magenta on the objects.
+```
+
+### 14-2. 창구 · 상자 · 장식 9종 · 🔧 **v1.25 실내 소품 9종 — 창구·상자·장식 (3×3)** · `props_interior2.png`
+📎 콘셉트 아트 · 5번(열린 상자)은 4번과 **같은 상자**가 뚜껑이 열리고 비어 있는 모습
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate interior objects from abandoned buildings in post-apocalyptic Seoul, each centered in its own equal cell with wide empty space between them, every object resting on its base at the bottom of its cell. Counters (1 to 3) are ONE short unit about as wide as a person is tall, with the long side running diagonally toward the bottom-right. In order, left to right, top to bottom: 1) a Korean bank teller counter segment with a cracked glass partition on top; 2) a white hospital reception counter segment with scattered papers and a dark monitor; 3) a gray Korean police station desk with a dark monitor, files and a desk lamp (off); 4) a closed olive military supply crate with a latch and stenciled marks; 5) the SAME crate but open and empty, lid leaning on its side; 6) a fallen wooden chair lying on its side; 7) a small stack of three dusty cardboard boxes, one torn; 8) a flat patch of fallen ceiling tiles, broken plaster and scattered papers on the floor (very low); 9) an old hospital bed with a stained mattress and metal rails. All in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no floor, no walls, no people, no text, no letters, no logos, no numbers, no grid lines, no border. Do not use pink or magenta on the objects.
+```
+
+### 14-3. 실내 바닥 질감 6종 · 🔧 **v1.25 실내 바닥 질감 6종 (3×2)** · `tex_floor.png`
+📎 콘셉트 아트 · 한 장이 바닥 2×2칸에 펼쳐지므로 무늬가 너무 크지 않게
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate square indoor floor textures for abandoned shops in post-apocalyptic Seoul, each a solid filled SQUARE seen from DIRECTLY ABOVE (top-down orthographic, no perspective), placed in its own equal cell with wide empty space between them. Each texture must tile seamlessly: the left edge matches the right edge and the top edge matches the bottom edge, no border, no frame. In order, left to right, top to bottom: 1) dirty white square ceramic floor tiles of a convenience store, a few cracked tiles and dust; 2) worn brown wooden floorboards of a cafe, scratches and stains; 3) faded green hospital linoleum with scuffs and a few tears; 4) dark gray stained carpet of a PC bang with a subtle pattern; 5) polished beige stone tiles of a bank lobby, cracked and dusty; 6) bare gray concrete floor with oil stains and cracks. Evenly lit, no shadows, no objects, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no letters, no numbers, no grid lines between tiles. Do not use pink or magenta inside the tiles.
+```
+
+> 소품이 칸보다 커서 겹치면 `js/assets.js`의 `propFit`에서 그 키의 `w`를 줄이세요 (기본 34).
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |

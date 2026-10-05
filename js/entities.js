@@ -11,6 +11,7 @@ function affixPool(kind, key) {
   return Object.keys(AFFIXES).filter(k => {
     const sl = AFFIXES[k].slot;
     if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(key)) return false; // 계열 전용 옵션
+    if (kind === 'belt') return sl === 'belt'; // v1.25
     return kind !== 'weapon' ? sl === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee); // 헬멧은 방어구 옵션
   });
 }
@@ -103,9 +104,10 @@ function wornUnique(id) { const e = G.player && G.player.equip; return !!e && ((
 
 const GEAR_DEFS = k => WEAPONS[k] || ARMORS[k] || HELMETS[k];
 // v1.24 벨트: 등급(rarity)이 곧 핫바 칸 수
-function makeBelt(tier) {
-  const b = BELTS[Math.max(0, Math.min(3, tier))];
-  return { id: nextItemId++, kind: 'belt', key: 'belt', rarity: BELTS.indexOf(b), ilvl: b.lvl, plus: 0, name: b.name, affixes: [], isNew: true, value: b.price };
+function makeBelt(tier, ilvl) {
+  const b = BELTS[Math.max(0, Math.min(3, tier))], r = BELTS.indexOf(b), lv = Math.max(b.lvl, ilvl || b.lvl);
+  const affixes = rollAffixes('belt', 'belt', r, lv); // v1.25 벨트 옵션 (등급만큼 0~3개)
+  return { id: nextItemId++, kind: 'belt', key: 'belt', rarity: r, ilvl: lv, plus: 0, name: b.name, affixes, isNew: true, value: Math.round(b.price * (1 + affixes.length * 0.2)) };
 }
 function beltSlots(p) { const b = p.equip.belt; return Math.max(2, b ? BELTS[b.rarity].slots : 2); }
 function makeGear(k, level, r) { return WEAPONS[k] ? makeWeapon(k, level, r) : ARMORS[k] ? makeArmor(k, level, r) : makeHelmet(k, level, r); }
@@ -149,7 +151,7 @@ function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
 function itemName(it) { return it.plus ? `+${it.plus} ${it.name}` : it.name; }
 function plusMul(it) { return 1 + (it.plus || 0) * ENHANCE.step; }
 function armorDef(arm) { return arm ? Math.round(arm.def * plusMul(arm)) : 0; }
-function itemSellPrice(it) { return Math.max(1, Math.floor((it.value || 0) * 0.3 * (1 + (it.plus || 0) * 0.25))) * (it.count || 1); }
+function itemSellPrice(it) { return Math.max(1, Math.floor((it.value || 0) * ECON.sell * /* v1.25 0.3 → 0.2 */ (1 + (it.plus || 0) * 0.25))) * (it.count || 1); }
 
 function enhanceCost(it) { return Math.round((20 + it.ilvl * 6) * Math.pow(it.plus + 1, 1.3) * (1 + it.rarity * 0.25) * Camp.enhanceMul()); } // v1.13 작업대
 function enhanceRate(it) { return Math.min(1, ENHANCE.rates[it.plus] + (it.fails || 0) * ENHANCE.failBonus + Camp.enhanceBonus()); }
@@ -202,7 +204,7 @@ function newPlayer(name) {
   const c = World.campCenter();
   return {
     name, x: c.x, y: c.y, r: 12, aim: 0, mapV: 4, mats: { scrap: 0, chip: 0 }, stash: [], raid: null, graves: {},
-    level: 1, exp: 0, credits: 150, statPoints: 0,
+    level: 1, exp: 0, credits: 150, statPoints: 0, sp: 1, spV125: true, // v1.25 스킬 포인트
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
     hp: 1, reserve: 150,
     equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: null, helmet: null, belt: makeBelt(0) }, // v1.24 벨트 // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
@@ -222,7 +224,7 @@ function newPlayer(name) {
 // 장착 장비의 옵션 합계. 무기 옵션은 들고 있는 무기만, 방어구 옵션은 항상 적용
 function gearBonus(p, k, w = p.equip[p.active]) {
   let v = 0;
-  for (const arm of [p.equip.armor, p.equip.helmet]) if (arm && arm.affixes) for (const a of arm.affixes) if (a.k === k) v += a.v;
+  for (const arm of [p.equip.armor, p.equip.helmet, p.equip.belt]) if (arm && arm.affixes) for (const a of arm.affixes) if (a.k === k) v += a.v; // v1.25 벨트 옵션도
   if (w && w.affixes) for (const a of w.affixes) if (a.k === k) v += a.v;
   return v;
 }
@@ -258,7 +260,7 @@ const PlayerStats = {
   expMul: p => 1 + gearBonus(p, 'exp') + (pas('t5') ? 0.05 : 0),
   // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
   // v1.7: 밸런스 봇 측정 결과 Lv30까지 너무 빠름 → Lv5부터 점점 더 많이 (Lv10 ×1.65 · Lv20 ×2.4 · Lv30 ×3.0)
-  expNext: lvl => Math.floor(70 * lvl * lvl * Math.max(1, Math.pow(lvl / 4, 0.55))),
+  expNext: lvl => Math.floor(70 * lvl * lvl * Math.max(1, Math.pow(lvl / 4, 0.55)) * (lvl >= 3 ? 1.5 : 1)), // v1.25 Lv3부터 ×1.5
 };
 
 // 스킬 수치: 각 스킬은 연동 능력치 하나를 따라 강해짐
@@ -270,7 +272,7 @@ const SkillCalc = {
   grenadeDmg: p => (30 + p.level * 6) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5), // v1.16 너프: 45+레벨×9 · 사격 능력치 전부 → 30+레벨×6 · 절반만
   healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006) + (stree('heal', 'r1') ? 0.1 : 0),
   adrenDur: p => 8 + (stree('adren', 'r1') ? 2 : 0), // v1.22
-  cdMul: id => (stree(id, 'r2') ? 0.85 : 1) * (pas('t3') ? 0.94 : 1) * (branchOn('tac') ? 0.9 : 1), // v1.22 숙달 · v1.23 전술 단련·갈래 보너스
+  cdMul: id => (1 - gearBonus(G.player, 'cdr')) * (stree(id, 'r2') ? 0.85 : 1) * (pas('t3') ? 0.94 : 1) * (branchOn('tac') ? 0.9 : 1), // v1.22 숙달 · v1.23 전술 단련·갈래 보너스
   adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.5 : 1),
 };
 const stree = (id, k) => !!(G.player && G.player.stree && G.player.stree[id + '_' + k]); // v1.22 스킬 트리
@@ -341,7 +343,7 @@ function isUpgrade(p, it) {
     const best = same.length ? Math.max(...same.map(w => weaponDps(p, w))) : 0;
     return weaponDps(p, it) > best * 1.02;
   }
-  if (it.kind === 'belt') return BELTS[it.rarity].slots > beltSlots(p); // v1.24
+  if (it.kind === 'belt') { const cur = p.equip.belt; return BELTS[it.rarity].slots > beltSlots(p) || (!!cur && it.rarity === cur.rarity && it.affixes.length > cur.affixes.length); } // v1.24 · v1.25 옵션
   if (it.kind === 'armor' || it.kind === 'helmet') {
     const cur = p.equip[it.kind];
     return armorEhp(p, it) > armorEhp(p) * 1.02 || (!!cur && it.affixes.length > cur.affixes.length && armorDef(it) >= armorDef(cur));

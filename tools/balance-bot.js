@@ -45,8 +45,9 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     };
     // 캠프 정비: 장착·판매·보충·강화·능력치
     B.camp = () => {
-      for (const s of SKILLS) if (p.level >= s.lvl && !p.skills[s.id] && p.credits >= s.price + 200) { p.credits -= s.price; p.skills[s.id] = true; B.skillBuy = (B.skillBuy || 0) + s.price; } // v1.16 스킬은 상인에게서 삼
-      for (const s of SKILLS) for (const k of ['r1', 'r2', 'cap']) { const n = SKILL_TREE[s.id][k]; if (p.skills[s.id] && !p.stree[s.id + '_' + k] && UI.treeNode(s, k).pre && p.level >= n.lvl && p.credits >= n.price + 1500) { p.credits -= n.price; p.stree[s.id + '_' + k] = true; B.skillBuy = (B.skillBuy || 0) + n.price; } } // v1.22 스킬 트리
+      for (const s of SKILLS) if (p.level >= s.lvl && !p.skills[s.id] && p.sp >= SKILL_SP.root) { p.sp -= SKILL_SP.root; p.skills[s.id] = true; } // v1.25 스킬 포인트
+      for (const s of SKILLS) if (p.stree[s.id + '_r2'] && !p.smodOwned[s.id + '_a'] && !p.smodOwned[s.id + '_b'] && p.sp >= SKILL_SP.a) { p.sp -= SKILL_SP.a; p.smodOwned[s.id + '_a'] = true; p.skillMods[s.id] = 'a'; } // v1.25 갈래
+      for (const s of SKILLS) for (const k of ['r1', 'r2', 'cap']) { const n = SKILL_TREE[s.id][k]; if (p.skills[s.id] && !p.stree[s.id + '_' + k] && UI.treeNode(s, k).pre && p.level >= n.lvl && p.sp >= SKILL_SP[k]) { p.sp -= SKILL_SP[k]; p.stree[s.id + '_' + k] = true; } } // v1.22 스킬 트리 · v1.25 SP
       for (const b of Object.keys(PASSIVES)) PASSIVES[b].forEach((n, i) => { if (!p.passive[n.id] && (i === 0 || p.passive[PASSIVES[b][i - 1].id]) && p.level >= n.lvl && p.credits >= n.price + 2500) { p.credits -= n.price; p.passive[n.id] = true; B.skillBuy = (B.skillBuy || 0) + n.price; } }); // v1.23 패시브 단련
       UI.openShop(); // 상인 진열품 중 더 좋은 것 구매 (사람처럼)
       for (const it of G.shopStock) if (p.level >= itemReqLevel(it) && isUpgrade(p, it) && p.credits >= it.value + 300) { const c = JSON.parse(JSON.stringify(it)); c.id = nextItemId++; UI.buy(c, it.value); B.shop = (B.shop || 0) + it.value; }
