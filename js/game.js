@@ -133,7 +133,7 @@ function startGame(save, name) {
     G.autoStory = true; // v0.16: 1장을 바로 시작 (캠프 대화 없이)
     G.welcome = true; // v1.15 첫 플레이 안내
   }
-  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.turrets = []; G.corpses = [];
+  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.turrets = []; G.corpses = []; Juice.reset();
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.exits = []; G.extractT = 0;
@@ -350,6 +350,8 @@ function playerAttack() {
     });
   }
   p.recoilT = 0.07;
+  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || w.key === 'sniper' ? 7 : w.key === 'lmg' || w.key === 'smg' ? 1.6 : 3; G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * k; G.kick.y -= d.y * k; } // v1.28 사격 반동이 화면에도
+  Juice.shot(p, w, mx, my, aim0); // v1.28 총구 섬광 · 탄피
   if (w.key === 'sniper') { // v1.9 저격: 탄도가 잠깐 남음
     let ex = mx, ey = my; const c = Math.cos(aim0), sn = Math.sin(aim0);
     for (let d = 0; d < b.range; d += 16) { const nx = mx + c * d, ny = my + sn * d; if (World.solidAt(nx, ny)) break; ex = nx; ey = ny; }
@@ -583,11 +585,17 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
     if (Math.random() < 0.3) floatText(e.x, e.y - e.r - 6, '막힘', '#9fb2c8', 12);
     SFX.play('metal', 0.6); burst(e.x + Math.cos(angle + Math.PI) * 12, e.y + Math.sin(angle + Math.PI) * 12, '#ffe0a0', 3, 120, 0.15, 2);
     e.hp -= dmg; e.hitT = 0.05; e.state = 'chase';
+    if (!hit.noProc) { Juice.hit(e.hp <= 0); if (e.hp <= 0) SFX.play('hitmark'); } // v1.28 명중 표시
     if (e.hp <= 0) killEnemy(e);
     return;
   }
   if (e.def.cloak) e.revealT = 2.5; // 맞으면 잠시 드러남
   e.hp -= dmg; e.hitT = e.def.boss ? 0.05 : 0.1; e.state = 'chase';
+  if (!hit.noProc) { Juice.hit(e.hp <= 0); if (e.hp <= 0) SFX.play('hitmark'); } // v1.28 명중 표시 (불길 같은 지속 피해는 제외)
+  if (!hit.noProc && FACTION[e.type] !== 'machine' && angle !== undefined && Math.random() < 0.5) { // v1.28 맞은 반대쪽 바닥에 핏방울
+    const d = e.r * rand(0.8, 2.2); G.decals.push({ x: e.x + Math.cos(angle) * d, y: e.y + Math.sin(angle) * d, r: rand(2, 4.5), a: rand(0, TAU), drop: true });
+    if (G.decals.length > 150) G.decals.shift();
+  }
   // 넉백·경직은 적의 무게에 반비례 (보스는 무시)
   const wt = e.weight ?? e.def.weight; // 네임드는 잘 밀리지 않음
   if (wt > 0 && angle !== undefined) {
@@ -1142,6 +1150,7 @@ function update(dt) {
   RaidEvents.update(dt); // v1.10
   Gadgets.update(dt); // v1.14 지뢰
   Turrets.update(dt); // v1.26 포탑
+  Juice.update(dt); // v1.28
   Journal.update(dt); // v1.15 업적
   Music.update(dt); // v1.17 배경 음악
   if (!p.dead && p.hp < PlayerStats.maxHp(p) * 0.3 && World.map !== 'camp' && (G.beatT = (G.beatT || 0) - dt) <= 0) { G.beatT = 0.4 + p.hp / PlayerStats.maxHp(p) * 2.2; SFX.play('heart'); } // v1.17 저체력 심장 박동
@@ -1179,8 +1188,16 @@ function update(dt) {
   // 카메라
   G.shake *= Math.pow(0.002, dt);
   if (!Settings.shake) G.shake = 0; // 설정: 화면 흔들림 끔
-  G.cam.x = (p.x - p.y) * ISO_K - VW / 2 + rand(-G.shake, G.shake);
-  G.cam.y = (p.x + p.y) * ISO_K / 2 - VH / 2 - 20 + rand(-G.shake, G.shake);
+  // v1.28 카메라 손맛: 부드럽게 따라가기 + 조준 방향으로 시야 내밀기 + 사격 반동 (순간이동·출격 땐 바로 맞춤)
+  const ctx0 = (p.x - p.y) * ISO_K - VW / 2, cty0 = (p.x + p.y) * ISO_K / 2 - VH / 2 - 20;
+  const F = G.camF || (G.camF = { x: ctx0, y: cty0 }), L = G.camLead || (G.camLead = { x: 0, y: 0 }), KK = G.kick || (G.kick = { x: 0, y: 0 });
+  if (Math.hypot(ctx0 - F.x, cty0 - F.y) > 300) { F.x = ctx0; F.y = cty0; } else { const k = 1 - Math.pow(0.00005, dt); F.x += (ctx0 - F.x) * k; F.y += (cty0 - F.y) * k; }
+  const lead = Settings.camLead !== false && !p.dead && !UI.anyOpen() && !IS_TOUCH;
+  const lx = lead ? clamp((input.mx - VW / 2) * 0.2, -110, 110) : 0, ly = lead ? clamp((input.my - VH / 2) * 0.2, -70, 70) : 0, kl = 1 - Math.pow(0.02, dt);
+  L.x += (lx - L.x) * kl; L.y += (ly - L.y) * kl;
+  const kd = Math.pow(0.0005, dt); KK.x *= kd; KK.y *= kd;
+  G.cam.x = F.x + L.x + KK.x + rand(-G.shake, G.shake);
+  G.cam.y = F.y + L.y + KK.y + rand(-G.shake, G.shake);
 
   G.saveT += dt;
   if (G.saveT > 20) { G.saveT = 0; Bounty.refresh(); Weekly.refresh(); saveGame(); } // 자정이 지나면 의뢰 갱신

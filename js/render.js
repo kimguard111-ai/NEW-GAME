@@ -655,7 +655,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     ctx.beginPath(); ctx.ellipse(sx, sy - 22, 20, 30, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
   }
   if (ui) return;
-  nameTag(sx, sy - 48 * (ART.charScale || 1) - 4, p.name, '#9fe08f', '12px sans-serif');
+  if (World.map === 'camp') nameTag(sx, sy - 48 * (ART.charScale || 1) - 4, p.name, '#9fe08f', '12px sans-serif'); // v1.28 출격 중엔 내 이름표 없이
   if (p.reloadT > 0) {
     const b2 = WEAPONS[w.key];
     ctx.fillStyle = '#000'; ctx.fillRect(sx - 18, sy + 8, 36, 4);
@@ -998,9 +998,10 @@ function drawEnemy(e) {
     nameTag(sx, topY - 4, `◆ Lv${e.level} ${A.name} ${e.def.name}`, A.color, 'bold 11px sans-serif');
     ctx.fillStyle = '#300'; ctx.fillRect(sx - 20, topY + 1, 40, 4);
     ctx.fillStyle = A.color; ctx.fillRect(sx - 20, topY + 1, 40 * e.hp / e.maxHp, 4);
-  } else if (!e.def.boss) {
-    const lvDiff = e.level - G.player.level;
-    nameTag(sx, topY, `Lv${e.level} ${e.def.name}`, lvDiff >= 4 ? '#f66' : lvDiff >= 1 ? '#fc8' : lvDiff <= -4 ? '#999' : '#eee');
+  } else if (!e.def.boss) { // v1.28 일반 적은 이름표 없이 (마우스를 올리면 이름 · 레벨이 훨씬 높으면 붉은 !! · 맞으면 체력 바)
+    const lvDiff = e.level - G.player.level, hover = !IS_TOUCH && Math.abs(input.mx - sx) < 26 && input.my > topY - 6 && input.my < sy + 6;
+    if (hover) nameTag(sx, topY, `Lv${e.level} ${e.def.name}`, lvDiff >= 4 ? '#f66' : lvDiff >= 1 ? '#fc8' : lvDiff <= -4 ? '#999' : '#eee');
+    else if (lvDiff >= 4) nameTag(sx, topY, '!!', '#f66', 'bold 11px sans-serif');
     if (e.hp < e.maxHp) {
       ctx.fillStyle = '#300'; ctx.fillRect(sx - 16, topY + 4, 32, 4);
       ctx.fillStyle = '#e33'; ctx.fillRect(sx - 16, topY + 4, 32 * e.hp / e.maxHp, 4);
@@ -1119,7 +1120,7 @@ function render() {
   }
   Iso.groundTransform();
   for (const d of G.decals) {
-    ctx.fillStyle = 'rgba(90,10,10,0.45)';
+    ctx.fillStyle = d.drop ? 'rgba(110,12,12,0.6)' : 'rgba(90,10,10,0.45)';
     ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r, d.r * 0.6, d.a, 0, TAU); ctx.fill();
   }
   for (const h of World.hazards) { // 방사능 웅덩이
@@ -1298,6 +1299,7 @@ function render() {
     ctx.lineTo(bx, by); ctx.stroke(); ctx.lineWidth = 1;
   }
   Gadgets.draw(); // v1.14 지뢰
+  Juice.drawWorld(); // v1.28 탄피 · 총구 섬광
   for (const g of G.grenades) {
     drawShadow(Iso.sx(g.x, g.y), Iso.sy(g.x, g.y), 4);
     const gx = Iso.sx(g.x, g.y), gy = Iso.sy(g.x, g.y, 6 + g.h * 1.5);
@@ -1351,6 +1353,7 @@ function render() {
     ctx.fillStyle = g3; ctx.fillRect(0, 0, VW, VH);
   }
   drawHitDirs(psx, psy); // v1.17 화면 밖에서 맞은 방향
+  Juice.drawHUD(); canvas.classList.toggle('aim', G.running && !p.dead); // v1.28 조준선
 
   if (G.fade) { // v1.17 출격·귀환 화면 전환 (검게 → 밝게)
     G.fade.t += 1 / 60; const k = G.fade.t / G.fade.life;

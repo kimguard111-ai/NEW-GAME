@@ -51,6 +51,8 @@ const SFX = {
       case 'sniper': this.noise(0.4, 1100, 0.6, 0.8 * v, 'lowpass', 0.2); this.tone(70, 0.3, 0.45 * v, 'sine', 0, 0.3); break;
       case 'swing': this.noise(0.14, 700, 1.5, 0.25 * v, 'bandpass', 3); break;
       case 'heavy': this.noise(0.22, 420, 1.2, 0.4 * v, 'bandpass', 2.5); this.tone(90, 0.18, 0.3 * v, 'sine', 0.05, 0.5); break; // v1.9 근접 마무리
+      case 'casing': this.tone(2600 + Math.random() * 900, 0.03, 0.06 * v, 'triangle', 0, 0.8); this.tone(3400 + Math.random() * 600, 0.025, 0.04 * v, 'triangle', 0.05, 0.8); break; // v1.28 탄피 떨어지는 소리
+      case 'hitmark': this.tone(2400, 0.025, 0.07 * v, 'square'); break; // v1.28 명중 확인
       case 'empty': this.tone(1200, 0.03, 0.12, 'square'); break;
       case 'reload': this.tone(600, 0.04, 0.12, 'square'); this.tone(380, 0.05, 0.12, 'square', 0.12); break;
       // 타격

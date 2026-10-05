@@ -6,6 +6,7 @@ html, body {
   user-select: none;
 }
 canvas#game { display: block; cursor: crosshair; }
+body:not(.touch) canvas#game.aim { cursor: none; } /* v1.28 조준선은 게임이 그림 */
 .hidden { display: none !important; }
 button {
   background: #2a2f36; color: #e8e8e8; border: 1px solid #555; padding: 6px 12px;

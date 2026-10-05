@@ -2,6 +2,7 @@
 const Settings = {
   light: true,   // 조명 효과 (끄면 단순 어둠 — 가벼움)
   shake: true,   // 화면 흔들림
+  camLead: true, // v1.28 조준 방향으로 시야 내밀기
   dmgNum: true,  // 피해 숫자
   detail: true,  // v1.11 세부 묘사 (옥상 난간·물탱크 · 1층 셔터 · 도로 마모 · 차 디테일)
   tips: true,    // 도움말 팁 (v1.0)
