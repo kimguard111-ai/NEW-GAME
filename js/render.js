@@ -732,7 +732,7 @@ const TexCache = { strips: new Map() };
 function facadeVariant(tx, ty, glass) {
   if (!ART.tex) return null;
   const ok = k => { const a = ART.tex[k]; return a && a.ready ? k : null; };
-  if (glass && ok('f_glass')) return 'f_glass';
+  if (glass) { const gl = ['f_glass', 'f_glass2'].filter(ok); if (gl.length) return gl[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 5 + 1, Math.floor(ty / World.BLOCK) * 3 + 7) * gl.length)]; } // v1.31 유리 외벽 2종
   const list = (ART.texZones[World.zoneIndex(tx * TILE, ty * TILE)] || ART.texZones[1]).filter(ok);
   if (!list.length) return null;
   return list[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 7 + 3, Math.floor(ty / World.BLOCK) * 11 + 5) * list.length)]; // 같은 블록은 같은 외벽
@@ -741,7 +741,7 @@ function facadeStrip(v, ht) {
   const key = v + '|' + ht;
   let c = TexCache.strips.get(key);
   if (c) return c;
-  const a = ART.tex[v], shop = ART.tex.f_shop && ART.tex.f_shop.ready && v !== 'f_glass' ? ART.tex.f_shop : null;
+  const a = ART.tex[v], shop = ART.tex.f_shop && ART.tex.f_shop.ready && !v.startsWith('f_glass') ? ART.tex.f_shop : null;
   const PX = 2, W = TILE * PX, FH = FLOOR_H * PX, H = Math.ceil(ht * PX); // 월드 1 = 2px
   c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
@@ -786,7 +786,7 @@ function drawPropArt(key, sx, sy, flip = false, k = 1) {
   const a = propArt(key); if (!a) return false;
   const [rx, ry, rw, rh] = a.rect || [0, 0, a.img.width, a.img.height], fit = ART.propFit[key] || { w: 40, y: 4 };
   const w = fit.w * k, h = rh * w / rw;
-  ctx.save(); ctx.translate(sx, sy + fit.y * k); if (flip) ctx.scale(-1, 1);
+  ctx.save(); ctx.translate(sx, sy + fit.y * k); if (flip !== !!a.mirror) ctx.scale(-1, 1); // v1.31 mirror: 반대 방향으로 그려진 그림
   ctx.drawImage(a.img, rx, ry, rw, rh, -w / 2, -h, w, h);
   ctx.restore();
   return true;

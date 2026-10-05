@@ -32,7 +32,7 @@ art_raw/
 | 플레이어 몸 | `player.png` · `player_long.png` · `player_heavy.png` … |
 | 무기·헬멧 한 장 | `weapons_all.png` · `helmets_all.png` |
 | 랜드마크 | `cathedral.png` · `coex.png` … |
-| 소품 (12장) | `props_street.png` · `props_vehicle.png` · `props_object.png` · `props_camp.png` · `props_deco.png` · `props_seoul.png` |
+| 소품 (12장 · 가로등만 다시) | `props_street.png` · `props_vehicle.png` · `props_object.png` · `props_camp.png` · `props_deco.png` · `props_seoul.png` |
 | 실내 (14장) | `props_interior1.png` · `props_interior2.png` · `tex_floor.png` |
 | 건물 질감 (13장) | `tex_facade.png` · `tex_roof.png` |
 

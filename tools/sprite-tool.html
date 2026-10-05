@@ -113,6 +113,8 @@
       </div>
       <label>출력 칸 크기 (px)</label>
       <input id="cell" type="number" value="128" min="32" step="16">
+      <label>칸 가로 배율 (옆으로 긴 몸·4족 보행은 2~2.5)</label>
+      <input id="wide" type="number" value="1.5" min="1" max="3" step="0.1"> <!-- v1.31 -->
       <label>캐릭터가 오른쪽을 보고 있음 (왼쪽을 보면 체크 해제 → 자동 반전)</label>
       <input id="facingRight" type="checkbox" checked>
       <label>동작 순서 지정 (선택) — Gemini가 행을 섞어 그렸을 때. 왼쪽 위부터 읽는 순서대로 나눔<br>예: <code>idle 4, walk 7, hit 3, death 4</code></label>
@@ -410,7 +412,7 @@ function process() {
   }
   // 원본 미리보기: 첫 이미지
   const src = $('src'); src.width = imgs[0].width; src.height = imgs[0].height; src.getContext('2d').drawImage(parts[0] ? parts[0].cv : imgs[0], 0, 0);
-  const cell = +$('cell').value, cellW = Math.round(cell * 1.5); // 가로를 넓게: 총·근접 무기·화염이 잘리지 않도록
+  const cell = +$('cell').value, cellW = Math.round(cell * (+$('wide').value || 1.5)); // 가로를 넓게: 총·근접 무기·화염이 잘리지 않도록
   if (!parts.length) { $('info').innerHTML = '<span class="warn">캐릭터를 찾지 못했습니다. 배경 제거 강도나 배경색을 조정하세요.</span>'; return; }
   // 크기 기준: 각 이미지의 첫 행 중간 키. 단, 첫 이미지보다 0.6배 이상 납작한 이미지(쓰러진 자세 등)는 첫 이미지 배율을 따름
   const base = parts[0];

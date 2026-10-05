@@ -36,7 +36,7 @@ const ART = {
   handX: 0.1,      // 손이 몸 중심에서 앞으로 나온 정도 (플레이어 키 대비)
   // v1.7.7 무기를 든 몸 그림의 그룹: player[_방어구]_그룹 그림이 있으면 그 몸을 쓰고 무기를 따로 붙이지 않음 (근접 무기는 기존 방식)
   weaponGroup: { pistol: 'pistol', smg: 'long', shotgun: 'long', rifle: 'long', sniper: 'long', lmg: 'long',
-    pipe: 'heavy', axe: 'heavy', katana: 'heavy' }, // v1.7.9 근접 그룹 · v1.8.0 근접은 모두 둔기(도끼) 그림으로 통일
+    pipe: 'heavy', axe: 'heavy', katana: 'blade' }, // v1.7.9 근접 그룹 · v1.8.0 근접은 모두 둔기(도끼) 그림으로 통일 · v1.31 블레이드는 칼 든 몸 그림
   // v1.8.1 총을 든 몸 그림 속 총구 위치 (발 기준, 플레이어 키 대비: 앞으로, 위로) — 그림에서 측정
   muzzle: { long: [0.61, 0.71], pistol: [0.42, 0.73] },
   handFromHead: { x: 0.1, y: 0.46 }, // v1.7.5 손 위치 = 이번 프레임 머리 꼭대기에서 (앞으로 x, 아래로 y) × 플레이어 키
@@ -55,7 +55,81 @@ const ART = {
 
   // v1.18 소품 그림 (가공 도구의 「v1.18 … 소품」 한 장 모드). 등록한 것만 코드 그림 대신 그림으로 바뀜
   // 예: lamp: { file: 'props_street.png', rect: [0, 0, 120, 300] },
-  props: {
+  props: { // v1.31 Gemini 소품 8장 (64종) — 덩어리 추출로 자른 아틀라스 · mirror = 그림이 반대 방향이라 뒤집어 씀
+    // props_street.png
+    barrel: { file: 'props_street.png', rect: [489, 4, 84, 146] },
+    bench: { file: 'props_street.png', rect: [304, 184, 168, 164], mirror: true },
+    cone: { file: 'props_street.png', rect: [383, 4, 102, 130] },
+    deadtree: { file: 'props_street.png', rect: [126, 4, 96, 158] },
+    hydrant: { file: 'props_street.png', rect: [671, 4, 72, 137] },
+    // lamp: Gemini 그림에 신호등이 붙어 있어 보류 (코드 가로등 사용) — 다시 그리면 연결
+    signal: { file: 'props_street.png', rect: [476, 184, 251, 178] },
+    trash: { file: 'props_street.png', rect: [226, 4, 153, 122] },
+    tree: { file: 'props_street.png', rect: [4, 4, 118, 176] },
+    // props_vehicle.png
+    bus: { file: 'props_vehicle.png', rect: [294, 207, 380, 303], mirror: true },
+    car_a: { file: 'props_vehicle.png', rect: [4, 4, 276, 173], mirror: true },
+    car_b: { file: 'props_vehicle.png', rect: [284, 4, 268, 199], mirror: true },
+    car_burnt: { file: 'props_vehicle.png', rect: [678, 207, 276, 173], mirror: true },
+    car_c: { file: 'props_vehicle.png', rect: [556, 4, 257, 182], mirror: true },
+    police: { file: 'props_vehicle.png', rect: [4, 207, 286, 179], mirror: true },
+    // props_object.png
+    airdrop: { file: 'props_object.png', rect: [799, 4, 166, 149] },
+    bag: { file: 'props_object.png', rect: [551, 4, 115, 119] },
+    dumpster: { file: 'props_object.png', rect: [271, 4, 172, 176] },
+    generator: { file: 'props_object.png', rect: [146, 194, 158, 148] },
+    labcase: { file: 'props_object.png', rect: [4, 4, 152, 127] },
+    locker: { file: 'props_object.png', rect: [447, 4, 100, 186] },
+    mine: { file: 'props_object.png', rect: [308, 194, 70, 51] },
+    nest: { file: 'props_object.png', rect: [382, 194, 268, 162] },
+    safe: { file: 'props_object.png', rect: [670, 4, 125, 167] },
+    // props_camp.png
+    campfire: { file: 'props_camp.png', rect: [375, 182, 188, 105] },
+    container: { file: 'props_camp.png', rect: [567, 182, 235, 218] },
+    crates: { file: 'props_camp.png', rect: [487, 4, 191, 147] },
+    maptable: { file: 'props_camp.png', rect: [4, 182, 187, 151] },
+    radio: { file: 'props_camp.png', rect: [285, 182, 86, 242] },
+    sandbags: { file: 'props_camp.png', rect: [806, 182, 178, 160] },
+    tent: { file: 'props_camp.png', rect: [4, 4, 238, 165] },
+    tent_medic: { file: 'props_camp.png', rect: [246, 4, 237, 166] },
+    workbench: { file: 'props_camp.png', rect: [682, 4, 172, 174] },
+    // props_deco.png
+    acunit: { file: 'props_deco.png', rect: [4, 180, 134, 146] },
+    antenna: { file: 'props_deco.png', rect: [142, 180, 111, 158] },
+    cart: { file: 'props_deco.png', rect: [449, 180, 128, 161] },
+    debris: { file: 'props_deco.png', rect: [581, 180, 227, 145] },
+    rubble_a: { file: 'props_deco.png', rect: [4, 4, 270, 149] },
+    rubble_b: { file: 'props_deco.png', rect: [278, 4, 199, 110] },
+    slab: { file: 'props_deco.png', rect: [481, 4, 292, 172] },
+    tires: { file: 'props_deco.png', rect: [257, 180, 188, 134] },
+    watertank: { file: 'props_deco.png', rect: [777, 4, 117, 167] },
+    // props_seoul.png
+    busstop: { file: 'props_seoul.png', rect: [4, 4, 346, 267], mirror: true },
+    cross: { file: 'props_seoul.png', rect: [393, 529, 88, 243] },
+    pocha: { file: 'props_seoul.png', rect: [354, 4, 342, 258] },
+    pole: { file: 'props_seoul.png', rect: [700, 4, 120, 521] },
+    scooter: { file: 'props_seoul.png', rect: [824, 4, 170, 164] },
+    subway: { file: 'props_seoul.png', rect: [4, 529, 385, 246] },
+    // props_interior1.png
+    in_books: { file: 'props_interior1.png', rect: [443, 4, 148, 205], mirror: true },
+    in_cafe: { file: 'props_interior1.png', rect: [154, 233, 188, 161] },
+    in_elec: { file: 'props_interior1.png', rect: [758, 4, 243, 225], mirror: true },
+    in_food: { file: 'props_interior1.png', rect: [346, 233, 196, 149] },
+    in_mart: { file: 'props_interior1.png', rect: [4, 233, 146, 204], mirror: true },
+    in_pc: { file: 'props_interior1.png', rect: [677, 233, 187, 183] },
+    in_pharma: { file: 'props_interior1.png', rect: [238, 4, 201, 199], mirror: true },
+    in_snack: { file: 'props_interior1.png', rect: [4, 4, 230, 205], mirror: true },
+    in_washer: { file: 'props_interior1.png', rect: [546, 233, 127, 166] },
+    // props_interior2.png
+    in_bank: { file: 'props_interior2.png', rect: [525, 4, 167, 177] },
+    in_bed: { file: 'props_interior2.png', rect: [193, 323, 182, 158] },
+    in_boxes: { file: 'props_interior2.png', rect: [625, 185, 155, 125] },
+    in_chair: { file: 'props_interior2.png', rect: [364, 185, 126, 98] },
+    in_crate: { file: 'props_interior2.png', rect: [696, 4, 153, 131] },
+    in_crate_open: { file: 'props_interior2.png', rect: [4, 185, 176, 134] },
+    in_debris: { file: 'props_interior2.png', rect: [784, 185, 184, 97] },
+    in_hosp: { file: 'props_interior2.png', rect: [4, 4, 193, 158] },
+    in_police: { file: 'props_interior2.png', rect: [363, 4, 158, 148] },
   },
   // 소품 그림을 화면에 놓는 크기: w = 화면 가로(px, 확대 1배 기준) · y = 그림 아래쪽을 바닥 점보다 얼마나 아래에 둘지
   propFit: {
@@ -75,7 +149,31 @@ const ART = {
 
   // v1.19 건물 질감 (가공 도구의 「v1.19 건물 외벽 / 옥상 질감」). 외벽 = 건물 한 칸 × 한 층의 정면 그림, 옥상 = 위에서 본 바닥
   // 등록하면 건물 벽·옥상에 기울여 붙임 (없으면 코드로 그린 벽·창문)
-  tex: {
+  tex: { // v1.31 Gemini 질감 4장 — 외벽 6종 + 변형 5종 · 옥상 3종 · 실내 바닥 6종
+    // tex_facade.png
+    f_apartment: { file: 'tex_facade.png', rect: [7, 7, 319, 266] },
+    f_brick: { file: 'tex_facade.png', rect: [336, 7, 316, 266] },
+    f_office: { file: 'tex_facade.png', rect: [662, 7, 317, 266] },
+    f_glass: { file: 'tex_facade.png', rect: [7, 283, 318, 266] },
+    f_burnt: { file: 'tex_facade.png', rect: [335, 283, 316, 266] },
+    f_shop: { file: 'tex_facade.png', rect: [661, 283, 317, 266] },
+    // tex_facade2.png
+    f_apartment2: { file: 'tex_facade2.png', rect: [7, 7, 313, 251] },
+    f_brick2: { file: 'tex_facade2.png', rect: [330, 7, 312, 249] },
+    f_office2: { file: 'tex_facade2.png', rect: [652, 7, 312, 249] },
+    f_glass2: { file: 'tex_facade2.png', rect: [7, 268, 313, 250] },
+    f_burnt2: { file: 'tex_facade2.png', rect: [330, 268, 312, 250] },
+    // tex_roof.png
+    r_concrete: { file: 'tex_roof.png', rect: [7, 7, 330, 342] },
+    r_gravel: { file: 'tex_roof.png', rect: [347, 7, 330, 342] },
+    r_tar: { file: 'tex_roof.png', rect: [687, 7, 330, 341] },
+    // tex_floor.png
+    fl_tile: { file: 'tex_floor.png', rect: [7, 7, 269, 273] },
+    fl_wood: { file: 'tex_floor.png', rect: [286, 7, 264, 274] },
+    fl_lino: { file: 'tex_floor.png', rect: [560, 7, 274, 274] },
+    fl_carpet: { file: 'tex_floor.png', rect: [7, 291, 270, 275] },
+    fl_marble: { file: 'tex_floor.png', rect: [287, 291, 265, 275] },
+    fl_concrete: { file: 'tex_floor.png', rect: [562, 291, 280, 274] },
   },
   // 지역마다 쓰는 외벽 (zone 번호 → 후보). 1층은 f_shop. 강남 유리 고층은 항상 f_glass
   // v1.25 실내 바닥 질감 (가공 도구 「v1.25 실내 바닥 질감 6종」 → tex 안에 붙여넣기). 2×2칸에 한 장을 펼침
@@ -86,8 +184,8 @@ const ART = {
     분식집: { obj: 'in_food', floor: 'fl_concrete' }, 은행: { obj: 'in_bank', floor: 'fl_marble' }, 병원: { obj: 'in_hosp', floor: 'fl_lino', deco: 'in_bed' },
     파출소: { obj: 'in_police', floor: 'fl_marble' }, PC방: { obj: 'in_pc', floor: 'fl_carpet' }, 세탁소: { obj: 'in_washer', floor: 'fl_concrete' },
   },
-  texZones: { 0: ['f_apartment', 'f_brick'], 1: ['f_brick', 'f_apartment', 'f_office'], 2: ['f_brick', 'f_apartment'], 3: ['f_office', 'f_burnt', 'f_apartment'],
-    4: ['f_office', 'f_glass', 'f_burnt'], 6: ['f_glass', 'f_office'], 7: ['f_apartment', 'f_burnt', 'f_brick'] },
+  texZones: { 0: ['f_apartment', 'f_brick', 'f_apartment2'], 1: ['f_brick', 'f_apartment', 'f_office', 'f_brick2', 'f_apartment2'], 2: ['f_brick', 'f_apartment', 'f_brick2', 'f_apartment2'], 3: ['f_office', 'f_burnt', 'f_apartment', 'f_office2', 'f_burnt2'],
+    4: ['f_office', 'f_glass', 'f_burnt', 'f_office2', 'f_burnt2'], 6: ['f_glass', 'f_office', 'f_glass2', 'f_office2'], 7: ['f_apartment', 'f_burnt', 'f_brick', 'f_apartment2', 'f_burnt2'] }, // v1.31 변형(…2) 섞어 반복 줄이기
 
   // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
   landmarks: {
@@ -153,5 +251,21 @@ const ART = {
     player_heavy: { file: 'player_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 5] }, headW: 19, heads: { idle: [[5,-102],[4,-98],[4,-98],[4,-102]], walk: [[2,-94],[-2,-94],[1,-94],[2,-97],[2,-97],[1,-94],[0,-94],[-1,-94]], attack: [[-10,-94],[7,-91],[5,-93],[9,-89],[23,-94]], hit: [[13,-95],[11,-94]], death: [[11,-94],[9,-90],[-52,-73],[-53,-54],[-35,-50]] } },
     player_vest_heavy: { file: 'player_vest_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, headW: 20, heads: { idle: [[4,-98],[4,-98],[3,-98],[3,-102]], walk: [[5,-94],[-2,-97],[-1,-94],[2,-94],[2,-97],[-1,-94],[2,-94],[-1,-94]], attack: [[-9,-84],[-15,-96],[-14,-95],[6,-92]], hit: [[11,-96],[15,-89]], death: [[8,-105],[-29,-91],[-38,-80],[9,-56],[9,-56]] } },
     player_tactical_heavy: { file: 'player_tactical_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, headW: 20, heads: { idle: [[3,-98],[4,-98],[3,-98],[3,-102]], walk: [[5,-94],[-2,-97],[-1,-94],[2,-94],[3,-94],[-1,-94],[2,-94],[0,-94]], attack: [[-9,-84],[-15,-97],[-14,-95],[6,-92]], hit: [[11,-96],[15,-89]], death: [[7,-101],[-29,-91],[-36,-76],[9,-56],[9,-56]] } },
+    // v1.31 Gemini 그림 2차: 보스 8종 · 블레이드 든 몸 5종 · 둔기 든 몸(군용·외골격) 2종
+    anvil: { file: 'anvil.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    butcher: { file: 'butcher.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 5], attack: [2, 5], hit: [3, 2], death: [4, 5] } },
+    cerberus: { file: 'cerberus.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    chimera: { file: 'chimera.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    colony: { file: 'colony.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    queen: { file: 'queen.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    shade: { file: 'shade.png', cell: 128, w: 307, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 4] } },
+    warden: { file: 'warden.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    player_blade: { file: 'player_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, headW: 19, heads: { idle: [[4,-104],[4,-99],[4,-95],[4,-99]], walk: [[6,-99],[1,-98],[0,-95],[4,-99],[5,-104],[-2,-98],[1,-99],[1,-95]], attack: [[-11,-99],[-9,-100],[-10,-96],[5,-96]], hit: [[-1,-97],[12,-95]], death: [[-28,-99],[-33,-92],[-44,-82],[-13,-59],[6,-59]] } },
+    player_vest_blade: { file: 'player_vest_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[4,-99],[3,-99],[3,-104],[3,-104]], walk: [[3,-95],[1,-98],[-1,-90],[2,-90],[2,-95],[-2,-98],[1,-90],[-1,-95]], attack: [[-18,-106],[18,-97],[-20,-92],[10,-92],[40,-98]], hit: [[-4,-97],[-1,-95]], death: [[5,-98],[-28,-92],[-27,-80],[-53,-56],[7,-58],[-36,-48]] } },
+    player_tactical_blade: { file: 'player_tactical_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[4,-99],[4,-99],[4,-104],[4,-99]], walk: [[6,-95],[1,-94],[0,-95],[3,-95],[4,-100],[-3,-98],[3,-95],[1,-100]], attack: [[7,-100],[21,-96],[34,-96],[12,-96]], hit: [[-4,-97],[24,-89]], death: [[-4,-102],[-53,-89],[-40,-82],[-25,-66],[0,-58],[-3,-58]] } },
+    player_military_blade: { file: 'player_military_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 7], attack: [2, 4], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[3,-99],[3,-99],[3,-99],[3,-99]], walk: [[6,-95],[1,-94],[-1,-98],[4,-100],[4,-95],[-2,-94],[3,-95]], attack: [[-17,-102],[-19,-95],[10,-96],[10,-96]], hit: [[-13,-99],[21,-90]], death: [[6,-103],[-52,-91],[-24,-84],[-55,-60],[-3,-56],[-3,-55]] } },
+    player_exo_blade: { file: 'player_exo_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 5] }, headW: 26, heads: { idle: [[1,-99],[2,-99],[4,-100],[1,-95]], walk: [[2,-98],[-4,-98],[-5,-107],[-1,-98],[0,-102],[-8,-98],[-1,-107],[-2,-95]], attack: [[-2,-104],[6,-95],[23,-100],[9,-100],[5,-100]], hit: [[-14,-97],[-2,-100]], death: [[11,-97],[-26,-91],[-19,-85],[-19,-66],[-14,-61]] } },
+    player_military_heavy: { file: 'player_military_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 5] }, headW: 18, heads: { idle: [[9,-102],[4,-99],[4,-95],[4,-99]], walk: [[3,-95],[0,-91],[1,-98],[2,-100],[4,-95],[1,-95],[2,-95],[1,-95]], attack: [[-10,-96],[7,-92],[6,-93],[10,-93],[24,-96]], hit: [[15,-101],[13,-98]], death: [[14,-99],[5,-91],[-61,-77],[-23,-67],[-1,-62]] } },
+    player_exo_heavy: { file: 'player_exo_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 5] }, headW: 18, heads: { idle: [[4,-104],[3,-99],[4,-99],[5,-99]], walk: [[6,-98],[0,-94],[-1,-91],[3,-98],[4,-98],[-3,-94],[2,-95],[1,-95]], attack: [[-15,-97],[-1,-103],[2,-101],[2,-97],[2,-97]], hit: [[5,-96],[5,-98]], death: [[12,-97],[-30,-87],[-25,-79],[-22,-70],[-20,-66]] } },
   },
 };
