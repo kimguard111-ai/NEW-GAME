@@ -646,7 +646,7 @@ function killEnemy(e) {
     G.combo = G.time - (G.comboT || -9) < 3 ? (G.combo || 0) + 1 : 1; G.comboT = G.time;
     if (G.combo >= 3) SFX.play('combo', G.combo);
     if (G.combo > p.bestCombo) p.bestCombo = G.combo;
-    if (G.combo === 10 || G.combo === 25 || G.combo === 50) { UI.toast(`${G.combo} 연속 처치!`, `보너스 +${G.combo * p.level}₵`); p.credits += G.combo * p.level; }
+    if (G.combo === 10 || G.combo === 25 || G.combo === 50) { UI.toast(`${G.combo} 연속 처치!`, `보너스 +${Math.round(G.combo * p.level * ECON.cr)}₵`); p.credits += Math.round(G.combo * p.level * ECON.cr); } // v1.25
   }
   { // v1.12 세트 · 고유 처치 효과
     const h = e.lastHit || {}, cw = curWeapon();

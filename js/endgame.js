@@ -53,11 +53,11 @@ const Bounty = {
     const p = G.player, lv = p.level;
     b.done = true;
     const hard = ['fieldBoss', 'hardAssault', 'titan'].includes(b.k);
-    p.credits += lv * 100;
+    p.credits += Math.round(lv * 100 * ECON.cr); // v1.25
     Workshop.gain(6, hard ? 3 : 2);
     const it = randomGear(lv, 1.2, hard ? 3 : 2);
     if (!addItem(it)) G.drops.push({ x: p.x, y: p.y, kind: 'item', t: 0, item: it });
-    UI.toast('의뢰 완료', `${BOUNTIES[b.k].text(b.need)} · +${fmt(lv * 100)}₵ · ${itemName(it)}`);
+    UI.toast('의뢰 완료', `${BOUNTIES[b.k].text(b.need)} · +${fmt(Math.round(lv * 100 * ECON.cr))}₵ · ${itemName(it)}`);
     log(`${ICON('bounty')} 의뢰 완료: ${BOUNTIES[b.k].text(b.need)} → ${itemName(it)}`, '#8cf');
     if (!p.bounty.bonus && p.bounty.list.every(x => x.done)) { // 3개 모두: 영웅 이상 + 전자 부품
       p.bounty.bonus = true;
@@ -115,9 +115,9 @@ const Weekly = {
   },
   complete(b) {
     const p = G.player, lv = p.level; b.done = true;
-    p.credits += lv * 300; Workshop.gain(10, 4);
+    p.credits += Math.round(lv * 300 * ECON.cr); Workshop.gain(10, 4); // v1.25
     const it = randomGear(lv, 1.5, 3); if (!addItem(it)) G.drops.push({ x: p.x, y: p.y, kind: 'item', t: 0, item: it });
-    UI.toast('주간 도전 완료', `${WEEKLIES[b.k].text(b.need)} · +${fmt(lv * 300)}₵ · ${itemName(it)}`);
+    UI.toast('주간 도전 완료', `${WEEKLIES[b.k].text(b.need)} · +${fmt(Math.round(lv * 300 * ECON.cr))}₵ · ${itemName(it)}`);
     log(`${ICON('bounty')} 주간 도전 완료: ${WEEKLIES[b.k].text(b.need)} → ${itemName(it)}`, '#ffb07a');
     if (!p.weekly.bonus && p.weekly.list.every(x => x.done)) {
       p.weekly.bonus = true;

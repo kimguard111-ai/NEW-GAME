@@ -486,7 +486,7 @@ const UI = {
         h += `<div class="step-row${j === p.quest.step ? ' cur' : ''}">${mark} ${Story.objective(st)}${j === p.quest.step && (st.type === 'kill' || st.type === 'collect') ? ` <b>${p.quest.progress} / ${st.count}</b>` : ''}</div>`;
         if (j === p.quest.step) {
           const r = st.reward;
-          h += `<div class="step-text">${st.text}<br><span class="muted">보상: EXP ${fmt(r.exp)}, ${fmt(r.credits)}₵${r.equip ? ', ' + GEAR_DEFS(r.equip).name : r.gear ? ', 장비' : ''}</span></div>`;
+          h += `<div class="step-text">${st.text}<br><span class="muted">보상: EXP ${fmt(r.exp)}, ${fmt(Math.round(r.credits * ECON.cr))}₵${r.equip ? ', ' + GEAR_DEFS(r.equip).name : r.gear ? ', 장비' : ''}</span></div>`;
         }
       });
     });
