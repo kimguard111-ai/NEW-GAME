@@ -45,6 +45,7 @@ const UI = {
 
   isOpen(name) { return !$('panel-' + name).classList.contains('hidden'); },
   open(name) {
+    if ($('panel-' + name).classList.contains('hidden') && name !== 'dialog') SFX.play('open'); // v1.35
     $('panel-' + name).classList.remove('hidden');
     if (name === 'inventory') UI.refreshInventory();
     if (name === 'stats') UI.refreshStats();
@@ -53,6 +54,7 @@ const UI = {
     if (name === 'skills') UI.renderSkills(); // v1.26
   },
   close(name) {
+    if (!$('panel-' + name).classList.contains('hidden') && name !== 'dialog') SFX.play('close'); // v1.35
     $('panel-' + name).classList.add('hidden');
     if (name === 'shop') { UI.shopOpen = false; UI.refreshInventory(); }
   },
@@ -314,6 +316,7 @@ const UI = {
     const p = G.player;
     if (p.level < itemReqLevel(it)) { log(`레벨이 부족합니다. (요구 Lv${itemReqLevel(it)})`, '#f88'); return; }
     const idx = p.inventory.indexOf(it);
+    SFX.play('equip'); // v1.35
     const old = p.equip[slot];
     p.equip[slot] = it;
     if (old) p.inventory[idx] = old; else p.inventory.splice(idx, 1);
@@ -841,7 +844,7 @@ const UI = {
     if (p.credits < price) { log('크레딧이 부족합니다.', '#f88'); return; }
     if (!addItem(it)) { log('인벤토리가 가득 찼습니다.', '#f88'); return; }
     p.credits -= price;
-    log(`구매: ${itemName(it)} (-${fmt(price)}₵)`, '#ffd76a');
+    log(`구매: ${itemName(it)} (-${fmt(price)}₵)`, '#ffd76a'); SFX.play('buy'); // v1.35
     saveGame();
   },
 };

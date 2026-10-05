@@ -16,9 +16,9 @@ const Juice = {
   spot(e, d) {
     e.alertT = 0.9;
     const v = clamp(1.2 - d / 600, 0.25, 1), fac = FACTION[e.type];
-    SFX.play(e.type === 'brute' || e.elite || e.fieldBoss ? 'roar' : fac === 'machine' ? 'beep' : fac === 'human' ? 'shout' : 'growl', v);
+    SFX.playAt(e.type === 'brute' || e.elite || e.fieldBoss ? 'roar' : fac === 'machine' ? 'beep' : fac === 'human' ? 'shout' : 'growl', e.x, e.y, Math.max(v, 0.6), 1100); // v1.35 좌우 위치
   },
-  step(e, d) { SFX.play('estep', clamp(1 - d / 520, 0.15, 1) * (e.type === 'brute' ? 2.2 : 1)); },
+  step(e, d) { const v = clamp(1 - d / 520, 0.15, 1) * (e.type === 'brute' ? 2.2 : 1); SFX.step(Ambience.surface(e.x, e.y), v * 0.55, clamp((Iso.sx(e.x, e.y) - VW / 2) / (VW / 2), -1, 1) * 0.8); }, // v1.35 바닥별 · 좌우
   // v1.29 주운 물건: 오른쪽 알림 카드 + 아이콘이 가방 버튼으로 날아감 (장비만)
   flies: [],
   loot(it, x, y) {

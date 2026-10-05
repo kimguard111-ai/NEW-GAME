@@ -60,7 +60,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && G.r
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 // ---------------- 공용 ----------------
-function log(msg, color = '#ddd') { UI.log(msg, color); }
+function log(msg, color = '#ddd') { UI.log(msg, color); if (color === '#f88' && typeof SFX !== 'undefined') SFX.play('error'); } // v1.35 안 되는 일: 낮은 삐-삐
 function floatText(x, y, text, color = '#fff', size = 14) {
   G.texts.push({ x: x + rand(-6, 6), y, z: 34, text, color, size, t: 0, life: 0.9 });
 }
@@ -250,7 +250,7 @@ function startReload() {
     return;
   }
   p.reloadT = p.reloadMax = b.reload * PlayerStats.reloadMul(p);
-  SFX.play('reload');
+  SFX.reload(w.key, p.reloadMax); // v1.35 무기별 장전 소리
 }
 
 function finishReload() {
@@ -282,7 +282,7 @@ function playerAttack() {
   const b = WEAPONS[w.key];
   if (!b.melee) p.atkT = b.rate * PlayerStats.rateMul(p) * gunRateMul(p, w);
   p.lastAtk = G.time; // 공격 애니메이션용
-  SFX.play(b.melee ? 'swing' : { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[w.key] || 'pistol');
+  SFX.play(b.melee ? 'swing_' + w.key : { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[w.key] || 'pistol');
   const critMul = PlayerStats.critMul(p, w); let cc = PlayerStats.crit(p, w);
   if (b.melee) {
     // v1.9 근접 3타 콤보: 1·2타는 빠르게, 3타는 무기별 마무리 (쇠파이프 강타 · 도끼 회전 베기 · 칼 찌르기)
@@ -373,7 +373,7 @@ function explode(x, y, dmg, r, opts = {}) {
     if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e)) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true, blast: true });
   }
   G.effects.push({ type: 'boom', x, y, t: 0, life: 0.4, r });
-  SFX.play('boom', opts.small ? 0.4 : 1);
+  SFX.playAt('boom', x, y, opts.small ? 0.4 : 1, 1400); // v1.35 위치 소리
   burst(x, y, '#ffb040', opts.small ? 12 : 30, opts.small ? 160 : 260, 0.5, 4);
   if (!opts.small) burst(x, y, '#555', 20, 120, 0.9, 6);
   G.shake = Math.max(G.shake, opts.small ? 4 : 12);
@@ -1138,6 +1138,7 @@ function update(dt) {
       World.move(p, wx / l * sp, wy / l * sp);
       p.walkT = (p.walkT || 0) + dt;
     }
+    Ambience.playerStep(p, dt, !!mv && !(p.rollT > 0)); // v1.35 바닥별 발소리
     if (IS_TOUCH) Touch.aimUpdate(p); // 모바일 오른쪽 조이스틱 → 조준점·사격
     const aimAt = Iso.toWorld(input.mx, input.my, 20); // 가슴 높이 조준
     p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x); p.aimPt = aimAt; p.aimPtT = G.time;
@@ -1171,6 +1172,7 @@ function update(dt) {
   Journal.update(dt); // v1.15 업적
   updateTension(dt); // v1.29 출격 긴장도 (음악 · 화면 톤)
   Music.update(dt); // v1.17 배경 음악
+  Ambience.update(dt); // v1.35 환경음 · 울림
   if (!p.dead && p.hp < PlayerStats.maxHp(p) * 0.3 && World.map !== 'camp' && (G.beatT = (G.beatT || 0) - dt) <= 0) { G.beatT = 0.4 + p.hp / PlayerStats.maxHp(p) * 2.2; SFX.play('heart'); } // v1.17 저체력 심장 박동
   Nav.update(dt);
   updateEnemies(dt);

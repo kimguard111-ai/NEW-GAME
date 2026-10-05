@@ -66,7 +66,7 @@ const Monsters = {
       s.done = true;
       if (!p.dead && Math.hypot(p.x - s.x, p.y - s.y) < s.r + p.r) damagePlayer(s.dmg);
       G.effects.push({ type: 'boom', x: s.x, y: s.y, t: 0, life: 0.35, r: s.r });
-      SFX.play('boom', clamp(1 - Math.hypot(p.x - s.x, p.y - s.y) / 900, 0.1, 0.6));
+      SFX.playAt('boom', s.x, s.y, 0.7, 1300);
       burst(s.x, s.y, s.pool ? '#8fd14a' : '#ffb040', 16, 200, 0.4, 4);
       G.shake = Math.max(G.shake, 5);
       if (s.pool) G.pools.push({ x: s.x, y: s.y, r: s.r * 0.9, t: 0, life: 4, dps: s.dmg * 0.5 });
@@ -183,7 +183,7 @@ const Monsters = {
       return false;
     }
     if (e.burstN > 0) { // v1.5 보안 포탑: 점사
-      if ((e.burstT -= dt) <= 0) { e.burstN--; e.burstT = 0.13; spawnEnemyBullet(e, e.aimA + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg * b, '#ffd040'); SFX.play('eshot', this.vol(e)); }
+      if ((e.burstT -= dt) <= 0) { e.burstN--; e.burstT = 0.13; spawnEnemyBullet(e, e.aimA + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg * b, '#ffd040'); SFX.playAt('eshot', e.x, e.y); }
       return true;
     }
     if (e.def.nade && !(e.aimT > 0) && !(e.burstN > 0)) { // v1.6 용병 수류탄: 플레이어 자리에 주황 원 → 1.2초 뒤 폭발 (구르거나 벗어나기)
@@ -202,7 +202,7 @@ const Monsters = {
       if (e.aimT > 0) {
         e.aimT -= dt;
         if (e.aimT <= 0) {
-          spawnEnemyBullet(e, e.aimA + rand(-0.03, 0.03), e.def.bulletSpeed, e.dmg * b, e.def.burst ? '#ffd040' : undefined); e.lastAtk = G.time; SFX.play('eshot', this.vol(e));
+          spawnEnemyBullet(e, e.aimA + rand(-0.03, 0.03), e.def.bulletSpeed, e.dmg * b, e.def.burst ? '#ffd040' : undefined); e.lastAtk = G.time; SFX.playAt('eshot', e.x, e.y);
           if (e.def.burst) { e.burstN = e.def.burst - 1; e.burstT = 0.13; }
         }
         return true;
@@ -222,7 +222,7 @@ const Monsters = {
       if (e.pounceT > 0) { e.pounceT -= dt; if (e.pounceT <= 0) { e.leapT = 0.42; e.leapHit = false; } return true; }
       e.pounceCd = (e.pounceCd ?? rand(2, 4)) - dt;
       if (e.pounceCd <= 0 && d > 80 && d < 190 && World.lineOfSight(e, p)) {
-        e.pounceCd = rand(5, 8); e.pounceT = 0.7; e.leapA = a; SFX.play('growl', this.vol(e)); return true; // v1.33 웅크림 0.45 → 0.7초 (보고 피할 시간) · 간격 3~5 → 5~8초
+        e.pounceCd = rand(5, 8); e.pounceT = 0.7; e.leapA = a; SFX.playAt('growl', e.x, e.y); return true; // v1.33 웅크림 0.45 → 0.7초 (보고 피할 시간) · 간격 3~5 → 5~8초
       }
     }
     if (e.type === 'brute') { // 내려찍기: 앞쪽 원 예고
