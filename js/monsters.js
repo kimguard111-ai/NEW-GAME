@@ -190,9 +190,9 @@ const Monsters = {
       e.nadeT = (e.nadeT ?? rand(3, 6)) - dt;
       const los = World.lineOfSight(e, p), flush = !los && G.time - (e.seenT || -9) < 3; // v1.32 벽 뒤에 숨은 플레이어에게도 (넘겨 던짐)
       if (e.nadeT <= 0 && d > 140 && d < (e.def.nade === 'weak' ? 300 : 380) && (los || flush)) {
-        e.nadeT = (e.def.nade === 'weak' ? rand(14, 20) : rand(9, 13)) * (e.fireMul || 1); e.lastAtk = G.time;
+        e.nadeT = (e.def.nade === 'weak' ? rand(18, 26) : rand(9, 13)) * (e.fireMul || 1); e.lastAtk = G.time;
         const tx = p.x + rand(-15, 15), ty = p.y + rand(-15, 15);
-        this.strike(tx, ty, 72, 1.2, e.dmg * (e.def.nade === 'weak' ? 1.8 : 2.2) * b, 'rgba(255,150,50,');
+        this.strike(tx, ty, 72, 1.2, e.dmg * (e.def.nade === 'weak' ? 1.3 : 2.2) * b, 'rgba(255,150,50,');
         G.effects.push({ type: 'nade', x: e.x, y: e.y, x2: tx, y2: ty, t: 0, life: 0.75 }); // 날아가는 수류탄
         floatText(e.x, e.y - 40, '수류탄!', '#ffb040', 13);
         return true;
@@ -215,14 +215,14 @@ const Monsters = {
     }
     if (e.type === 'dog' || e.def.pounce) { // 웅크림 0.45초(예고선) → 도약 (v1.6 은신 변이체도)
       if (e.leapT > 0) {
-        e.leapT -= dt; tryMoveSmart(e, e.leapA, 560 * dt);
+        e.leapT -= dt; tryMoveSmart(e, e.leapA, 330 * dt); // v1.33 560 → 330 (너무 빨라 정신없던 것)
         if (!e.leapHit && dist(e, p) < e.r + p.r + 6) { e.leapHit = true; e.lastAtk = G.time; damagePlayer(e.dmg * 1.5 * b, e.x, e.y); }
         return true;
       }
-      if (e.pounceT > 0) { e.pounceT -= dt; if (e.pounceT <= 0) { e.leapT = 0.32; e.leapHit = false; } return true; }
-      e.pounceCd = (e.pounceCd ?? rand(1, 3)) - dt;
-      if (e.pounceCd <= 0 && d > 80 && d < 230 && World.lineOfSight(e, p)) {
-        e.pounceCd = rand(3, 5); e.pounceT = 0.45; e.leapA = a; SFX.play('growl', this.vol(e)); return true;
+      if (e.pounceT > 0) { e.pounceT -= dt; if (e.pounceT <= 0) { e.leapT = 0.42; e.leapHit = false; } return true; }
+      e.pounceCd = (e.pounceCd ?? rand(2, 4)) - dt;
+      if (e.pounceCd <= 0 && d > 80 && d < 190 && World.lineOfSight(e, p)) {
+        e.pounceCd = rand(5, 8); e.pounceT = 0.7; e.leapA = a; SFX.play('growl', this.vol(e)); return true; // v1.33 웅크림 0.45 → 0.7초 (보고 피할 시간) · 간격 3~5 → 5~8초
       }
     }
     if (e.type === 'brute') { // 내려찍기: 앞쪽 원 예고

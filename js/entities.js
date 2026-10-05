@@ -206,7 +206,7 @@ function newPlayer(name) {
     name, x: c.x, y: c.y, r: 12, aim: 0, mapV: 4, mats: { scrap: 0, chip: 0 }, stash: [], raid: null, graves: {},
     level: 1, exp: 0, credits: 150, statPoints: 0, sp: 1, spV125: true, srank: {}, spV126: true, // v1.25 스킬 포인트
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
-    hp: 1, reserve: 150,
+    hp: 1, ammo: Object.fromEntries(Object.entries(AMMO).map(([k, a]) => [k, a.start])), // v1.33 탄약 4종
     equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: null, helmet: null, belt: makeBelt(0) }, // v1.24 벨트 // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
     active: 'w1',
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
@@ -251,7 +251,7 @@ const PlayerStats = {
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {
     const w = p.equip[p.active];
-    return 125 /* v1.30 175 → 150 · v1.32 → 125 (빠른 걸음 ≈ 초속 6m) */ * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (pas('t4') ? 1.04 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
+    return 88 /* v1.30 175 → 150 · v1.32 → 125 · v1.33 → 88 (-30% · 초속 약 4.4m) */ * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (pas('t4') ? 1.04 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
   rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1) / (p.buffs.stim > 0 ? 1.15 : 1),
@@ -375,3 +375,10 @@ function makeEnemy(type, x, y, level) {
     bossT1: 3, bossT2: 7, bossT3: 5, charge: 0, chargeA: 0,
   };
 }
+
+// v1.33 탄약 4종 도우미
+function ammoOf(w) { return w && WEAPONS[w.key] && WEAPONS[w.key].ammo || null; }
+function gunAmmoTypes(p) { return [...new Set(['w1', 'w2'].map(k => ammoOf(p.equip[k])).filter(Boolean))]; }
+function addAmmo(p, t, n) { p.ammo[t] = (p.ammo[t] || 0) + Math.max(1, Math.round(n)); return Math.max(1, Math.round(n)); }
+// 기관총탄 u발어치를 들고 있는 총(없으면 장착한 총, 그것도 없으면 권총탄)에 맞춰 줌
+function giveAmmoUnits(p, u, t) { t = t || ammoOf(curWeapon()) || gunAmmoTypes(p)[0] || 'pistol'; return [t, addAmmo(p, t, u * AMMO[t].k)]; }

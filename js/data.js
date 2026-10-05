@@ -1,8 +1,8 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const ENEMY_SPEED = 0.85; // v1.32 적 이동 속도 전체 배율 (플레이어 150 → 125에 맞춰)
-const GAME_VERSION = 'v1.32';
+const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
+const GAME_VERSION = 'v1.33';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -17,27 +17,34 @@ const RARITIES = [
 const ECON = { gear: 0.3, cr: 0.5, sell: 0.2 };
 const PITY_DROPS = 10; // v1.25 드랍 자체가 귀해진 만큼 15 → 10 // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 → 25 · v1.7.1 → 15 (드랍이 더 귀해진 만큼)
 
+// v1.33 탄약 4종 — 총마다 쓰는 탄이 다름. k = 기관총탄 1발 대비 양 (줍거나 상자로 받을 때) · pack/price = 출격 지도에서 사는 묶음
+const AMMO = {
+  pistol: { name: '권총탄',   color: '#d8c890', k: 0.6,  pack: 48,  price: 15, start: 72 },
+  auto:   { name: '기관총탄', color: '#c8a050', k: 1,    pack: 120, price: 45, start: 120, desc: '기관단총 · 소총 · 기관총' },
+  shell:  { name: '산탄',     color: '#d05a3a', k: 0.25, pack: 30,  price: 45, start: 24 },
+  sniper: { name: '저격탄',   color: '#7ab0d8', k: 0.12, pack: 15,  price: 50, start: 10 },
+};
 // 무기 기본 정보
 // range: 사거리(px) · knock: 넉백 · stagger: 경직(초) · move: 장착 시 이동속도 배율
 // role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
   pipe:    { name: '쇠파이프',      icon: 'pipe', melee: true, dmg: 25, rate: 0.55, /* v1.8.1 공속↓·피해↑ (DPS 유지) 0.40/18 */ range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
              role: '3타째 강타로 크게 경직 · 탄약 불필요' },
-  pistol:  { name: 'M1911 권총',    icon: 'pistol', dmg: 18, rate: 0.42, /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
-             infinite: true, quickDraw: true, lvl: 1, price: 80, role: '탄약 무한 · 즉시 꺼내 듦 · 언제나 믿을 수 있는 보조무기' },
+  pistol:  { ammo: 'pistol', name: 'M1911 권총',    icon: 'pistol', dmg: 18, rate: 0.42, /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
+             quickDraw: true, lvl: 1, price: 80, role: '권총탄이 흔하고 쌈 · 즉시 꺼내 듦 · 언제나 믿을 수 있는 보조무기' },
   axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 55, rate: 1.0, /* v1.8.1 0.8/44 */ range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
              role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄' },
-  smg:     { name: 'MP5 기관단총',  icon: 'smg', dmg: 9, rate: 0.075, mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
+  smg:     { ammo: 'auto', name: 'MP5 기관단총',  icon: 'smg', dmg: 9, rate: 0.075, mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
-  shotgun: { name: 'M870 산탄총',   icon: 'shotgun', dmg: 10, pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
+  shotgun: { ammo: 'shell', name: 'M870 산탄총',   icon: 'shotgun', dmg: 10, pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
              lvl: 5, price: 380, role: '근거리 폭발력 · 코앞에서 쏘면 크게 날려버림' },
-  rifle:   { name: 'K2 돌격소총',   icon: 'rifle', dmg: 17, rate: 0.11, mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
+  rifle:   { ammo: 'auto', name: 'K2 돌격소총',   icon: 'rifle', dmg: 17, rate: 0.11, mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
              lvl: 8, price: 620, role: '안정적인 중거리 화력 · 끊어 쏘면 첫 발이 정확' },
   katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 62, rate: 0.5, /* v1.8.1 0.38/60 · v1.27 79 → 62 (Lv16 기관총보다 훨씬 강하던 것) */ range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
              role: '긴 칼날 · 3타째 돌진 찌르기 · 가장 빠른 이동' },
-  sniper:  { name: 'K14 저격소총',  icon: 'sniper', dmg: 140, rate: 1.2, /* v1.27 120 (Lv8 소총보다 약하던 것) */ mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
+  sniper:  { ammo: 'sniper', name: 'K14 저격소총',  icon: 'sniper', dmg: 140, rate: 1.2, /* v1.27 120 (Lv8 소총보다 약하던 것) */ mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
              lvl: 12, price: 1100, role: '장거리 일격 · 관통 · 치명타 x2.6' },
-  lmg:     { name: 'K3 기관총',     icon: 'lmg', dmg: 15, rate: 0.07, mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
+  lmg:     { ammo: 'auto', name: 'K3 기관총',     icon: 'lmg', dmg: 15, rate: 0.07, mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
              lvl: 16, price: 1800, role: '압도적 지속 화력 · 쏠수록 빨라지고 정확해짐 · 무거움' },
 };
 
@@ -73,7 +80,7 @@ const AFFIXES = {
   medHeal: { name: '구급상자 회복', slot: 'belt', min: 0.10, max: 0.30, pct: true },
   gadDmg:  { name: '투척물 피해',   slot: 'belt', min: 0.10, max: 0.35, pct: true },
   cdr:     { name: '스킬 재사용 단축', slot: 'belt', min: 0.04, max: 0.10, pct: true },
-  rollStam:{ name: '구르기 기력 절약', slot: 'belt', min: 0.08, max: 0.20, pct: true },
+  rollStam:{ name: '슬라이딩 재사용 감소', slot: 'belt', min: 0.08, max: 0.20, pct: true },
   gadSave: { name: '소모품 절약 확률', slot: 'belt', min: 0.08, max: 0.20, pct: true },
 };
 
@@ -88,7 +95,7 @@ const LEGENDARY = {
   // v1.12 방어구 전설 (slot: armor)
   aegis:      { name: '반응 장갑', desc: '맞으면 20% 확률로 3초 방어막 (받는 피해 -40%, 재발동 10초)', slot: 'armor' },
   thorns:     { name: '가시 갑옷', desc: '맞으면 가까운 적 모두에게 받은 피해의 80% 반사', slot: 'armor' },
-  afterimage: { name: '잔상', desc: '구르기가 끝난 자리에 충격파 (레벨×14 피해 · 경직)', slot: 'armor' },
+  afterimage: { name: '잔상', desc: '슬라이딩이 끝난 자리에 충격파 (레벨×14 피해 · 경직)', slot: 'armor' },
   survivor:   { name: '생존 본능', desc: '체력이 30% 아래로 떨어지면 아드레날린 자동 발동 (재발동 45초)', slot: 'armor' },
   // v1.12 헬멧 전설 (slot: helmet)
   nightVision:{ name: '야간 투시', desc: '어둠 -60% · 은신한 적이 항상 보임', slot: 'helmet' },
@@ -120,7 +127,7 @@ const UNIQUES = {
   hawk:    { from: 'hawk',    boss: '매',       key: 'sniper',  name: '「매」의 눈 저격소총', chance: 0.10,
              desc: '관통 +2 · 맞은 적 5초 동안 받는 피해 +25% (표식)' },
   shade:   { from: 'shade',   boss: '그림자',   key: 'exo',     name: '「그림자」 은신 외피', chance: 0.10,
-             desc: '구르기 후 1.5초 동안 이동 속도 +40% · 받는 피해 -30%' },
+             desc: '슬라이딩 후 1.5초 동안 이동 속도 +40% · 받는 피해 -30%' },
   chimera: { from: 'chimera', boss: '키메라',   key: 'military', name: '「키메라」 재생 조직 갑옷', chance: 0.15,
              desc: '체력 재생 +3/초 · 체력 50% 이하에서 재생 3배' },
   titan:   { from: 'titan',   boss: '타이탄',   key: 'lmg',     name: '「타이탄」 방사능 심장포', chance: 0.15,
@@ -158,7 +165,7 @@ const HELMETS = {
 
 const CONSUMABLES = {
   medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복', price: 40, stack: 20 },
-  ammo:   { name: '탄약 상자', icon: 'ammo', desc: '예비 탄약 +120', price: 45, stack: 20 },
+  ammo:   { name: '탄약 상자', icon: 'ammo', desc: '들고 있는 총의 탄약 (기관총탄 120발어치)', price: 45, stack: 20 },
   // v1.14 투척물 (6번 칸, T로 바꿈) · 보조 (7번 칸, Y로 바꿈)
   molotov: { name: '화염병', icon: 'molotov', desc: '던진 자리에 5초 불길 (넓게 · 계속 피해)', price: 90, stack: 10, slot: 'throw' },
   flash:   { name: '섬광탄', icon: 'flash', desc: '반경 170 안의 적 2.5초 기절 (보스 0.6초) · 은신 드러냄', price: 70, stack: 10, slot: 'throw' },
@@ -264,15 +271,15 @@ const SKILLS = [
 // v1.11 특성: 이 레벨이 되면 3개 중 1개 선택 (총 6개). 의무병의 능력치 초기화 때 함께 초기화
 const PERK_TIERS = [
   { lvl: 5, perks: [
-    { id: 'rollStrike', name: '구르기 공격', desc: '구르기가 끝나고 1.5초 동안 주는 피해 +30%' },
+    { id: 'rollStrike', name: '슬라이딩 공격', desc: '슬라이딩이 끝나고 1.5초 동안 주는 피해 +30%' },
     { id: 'scavenger', name: '청소부', desc: '뒤지기 속도 +40% · 뒤질 곳의 크레딧 +50%' },
     { id: 'thickSkin', name: '강인함', desc: '최대 체력 +12%' } ] },
   { lvl: 10, perks: [
     { id: 'lastRounds', name: '마지막 탄', desc: '탄창이 25% 이하일 때 치명타 확률 +25%' },
     { id: 'brawler', name: '싸움꾼', desc: '근접 공격으로 처치하면 최대 체력 4% 회복' },
-    { id: 'runner', name: '질주', desc: '이동 속도 +8% · 구르기 기력 소모 -25%' } ] },
+    { id: 'runner', name: '질주', desc: '이동 속도 +8% · 슬라이딩 재사용 -15%' } ] },
   { lvl: 15, perks: [
-    { id: 'executioner', name: '처형 일격', desc: '근접 3타 마무리 · 구르기 베기 피해 +40%' },
+    { id: 'executioner', name: '처형 일격', desc: '근접 3타 마무리 · 슬라이딩 베기 피해 +40%' },
     { id: 'steadyAim', name: '침착함', desc: '2초 동안 맞지 않으면 총기 피해 +15%' },
     { id: 'fieldMedic', name: '응급 요원', desc: '구급상자 회복량 +50% · 응급 처치 재사용 -30%' } ] },
   { lvl: 20, perks: [
@@ -285,7 +292,7 @@ const PERK_TIERS = [
     { id: 'bulletStorm', name: '탄막', desc: '탄창 용량 +30% · 재장전 속도 +20%' } ] },
   { lvl: 30, perks: [
     { id: 'apex', name: '정점 포식자', desc: '엘리트·네임드·보스·둥지에게 주는 피해 +20%' },
-    { id: 'ghost', name: '그림자 걸음', desc: '구르기 재사용 -40% · 구르기 후 1초 동안 받는 피해 -50%' },
+    { id: 'ghost', name: '그림자 걸음', desc: '슬라이딩 재사용 -40% · 슬라이딩 후 1초 동안 받는 피해 -50%' },
     { id: 'warlord', name: '전쟁군주', desc: '모든 스킬 재사용 대기 -25%' } ] },
 ];
 
@@ -307,14 +314,14 @@ const PERK_BRANCH = { rollStrike: 'atk', scavenger: 'tac', thickSkin: 'sur', las
   bulletStorm: 'atk', treasure: 'tac', secondWind: 'sur', apex: 'atk', warlord: 'tac', ghost: 'sur' };
 const PASSIVE_BRANCHES = {
   atk: { name: '공격', color: '#ff8a6a', bonus: '모든 피해 +8%' },
-  tac: { name: '전술', color: '#6ab4ff', bonus: '스킬 재사용 대기 -10% · 구르기 재사용 -20%' },
+  tac: { name: '전술', color: '#6ab4ff', bonus: '스킬 재사용 대기 -10% · 슬라이딩 재사용 -20%' },
   sur: { name: '생존', color: '#6fdc6f', bonus: '최대 체력 +10%' },
 };
 const PASSIVES = {
   atk: [ { id: 'a1', name: '근접 단련', desc: '근접 피해 +6%', lvl: 7, price: 1500 }, { id: 'a2', name: '사격 단련', desc: '총기 피해 +6%', lvl: 12, price: 3000 },
          { id: 'a3', name: '급소 노리기', desc: '치명타 확률 +3%', lvl: 17, price: 5000 }, { id: 'a4', name: '치명상', desc: '치명타 피해 +15%', lvl: 22, price: 8000 },
          { id: 'a5', name: '살육', desc: '모든 피해 +5%', lvl: 27, price: 12000 } ],
-  tac: [ { id: 't1', name: '빠른 손', desc: '재장전 속도 +10%', lvl: 7, price: 1500 }, { id: 't2', name: '호흡 조절', desc: '구르기 기력 소모 -15%', lvl: 12, price: 3000 },
+  tac: [ { id: 't1', name: '빠른 손', desc: '재장전 속도 +10%', lvl: 7, price: 1500 }, { id: 't2', name: '호흡 조절', desc: '슬라이딩 재사용 -10%', lvl: 12, price: 3000 },
          { id: 't3', name: '전술 훈련', desc: '스킬 재사용 대기 -6%', lvl: 17, price: 5000 }, { id: 't4', name: '경량 장비', desc: '이동 속도 +4%', lvl: 22, price: 8000 },
          { id: 't5', name: '현장 감각', desc: '뒤지기 속도 +25% · 경험치 +5%', lvl: 27, price: 12000 } ],
   sur: [ { id: 's1', name: '강골', desc: '최대 체력 +5%', lvl: 7, price: 1500 }, { id: 's2', name: '보호대', desc: '방어력 +8%', lvl: 12, price: 3000 },

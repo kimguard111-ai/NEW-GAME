@@ -74,7 +74,7 @@ const UI = {
   },
 
   // ---------------- HUD ----------------
-  buildHotbar() { // v1.24 벨트 칸 수만큼, 등록한 것만 (1~8 키) + 칸 등록 버튼 + 구르기
+  buildHotbar() { // v1.24 벨트 칸 수만큼, 등록한 것만 (1~8 키) + 칸 등록 버튼 + 슬라이딩
     const p = G.player, hb = $('hotbar'), n = beltSlots(p);
     hb.innerHTML = '';
     for (let i = 0; i < n; i++) {
@@ -100,9 +100,9 @@ const UI = {
     ed.className = 'hot edit'; ed.dataset.act = 'edit'; ed.title = `벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 ${n}칸 — 칸 등록 (B)`;
     ed.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'B'}</span><div class="icon">${ICON('belt')}</div>${n}칸`;
     hb.appendChild(ed);
-    const r = document.createElement('div'); // v0.16 구르기 (벨트와 상관없이 항상)
-    r.className = 'hot'; r.dataset.act = 'roll'; r.title = '구르기: 짧은 무적 돌진 (적 공격 예고를 보고 피하기)';
-    r.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'SPC'}</span><div class="icon">${ICON('roll')}</div>구르기<div class="cd" id="cdroll"></div>`;
+    const r = document.createElement('div'); // v0.16 슬라이딩 (벨트와 상관없이 항상)
+    r.className = 'hot'; r.dataset.act = 'roll'; r.title = '슬라이딩: 무적으로 미끄러져 빠져나감 · 재사용 5초 (위급할 때)';
+    r.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'SPC'}</span><div class="icon">${ICON('roll')}</div>슬라이딩<div class="cd" id="cdroll"></div>`;
     hb.appendChild(r);
     if (!IS_TOUCH) hb.onclick = e => { // PC: 칸을 눌러도 사용 · 빈 칸·벨트 칸은 등록 창
       const hot = e.target.closest('.hot'); if (!hot) return;
@@ -121,7 +121,7 @@ const UI = {
     const p = G.player, mh = PlayerStats.maxHp(p), next = PlayerStats.expNext(p.level);
     $('hud-name').textContent = p.name;
     $('hud-lv').textContent = `Lv.${p.level}`;
-    $('st-fill').style.width = clamp(p.stam, 0, 100) + '%'; $('st-text').textContent = `${Math.floor(p.stam)} / 100`;
+    { const cd = Math.max(0, p.rollCd || 0), mx = p.rollCdMax || ROLL.cd; $('st-fill').style.width = (100 * (1 - cd / mx)) + '%'; $('st-text').textContent = cd > 0 ? `슬라이딩 ${cd.toFixed(1)}초` : '슬라이딩 준비'; } // v1.33 기력 막대 → 슬라이딩 재사용
     if ((UI.portT = (UI.portT || 0) - 0.08) <= 0) { UI.portT = 0.4; drawPlayerInto($('portrait'), 3.6, 210, 0.75); } // 초상화 (상반신)
     $('mm-label').textContent = ZONES[G.zone].name.split(' ')[0];
     $('hp-fill').style.width = clamp(100 * p.hp / mh, 0, 100) + '%';
@@ -148,7 +148,7 @@ const UI = {
     if (w) {
       const b = WEAPONS[w.key];
       $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${itemName(w)}</span>`;
-      $('weapon-ammo').innerHTML = b.melee ? '<small>근접</small>' : p.reloadT > 0 ? '<small>재장전…</small>' : `${w.loaded} <small>/ ${b.infinite ? '∞' : fmt(p.reserve)}</small>`;
+      $('weapon-ammo').innerHTML = b.melee ? '<small>근접</small>' : p.reloadT > 0 ? '<small>재장전…</small>' : `${w.loaded} <small>/ ${b.infinite ? '∞' : fmt(p.ammo[b.ammo] || 0)} ${b.ammo ? AMMO[b.ammo].name : ''}</small>`;
       if (UI.iconFor !== w || UI.iconPlus !== w.plus) { UI.iconFor = w; UI.iconPlus = w.plus; drawWeaponIcon($('weapon-icon'), w); }
       $('weapon-role').textContent = `${b.role} · DPS ${Math.round(weaponDps(p, w))}`;
     } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; $('weapon-role').textContent = ''; drawWeaponIcon($('weapon-icon'), null); UI.iconFor = null; }
@@ -160,7 +160,7 @@ const UI = {
     const prog = G.search ? [G.search.t / G.search.dur, G.search.target.grave ? '시체 가방 회수 중…' : '뒤지는 중…'] : G.extractT > 0 ? [G.extractT / EXTRACT_TIME, '탈출 중…'] : null; // 진행 바
     $('extract-bar').classList.toggle('hidden', !prog);
     if (prog) { $('extract-fill').style.width = (100 * prog[0]) + '%'; $('extract-label').textContent = prog[1]; }
-    if ($('cdroll')) $('cdroll').style.height = (p.stam < ROLL.cost ? 100 * (ROLL.cost - p.stam) / ROLL.cost : 0) + '%'; // 스태미나 부족
+    if ($('cdroll')) $('cdroll').style.height = (100 * Math.max(0, p.rollCd || 0) / (p.rollCdMax || ROLL.cd)) + '%'; // v1.33 슬라이딩 재사용
     const live = G.combo >= 3 && G.time - G.comboT < 3; // 연속 처치 표시
     $('combo').classList.toggle('hidden', !live);
     if (live) { $('combo-n').textContent = `x${G.combo}`; $('combo-bar').style.width = (100 * (1 - (G.time - G.comboT) / 3)) + '%'; $('combo').style.color = G.combo >= 25 ? '#ffa53a' : G.combo >= 10 ? '#c77dff' : '#ffd76a'; }
@@ -756,7 +756,7 @@ const UI = {
     const k = (pc, m) => IS_TOUCH ? m : pc;
     UI.dialog('생존 수칙 — 시청역 캠프', `<div class="welcome">`
       + `<b>1. 출격</b> 캠프의 <b>작전 장교 윤씨</b>에게서 맵을 골라 나간다.<br>`
-      + `<b>2. 뒤지고 싸운다</b> 노란 반짝임 = 뒤질 곳 ${k('[E]', '(E 버튼)')} · 미니맵 노란 ◆ = 사건 · 붉은 예고(「!」·원·선)가 보이면 ${k('Space', '구르기 버튼')}로 구르기.<br>`
+      + `<b>2. 뒤지고 싸운다</b> 노란 반짝임 = 뒤질 곳 ${k('[E]', '(E 버튼)')} · 미니맵 노란 ◆ = 사건 · 붉은 예고(「!」·원·선)가 보이면 ${k('Space', '슬라이딩 버튼')}로 슬라이딩.<br>`
       + `<b>3. 탈출해야 내 것</b> 주운 장비·크레딧은 맵 끝 초록 ◎에 5초 머물러야 확정. 죽으면 그 자리에 시체 가방.<br>`
       + `<b>4. 캠프에서 성장</b> 레벨 업 능력치·특성 ${k('(C)', '(능력치 버튼)')} · 정비공 강화 · 대장 한씨의 캠프 시설 · 창고에 귀중품 보관.<br><br>`
       + `<span class="muted">${k('WASD 이동 · 마우스 조준·클릭 공격 · R 재장전 · Q 무기 교체 · 1~8 벨트 칸 (스킬·구급상자·소모품, B로 등록) · K 스킬 · I 가방 · J 임무', '왼쪽 끌기 이동 · 오른쪽 끌기 조준·공격 · 아래 칸 스킬·소모품')}</span></div>`,
@@ -872,7 +872,7 @@ const Hotbar = {
   },
   edit() {
     const p = G.player, n = beltSlots(p), acts = HOT_ACTS();
-    let h = `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>${n}칸</b> (벨트 등급마다 2 · 4 · 6 · 8칸) · 칸에 넣을 것을 고르세요. 구르기는 항상 따로 있습니다.</div><div class="hb-edit">`;
+    let h = `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>${n}칸</b> (벨트 등급마다 2 · 4 · 6 · 8칸) · 칸에 넣을 것을 고르세요. 슬라이딩은 항상 따로 있습니다.</div><div class="hb-edit">`;
     for (let i = 0; i < HOT_MAX; i++) {
       if (i >= n) { h += `<div class="hb-row off"><span class="tag">${i + 1}</span> <span class="muted">${ICON('lock')} ${BELTS.find(b => b.slots > i).name} 이상</span></div>`; continue; }
       h += `<div class="hb-row"><span class="tag">${i + 1}</span> <select data-hb="${i}"><option value="">— 비움 —</option>${acts.map(([a, nm]) => `<option value="${a}"${p.hotbar[i] === a ? ' selected' : ''}>${nm}</option>`).join('')}</select></div>`;

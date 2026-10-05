@@ -8,7 +8,7 @@ const ART = {
   charFill: 0.78, // 가공 도구와 같은 값 (대기 자세 키 / 칸 높이)
   charScale: 0.8, // v1.21 실제 스케일: 사람 키 1.75m = 약 35단위 (1m = 20단위) — 캐릭터 그림 전체 배율
   feetPad: 4,     // 가공 도구와 같은 값 (칸 바닥 ~ 발)
-  fps: { idle: 6, walk: 10, attack: 16, hit: 12, death: 10 },
+  fps: { idle: 6, walk: 8, /* v1.33 10 → 8 (느려진 걸음에 맞춰) */ attack: 16, hit: 12, death: 10 },
   // 화면에 표시할 대기 자세 키 (px)
   // player_vest 등 방어구별 몸 그림은 player 키를 따름
   height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44, deploy: 44, stash: 44,

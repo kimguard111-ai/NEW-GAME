@@ -56,7 +56,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       for (const it of [...p.inventory]) if (it.kind !== 'cons' && !isUpgrade(p, it)) { p.credits += itemSellPrice(it); removeItem(it); }
       const med = p.inventory.find(i => i.key === 'medkit'); let mc = med ? med.count : 0;
       while (mc < 8 && p.credits >= 120 + 50) { addItem(makeConsumable('medkit', 3)); p.credits -= 120; mc += 3; B.bought += 120; }
-      while (p.reserve < 400 && p.credits >= 45 + 50) { p.reserve += 120; p.credits -= 45; B.bought += 45; }
+      for (const t of gunAmmoTypes(p)) while (p.ammo[t] < AMMO[t].pack * 3.3 && p.credits >= AMMO[t].price + 50) { p.ammo[t] += AMMO[t].pack; p.credits -= AMMO[t].price; B.bought += AMMO[t].price; } // v1.33 탄약 4종
       for (const slot of ['w1', 'armor', 'helmet']) { const it = p.equip[slot]; let k = 0; while (it && it.plus < 6 && p.credits > enhanceCost(it) * 2 && k++ < 10) { UI.doEnhance(it); B.enh++; } }
       while (p.statPoints > 0) { p.stats[['dex', 'vit', 'agi'][p.statPoints % 3]]++; p.statPoints--; }
       PERK_TIERS.forEach((t, i) => { if (p.level >= t.lvl && !p.perks[i]) p.perks[i] = ['thickSkin', 'runner', 'steadyAim', 'lastStand', 'secondWind', 'apex'][i]; }); // v1.16 봇도 특성 선택 (생존 위주)
@@ -89,7 +89,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       // 예고 공격 반응: 한 번의 예고마다 DODGE 확률로 구르기
       for (const e of G.enemies) {
         const tele = (e.windT > 0 && dist(e, p) < 70) || (e.pounceT > 0 && dist(e, p) < 260) || (e.aimT > 0 && e.aimT < 0.2 && dist(e, p) < 500) || (e.slamT > 0 && dist(e, p) < 110);
-        if (tele && !e._tele) { B.dodgeTry++; if (Math.random() < DODGE && p.stam >= ROLL.cost) { dodge(); B.dodges++; } }
+        if (tele && !e._tele) { B.dodgeTry++; if (Math.random() < DODGE && !((p.rollCd || 0) > 0)) { dodge(); B.dodges++; } }
         e._tele = tele;
       }
       for (const s of G.strikes) if (Math.hypot(p.x - s.x, p.y - s.y) < s.r + 14 && Math.random() < DODGE * 0.1) { const aa = Math.atan2(p.y - s.y, p.x - s.x); World.move(p, Math.cos(aa) * sp * 1.5, Math.sin(aa) * sp * 1.5); }

@@ -613,9 +613,14 @@ function nameTag(sx, y, text, color, font = '11px sans-serif', icon = null) {
 }
 
 function drawPlayer(p) {
-  if (p.rollT > 0) { // 구르기: 잔상 + 반투명 (무적 표시)
-    ctx.globalAlpha = 0.25; drawShadow(Iso.sx(p.x - Math.cos(p.rollA) * 30, p.y - Math.sin(p.rollA) * 30) + 0, Iso.sy(p.x - Math.cos(p.rollA) * 30, p.y - Math.sin(p.rollA) * 30), p.r * 1.2);
-    ctx.globalAlpha = 0.55;
+  if (p.rollT > 0) { // v1.33 슬라이딩: 발부터 미끄러지며 뒤로 눕는 자세 (그림 기울이기) + 바닥 긁힌 자국 · 무적이라 살짝 푸른빛
+    const sx = Iso.sx(p.x, p.y), sy = Iso.sy(p.x, p.y), d = Iso.dir(p.rollA), sg = d.x >= 0 ? 1 : -1, k = p.rollT / ROLL.dur;
+    const env = k > 0.82 ? (1 - k) / 0.18 : k < 0.2 ? k / 0.2 : 1; // 0.08초 만에 눕고 → 끝에서 일어남
+    ctx.strokeStyle = 'rgba(40,36,30,0.45)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx - d.x * 34 * (1 - k * 0.5), sy - d.y * 34 * (1 - k * 0.5)); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.save(); ctx.translate(sx + d.x * 8 * env, sy + 2 * env); ctx.rotate(-sg * 1.05 * env); ctx.scale(1, 1 - 0.12 * env); ctx.translate(-sx, -sy);
+    try { drawPlayerBody(p); } finally { ctx.restore(); }
+    ctx.globalAlpha = 0.18 * env; ctx.fillStyle = '#9fe0ff'; ctx.beginPath(); ctx.ellipse(sx, sy - 10, 16, 12, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+    return;
   }
   drawPlayerBody(p);
   ctx.globalAlpha = 1;
@@ -1273,14 +1278,14 @@ function render() {
   }
   for (const e of G.enemies) { // v0.16 일반 적 예고: 변이견 도약선 · 원거리 조준선
     if (e.pounceT > 0) {
-      ctx.strokeStyle = `rgba(255,80,60,${0.3 + (0.45 - e.pounceT)})`; ctx.lineWidth = e.r * 1.4;
-      ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + Math.cos(e.leapA) * 180, e.y + Math.sin(e.leapA) * 180); ctx.stroke(); ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(255,80,60,${0.3 + (0.7 - e.pounceT) * 0.8})`; ctx.lineWidth = e.r * 1.4;
+      ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + Math.cos(e.leapA) * 140, e.y + Math.sin(e.leapA) * 140); ctx.stroke(); ctx.lineWidth = 1; // v1.33 도약 거리에 맞춤
     }
   }
   for (const e of G.enemies) if (e.charge > 0.8) { // 돌진 예고선 (타이탄 · 필드 보스)
     ctx.strokeStyle = 'rgba(255,60,60,0.5)'; ctx.lineWidth = e.r * 1.6;
     ctx.beginPath(); ctx.moveTo(e.x, e.y);
-    ctx.lineTo(e.x + Math.cos(e.chargeA) * 330, e.y + Math.sin(e.chargeA) * 330); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.lineTo(e.x + Math.cos(e.chargeA) * 270, e.y + Math.sin(e.chargeA) * 270); ctx.stroke(); ctx.lineWidth = 1;
   }
   // 아이템 바닥 빛
   for (const d of G.drops) if (d.kind === 'item') {
@@ -1659,8 +1664,9 @@ function drawDrop(d) {
     ctx.fillStyle = '#ffd24a'; ctx.beginPath(); ctx.ellipse(sx, sy, 5, 5, 0, 0, TAU); ctx.fill();
     ctx.strokeStyle = '#a07a10'; ctx.stroke();
   } else if (d.kind === 'ammo') {
-    ctx.fillStyle = '#7a7a3a'; ctx.fillRect(sx - 6, sy - 5, 12, 8);
-    ctx.fillStyle = '#cc8'; ctx.fillRect(sx - 4, sy - 3, 8, 2);
+    if (!d.ammo) d.ammo = ammoPick(G.player); // v1.33 떨어질 때 종류가 정해짐 (색으로 구분)
+    ctx.fillStyle = '#4a4a2a'; ctx.fillRect(sx - 6, sy - 5, 12, 8);
+    ctx.fillStyle = AMMO[d.ammo].color; ctx.fillRect(sx - 4, sy - 3, 8, 3);
   } else {
     const r = d.item.rarity || 0, c = RARITIES[r].color;
     if (r >= 2 && d.landed) { // 희귀 이상: 멀리서도 보이는 빛기둥 (착지 후)

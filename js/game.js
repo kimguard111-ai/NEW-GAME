@@ -166,6 +166,9 @@ function startGame(save, name) {
   }
   if (!('belt' in P.equip)) P.equip.belt = null;
   P.srank = P.srank || {};
+  if (save && !save.p.ammo) { // v1.33 탄약 4종: 예전 예비 탄약은 기관총탄으로, 나머지는 시작 양
+    const r = save.p.reserve ?? 150; P.ammo = Object.fromEntries(Object.entries(AMMO).map(([k, a]) => [k, k === 'auto' ? Math.max(a.start, r) : a.start])); delete P.reserve;
+  }
   if (save && !save.p.spV126) { // v1.25·1.26 기존 세이브: 배운 것은 그대로(등급 1), 지금까지 받았을 SP(시작 1 + 레벨 업 + 장 완료)에서 쓴 만큼 빼고 남은 SP를 줌
     P.sp = Math.max(0, 1 + (P.level - 1) + (P.quest.ch || 0) - spSpent(P)); P.spV125 = P.spV126 = true;
   }
@@ -177,14 +180,15 @@ function startGame(save, name) {
   UI.refreshAll();
   if (G.welcome) { G.welcome = false; setTimeout(() => UI.welcome(), 600); }
   if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았습니다 — 암시장 상인 박씨 「스킬 교범」`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }
-  if (G.autoStory) { G.autoStory = false; Story.start(G.player); log('조작: WASD 이동 · 마우스 조준·사격 · Space 구르기(무적) · R 재장전 · 1~8 벨트 칸 (B: 칸 등록)', '#8cf'); }
+  if (G.autoStory) { G.autoStory = false; Story.start(G.player); log('조작: WASD 이동 · 마우스 조준·사격 · Space 슬라이딩(무적 · 재사용 5초) · R 재장전 · 1~8 벨트 칸 (B: 칸 등록)', '#8cf'); }
   saveGame();
 }
 
 // ---------------- 플레이어 행동 ----------------
-// 구르기 (v0.16): 0.28초 무적 돌진, 1초 쿨타임. 이동 중이면 그 방향, 아니면 조준 방향
-// v1.1: 쿨타임 대신 스태미나 50 소모 (최대 100 → 연속 2번), 초당 40 회복
-const ROLL = { dur: 0.28, speed: 490, /* v1.32 540 → 490 (이동 감속에 맞춰) */ cd: 0.35, cost: 50, regen: 40 };
+// 슬라이딩 (v1.33, 예전 슬라이딩): 0.42초 무적, 빠르게 미끄러지다 감속. 이동 중이면 그 방향, 아니면 조준 방향
+// 재사용 5초 — 위급할 때만 (예전: 스태미나 50 · 연속 2번). 기력 절약 효과들은 재사용 감소로 바뀜
+const ROLL = { dur: 0.42, speed: 400, cd: 5, minCd: 2, regen: 40 };
+function rollCdMax(p) { return Math.max(ROLL.minCd, ROLL.cd * (perk('ghost') ? 0.6 : 1) * (branchOn('tac') ? 0.8 : 1) * (perk('runner') ? 0.85 : 1) * (pas('t2') ? 0.9 : 1) * (1 - gearBonus(p, 'rollStam'))); }
 // v1.8.1 총구 위치: 총을 든 몸 그림이면 그림 속 총구(옆으로 · 어깨 높이)에서 쏘고, 조준점(커서)을 향해 날아감
 // 총알은 높이 22에서 그려지므로, 화면상 총구 위치에 맞는 바닥 좌표를 역산
 function gunMuzzle(p, w) {
@@ -204,15 +208,13 @@ function gunMuzzle(p, w) {
 
 function dodge() {
   const p = G.player;
-  if (p.dead || p.rollT > 0 || (p.rollCd || 0) > 0) return;
-  const rollCost = ROLL.cost * (perk('runner') ? 0.75 : 1) * (pas('t2') ? 0.85 : 1) * (1 - gearBonus(p, 'rollStam')); // v1.23 호흡 조절 · v1.25 벨트
-  if (p.stam < rollCost) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, '기력 부족', '#7ab8ff', 12); } return; }
-  p.stam -= rollCost; p.stamT = 0.5;
+  if (p.dead || p.rollT > 0) return;
+  if ((p.rollCd || 0) > 0) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, `슬라이딩 ${p.rollCd.toFixed(1)}초`, '#7ab8ff', 12); } return; }
   let a = p.aim;
   const m = moveInput();
   if (m) a = Math.atan2(m.wy, m.wx);
-  p.rollT = ROLL.dur; p.rollCd = ROLL.cd * (perk('ghost') ? 0.6 : 1) * (branchOn('tac') ? 0.8 : 1); p.rollA = a; p.lastRoll = G.time;
-  SFX.play('dodge'); burst(p.x, p.y, '#8a8070', 6, 80, 0.3, 3);
+  p.rollT = ROLL.dur; p.rollCd = p.rollCdMax = rollCdMax(p); p.rollA = a; p.lastRoll = G.time;
+  SFX.play('dodge'); burst(p.x, p.y, '#8a8070', 8, 90, 0.35, 3);
 }
 // 현재 이동 입력 (월드 방향, 정규화 안 됨). 없으면 null
 function moveInput() {
@@ -236,13 +238,15 @@ function swapWeapon() {
   UI.refreshInventory();
 }
 
+// v1.33 주운 탄약 종류: 장착한 총의 탄 위주 (가끔 다른 탄 — 나중에 쓸 총용)
+function ammoPick(p) { const own = gunAmmoTypes(p), all = Object.keys(AMMO); return own.length && Math.random() < 0.75 ? own[Math.floor(Math.random() * own.length)] : all[Math.floor(Math.random() * all.length)]; }
 function startReload() {
   const p = G.player, w = curWeapon();
   if (!w) return;
   const b = WEAPONS[w.key];
   if (b.melee || p.reloadT > 0 || w.loaded >= magSize(w)) return;
-  if (p.reserve <= 0 && !b.infinite) {
-    if (G.noAmmoT <= 0) { log('예비 탄약이 없습니다! 상점에서 구매하거나 근접 무기로 교체(Q)하세요.', '#f88'); G.noAmmoT = 2; SFX.play('empty'); }
+  if ((p.ammo[b.ammo] || 0) <= 0 && !b.infinite) {
+    if (G.noAmmoT <= 0) { log(`${AMMO[b.ammo].name}이 없습니다! 다른 총이나 근접 무기로 교체(Q)하거나 출격 지도에서 사세요.`, '#f88'); G.noAmmoT = 2; SFX.play('empty'); }
     return;
   }
   p.reloadT = p.reloadMax = b.reload * PlayerStats.reloadMul(p);
@@ -254,8 +258,8 @@ function finishReload() {
   if (!w || WEAPONS[w.key].melee) return;
   const need = magSize(w) - w.loaded;
   if (WEAPONS[w.key].infinite) { w.loaded += need; return; } // 권총: 예비 탄약 소모 없음
-  const take = Math.min(need, p.reserve);
-  w.loaded += take; p.reserve -= take;
+  const t = WEAPONS[w.key].ammo, take = Math.min(need, p.ammo[t] || 0);
+  w.loaded += take; p.ammo[t] -= take;
 }
 
 // v1.9 기관총 예열: 연사할수록 최대 25% 빨라짐 (0.4초 쉬면 식기 시작)
@@ -282,7 +286,7 @@ function playerAttack() {
   const critMul = PlayerStats.critMul(p, w); let cc = PlayerStats.crit(p, w);
   if (b.melee) {
     // v1.9 근접 3타 콤보: 1·2타는 빠르게, 3타는 무기별 마무리 (쇠파이프 강타 · 도끼 회전 베기 · 칼 찌르기)
-    // 구르기 직후 0.35초 안의 공격은 바로 마무리 일격 (구르기 베기)
+    // 슬라이딩 직후 0.35초 안의 공격은 바로 마무리 일격 (슬라이딩 베기)
     const rolled = G.time - ((p.lastRoll || -9) + ROLL.dur) < 0.35 && (p.lastRoll || -9) > (p.rollAtk || -9);
     p.mStep = rolled ? 2 : G.time - (p.mLast || -9) < b.rate * 1.6 + 0.35 ? ((p.mStep || 0) + 1) % 3 : 0;
     p.mLast = G.time;
@@ -293,7 +297,7 @@ function playerAttack() {
     p.swingT = p.swingMax = fin ? 0.26 : 0.18; p.swingArc = arc; p.swingRange = range; p.swingFin = fin ? w.key : null;
     p.swingDir = p.mStep === 1 ? -1 : 1; // 2타는 반대 방향으로
     World.move(p, Math.cos(p.aim) * M.lunge * (rolled ? 1.5 : 1), Math.sin(p.aim) * M.lunge * (rolled ? 1.5 : 1)); // 휘두르며 전진
-    if (fin) { SFX.play('heavy'); if (rolled) floatText(p.x, p.y - 34, '구르기 베기!', '#ffd27a', 13); }
+    if (fin) { SFX.play('heavy'); if (rolled) floatText(p.x, p.y - 34, '슬라이딩 베기!', '#ffd27a', 13); }
     const dmg = weaponDmg(w) * playerDamageMul(true) * M.dmg * (fin && perk('executioner') ? 1.4 : 1) * (fin && w.unique === 'goliath' ? 1.5 : 1) * (p.fangBuff ? 2 : 1);
     if (p.fangBuff) { p.fangBuff = false; floatText(p.x, p.y - 36, '굶주린 송곳니!', '#ff6a5a', 13); } // v1.12 붉은 이빨
     let hits = 0, anyCrit = false;
@@ -427,7 +431,7 @@ function useItem(it) {
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
   } else if (it.key === 'ammo') {
-    p.reserve += 120; log('예비 탄약 +120', '#cc8');
+    const [t, n] = giveAmmoUnits(p, 120); log(`${AMMO[t].name} +${n}`, '#cc8');
   } else if (CONSUMABLES[it.key].slot) { // v1.14 투척물·보조: 가방에서 누르면 그 칸에 선택
     const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
     const on = Hotbar.autoAdd(slot), k = G.player.hotbar.indexOf(slot) + 1; log(`${it.name}을(를) ${slot === 'throw' ? '투척' : '보조'} 칸${on ? `(${k}번)` : ''}에 올렸다.${on ? '' : ' 벨트 칸이 가득 — B로 등록'}`, '#cfe'); UI.buildHotbar(); return; // v1.24
@@ -499,7 +503,7 @@ function damagePlayer(dmg, srcX, srcY) {
   const p = G.player;
   if (p.dead || World.inSafe(p.x, p.y)) return;
   if (p.invT > 0) return; // v1.11 두 번째 숨 무적
-  if (p.rollT > 0) { // 구르기 무적
+  if (p.rollT > 0) { // 슬라이딩 무적
     if (G.time - (p.dodgeTxt || 0) > 0.4) { p.dodgeTxt = G.time; floatText(p.x, p.y - 30, '회피!', '#9fe0ff', 14); }
     return;
   }
@@ -736,7 +740,7 @@ function killEnemy(e) {
     if (Math.random() < 0.12 * ECON.gear) dropAt('item', { item: randomGear(e.level, 1.2, 0, ZONES[World.zoneIndex(e.x, e.y)].gear) });
   }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
-  if (Math.random() < 0.28) dropAt('ammo', { amount: randInt(15, 35) });
+  if (Math.random() < 0.34) dropAt('ammo', { amount: randInt(15, 35) }); // v1.33 0.28 → 0.34 (탄약이 4종으로 나뉘어 권총도 탄이 필요)
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
   const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)
@@ -828,7 +832,7 @@ function updateEnemies(dt) {
       // 보스 돌진 (0.5초 예고 후 질주)
       e.charge -= dt;
       if (e.charge < 0.8) {
-        tryMoveSmart(e, e.chargeA, 430 * dt);
+        tryMoveSmart(e, e.chargeA, 340 * dt); // v1.33 430 → 340 (이동 감속에 맞춰)
         if (d < e.r + p.r + 4 && e.atkT <= 0) { damagePlayer(e.dmg * 1.4); e.atkT = 0.8; }
       }
       continue;
@@ -836,7 +840,7 @@ function updateEnemies(dt) {
 
     if (e.state === 'chase') {
       const a = angleTo(e, p);
-      if (e.def.shield && !e.bossName) { const df = angDiff(a, e.face || 0), tr = 2.2 * dt; e.face = (e.face || 0) + clamp(df, -tr, tr); } // v1.6 방패병은 천천히 돌아섬 → 구르기로 뒤를 잡을 수 있음
+      if (e.def.shield && !e.bossName) { const df = angDiff(a, e.face || 0), tr = 2.2 * dt; e.face = (e.face || 0) + clamp(df, -tr, tr); } // v1.6 방패병은 천천히 돌아섬 → 슬라이딩으로 뒤를 잡을 수 있음
       else e.face = a;
       let moveA = a, spd = e.speed * Monsters.buff(e) * ((e.slowT || 0) > G.time ? 0.65 : 1); // v1.12 독사 둔화
       const hold = !e.def.boss && Monsters.attack(e, dt, d, a); // v0.16 예고 공격 (예고·도약 중엔 정지)
@@ -1095,7 +1099,7 @@ function updateDrops(dt) {
       if (d.kind === 'credits' && p.raid) p.raid.credits += d.amount; // 탈출해야 확정
       if (d.kind === 'item' && p.raid && d.item.kind !== 'cons' && !d.item.raid) d.item.raid = true;
       if (d.kind === 'credits') { p.credits += d.amount; floatText(p.x, p.y - 26, `+${d.amount}₵`, '#ffd76a', 12); d.gone = true; SFX.play('coin'); }
-      else if (d.kind === 'ammo') { p.reserve += d.amount; floatText(p.x, p.y - 26, `탄약 +${d.amount}`, '#cc8', 12); d.gone = true; SFX.play('ammo'); }
+      else if (d.kind === 'ammo') { const t = d.ammo || ammoPick(p), n = addAmmo(p, t, d.amount * AMMO[t].k); floatText(p.x, p.y - 26, `${AMMO[t].name} +${n}`, AMMO[t].color, 12); d.gone = true; SFX.play('ammo'); }
       else if (d.kind === 'item') {
         if (addItem(d.item)) {
           const r = d.item.rarity || 0, up = isUpgrade(p, d.item);
@@ -1122,11 +1126,12 @@ function update(dt) {
   Tips.update(dt);
   if (!p.dead) {
     const mv = moveInput();
-    if (p.rollT > 0) { // 구르는 중: 정해진 방향으로 빠르게
+    if (p.rollT > 0) { // 슬라이딩 중: 빠르게 미끄러지다 감속
+      const sp = ROLL.speed * (0.3 + 0.7 * p.rollT / ROLL.dur);
       p.rollT -= dt;
-      World.move(p, Math.cos(p.rollA) * ROLL.speed * dt, Math.sin(p.rollA) * ROLL.speed * dt);
+      World.move(p, Math.cos(p.rollA) * sp * dt, Math.sin(p.rollA) * sp * dt);
       if (p.rollT <= 0 && armorLegend('afterimage')) { explode(p.x, p.y, p.level * 14 * playerDamageMul(true), 80, { small: true, knock: 18, stagger: 0.5 }); G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.35, color: '#c9a0ff', r: 90 }); } // v1.12 잔상
-      if (Math.random() < 0.5) G.particles.push({ x: p.x, y: p.y, vx: 0, vy: 0, t: 0, life: 0.35, color: 'rgba(150,140,120,0.6)', size: 6, z: 4 });
+      for (let i = 0; i < 2; i++) G.particles.push({ x: p.x + rand(-5, 5), y: p.y + rand(-5, 5), vx: -Math.cos(p.rollA) * rand(20, 60) + rand(-20, 20), vy: -Math.sin(p.rollA) * rand(20, 60) + rand(-20, 20), t: 0, life: rand(0.3, 0.55), color: 'rgba(150,140,120,0.55)', size: rand(4, 7), z: 2, vz: 14 }); // 바닥 먼지
     } else if (mv) {
       const { wx, wy, amt } = mv;
       const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt * World.slow(p.x, p.y); // v1.6 물속은 느림

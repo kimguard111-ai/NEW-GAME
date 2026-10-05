@@ -32,7 +32,7 @@ const Touch = {
     btn('Q', () => swapWeapon());
     btn('R', () => startReload());
     btn('E', () => interact(), 'big');
-    btn(ICON('roll'), () => dodge(), 'big roll'); // v0.16 구르기
+    btn(ICON('roll'), () => dodge(), 'big roll'); // v0.16 슬라이딩
     document.getElementById('hud').appendChild(bar);
     // 스킬 칸 터치
     document.getElementById('hotbar').addEventListener('touchstart', e => {
