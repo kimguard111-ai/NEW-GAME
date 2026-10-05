@@ -290,8 +290,9 @@ function drawRaidEvent(e) {
     for (let i = 0; i < 4; i++) { const q = (G.time * 0.35 + i / 4) % 1; ctx.fillStyle = `rgba(255,${e.done ? 140 : 90},60,${0.22 * (1 - q)})`; ctx.beginPath(); ctx.arc(sx + 14 + q * 18 + Math.sin(G.time + i) * 4, sy - 8 - q * 90, 6 + q * 16, 0, TAU); ctx.fill(); }
     const z = e.state === 'falling' ? e.fall / 12 * 320 : 0;
     if (e.state === 'falling') { drawShadow(sx, sy, 16 * (1 - e.fall / 12) + 6); ctx.strokeStyle = 'rgba(255,90,60,0.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy, 22, 0, TAU); ctx.stroke(); ctx.lineWidth = 1; }
-    drawBox(e.x - 12, e.y - 12, e.x + 12, e.y + 12, z + 22, e.done ? '#4a4a3a' : '#5a6a3a', '#34401e', '#46542a', z, z, 0);
-    if (!e.done) { ctx.fillStyle = '#e8e8e0'; ctx.fillRect(sx - 6, Iso.sy(e.x, e.y + 12, z + 12) - 2, 12, 4); }
+    if (propArt('airdrop')) { if (e.done) ctx.globalAlpha = 0.6; drawPropArt('airdrop', sx, Iso.sy(e.x, e.y, z)); ctx.globalAlpha = 1; } // v1.18 그림
+    else drawBox(e.x - 12, e.y - 12, e.x + 12, e.y + 12, z + 22, e.done ? '#4a4a3a' : '#5a6a3a', '#34401e', '#46542a', z, z, 0);
+    if (!e.done && !propArt('airdrop')) { ctx.fillStyle = '#e8e8e0'; ctx.fillRect(sx - 6, Iso.sy(e.x, e.y + 12, z + 12) - 2, 12, 4); }
     if (e.state === 'falling') { // 낙하산
       const ty = Iso.sy(e.x, e.y, z + 70);
       ctx.fillStyle = '#d8d0b8'; ctx.beginPath(); ctx.ellipse(sx, ty, 30, 14, 0, Math.PI, TAU); ctx.fill();
@@ -310,12 +311,12 @@ function drawRaidEvent(e) {
       nameTag(sx, sy - 52, '부상당한 생존자', '#8cf', 'bold 11px sans-serif');
     } else { ctx.fillStyle = '#eee'; ctx.fillRect(sx + 10, sy - 40, 12, 8); }
   } else if (e.kind === 'safe') {
-    drawBox(e.x - 12, e.y - 10, e.x + 12, e.y + 10, 30, '#5a5e64', '#34373c', '#44484e', 0, 0, 0);
+    if (!drawPropArt('safe', sx, sy)) drawBox(e.x - 12, e.y - 10, e.x + 12, e.y + 10, 30, '#5a5e64', '#34373c', '#44484e', 0, 0, 0); // v1.18 그림
     ctx.fillStyle = e.done ? '#222' : e.state === 'locked' ? '#c83a2a' : '#40d070'; ctx.beginPath(); ctx.arc(Iso.sx(e.x, e.y + 10), Iso.sy(e.x, e.y + 10, 16), 4, 0, TAU); ctx.fill();
     if (!e.done) nameTag(sx, sy - 44, e.state === 'locked' ? '잠긴 금고' : '금고 (열쇠 있음)', '#ffd76a', 'bold 11px sans-serif');
   } else if (e.kind === 'generator') {
     const j = e.state === 'on' ? Math.sin(G.time * 40) * 0.6 : 0;
-    drawBox(e.x - 14 + j, e.y - 10, e.x + 14 + j, e.y + 10, 20, '#8a7a2a', '#5a4e18', '#6e6020', 0, 0, 0);
+    if (!drawPropArt('generator', sx + j, sy)) drawBox(e.x - 14 + j, e.y - 10, e.x + 14 + j, e.y + 10, 20, '#8a7a2a', '#5a4e18', '#6e6020', 0, 0, 0); // v1.18 그림
     ctx.fillStyle = e.state === 'on' ? '#40ff70' : `rgba(255,60,40,${0.5 + k * 0.5})`; ctx.fillRect(sx - 3, Iso.sy(e.x, e.y, 20) - 4, 6, 3);
     if (e.state !== 'on') nameTag(sx, sy - 38, '발전기', '#ffd76a', 'bold 11px sans-serif');
     else if (Settings.light) addLight(sx, sy - 12, 90, 0.6, 'rgba(120,255,140,A)');
@@ -344,6 +345,14 @@ function drawNest(e) {
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y);
   if (sx < -100 || sx > VW + 100 || sy < -120 || sy > VH + 80) return;
   const lab = World.def && World.def.lab, pul = 1 + Math.sin(G.time * 3) * 0.06, fl = e.hitT > 0;
+  if (propArt('nest')) { // v1.18 그림 (맥박 · 맞으면 번쩍)
+    ctx.save(); if (fl && 'filter' in ctx) ctx.filter = 'brightness(2.4)'; drawPropArt('nest', sx, sy, false, pul); ctx.restore();
+    if (Settings.light) addLight(sx, sy - 18, 110, 0.7, lab ? 'rgba(100,255,140,A)' : 'rgba(255,60,90,A)');
+    const w = 60, hp = Math.max(0, e.hp / e.maxHp);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(sx - w / 2, sy - 70, w, 5); ctx.fillStyle = '#d33'; ctx.fillRect(sx - w / 2, sy - 70, w * hp, 5);
+    nameTag(sx, sy - 76, e.def.name, '#ff8a8a', 'bold 11px sans-serif');
+    return;
+  }
   ctx.fillStyle = 'rgba(60,10,20,0.5)'; ctx.beginPath(); ctx.ellipse(sx, sy, 46, 22, 0, 0, TAU); ctx.fill();
   for (let i = 0; i < 6; i++) { // 촉수
     const a = i / 6 * TAU + Math.sin(G.time * 1.5 + i) * 0.2;

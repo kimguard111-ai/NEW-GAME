@@ -91,6 +91,7 @@ const Gadgets = {
   draw() {
     for (const m of G.mines) {
       const sx = Iso.sx(m.x, m.y), sy = Iso.sy(m.x, m.y);
+      if (drawPropArt('mine', sx, sy)) { const on = m.arm <= 0 && Math.sin(G.time * 8 + m.x) > 0; ctx.fillStyle = m.arm > 0 ? '#665' : on ? '#ff3030' : '#601010'; ctx.fillRect(sx - 1.5, sy - 6, 3, 2); continue; } // v1.18 그림
       ctx.fillStyle = '#3a4430'; ctx.beginPath(); ctx.ellipse(sx, sy, 9, 4.5, 0, 0, TAU); ctx.fill();
       ctx.fillStyle = '#5e6b3a'; ctx.beginPath(); ctx.ellipse(sx, sy - 2, 8, 4, 0, 0, TAU); ctx.fill();
       const on = m.arm <= 0 && Math.sin(G.time * 8 + m.x) > 0;

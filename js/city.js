@@ -34,7 +34,9 @@ const City = {
         else if (h > 0.935 && h < 0.955) add('paper', x * TILE + 16, y * TILE + 16, { s: h });
         else if (h > 0.965) add('trash', x * TILE + rand2(h, 8, 24), y * TILE + rand2(h * 7, 8, 24), { n: 2 + Math.floor(h * 100) % 3 });
         else if (h > 0.955 && zone >= 1) add('barrel', x * TILE + 16, y * TILE + 16);
-      } else if (t === T.GRASS && h < 0.12) add('tree', x * TILE + 16, y * TILE + 16, { dead: zone >= 3, s: 1 + h * 3 });
+      } else if (t === T.RUBBLE && h > 0.9) add('deco', x * TILE + 16, y * TILE + 16, { key: ['rubble_a', 'rubble_b', 'slab', 'debris', 'tires'][Math.floor(h * 1000) % 5] }); // v1.18 잔해 장식 (그림이 있을 때만 보임)
+      else if (t === T.WALK && h > 0.88 && h < 0.885) add('deco', x * TILE + 16, y * TILE + 16, { key: 'cart' });
+      else if (t === T.GRASS && h < 0.12) add('tree', x * TILE + 16, y * TILE + 16, { dead: zone >= 3, s: 1 + h * 3 });
       else if (t === T.ROAD && h > 0.985) add('cone', x * TILE + 16, y * TILE + 16);
       else if (t === T.CAR && h < 0.12 && zone >= 1) { add('police', x * TILE + 16, y * TILE + 16, { vertical: x % B < RW }); this.carSkip.add(y * W + x); }
     }
@@ -115,8 +117,45 @@ function burstSpark(x, y) { ctx.fillStyle = '#ffd27a'; for (let i = 0; i < 3; i+
 function hexA(hex) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},A)`; }
 function rand2(h, a, b) { return a + (h * 9301 % 1) * (b - a); }
 
+// v1.18 소품 그림 키 (등록돼 있으면 코드 그림 대신). 차량 그림은 오른쪽 아래(+x)를 향하게 그림 → 세로 차선은 뒤집음
+const CITY_ART = { lamp: 'lamp', trash: 'trash', cone: 'cone', barrel: 'barrel', hydrant: 'hydrant', bench: 'bench', signal: 'signal', bus: 'bus', police: 'police',
+  tent: 'tent', crates: 'crates', bench_w: 'workbench', maptable: 'maptable', radio: 'radio', campfire: 'campfire', generator: 'generator', deco: null };
+function cityArt(o) {
+  if (o.type === 'tree') return o.dead ? 'deadtree' : 'tree';
+  if (o.type === 'tent' && o.medic) return 'tent_medic';
+  if (o.type === 'deco') return o.key;
+  if (o.type === 'bench' && World.map === 'camp') return 'workbench'; // 캠프의 bench = 정비 작업대
+  return CITY_ART[o.type] || null;
+}
+// 그림 위에 계속 코드로 얹는 것: 불빛 · 불꽃 · 경광등
+function cityArtExtras(o, sx, sy) {
+  const K = ISO_K, L = Settings.light && Light.list.length < LIGHT_CAP;
+  if (o.type === 'lamp') { const lit = !o.broken || Math.sin(G.time * 17 + o.x) > 0.7; if (lit && L) addLight(sx + (o.side === 'x' ? -14 : 14), sy + 6, 110, 0.75, 'rgba(255,220,150,A)'); }
+  else if (o.type === 'barrel' || o.type === 'campfire') {
+    const top = o.type === 'barrel' ? sy - 20 * K : sy - 4;
+    for (let i = 0; i < 4; i++) { const k = (G.time * 2 + i / 4 + o.x * 0.01) % 1; ctx.fillStyle = `rgba(255,${110 + i * 35},40,${1 - k})`; ctx.beginPath(); ctx.arc(sx + Math.sin(G.time * 5 + i) * 3, top - k * 20, 4.5 * (1 - k) + 2, 0, TAU); ctx.fill(); }
+    if (L) addLight(sx, top, o.type === 'campfire' ? 170 : 120, o.type === 'campfire' ? 1 : 0.9, 'rgba(255,140,60,A)');
+  } else if (o.type === 'police') {
+    const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16, blink = Math.sin(G.time * 10 + o.x) > 0, lx = Iso.sx(tx, ty), ly = Iso.sy(tx, ty, 22);
+    ctx.fillStyle = blink ? '#ff2a2a' : '#2a6aff'; ctx.fillRect(lx - 3, ly - 3, 6, 3);
+    if (L) addLight(lx, ly, 70, 0.6, blink ? 'rgba(255,40,40,A)' : 'rgba(40,100,255,A)');
+  } else if (o.type === 'signal') { if (Math.sin(G.time * 3 + o.ph) > 0 && L) addLight(sx - 20, sy - 70 * K, 40, 0.5, 'rgba(255,190,60,A)'); }
+  else if (o.type === 'maptable') { if (L) addLight(sx, sy - 16, 60, 0.6, 'rgba(255,220,150,A)'); }
+}
+
 function drawCityProp(o) {
   const sx = Iso.sx(o.x, o.y), sy = Iso.sy(o.x, o.y), K = ISO_K;
+  const ak = cityArt(o);
+  if (ak && propArt(ak)) { // v1.18 그림
+    let px = sx, py = sy;
+    if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
+    drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
+    drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' ? !!o.vertical : o.type === 'bench' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
+    if (o.type === 'bus' && o.burnt) burnFx(Math.floor(o.x / TILE), Math.floor(o.y / TILE));
+    cityArtExtras(o, sx, sy);
+    return;
+  }
+  if (o.type === 'deco') return; // 장식은 그림이 있을 때만
   switch (o.type) {
     case 'lamp': { // v1.11 받침대 + 굵은 기둥 + 등갓
       const top = sy - 74 * K, dx = o.side === 'x' ? -14 : 14;

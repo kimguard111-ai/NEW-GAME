@@ -1,4 +1,4 @@
-# Gemini 프롬프트 (v1.7.1) — 아트 종류별 한 번에 복붙
+# Gemini 프롬프트 (v1.18) — 아트 종류별 한 번에 복붙
 
 **프롬프트 1개 = 그림 1장 = 가공 1번.** 회색 상자를 통째로 복사해 Gemini에 붙여넣으세요.
 그림이 없는 것은 지금의 코드 그림을 그대로 쓰고, 등록한 것부터 하나씩 바뀝니다. 한꺼번에 다 만들 필요 없습니다.
@@ -44,6 +44,7 @@
 | 9 | 보스 전용 17종 (선택) | 17 | glutton … chimera | 없으면 기본 적을 키워서 씀 |
 | 10 | 타이틀 키아트 | 1 | (가공 없음) | 첫 화면 |
 | 11 | **무기를 든 플레이어 몸** (v1.7.7 · 근접 v1.7.9) | 2~20 | player_long · player_pistol · player_vest_long … | 손과 총이 붙어 보임 |
+| 12 | **소품 · 맵 꾸미기** (v1.18) | 5 | v1.18 거리 소품 · 차량 · 맵 오브젝트 · 캠프 소품 · 잔해·옥상 장식 | 거리·캠프·사건 오브젝트가 전부 그림으로 |
 
 > 아이콘: 무기·헬멧은 2·5번을 등록하면 자동으로 그 그림이 됩니다. 방어구·구급상자·메뉴 아이콘은 코드로 그린 아이콘(46종)이 이미 통일돼 있어 따로 만들지 않아도 됩니다.
 
@@ -400,6 +401,59 @@ Using the attached character as the exact reference (same face, same hair, same 
 ```
 
 > 결과가 이상할 때: 총이 비스듬하면 "barrel perfectly horizontal" 을, 사람이 바뀌면 빈손 몸 그림을 다시 첨부했는지 확인하세요. 행이 섞이거나 공격·피격이 한 줄에 그려져도 괜찮습니다 (가공할 때 세어서 맞춥니다).
+
+---
+
+## 12. 소품 · 맵 꾸미기 (v1.18) · 한 장에 여러 개 (격자)
+
+지금 거리·캠프의 소품은 전부 코드로 그린 도형입니다. 아래 5장을 만들면 **등록한 것부터 그림으로 바뀝니다** (없는 건 지금 그대로).
+불빛·불꽃·경광등·연기는 게임이 그림 위에 계속 얹으므로 **그림에는 켜진 불·불꽃을 그리지 않습니다.**
+
+| 장 | 🔧 도구 이름 | 격자 | 파일 이름 | 들어가는 곳 |
+|---|---|---|---|---|
+| 12-1 | **v1.18 거리 소품 9종** | 3×3 | `props_street.png` | 가로등 · 나무 · 죽은 나무 · 쓰레기봉투 · 고깔 · 드럼통 · 소화전 · 벤치 · 신호등 |
+| 12-2 | **v1.18 차량 6종** | 3×2 | `props_vehicle.png` | 길 위 폐차 3종 · 경찰차 · 버스 · 불탄 차 |
+| 12-3 | **v1.18 맵 오브젝트 9종** | 3×3 | `props_object.png` | 뒤질 곳 4종 · 금고 · 보급 상자 · 발전기 · 변이 둥지 · 지뢰 |
+| 12-4 | **v1.18 캠프 소품 9종** | 3×3 | `props_camp.png` | 천막 · 의무 천막 · 상자 더미 · 작업대 · 작전 탁자 · 무전기 · 모닥불 · 컨테이너 · 모래주머니 |
+| 12-5 | **v1.18 잔해·옥상 장식 9종** | 3×3 | `props_deco.png` | 잔해 더미 · 콘크리트 판 · 옥상 물탱크·실외기·안테나 · 타이어 · 쇼핑카트 · 쓰레기 |
+
+**순서**: 회색 상자 → Gemini (📎 콘셉트 아트 첨부) → 결과를 `art_raw/`에 위 파일 이름으로 올리기 → 끝 (가공·등록은 제가 합니다).
+직접 할 때: 도구에서 🔧 이름 선택 → 그림 끌어다 놓기 → **PNG 다운로드**를 `assets/`에 → 도구 아래 코드를 `js/assets.js`의 **`props`** 안에 붙여넣기.
+
+**격자 규칙 (중요)**: 도구는 그림을 **격자 칸으로 똑같이 나눠** 칸마다 물건 하나를 꺼냅니다. 순서는 **왼쪽 위 → 오른쪽 → 다음 줄**이고, 물건마다 칸 가운데에 두고 **바닥에 닿는 부분이 칸 아래쪽**에 오게 합니다. 칸이 비거나 두 물건이 붙으면 그 칸만 빠집니다 (도구가 알려 줌).
+크기는 상관없습니다 — 게임이 `js/assets.js`의 `propFit`(화면 가로 px)에 맞춰 줄입니다.
+
+### 12-1. 거리 소품 9종 · 🔧 **v1.18 거리 소품 9종 (3×3)** · `props_street.png`
+📎 콘셉트 아트
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street props from a ruined post-apocalyptic Seoul, each centered in its own equal cell with wide empty space between them, every prop standing upright with its base at the bottom of its cell. In order, left to right, top to bottom: 1) a tall broken Korean street lamp, curved metal pole with the lamp head arching to the right, lamp OFF (dark glass); 2) a small leafy roadside ginkgo tree in a square tree pit; 3) a dead leafless tree with bare twisted branches; 4) a pile of three tied black garbage bags with some scattered paper; 5) an orange traffic cone with white stripes on a square base; 6) a rusty open-top steel oil drum used as a fire barrel, NO fire, NO flames; 7) a red Korean fire hydrant; 8) a weathered wooden park bench with a black metal frame, the long side running diagonally toward the bottom-right; 9) a traffic light pole with a horizontal arm reaching to the LEFT holding a dark three-light signal box, all lights OFF. All props in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, same scale (the lamp and traffic light are the tallest). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no street, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the props.
+```
+
+### 12-2. 차량 6종 · 🔧 **v1.18 차량 6종 (3×2)** · `props_vehicle.png`
+📎 콘셉트 아트 · ⚠ **모든 차가 같은 방향**(앞이 오른쪽 아래)이어야 합니다. 반대 차선은 게임이 뒤집어 씁니다.
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate abandoned vehicles from a ruined post-apocalyptic Seoul, each centered in its own equal cell with wide empty space between them. EVERY vehicle points the SAME way: parked diagonally with its FRONT toward the BOTTOM-RIGHT of the image (isometric view, the long side of the vehicle runs from top-left to bottom-right), wheels on the ground at the bottom of the cell. In order, left to right, top to bottom: 1) a dusty gray Korean compact sedan with a cracked windshield and a flat tire; 2) a rusty dark green SUV with a dented door; 3) a faded red hatchback with broken side windows and rust patches; 4) an abandoned white Korean police car with a dark blue stripe and a roof light bar (lights OFF); 5) a long green Seoul city bus, windows partly broken, doors open (this one is much longer than the cars); 6) a completely burnt-out black car shell, charred and rusted, no fire. All in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale (the bus is about 3 times longer than a car). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no road, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the vehicles.
+```
+
+### 12-3. 맵 오브젝트 9종 · 🔧 **v1.18 맵 오브젝트 9종 (3×3)** · `props_object.png`
+📎 콘셉트 아트 · 뒤질 곳(1~4)은 뒤지고 나면 게임이 어둡게 만듭니다
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate objects for a post-apocalyptic looting game, each centered in its own equal cell with wide empty space between them, every object resting on its base at the bottom of its cell. In order, left to right, top to bottom: 1) a dark green metal garbage dumpster with a half-open lid; 2) a tall olive-green military storage locker with stenciled markings; 3) a white sealed laboratory equipment case with a blue stripe and a small keypad; 4) a dusty abandoned canvas backpack lying on its side; 5) a heavy steel wall safe on the floor with a round combination dial, door closed; 6) an olive military supply airdrop crate with white markings and a collapsed parachute bundle on top; 7) a yellow portable diesel generator with a fuel can beside it; 8) a large pulsing mutant flesh nest: a dark red organic mound with veins, small glowing yellow egg sacs and short tentacles spreading on the ground; 9) a small round olive anti-personnel landmine with a tiny sensor on top. All in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale (the nest is the largest, the landmine the smallest). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the objects.
+```
+
+### 12-4. 캠프 소품 9종 · 🔧 **v1.18 캠프 소품 9종 (3×3)** · `props_camp.png`
+📎 콘셉트 아트 · 모닥불은 **장작과 돌만** (불꽃은 게임이 그림)
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate props for a survivor camp inside a ruined Seoul subway plaza, each centered in its own equal cell with wide empty space between them, every prop resting on its base at the bottom of its cell. In order, left to right, top to bottom: 1) a worn olive-green canvas A-frame tent with an open flap; 2) a white medical A-frame tent with a big red cross on the side; 3) a stack of wooden supply crates with a small green military box on top; 4) a mechanic's workbench made of steel with tools, a vise and scrap parts; 5) a wooden operations table with a paper map of Seoul and a small unlit lantern; 6) a field radio set on a crate with a tall thin antenna mast and guy wires; 7) a campfire ring of gray stones with crossed charred logs, NO fire, NO flames; 8) a rusty blue shipping container with doors closed; 9) a short wall of stacked tan sandbags, three layers high, with a strand of barbed wire on top. All in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale (the shipping container and tents are the largest). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no people, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the props.
+```
+
+### 12-5. 잔해·옥상 장식 9종 · 🔧 **v1.18 잔해·옥상 장식 9종 (3×3)** · `props_deco.png`
+📎 콘셉트 아트 · 1·2·3·7·9는 잔해 바닥에 흩어 놓고, 4·5·6은 건물 옥상에 올라갑니다
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate debris and rooftop props from a ruined post-apocalyptic Seoul, each centered in its own equal cell with wide empty space between them, every prop resting on its base at the bottom of its cell. In order, left to right, top to bottom: 1) a low wide pile of broken concrete chunks and bricks with bent rusty rebar sticking out; 2) a smaller rubble pile of gray concrete pieces and dust; 3) a large cracked slab of concrete floor tilted at an angle with rebar edges; 4) a round blue rooftop water tank on a small steel stand; 5) a gray rooftop air conditioner outdoor unit with a fan grille; 6) a thin rooftop TV antenna mast with crossbars; 7) a stack of four old car tires; 8) an abandoned rusty shopping cart tipped slightly; 9) a scattered heap of trash: broken boxes, plastic crates and newspapers. All in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the props.
+```
+
+> 소품이 너무 크거나 작게 보이면 `js/assets.js`의 `propFit`에서 그 키의 `w`(화면 가로 px)만 바꾸면 됩니다. 땅에서 떠 보이면 `y`를 키우세요.
 
 ---
 

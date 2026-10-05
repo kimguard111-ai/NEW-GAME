@@ -114,7 +114,9 @@ const Scavenge = {
 function drawCache(c) {
   const sx = Iso.sx(c.x, c.y), sy = Iso.sy(c.x, c.y);
   if (sx < -60 || sx > VW + 60 || sy < -60 || sy > VH + 60) return;
-  if (c.type === 'dumpster') drawBox(c.x - 12, c.y - 8, c.x + 12, c.y + 8, 22, c.looted ? '#2a3a2a' : '#3e5a3a', '#243424', '#2e442e', 0, 0, 0);
+  if (c.type !== 'trunk' && propArt(c.type)) { // v1.18 그림 (뒤진 곳은 어둡게)
+    if (c.looted) ctx.globalAlpha = 0.55; drawPropArt(c.type, sx, sy); ctx.globalAlpha = 1;
+  } else if (c.type === 'dumpster') drawBox(c.x - 12, c.y - 8, c.x + 12, c.y + 8, 22, c.looted ? '#2a3a2a' : '#3e5a3a', '#243424', '#2e442e', 0, 0, 0);
   else if (c.type === 'labcase') { drawBox(c.x - 9, c.y - 7, c.x + 9, c.y + 7, 26, c.looted ? '#6a6e72' : '#d8dce0', '#9a9ea4', '#b8bcc2', 0, 0, 0); if (!c.looted) { ctx.fillStyle = '#3a7ad8'; ctx.fillRect(sx - 6, sy - 24, 12, 3); } }
   else if (c.type === 'locker') drawBox(c.x - 8, c.y - 8, c.x + 8, c.y + 8, 34, c.looted ? '#3a3e34' : '#55603f', '#353d27', '#454f33', 0, 0, 0);
   else if (c.type === 'bag') { ctx.fillStyle = c.looted ? '#2a2620' : '#5a4a2e'; ctx.beginPath(); ctx.ellipse(sx, sy - 5, 8, 6, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#3a2e1c'; ctx.fillRect(sx - 3, sy - 12, 6, 4); }

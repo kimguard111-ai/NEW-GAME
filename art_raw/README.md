@@ -19,6 +19,7 @@ Claude가 가져가서 배경 제거·프레임 자르기·발 정렬 → `asset
 | 적·NPC·보스 | `zombie.png` · `merc.png` · `deploy.png` · `chimera.png` … |
 | 랜드마크 | `cathedral.png` · `coex.png` … |
 | 타이틀 | `title.png` |
+| 소품 5장 (v1.18) | `props_street.png` · `props_vehicle.png` · `props_object.png` · `props_camp.png` · `props_deco.png` |
 
 - 이름을 잘못 붙여도 괜찮습니다. 말로 "이건 감염자야"라고 알려 주면 됩니다.
 - 같은 그림을 다시 만들었으면 같은 이름으로 올리면 덮어씁니다 (최신 것으로 교체).

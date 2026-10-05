@@ -298,7 +298,12 @@ function drawSolidTile(o) {
     const cols = [['#7b4a32', '#4b2a1a', '#5f3824'], ['#56626e', '#333b44', '#454f5a'], ['#6d6a44', '#43412a', '#575536'], ['#44566a', '#28323e', '#364556'], ['#8a8a86', '#555552', '#6e6e6a'], ['#6a2a2a', '#401818', '#552020']];
     const burnt = isBurningCar(tx, ty);
     const c = burnt ? ['#2a2624', '#171514', '#201d1b'] : cols[Math.floor(h * cols.length)];
-    drawCarShape(x0 + 16, y0 + 16, (tx % World.BLOCK) < World.ROADW, c, h, { burnt });
+    const vert = (tx % World.BLOCK) < World.ROADW, carKeys = ['car_a', 'car_b', 'car_c'].filter(k => propArt(k)); // v1.18 차량 그림
+    const ck = burnt && propArt('car_burnt') ? 'car_burnt' : carKeys.length ? carKeys[Math.floor(h * 97) % carKeys.length] : null;
+    if (ck) { drawShadow(Iso.sx(x0 + 16, y0 + 16), Iso.sy(x0 + 16, y0 + 16), 18); drawPropArt(ck, Iso.sx(x0 + 16, y0 + 16), Iso.sy(x0 + 16, y0 + 16), vert); }
+    else drawCarShape(x0 + 16, y0 + 16, vert, c, h, { burnt });
+  } else if (t === T.BARRICADE && propArt('sandbags')) { // v1.18 그림
+    drawPropArt('sandbags', Iso.sx(x0 + 16, y0 + 16), Iso.sy(x0 + 16, y0 + 16), (tx + ty) % 2 === 0);
   } else if (t === T.BARRICADE) { // v1.10 모래주머니 3단 + 위에 철조망
     const S = Iso.sx, Y = Iso.sy;
     for (let r = 0; r < 3; r++) {
@@ -395,7 +400,9 @@ function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
   if (edge(-1, 0)) drawBox(x0, y0, x0 + lip, y1, ht + 4, rim, rimS, rimS, -1, ht, 0);
   if (edge(0, 1)) drawBox(x0, y1 - lip, x1, y1, ht + 4, rim, rimS, rimS, ht, -1, 0);
   if (edge(1, 0)) drawBox(x1 - lip, y0, x1, y1, ht + 4, rim, rimS, rimS, -1, ht, 0);
-  if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 실외기
+  if (h < 0.055 && propArt(h < 0.04 ? 'acunit' : 'watertank')) drawPropArt(h < 0.04 ? 'acunit' : 'watertank', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht)); // v1.18 그림
+  else if (h > 0.985 && propArt('antenna')) drawPropArt('antenna', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht));
+  else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 실외기
   else if (h < 0.055 && !glass) { // 물탱크 (원통)
     const cx = S(x0 + 16, y0 + 16), cy = Y(x0 + 16, y0 + 16, ht), r = 9, hh = 18 * ISO_K;
     ctx.fillStyle = '#3a6a8a'; ctx.fillRect(cx - r, cy - hh, r * 2, hh);
@@ -421,7 +428,7 @@ const Sprites = {
   },
   loadAll() { // 무기·헬멧 그림까지 포함
     const cache = {}; // 한 파일에 여러 무기·헬멧(rect)이 들어 있으면 한 번만 읽음
-    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets)]) {
+    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {})]) { // v1.18 소품 포함
       let im = cache[s.file];
       if (!im) {
         im = cache[s.file] = new Image(); im.users = [];
@@ -680,6 +687,18 @@ function drawHelmetOverlay(sx, sy, info, hel, color) {
     ctx.fillStyle = color || '#333';
     ctx.beginPath(); ctx.ellipse(hx, hy + hw * 0.32, hw / 2, hw * 0.42, 0, Math.PI, TAU); ctx.fill();
   }
+}
+
+// v1.18 소품 그림: 등록돼 있고 읽혔으면 바닥 점 (sx, sy) 위에 그리고 true. flip = 좌우 반전, k = 크기 배율
+function propArt(key) { const a = ART.props && ART.props[key]; return a && a.ready ? a : null; }
+function drawPropArt(key, sx, sy, flip = false, k = 1) {
+  const a = propArt(key); if (!a) return false;
+  const [rx, ry, rw, rh] = a.rect || [0, 0, a.img.width, a.img.height], fit = ART.propFit[key] || { w: 40, y: 4 };
+  const w = fit.w * k, h = rh * w / rw;
+  ctx.save(); ctx.translate(sx, sy + fit.y * k); if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(a.img, rx, ry, rw, rh, -w / 2, -h, w, h);
+  ctx.restore();
+  return true;
 }
 
 // v1.17 맞은 방향: 화면 가장자리 쪽 붉은 부채꼴 (0.9초)

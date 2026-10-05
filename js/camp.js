@@ -109,7 +109,7 @@ function drawFacility(o) {
       break;
     }
     case 'store': { // 1: 컨테이너 1 · 2: 2단 · 3: 3개 + 지게차
-      const box = (x, y, z, c) => drawBox(x - 26, y - 12, x + 26, y + 12, z + 26, c[0], c[1], c[2], z, z, 0);
+      const box = (x, y, z, c) => propArt('container') ? drawPropArt('container', Iso.sx(x, y), Iso.sy(x, y, z)) : drawBox(x - 26, y - 12, x + 26, y + 12, z + 26, c[0], c[1], c[2], z, z, 0); // v1.18 그림
       const cols = [['#2e5a8a', '#1a3a5a', '#244a72'], ['#8a4a2e', '#5a2e1a', '#723e24'], ['#3e6a3e', '#244424', '#305830']];
       box(o.x, o.y, 0, cols[0]);
       if (l >= 2) box(o.x, o.y, 26, cols[1]);

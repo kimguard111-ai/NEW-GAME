@@ -80,6 +80,11 @@
         <optgroup label="한 장에 여러 개 (격자)">
           <option value="weapons_all">무기 9종 한 장 (3×3)</option>
           <option value="helmets_all">헬멧 4종 한 장 (1×4)</option>
+          <option value="props_street">v1.18 거리 소품 9종 (3×3)</option>
+          <option value="props_vehicle">v1.18 차량 6종 (3×2)</option>
+          <option value="props_object">v1.18 맵 오브젝트 9종 (3×3)</option>
+          <option value="props_camp">v1.18 캠프 소품 9종 (3×3)</option>
+          <option value="props_deco">v1.18 잔해·옥상 장식 9종 (3×3)</option>
         </optgroup>
         <optgroup label="플레이어 무기 (옆모습 1장)">
           <option value="w_pipe">w_pipe (쇠파이프)</option><option value="w_pistol">w_pistol (권총)</option><option value="w_axe">w_axe (소방 도끼)</option>
@@ -323,6 +328,12 @@ function processLandmark() {
 const ATLAS = {
   weapons_all: { file: 'weapons.png', cols: 3, rows: 3, target: 'weapons', keys: ['pipe', 'pistol', 'axe', 'smg', 'shotgun', 'rifle', 'katana', 'sniper', 'lmg'] },
   helmets_all: { file: 'helmets.png', cols: 4, rows: 1, target: 'helmets', keys: ['cap', 'tacHelmet', 'gasmask', 'exoHelm'] },
+  // v1.18 소품 (js/assets.js 의 props 안에 붙여넣기). 등록하면 코드로 그린 소품 대신 이 그림
+  props_street:  { file: 'props_street.png', cols: 3, rows: 3, target: 'props', keys: ['lamp', 'tree', 'deadtree', 'trash', 'cone', 'barrel', 'hydrant', 'bench', 'signal'] },
+  props_vehicle: { file: 'props_vehicle.png', cols: 3, rows: 2, target: 'props', keys: ['car_a', 'car_b', 'car_c', 'police', 'bus', 'car_burnt'] },
+  props_object:  { file: 'props_object.png', cols: 3, rows: 3, target: 'props', keys: ['dumpster', 'locker', 'labcase', 'bag', 'safe', 'airdrop', 'generator', 'nest', 'mine'] },
+  props_camp:    { file: 'props_camp.png', cols: 3, rows: 3, target: 'props', keys: ['tent', 'tent_medic', 'crates', 'workbench', 'maptable', 'radio', 'campfire', 'container', 'sandbags'] },
+  props_deco:    { file: 'props_deco.png', cols: 3, rows: 3, target: 'props', keys: ['rubble_a', 'rubble_b', 'slab', 'watertank', 'acunit', 'antenna', 'tires', 'cart', 'debris'] },
 };
 function processAtlas(cfg) {
   const im = imgs[0], src = $('src'); src.width = im.width; src.height = im.height;
