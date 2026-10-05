@@ -14,7 +14,7 @@ const Raid = {
   // 출격 지도 (작전 장교 대화)
   openMap() {
     const p = G.player, btns = [], med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
-    let h = '"어디로 나갈 건가? 탈출 지점까지 살아서 돌아와야 주운 걸 챙길 수 있어."<br>'
+    let h = '"어디로 나갈 건가? 탈출 지점까지 살아서 돌아와야 주운 걸 챙길 수 있어." <span class="muted">맵 이름을 누르면 출격</span><br>'
       + `<div class="prep">출격 준비: ${ICON('medkit')} 구급상자 <b>${med}</b> · 예비 탄약 <b>${fmt(p.reserve)}</b> · 가방 <b>${p.inventory.length}/${Camp.bagSize()}</b> · ₵${fmt(p.credits)}</div>`;
     btns.push([`${ICON('medkit')} +3 (120₵)`, () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
     btns.push([`${ICON('ammo')} 탄약 +120 (45₵)`, () => { if (p.credits < 45) return log('크레딧이 부족합니다.', '#f88'); p.reserve += 120; p.credits -= 45; SFX.play('ammo'); this.openMap(); }]);
@@ -22,11 +22,11 @@ const Raid = {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id);
       const gr = p.graves[id];
       const ev = ok && Camp.lv('radio') >= 1 ? ` <span style="color:#ffd76a">${ICON('radio')} ${Camp.planFor(id).map(k => EVENT_DEFS[k].name).join(' · ')}</span>` : ''; // v1.13 무전실 미리 보기
-      h += `<div class="map-row${ok ? '' : ' locked'}"><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}${ev}</div>`;
-      if (ok) btns.push([`${d.name} 출격`, () => { UI.close('dialog'); this.deploy(id); }]);
+      h += `<div class="map-row${ok ? ' go' : ' locked'}"${ok ? ` data-map="${id}"` : ''}><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}${ev}</div>`;
     }
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨 — 출격 지도', h, btns);
+    $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); this.deploy(r.dataset.map); }; }); // v1.22 맵 이름을 눌러 바로 출격
   },
 
   deploy(id) {

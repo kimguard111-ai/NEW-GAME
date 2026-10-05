@@ -407,7 +407,7 @@ Using the attached character as the exact reference (same face, same hair, same 
 
 ## 12. 소품 · 맵 꾸미기 (v1.18) · 한 장에 여러 개 (격자)
 
-지금 거리·캠프의 소품은 전부 코드로 그린 도형입니다. 아래 5장을 만들면 **등록한 것부터 그림으로 바뀝니다** (없는 건 지금 그대로).
+지금 거리·캠프의 소품은 전부 코드로 그린 도형입니다. 아래 6장을 만들면 **등록한 것부터 그림으로 바뀝니다** (없는 건 지금 그대로).
 불빛·불꽃·경광등·연기는 게임이 그림 위에 계속 얹으므로 **그림에는 켜진 불·불꽃을 그리지 않습니다.**
 
 | 장 | 🔧 도구 이름 | 격자 | 파일 이름 | 들어가는 곳 |
@@ -417,6 +417,7 @@ Using the attached character as the exact reference (same face, same hair, same 
 | 12-3 | **v1.18 맵 오브젝트 9종** | 3×3 | `props_object.png` | 뒤질 곳 4종 · 금고 · 보급 상자 · 발전기 · 변이 둥지 · 지뢰 |
 | 12-4 | **v1.18 캠프 소품 9종** | 3×3 | `props_camp.png` | 천막 · 의무 천막 · 상자 더미 · 작업대 · 작전 탁자 · 무전기 · 모닥불 · 컨테이너 · 모래주머니 |
 | 12-5 | **v1.18 잔해·옥상 장식 9종** | 3×3 | `props_deco.png` | 잔해 더미 · 콘크리트 판 · 옥상 물탱크·실외기·안테나 · 타이어 · 쇼핑카트 · 쓰레기 |
+| 12-6 | **v1.22 서울 거리 소품 6종** | 3×2 | `props_seoul.png` | 전봇대 · 버스 정류장 · 포장마차 · 배달 오토바이 · 지하철 입구 · 옥상 교회 십자가 |
 
 **순서**: 회색 상자 → Gemini (📎 콘셉트 아트 첨부) → 결과를 `art_raw/`에 위 파일 이름으로 올리기 → 끝 (가공·등록은 제가 합니다).
 직접 할 때: 도구에서 🔧 이름 선택 → 그림 끌어다 놓기 → **PNG 다운로드**를 `assets/`에 → 도구 아래 코드를 `js/assets.js`의 **`props`** 안에 붙여넣기.
@@ -453,6 +454,14 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 ```
 Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate debris and rooftop props from a ruined post-apocalyptic Seoul, each centered in its own equal cell with wide empty space between them, every prop resting on its base at the bottom of its cell. In order, left to right, top to bottom: 1) a low wide pile of broken concrete chunks and bricks with bent rusty rebar sticking out; 2) a smaller rubble pile of gray concrete pieces and dust; 3) a large cracked slab of concrete floor tilted at an angle with rebar edges; 4) a round blue rooftop water tank on a small steel stand; 5) a gray rooftop air conditioner outdoor unit with a fan grille; 6) a thin rooftop TV antenna mast with crossbars; 7) a stack of four old car tires; 8) an abandoned rusty shopping cart tipped slightly; 9) a scattered heap of trash: broken boxes, plastic crates and newspapers. All in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the props.
 ```
+
+### 12-6. 서울 거리 소품 6종 · 🔧 **v1.22 서울 거리 소품 6종 (3×2)** · `props_seoul.png`
+📎 콘셉트 아트 · 게임이 계속 코드로 얹는 것: **전봇대 사이 전선**, **지하철 역 이름·노선 번호 기둥**, **십자가 빨간 불빛** → 그림에는 전선·글씨·켜진 불을 넣지 않습니다
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate street props that make a ruined post-apocalyptic city feel like SEOUL, KOREA, each centered in its own equal cell with wide empty space between them, every prop standing upright with its base at the bottom of its cell. In order, left to right, top to bottom: 1) a tall gray concrete Korean utility pole with two short crossbars near the top, white ceramic insulators, a small gray cylindrical transformer box hanging on one side, and a yellow-and-black warning band near the bottom, NO wires hanging off it; 2) a Seoul city bus stop shelter: thin steel posts, a glass back panel with cracks, a curved green roof, a narrow bench, and a small blank blue sign panel on a post (no letters), the long side running diagonally toward the bottom-right; 3) an abandoned Korean street food tent bar (pojangmacha): an orange-red plastic tarp tent over a metal frame, a rolled-up front flap, a small counter, and a few stacked red plastic stools beside it; 4) a Korean food delivery motor scooter standing on its kickstand, with a square insulated delivery box on the back, dusty and scratched; 5) a Seoul subway station stair entrance: low concrete walls with steps going DOWN into darkness, covered by a curved glass-and-steel canopy, open at the front, NO sign pillar, NO letters; 6) a small rooftop church cross: a slim metal pole holding a plain cross made of red neon tubes, the neon OFF (dark red glass), no glow. All props in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale (the utility pole is the tallest, about 3 times a person; the subway entrance and food tent are the widest). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no street, no people, no wires, no text, no letters, no numbers, no grid lines, no border. Do not use pink or magenta on the props.
+```
+
+> v1.21부터 사람이 실제 비율(약 1.75m)로 작아졌습니다. 12-2 차량을 이미 만들었다면 그대로 써도 게임이 승용차 2칸 · 버스 5칸 크기로 맞춥니다. 새로 만든다면 프롬프트의 "the bus is about 3 times longer than a car"를 **"about 2.5 times longer"**로 바꾸면 더 정확합니다.
 
 > 소품이 너무 크거나 작게 보이면 `js/assets.js`의 `propFit`에서 그 키의 `w`(화면 가로 px)만 바꾸면 됩니다. 땅에서 떠 보이면 `y`를 키우세요.
 

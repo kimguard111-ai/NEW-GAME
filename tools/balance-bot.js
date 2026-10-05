@@ -46,6 +46,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     // 캠프 정비: 장착·판매·보충·강화·능력치
     B.camp = () => {
       for (const s of SKILLS) if (p.level >= s.lvl && !p.skills[s.id] && p.credits >= s.price + 200) { p.credits -= s.price; p.skills[s.id] = true; B.skillBuy = (B.skillBuy || 0) + s.price; } // v1.16 스킬은 상인에게서 삼
+      for (const s of SKILLS) for (const k of ['r1', 'r2', 'cap']) { const n = SKILL_TREE[s.id][k]; if (p.skills[s.id] && !p.stree[s.id + '_' + k] && UI.treeNode(s, k).pre && p.level >= n.lvl && p.credits >= n.price + 1500) { p.credits -= n.price; p.stree[s.id + '_' + k] = true; B.skillBuy = (B.skillBuy || 0) + n.price; } } // v1.22 스킬 트리
       UI.openShop(); // 상인 진열품 중 더 좋은 것 구매 (사람처럼)
       for (const it of G.shopStock) if (p.level >= itemReqLevel(it) && isUpgrade(p, it) && p.credits >= it.value + 300) { const c = JSON.parse(JSON.stringify(it)); c.id = nextItemId++; UI.buy(c, it.value); B.shop = (B.shop || 0) + it.value; }
       for (const it of [...p.inventory]) if (it.kind !== 'cons' && p.level >= itemReqLevel(it) && isUpgrade(p, it)) UI.equip(it, it.kind === 'weapon' ? (WEAPONS[it.key].melee ? 'w2' : 'w1') : it.kind);

@@ -150,7 +150,7 @@ function startGame(save, name) {
     for (const s of SKILLS) if (P.level >= s.lvl) P.skills[s.id] = true;
     for (const [k, v] of Object.entries(P.skillMods || {})) if (v) P.smodOwned[k + '_' + v] = true;
   }
-  P.smodOwned = P.smodOwned || {};
+  P.smodOwned = P.smodOwned || {}; P.stree = P.stree || {}; // v1.22 스킬 트리
   if (save && !save.p.skillsV120) { // v1.20 기존 세이브도 스킬은 돈 주고 배우기: 배운 스킬·갈래를 초기화하고 그 값을 크레딧으로 돌려줌 (손해 없음)
     let refund = 0;
     for (const s of SKILLS) { if (P.skills[s.id]) refund += s.price; for (const k of ['a', 'b']) if (P.smodOwned[s.id + '_' + k]) refund += s.modPrice; }
@@ -366,12 +366,12 @@ function useSkill(i) {
   SFX.play(s.id === 'heal' ? 'heal' : 'skill');
   const m = smod(s.id); // v1.11 스킬 갈래
   if (s.id === 'rapid') {
-    p.buffs.rapid = SkillCalc.rapidDur(p); floatText(p.x, p.y - 30, m === 'a' ? '정밀 사격!' : m === 'b' ? '탄약 보급!' : '집중 사격!', '#7fd');
+    p.buffs.rapid = SkillCalc.rapidDur(p); p.rapidExt = 0; floatText(p.x, p.y - 30, m === 'a' ? '정밀 사격!' : m === 'b' ? '탄약 보급!' : '집중 사격!', '#7fd');
     const w = curWeapon(); if (m === 'b' && w && !WEAPONS[w.key].melee) { w.loaded = magSize(w); p.reloadT = 0; }
   } else if (s.id === 'grenade') {
     const { x: tx, y: ty } = Iso.toWorld(input.mx, input.my);
     const a = Math.atan2(ty - p.y, tx - p.x), d = Math.min(380, Math.hypot(tx - p.x, ty - p.y));
-    G.grenades.push({ sx: p.x, sy: p.y, x: p.x, y: p.y, tx: p.x + Math.cos(a) * d, ty: p.y + Math.sin(a) * d, t: 0, dur: 0.55, mod: m });
+    G.grenades.push({ sx: p.x, sy: p.y, x: p.x, y: p.y, tx: p.x + Math.cos(a) * d, ty: p.y + Math.sin(a) * d, t: 0, dur: 0.55, mod: m, echo: stree('grenade', 'cap') });
   } else if (s.id === 'heal') {
     const mh = PlayerStats.maxHp(p), amt = Math.round(mh * SkillCalc.healPct(p));
     const now = m === 'a' ? Math.round(amt / 2) : amt;
@@ -379,8 +379,19 @@ function useSkill(i) {
     if (m === 'a') { p.buffs.regen = 6; p.regenRate = amt / 6; }
     if (m === 'b') { p.buffs.shield = 4; G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.4, color: '#7ab8ff', r: 60 }); }
     floatText(p.x, p.y - 30, '+' + now, '#6f6', 16); burst(p.x, p.y, '#6f6', 16, 80);
-  } else if (s.id === 'adren') { p.buffs.adren = 8; p.adrenExt = 0; floatText(p.x, p.y - 30, m === 'a' ? '광폭!' : m === 'b' ? '진통제!' : '아드레날린!', '#f84'); }
-  p.skillCd[i] = s.cd * (perk('warlord') ? 0.75 : 1) * (s.id === 'heal' && perk('fieldMedic') ? 0.7 : 1) * (armorLegend('focus') ? 0.82 : 1);
+    if (stree('heal', 'cap')) { p.invT = Math.max(p.invT || 0, 1.5); floatText(p.x, p.y - 46, '불굴', '#ffe08a', 13); } // v1.22
+  } else if (s.id === 'adren') {
+    if (stree('adren', 'cap')) { // v1.22 전장의 함성
+      for (const e of G.enemies) {
+        if (e.hp <= 0 || e.nest || Math.hypot(e.x - p.x, e.y - p.y) > 180 + e.r) continue;
+        e.stunT = Math.max(e.stunT || 0, e.def.boss || e.fieldBoss || e.labBoss ? 0.4 : 1.5); e.state = 'chase'; Monsters.interrupt(e);
+        floatText(e.x, e.y - e.r - 14, '기절', '#fff3a0', 12);
+      }
+      G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.4, color: '#ff8844', r: 180 }); G.shake = Math.max(G.shake, 6);
+    }
+    p.buffs.adren = SkillCalc.adrenDur(p); p.adrenExt = 0; floatText(p.x, p.y - 30, m === 'a' ? '광폭!' : m === 'b' ? '진통제!' : '아드레날린!', '#f84'); }
+  p.skillCd[i] = s.cd * SkillCalc.cdMul(s.id) * (perk('warlord') ? 0.75 : 1) * (s.id === 'heal' && perk('fieldMedic') ? 0.7 : 1) * (armorLegend('focus') ? 0.82 : 1);
+  (p.skillCdMax = p.skillCdMax || [])[i] = p.skillCd[i]; // v1.22 줄어든 재사용 대기 기준으로 칸 표시
 }
 
 function quickMedkit() {
@@ -631,6 +642,7 @@ function killEnemy(e) {
     if (heldUnique('babel')) { const mh = PlayerStats.maxHp(p); p.hp = Math.min(mh, p.hp + mh * 0.03); }
   }
   if (e.lastHit && e.lastHit.melee && perk('brawler')) { const mh = PlayerStats.maxHp(p); p.hp = Math.min(mh, p.hp + mh * 0.04); } // v1.11 싸움꾼
+  if (p.buffs.rapid > 0 && stree('rapid', 'cap') && (p.rapidExt || 0) < 4) { p.buffs.rapid += 0.6; p.rapidExt = (p.rapidExt || 0) + 0.6; } // v1.22 사냥 본능
   if (p.buffs.adren > 0 && smod('adren') === 'a' && (p.adrenExt || 0) < 8) { p.buffs.adren += 1.5; p.adrenExt = (p.adrenExt || 0) + 1.5; } // 광폭
   const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
   SFX.play(e.def.boss || e.fieldBoss || e.elite ? 'roar' : 'kill', e.def.boss ? 1 : 0.8);
@@ -956,14 +968,15 @@ function updateGrenades(dt) {
       g.done = true;
       if (g.kind) { Gadgets.land(g); continue; } // v1.14 화염병 · 섬광탄
       const base = SkillCalc.grenadeDmg(p) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1) * (perk('demolition') ? 1.3 : 1);
-      const dmg = base * (g.child ? 0.35 : g.mod === 'b' ? 0.8 : 1), r = SkillCalc.grenadeR(p) * (g.child ? 0.55 : 1);
+      const dmg = base * (g.child ? 0.35 : g.mod === 'b' ? 0.8 : 1) * (g.second ? 0.5 : 1), r = SkillCalc.grenadeR(p) * (g.child ? 0.55 : g.second ? 0.8 : 1);
+      if (g.echo && !g.child) later.push({ sx: g.x, sy: g.y, x: g.x, y: g.y, tx: g.x, ty: g.y, t: 0, dur: 1, second: true }); // v1.22 연쇄 폭발
       explode(g.x, g.y, dmg, r, { knock: g.child ? 12 : 30, stagger: g.child ? 0.2 : 0.6, small: g.child });
       hitstop(g.child ? 0.02 : 0.05);
-      if (g.mod === 'a' && !g.child) for (let i = 0; i < 4; i++) { // v1.11 집속탄
+      if (g.mod === 'a' && !g.child && !g.second) for (let i = 0; i < 4; i++) { // v1.11 집속탄
         const a = i / 4 * TAU + rand(-0.4, 0.4), d = rand(55, 90);
         later.push({ sx: g.x, sy: g.y, x: g.x, y: g.y, tx: g.x + Math.cos(a) * d, ty: g.y + Math.sin(a) * d, t: 0, dur: 0.35, child: true });
       }
-      if (g.mod === 'b' && !g.child) G.fires.push({ x: g.x, y: g.y, r: r * 0.85, t: 0, life: 4, tick: 0, dmg: base * 0.22 * 0.5 }); // 소이탄 (0.5초마다)
+      if (g.mod === 'b' && !g.child && !g.second) G.fires.push({ x: g.x, y: g.y, r: r * 0.85, t: 0, life: 4, tick: 0, dmg: base * 0.22 * 0.5 }); // 소이탄 (0.5초마다)
     }
   }
   G.grenades = G.grenades.filter(g => !g.done).concat(later);

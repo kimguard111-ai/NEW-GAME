@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.21';
+const GAME_VERSION = 'v1.22';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -288,6 +288,23 @@ const SKILL_MODS = {
              b: { name: '방어막', desc: '회복 + 4초 동안 받는 피해 -40%' } },
   adren:   { a: { name: '광폭', desc: '지속 중 처치할 때마다 지속 +1.5초 (최대 +8초)' },
              b: { name: '진통제', desc: '지속 중 받는 피해 -30% (피해 증가는 절반)' } },
+};
+
+// v1.22 스킬 트리: 스킬마다 한 갈래 (배우기 → 숙련 → 숙달 → 갈래 a/b → 궁극). 모두 박씨에게서 크레딧으로 삼 · 되돌리기 없음
+// 선행: 숙련 ← 배우기 · 숙달 ← 숙련 · 갈래 ← 배우기 · 궁극 ← 숙달 + 갈래 하나
+const SKILL_TREE = {
+  rapid:   { r1: { name: '숙련 사격', desc: '지속 +1.5초', lvl: 4, price: 700 },
+             r2: { name: '사격 숙달', desc: '재사용 대기 -15%', lvl: 8, price: 1600 },
+             cap: { name: '사냥 본능', desc: '지속 중 처치할 때마다 지속 +0.6초 (최대 +4초)', lvl: 18, price: 8000 } },
+  grenade: { r1: { name: '파편 증량', desc: '폭발 반경 +15%', lvl: 6, price: 1500 },
+             r2: { name: '투척 숙달', desc: '재사용 대기 -15%', lvl: 10, price: 3000 },
+             cap: { name: '연쇄 폭발', desc: '1초 뒤 같은 자리에서 한 번 더 폭발 (피해 50%)', lvl: 20, price: 9000 } },
+  heal:    { r1: { name: '지혈대', desc: '회복량 +10%p (최대 70%)', lvl: 9, price: 2500 },
+             r2: { name: '처치 숙달', desc: '재사용 대기 -15%', lvl: 13, price: 4000 },
+             cap: { name: '불굴', desc: '발동하면 1.5초 동안 피해를 받지 않음', lvl: 22, price: 9000 } },
+  adren:   { r1: { name: '분노 조절', desc: '지속 +2초', lvl: 13, price: 5000 },
+             r2: { name: '투지 숙달', desc: '재사용 대기 -15%', lvl: 16, price: 7000 },
+             cap: { name: '전장의 함성', desc: '발동할 때 주변 적 1.5초 기절 (보스 0.4초)', lvl: 25, price: 12000 } },
 };
 
 // 임무는 js/quests.js (v0.7 챕터 구조)

@@ -147,7 +147,8 @@ function rand2(h, a, b) { return a + (h * 9301 % 1) * (b - a); }
 
 // v1.18 소품 그림 키 (등록돼 있으면 코드 그림 대신). 차량 그림은 오른쪽 아래(+x)를 향하게 그림 → 세로 차선은 뒤집음
 const CITY_ART = { lamp: 'lamp', trash: 'trash', cone: 'cone', barrel: 'barrel', hydrant: 'hydrant', bench: 'bench', signal: 'signal', bus: 'bus', police: 'police',
-  tent: 'tent', crates: 'crates', bench_w: 'workbench', maptable: 'maptable', radio: 'radio', campfire: 'campfire', generator: 'generator', deco: null };
+  tent: 'tent', crates: 'crates', bench_w: 'workbench', maptable: 'maptable', radio: 'radio', campfire: 'campfire', generator: 'generator', deco: null,
+  pole: 'pole', busstop: 'busstop', pocha: 'pocha', scooter: 'scooter', subway: 'subway' }; // v1.22 서울 거리 소품 그림
 function cityArt(o) {
   if (o.type === 'tree') return o.dead ? 'deadtree' : 'tree';
   if (o.type === 'car') { // v1.21 2칸 승용차
@@ -160,6 +161,23 @@ function cityArt(o) {
   if (o.type === 'bench' && World.map === 'camp') return 'workbench'; // 캠프의 bench = 정비 작업대
   return CITY_ART[o.type] || null;
 }
+// v1.22 그림이 있어도 코드로 얹는 것: 전봇대 전선 · 지하철 역 이름 기둥
+function poleWires(o, sx, sy) {
+  if (!o.next) return; // 다음 전봇대까지 처지는 전선 3가닥
+  const K = ISO_K, top = sy - 128 * K, nx = Iso.sx(o.next.x, o.next.y), ny = Iso.sy(o.next.x, o.next.y) - 128 * K;
+  ctx.strokeStyle = 'rgba(20,20,22,0.85)'; ctx.lineWidth = 1;
+  for (const [ox, oy, sag] of [[-12, 8, 18], [12, 8, 22], [-8, 18, 26]]) { ctx.beginPath(); ctx.moveTo(sx + ox, top + oy); ctx.quadraticCurveTo((sx + nx) / 2 + ox, (top + ny) / 2 + oy + sag, nx + ox, ny + oy); ctx.stroke(); }
+}
+function subwaySign(o) {
+  const S = Iso.sx, Y = Iso.sy, px = S(o.x + 30, o.y - 18), py = Y(o.x + 30, o.y - 18);
+  ctx.fillStyle = '#2a2c30'; ctx.fillRect(px - 2, py - 74, 4, 74);
+  ctx.fillStyle = '#e8e8e8'; ctx.fillRect(px - 16, py - 92, 32, 22);
+  const lines = [[o.line, o.color]].concat(o.line2 ? [[o.line2, o.color2]] : []);
+  lines.forEach(([ln, col], i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px - 9 + i * 9, py - 85, 4.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ln, px - 9 + i * 9, py - 85); });
+  ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.name, px + (o.line2 ? 6 : 4), py - 76);
+  if (Settings.light && Light.list.length < LIGHT_CAP) addLight(px, py - 80, 60, 0.5, 'rgba(220,240,255,A)');
+}
+
 // 그림 위에 계속 코드로 얹는 것: 불빛 · 불꽃 · 경광등
 function cityArtExtras(o, sx, sy) {
   const K = ISO_K, L = Settings.light && Light.list.length < LIGHT_CAP;
@@ -173,6 +191,8 @@ function cityArtExtras(o, sx, sy) {
     ctx.fillStyle = blink ? '#ff2a2a' : '#2a6aff'; ctx.fillRect(lx - 3, ly - 3, 6, 3);
     if (L) addLight(lx, ly, 70, 0.6, blink ? 'rgba(255,40,40,A)' : 'rgba(40,100,255,A)');
   } else if (o.type === 'signal') { if (Math.sin(G.time * 3 + o.ph) > 0 && L) addLight(sx - 26, sy - 100 * K, 40, 0.5, 'rgba(255,190,60,A)'); }
+  else if (o.type === 'pole') poleWires(o, sx, sy);
+  else if (o.type === 'subway') subwaySign(o);
   else if (o.type === 'maptable') { if (L) addLight(sx, sy - 16, 60, 0.6, 'rgba(255,220,150,A)'); }
 }
 
@@ -183,7 +203,7 @@ function drawCityProp(o) {
     let px = sx, py = sy;
     if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
     drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
-    drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
+    drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
     if (o.type === 'car' && o.burnt) burnFx(o.tx, o.ty);
     if (o.type === 'bus' && o.burnt) burnFx(Math.floor(o.x / TILE), Math.floor(o.y / TILE));
     cityArtExtras(o, sx, sy);
@@ -304,11 +324,7 @@ function drawCityProp(o) {
       ctx.fillStyle = '#3a3836'; ctx.fillRect(sx - 14, top + 8, 28, 3); ctx.fillRect(sx - 10, top + 18, 20, 2.5);
       if (o.tf) { ctx.fillStyle = '#6a6e74'; ctx.fillRect(sx + 3, top + 26, 9, 14); ctx.fillStyle = '#4a4e54'; ctx.fillRect(sx + 3, top + 26, 9, 3); }
       ctx.fillStyle = '#c8b030'; ctx.fillRect(sx - 3, sy - 26, 6, 10); // 노란 표시띠
-      if (o.next) { // 다음 전봇대까지 처지는 전선 3가닥
-        const nx = S(o.next.x, o.next.y), ny = Y(o.next.x, o.next.y) - 128 * K;
-        ctx.strokeStyle = 'rgba(20,20,22,0.85)'; ctx.lineWidth = 1;
-        for (const [ox, oy, sag] of [[-12, 8, 18], [12, 8, 22], [-8, 18, 26]]) { ctx.beginPath(); ctx.moveTo(sx + ox, top + oy); ctx.quadraticCurveTo((sx + nx) / 2 + ox, (top + ny) / 2 + oy + sag, nx + ox, ny + oy); ctx.stroke(); }
-      }
+      poleWires(o, sx, sy);
       break;
     }
     case 'busstop': { // v1.21 버스 정류장: 지붕 · 뒤 유리판 · 노선 표지판
@@ -344,13 +360,7 @@ function drawCityProp(o) {
       for (let i = 0; i < 3; i++) poly([S(o.x - 16, o.y + 10 - i * 6), Y(o.x - 16, o.y + 10 - i * 6, 2 - i * 3), S(o.x + 16, o.y + 10 - i * 6), Y(o.x + 16, o.y + 10 - i * 6, 2 - i * 3), S(o.x + 16, o.y + 8 - i * 6), Y(o.x + 16, o.y + 8 - i * 6, 2 - i * 3), S(o.x - 16, o.y + 8 - i * 6), Y(o.x - 16, o.y + 8 - i * 6, 2 - i * 3)], i % 2 ? '#2a2c30' : '#3a3c40');
       drawBox(o.x - 28, o.y - 16, o.x + 28, o.y + 16, 56, 'rgba(160,200,220,0.28)', 'rgba(90,120,140,0.3)', 'rgba(110,140,160,0.3)', 46, 10, 0); // 유리 지붕 + 옆 유리벽 (앞은 트여 계단이 보임)
       for (const dx of [-27, 27]) { const fx = S(o.x + dx, o.y + 15), fy = Y(o.x + dx, o.y + 15, 0); ctx.fillStyle = '#3a4048'; ctx.fillRect(fx - 1.5, fy - 50 * ISO_K, 3, 40 * ISO_K); } // 앞 기둥
-      const px = S(o.x + 30, o.y - 18), py = Y(o.x + 30, o.y - 18);
-      ctx.fillStyle = '#2a2c30'; ctx.fillRect(px - 2, py - 74, 4, 74);
-      ctx.fillStyle = '#e8e8e8'; ctx.fillRect(px - 16, py - 92, 32, 22);
-      const lines = [[o.line, o.color]].concat(o.line2 ? [[o.line2, o.color2]] : []);
-      lines.forEach(([ln, col], i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px - 9 + i * 9, py - 85, 4.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ln, px - 9 + i * 9, py - 85); });
-      ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.name, px + (o.line2 ? 6 : 4), py - 76);
-      if (Settings.light && Light.list.length < LIGHT_CAP) addLight(px, py - 80, 60, 0.5, 'rgba(220,240,255,A)');
+      subwaySign(o);
       break;
     }
     case 'campfire': { // 돌 테두리 + 장작 + 불꽃 + 연기

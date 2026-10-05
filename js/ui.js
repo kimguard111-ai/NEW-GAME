@@ -144,7 +144,7 @@ const UI = {
 
     SKILLS.forEach((s, i) => {
       const el = $('cd' + i);
-      if (el) el.style.height = (100 * p.skillCd[i] / s.cd) + '%';
+      if (el) el.style.height = (100 * p.skillCd[i] / ((p.skillCdMax && p.skillCdMax[i]) || s.cd)) + '%';
     });
     const prog = G.search ? [G.search.t / G.search.dur, G.search.target.grave ? '시체 가방 회수 중…' : '뒤지는 중…'] : G.extractT > 0 ? [G.extractT / EXTRACT_TIME, '탈출 중…'] : null; // 진행 바
     $('extract-bar').classList.toggle('hidden', !prog);
@@ -364,13 +364,13 @@ const UI = {
       }
       h += '</div>';
     });
-    h += '<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐 · 갈래는 캠프에서 바꿀 수 있음)</div>';
+    h += '<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐 · 갈래는 캠프에서 바꿀 수 있음) <button id="btn-stree" class="smod">스킬 트리</button></div>';
     const inCamp = World.map === 'camp';
     for (const s of SKILLS) {
       const locked = p.level < s.lvl || !p.skills[s.id], m = p.skillMods[s.id];
       const own = k => p.smodOwned[s.id + '_' + k];
       const mb = k => `<button class="smod${m === k ? ' sel' : ''}" ${!locked && inCamp && own(k) ? `data-smod="${s.id}:${k}"` : 'disabled'} title="${SKILL_MODS[s.id][k].desc}${own(k) ? '' : ` (상인에게서 ${fmt(s.modPrice)}₵)`}">${own(k) ? '' : ICON('lock')}${SKILL_MODS[s.id][k].name}</button>`;
-      h += `<div class="skill-row${locked ? ' locked' : ''}">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">${p.level < s.lvl ? `Lv${s.lvl}부터 · ` : ''}상인에게서 배우기 ${fmt(s.price)}₵</span>` : ''} <span class="smods">${mb('a')}${mb('b')}</span><br><span class="stat-eff">${skillDesc(s, p)}</span></div>`;
+      h += `<div class="skill-row${locked ? ' locked' : ''}">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">${p.level < s.lvl ? `Lv${s.lvl}부터 · ` : ''}상인에게서 배우기 ${fmt(s.price)}₵</span>` : ''} <span class="smods">${mb('a')}${mb('b')}</span><br><span class="stat-eff">${skillDesc(s, p)}${['r1', 'r2', 'cap'].filter(k => stree(s.id, k)).map(k => ` · <span class="${k === 'cap' ? 'r4' : 'r2'}">${SKILL_TREE[s.id][k].name}</span>`).join('')}</span></div>`;
     }
     const sets = Object.keys(SETS).filter(k => setCount(p, k) > 0); // v1.12 착용 중인 세트
     if (sets.length) h += '<hr style="border-color:#333">' + sets.map(k => { const S = SETS[k], n = setCount(p, k); return `<div class="setname" style="color:${S.color}">▣ ${S.name} 세트 ${n}/3</div><div class="setb${n >= 2 ? ' on' : ''}">(2) ${S.b2}</div><div class="setb${n >= 3 ? ' on' : ''}">(3) ${S.b3}</div>`; }).join('');
@@ -395,6 +395,7 @@ const UI = {
         UI.refreshStats(); UI.refreshInventory(); saveGame();
       };
     });
+    $('btn-stree').onclick = () => UI.skillTree(); // v1.22
     $('stats-body').querySelectorAll('button[data-smod]').forEach(b => {
       b.onclick = () => {
         const [id, k] = b.dataset.smod.split(':');
@@ -594,19 +595,49 @@ const UI = {
   },
 
   // v1.16 스킬 교범 (암시장 상인): 스킬 배우기 · 갈래 사기
-  skillShop() {
-    const p = G.player, btns = [];
-    let h = `"싸우는 법도 사고파는 시대야." <span class="muted">₵${fmt(p.credits)} 보유 · 갈래는 산 뒤 캠프에서 능력치 창(C)으로 바꿈</span>`;
+  // v1.22 스킬 트리: 스킬마다 세로 한 갈래 (배우기 → 숙련 → 숙달 → 갈래 a/b → 궁극). 노드를 눌러 설명 · 구입
+  skillShop() { this.skillTree(); },
+  treeNode(s, k) { // 노드 정보: 이름 · 설명 · 값 · 레벨 · 보유 · 선행 충족
+    const p = G.player, T = SKILL_TREE[s.id], has = !!p.skills[s.id];
+    if (k === 'root') return { name: s.name, desc: `${skillBaseDesc(s, p)} · 재사용 ${s.cd}초 · ${STAT_NAMES[s.stat]} 능력치로 강해짐`, price: s.price, lvl: s.lvl, own: has, pre: true, icon: s.icon };
+    if (k === 'a' || k === 'b') return { name: SKILL_MODS[s.id][k].name, desc: SKILL_MODS[s.id][k].desc + ' · 둘 다 사면 캠프 능력치 창(C)에서 바꿈', price: s.modPrice, lvl: s.lvl, own: !!p.smodOwned[s.id + '_' + k], pre: has, preTxt: s.name };
+    const n = T[k], own = stree(s.id, k);
+    const pre = k === 'r1' ? has : k === 'r2' ? stree(s.id, 'r1') : stree(s.id, 'r2') && (p.smodOwned[s.id + '_a'] || p.smodOwned[s.id + '_b']);
+    return { name: n.name, desc: n.desc, price: n.price, lvl: n.lvl, own, pre: !!pre, preTxt: k === 'r1' ? s.name : k === 'r2' ? T.r1.name : `${T.r2.name} + 갈래 하나`, cap: k === 'cap' };
+  },
+  treeSel: null,
+  skillTree() {
+    const p = G.player, shop = World.map === 'camp';
+    let h = `<div class="st-head">"싸우는 법도 사고파는 시대야." <span class="muted">₵${fmt(p.credits)} 보유 · 노드를 눌러 설명을 보고 구입 · 위에서부터 차례로 열림</span></div><div class="stree">`;
     for (const s of SKILLS) {
-      const has = p.skills[s.id], lv = p.level >= s.lvl;
-      h += `<div class="fac-row">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span> ${has ? '<span class="r1">배움</span>' : `<span class="muted">Lv${s.lvl}+ · ${fmt(s.price)}₵</span>`}<br><span class="stat-eff">${skillBaseDesc(s, p)} · 재사용 ${s.cd}초</span>`;
-      for (const k of ['a', 'b']) { const M = SKILL_MODS[s.id][k], o = p.smodOwned[s.id + '_' + k]; h += `<br><span class="muted">└ ${M.name}: ${M.desc}</span> ${o ? '<span class="r1">보유</span>' : `<span class="muted">${fmt(s.modPrice)}₵</span>`}`; }
-      h += '</div>';
-      if (!has && lv) btns.push([`${s.name} 배우기 (${fmt(s.price)}₵)`, () => this.buySkill(s)]);
-      if (has) for (const k of ['a', 'b']) if (!p.smodOwned[s.id + '_' + k]) btns.push([`${SKILL_MODS[s.id][k].name} (${fmt(s.modPrice)}₵)`, () => this.buySkill(s, k)]);
+      const node = k => {
+        const n = this.treeNode(s, k), st = n.own ? 'own' : !n.pre ? 'lock' : p.level < n.lvl ? 'lvl' : 'avail', sel = this.treeSel === s.id + ':' + k;
+        return `<button class="tn ${st}${n.cap ? ' cap' : ''}${k === 'a' || k === 'b' ? ' half' : ''}${sel ? ' sel' : ''}" data-tn="${s.id}:${k}">${n.icon ? ICON(n.icon) + ' ' : ''}<b>${n.name}</b><span>${n.own ? '보유' : st === 'avail' ? fmt(n.price) + '₵' : st === 'lvl' ? 'Lv' + n.lvl : ICON('lock')}</span></button>`;
+      };
+      const line = on => `<i class="tl${on ? ' on' : ''}"></i>`, own = k => this.treeNode(s, k).own;
+      h += `<div class="st-col"><div class="st-title">${STAT_NAMES[s.stat]}</div>${node('root')}${line(own('root'))}${node('r1')}${line(own('r1'))}${node('r2')}${line(own('a') || own('b'))}<div class="st-pair">${node('a')}${node('b')}</div>${line(own('cap'))}${node('cap')}</div>`;
     }
-    btns.push(['닫기', () => UI.close('dialog')]);
-    UI.dialog('암시장 상인 박씨 — 스킬 교범', h, btns);
+    h += '</div>';
+    const btns = [];
+    if (this.treeSel) {
+      const [id, k] = this.treeSel.split(':'), s = SKILLS.find(q => q.id === id), n = this.treeNode(s, k);
+      const why = n.own ? '보유 중' : !n.pre ? `먼저 「${n.preTxt}」` : p.level < n.lvl ? `Lv${n.lvl}부터` : p.credits < n.price ? `크레딧 부족 (${fmt(n.price)}₵)` : !shop ? '캠프의 암시장 상인 박씨에게서 구입' : '';
+      h += `<div class="st-detail"><b class="${n.cap ? 'r4' : 'r2'}">${n.name}</b> <span class="muted">${s.name} · Lv${n.lvl} · ${fmt(n.price)}₵</span><br>${n.desc}${why ? `<br><span class="muted">${why}</span>` : ''}</div>`;
+      if (!why) btns.push([`${n.name} 구입 (${fmt(n.price)}₵)`, () => this.buyNode(s, k)]);
+    }
+    btns.push(['닫기', () => { this.treeSel = null; UI.close('dialog'); }]);
+    UI.dialog('스킬 트리 — 암시장 상인 박씨의 교범', h, btns);
+    $('dialog-text').querySelectorAll('[data-tn]').forEach(b => { b.onclick = () => { this.treeSel = b.dataset.tn; SFX.play('ui'); this.skillTree(); }; });
+  },
+  buyNode(s, k) {
+    const p = G.player;
+    if (k === 'root') return this.buySkill(s);
+    if (k === 'a' || k === 'b') return this.buySkill(s, k);
+    const n = SKILL_TREE[s.id][k];
+    if (p.credits < n.price) { log('크레딧이 부족합니다.', '#f88'); SFX.play('empty'); return; }
+    p.credits -= n.price; p.stree[s.id + '_' + k] = true;
+    log(`스킬 트리: ${s.name} — ${n.name} (${n.desc})`, '#7fd'); UI.toast(k === 'cap' ? '궁극 기술' : '스킬 강화', `${s.name} — ${n.name}`);
+    SFX.play('levelup'); UI.refreshStats(); saveGame(); this.skillTree();
   },
   buySkill(s, k) {
     const p = G.player, price = k ? s.modPrice : s.price;

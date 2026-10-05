@@ -203,7 +203,7 @@ function newPlayer(name) {
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
-    perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
+    perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, stree: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
     // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
     bossKills: 0, totalKills: 0, pity: 0, respecs: 0, found: [], radT: 0,
@@ -254,12 +254,15 @@ const PlayerStats = {
 const STAT_NAMES = { str: '근력', dex: '사격', vit: '체력', agi: '민첩' };
 const statUp = (p, k) => Math.max(0, p.stats[k] - 5);
 const SkillCalc = {
-  rapidDur: p => (4 + Math.min(4, statUp(p, 'agi') * 0.1)) * (smod('rapid') === 'b' ? 0.75 : 1),
-  grenadeR: p => (110 + Math.min(50, statUp(p, 'dex') * 2)) * (perk('demolition') ? 1.3 : 1),
+  rapidDur: p => (4 + Math.min(4, statUp(p, 'agi') * 0.1) + (stree('rapid', 'r1') ? 1.5 : 0)) * (smod('rapid') === 'b' ? 0.75 : 1),
+  grenadeR: p => (110 + Math.min(50, statUp(p, 'dex') * 2)) * (perk('demolition') ? 1.3 : 1) * (stree('grenade', 'r1') ? 1.15 : 1),
   grenadeDmg: p => (30 + p.level * 6) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5), // v1.16 너프: 45+레벨×9 · 사격 능력치 전부 → 30+레벨×6 · 절반만
-  healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006),
+  healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006) + (stree('heal', 'r1') ? 0.1 : 0),
+  adrenDur: p => 8 + (stree('adren', 'r1') ? 2 : 0), // v1.22
+  cdMul: id => stree(id, 'r2') ? 0.85 : 1, // v1.22 숙달
   adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.5 : 1),
 };
+const stree = (id, k) => !!(G.player && G.player.stree && G.player.stree[id + '_' + k]); // v1.22 스킬 트리
 function skillDesc(s, p) {
   const m = smod(s.id), base = skillBaseDesc(s, p);
   return m ? `<b class="r2">[${SKILL_MODS[s.id][m].name}]</b> ${base} · ${SKILL_MODS[s.id][m].desc}` : base;
@@ -270,7 +273,7 @@ function skillBaseDesc(s, p) {
     case 'rapid': return `${SkillCalc.rapidDur(p).toFixed(1)}초간 공격 속도 2배`;
     case 'grenade': return `반경 ${SkillCalc.grenadeR(p)} 폭발, 피해 ${Math.round(SkillCalc.grenadeDmg(p))}`;
     case 'heal': return `즉시 최대 체력 ${pc(SkillCalc.healPct(p))} 회복`;
-    case 'adren': return `8초간 이동속도 +35%, 피해 +${pc(SkillCalc.adrenDmg(p))}, 재장전 +30%`;
+    case 'adren': return `${SkillCalc.adrenDur(p)}초간 이동속도 +35%, 피해 +${pc(SkillCalc.adrenDmg(p))}, 재장전 +30%`;
   }
   return '';
 }

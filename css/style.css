@@ -442,3 +442,31 @@ body.touch .hot.gad .cyc { font-size: 12px; padding: 0 4px; top: 0; right: 0; ba
 .inv-cell .mark.lock .ico { width: 11px; height: 11px; }
 button.mini { font-size: 10px; padding: 1px 6px; margin-left: 6px; background: #1c1f24; border: 1px solid #3a3f48; color: #aaa; border-radius: 3px; cursor: pointer; }
 .welcome { font-size: 13px; line-height: 1.7; }
+
+/* v1.22 스킬 트리 */
+.st-head { margin-bottom: 6px; }
+.stree { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.st-col { display: flex; flex-direction: column; align-items: stretch; }
+.st-title { text-align: center; font-size: 11px; color: #9aa; margin-bottom: 2px; }
+.tn { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px; font-size: 11px; line-height: 1.25; background: #15181d; border: 1px solid #3a3f48; border-radius: 6px; color: #888; cursor: pointer; min-height: 38px; justify-content: center; }
+.tn b { font-weight: 600; } .tn span { font-size: 10px; }
+.tn.own { border-color: #3fae62; color: #d8f5df; background: #16251b; } .tn.own span { color: #6fdc6f; }
+.tn.avail { border-color: #e0b23a; color: #f2e6c4; } .tn.avail span { color: #ffd76a; }
+.tn.lvl { color: #9a9a9a; } .tn.lock { opacity: .55; }
+.tn.cap { border-width: 2px; } .tn.cap.own { border-color: #ffa53a; background: #2a1e10; color: #ffe0b0; }
+.tn.sel { box-shadow: 0 0 0 2px #5aa8ff; }
+.tn:hover { filter: brightness(1.25); }
+.st-pair { display: flex; gap: 3px; } .st-pair .tn { flex: 1; min-width: 0; }
+.tl { display: block; width: 2px; height: 8px; margin: 0 auto; background: #3a3f48; } .tl.on { background: #3fae62; }
+.st-detail { margin-top: 8px; padding: 6px 8px; background: #111; border: 1px solid #333; border-radius: 6px; font-size: 13px; }
+/* v1.22 출격 지도: 맵 이름을 눌러 바로 출격 */
+.map-row.go { cursor: pointer; padding: 3px 6px; border: 1px solid #2c3138; border-radius: 6px; background: #13161a; }
+.map-row.go:hover { border-color: #7fe08a; background: #172119; }
+.map-row.go b::after { content: ' ▶ 출격'; color: #7fe08a; font-size: 11px; font-weight: normal; }
+/* v1.22 긴 대화창(스킬 트리·출격 지도)이 화면 위로 넘치지 않게 */
+#dialog-text { max-height: calc(100vh - 230px); overflow-y: auto; }
+@media (max-height: 520px) {
+  #panel-dialog { bottom: 6px; max-width: calc(100vw - 12px); }
+  #dialog-text { max-height: calc(100vh - 110px); padding: 8px 10px; }
+  .tn { min-height: 30px; padding: 2px; }
+}

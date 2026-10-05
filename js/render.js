@@ -419,9 +419,13 @@ function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
   if (edge(1, 0)) drawBox(x1 - lip, y0, x1, y1, ht + 4, rim, rimS, rimS, -1, ht, 0);
   if (!glass && h > 0.42 && h < 0.428 && ht >= FLOOR_H * 3 && !edge(0, 1) && !edge(1, 0)) { // v1.21 옥상 교회 십자가 (빨간 네온)
     const cx = S(x0 + 16, y0 + 16), cy = Y(x0 + 16, y0 + 16, ht), K = ISO_K, top = cy - 70 * K, on = Math.sin(G.time * 1.3 + tx) > -0.9;
-    ctx.strokeStyle = '#3a3a40'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, top + 30 * K); ctx.stroke();
-    ctx.fillStyle = on ? '#ff2a3a' : '#5a1a20'; ctx.fillRect(cx - 2, top, 4, 32 * K); ctx.fillRect(cx - 9 * K, top + 8 * K, 18 * K, 4);
-    if (on) { ctx.fillStyle = 'rgba(255,200,200,0.8)'; ctx.fillRect(cx - 0.5, top + 1, 1, 32 * K - 2); if (Settings.light && Light.list.length < LIGHT_CAP) addLight(cx, top + 14, 70, 0.6, 'rgba(255,40,60,A)'); }
+    if (propArt('cross')) drawPropArt('cross', cx, cy); // v1.22 그림 (빛은 코드)
+    else {
+      ctx.strokeStyle = '#3a3a40'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, top + 30 * K); ctx.stroke();
+      ctx.fillStyle = on ? '#ff2a3a' : '#5a1a20'; ctx.fillRect(cx - 2, top, 4, 32 * K); ctx.fillRect(cx - 9 * K, top + 8 * K, 18 * K, 4);
+      if (on) { ctx.fillStyle = 'rgba(255,200,200,0.8)'; ctx.fillRect(cx - 0.5, top + 1, 1, 32 * K - 2); }
+    }
+    if (on) { if (Settings.light && Light.list.length < LIGHT_CAP) addLight(cx, top + 14, 70, 0.6, 'rgba(255,40,60,A)'); }
     ctx.lineWidth = 1; return;
   }
   if (h < 0.055 && propArt(h < 0.04 ? 'acunit' : 'watertank')) drawPropArt(h < 0.04 ? 'acunit' : 'watertank', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht)); // v1.18 그림

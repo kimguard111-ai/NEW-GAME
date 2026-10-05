@@ -65,6 +65,7 @@ const ART = {
     dumpster: { w: 38, y: 8 }, locker: { w: 24, y: 6 }, labcase: { w: 26, y: 6 }, bag: { w: 20, y: 3 }, safe: { w: 34, y: 8 }, airdrop: { w: 38, y: 8 }, generator: { w: 40, y: 8 }, nest: { w: 96, y: 12 }, mine: { w: 18, y: 3 },
     tent: { w: 86, y: 18 }, tent_medic: { w: 86, y: 18 }, crates: { w: 48, y: 10 }, workbench: { w: 56, y: 10 }, maptable: { w: 50, y: 10 }, radio: { w: 40, y: 8 }, campfire: { w: 36, y: 6 }, container: { w: 70, y: 16 }, sandbags: { w: 54, y: 8 },
     rubble_a: { w: 60, y: 10 }, rubble_b: { w: 56, y: 10 }, slab: { w: 64, y: 12 }, watertank: { w: 26, y: 6 }, acunit: { w: 24, y: 6 }, antenna: { w: 22, y: 2 }, tires: { w: 30, y: 5 }, cart: { w: 30, y: 5 }, debris: { w: 46, y: 8 },
+    pole: { w: 30, y: 2 }, busstop: { w: 72, y: 10 }, pocha: { w: 74, y: 12 }, scooter: { w: 30, y: 4 }, subway: { w: 84, y: 14 }, cross: { w: 22, y: 2 }, /* v1.22 서울 거리 소품 */
   },
 
   // v1.19 건물 질감 (가공 도구의 「v1.19 건물 외벽 / 옥상 질감」). 외벽 = 건물 한 칸 × 한 층의 정면 그림, 옥상 = 위에서 본 바닥
