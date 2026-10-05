@@ -47,7 +47,7 @@
 | 12 | **소품 · 맵 꾸미기** (v1.18) | 5 | v1.18 거리 소품 · 차량 · 맵 오브젝트 · 캠프 소품 · 잔해·옥상 장식 | 거리·캠프·사건 오브젝트가 전부 그림으로 |
 | 13 | **건물 외벽 · 옥상 질감** (v1.19) | 2 | v1.19 건물 외벽 질감 · 옥상 질감 | 모든 일반 건물의 벽·창문·1층 상가·옥상이 그림으로 |
 
-> 아이콘: 무기·헬멧은 2·5번을 등록하면 자동으로 그 그림이 됩니다. 방어구·구급상자·메뉴 아이콘은 코드로 그린 아이콘(46종)이 이미 통일돼 있어 따로 만들지 않아도 됩니다.
+> 아이콘: 무기·헬멧은 2·5번을 등록하면 자동으로 그 그림이 됩니다. 방어구·소모품·탄약·스킬 아이콘은 17번(v1.35.1)으로 바꿀 수 있습니다. 메뉴 아이콘은 코드 아이콘 그대로.
 
 ---
 
@@ -615,6 +615,85 @@ Match the art style of the attached concept image. ONE flat building wall textur
 ```
 
 > 16번 4장은 v1.31.3에 연결됨. 15번 4장은 v1.31.2에 연결됨. Gemini가 이번에도 **정사각형에 가깝게** 그려서 외벽이 조금 옆으로 눌려 보입니다 — 신경 쓰이면 「**세로 그림 한 장씩**」(16-4처럼 3:5 한 장) 으로 다시 받는 게 확실합니다.
+
+---
+
+## 17. 아이콘 (v1.35.1) · 한 장에 여러 개 (격자)
+무기·헬멧 아이콘은 이미 그림에서 자동으로 만들어집니다. 나머지(방어구 · 소모품 · 탄약 4종 · 스킬)는 지금 코드로 그린 단순한 아이콘이라, 그림을 올리면 **가방 · 핫바 · 상점 · 스킬 창 아이콘이 바로 바뀝니다** (메뉴 아이콘은 작은 크기에서 또렷한 코드 아이콘이 나아 그대로 둠).
+- 아이콘은 **작게(30~50px) 보이므로** 굵은 실루엣 · 한 물체만 · 배경 없이 · 칸 가운데
+- 방향: 약간 위에서 본 3/4 (무기 그림과 같은 느낌)
+
+| 장 | 격자 | 파일 이름 | 내용 |
+|---|---|---|---|
+| 17-1 | 3×3 | `icons_gear.png` | 방어구 4종 · 벨트 · 구급상자 · 탄약 상자 · 고철 · 전자 부품 |
+| 17-2 | 3×3 | `icons_items.png` | 화염병 · 섬광탄 · 지뢰 · 자극제 · 방탄판 · 탄약 4종 (권총탄 · 기관총탄 · 산탄 · 저격탄) |
+| 17-3 | 3×2 | `icons_skills.png` | 스킬 5종 (집중 사격 · 수류탄 · 응급 처치 · 아드레날린 · 포탑) + 슬라이딩 |
+
+### 17-1. 장비 아이콘 9종 · `icons_gear.png`
+📎 콘셉트 아트
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate inventory item icons for a post-apocalyptic survival game, each a single object centered in its own equal cell with wide empty space around it, seen from a slight top-down three-quarter angle, with a bold clear silhouette that stays readable at very small size. In order, left to right, top to bottom: 1) a worn olive canvas vest with a few pouches; 2) a tan tactical plate carrier vest with magazine pouches; 3) a dark blue-gray military ballistic vest with a high collar and shoulder guards; 4) a bulky steel-gray powered exoskeleton chest piece with hydraulic tubes; 5) a rugged tactical belt with pouches and a metal buckle; 6) a red-and-white first aid kit box with a white cross shape; 7) an olive metal ammunition box with a carry handle; 8) a small pile of scrap metal pieces, bolts and a bent pipe; 9) a green electronic circuit board chip with gold contacts. No people, no hands. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border, no grid lines. Do not use pink or magenta on the objects.
+```
+
+### 17-2. 투척·보조·탄약 아이콘 9종 · `icons_items.png`
+📎 콘셉트 아트 · 탄약 3종은 **색으로 구분** (게임 화면의 탄약 상자 색과 같게)
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate inventory item icons for a post-apocalyptic survival game, each a single object centered in its own equal cell with wide empty space around it, seen from a slight top-down three-quarter angle, with a bold clear silhouette readable at very small size. In order, left to right, top to bottom: 1) a glass bottle molotov cocktail with a burning cloth wick; 2) a cylindrical flashbang grenade with a pull ring; 3) a round flat anti-personnel landmine with a pressure plate; 4) a combat stimulant auto-injector syringe with a yellow liquid window; 5) a gray ballistic armor plate insert; 6) a small stack of brass pistol cartridges with a pale yellow paper box; 7) a curved rifle magazine full of brass rounds, ochre colored; 8) a few fat red plastic shotgun shells with brass bases; 9) three long slim sniper rifle cartridges on a light blue-gray clip. No people, no hands. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border, no grid lines. Do not use pink or magenta on the objects.
+```
+
+### 17-3. 스킬 아이콘 6종 · `icons_skills.png`
+📎 콘셉트 아트 · 스킬은 물체가 아니라 **상징 그림** (원형 배지 안)
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate round skill badge icons for a post-apocalyptic action game, each a circular dark metal badge with a single bold symbol inside, centered in its own equal cell with empty space around it, readable at very small size. In order, left to right, top to bottom: 1) a crosshair with three speed lines (rapid focused fire), orange glow; 2) a frag grenade mid-air with a short fuse spark, orange glow; 3) a white medical cross with a bandage wrap, green glow; 4) a beating heart with a lightning bolt (adrenaline), red glow; 5) a small tripod gun turret seen from the side, cyan glow; 6) a runner sliding feet-first on the ground with dust (slide dodge), blue glow. Detailed dark pixel art, desaturated colors with warm highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no grid lines. Do not use pink or magenta on the badges.
+```
+
+---
+
+## 18. 외벽 다시 (세로 3:5) · 한 장에 3개 (v1.35.1)
+지금 외벽 그림 대부분이 **정사각형에 가깝게** 만들어져서, 한 칸(1.6m) × 한 층(2.7m) = **세로로 긴 3:5** 자리에 붙으면 옆으로 눌려 보입니다 (16-4 담쟁이 벽처럼 세로로 받으면 안 눌림).
+Gemini는 격자로 부탁하면 칸을 정사각형으로 만드는 경향이 있어서, **가로로 긴 한 장(16:9)에 세로 기둥 3개를 나란히** 그리게 합니다. 이미 쓰고 있는 이름(키)을 그대로 바꿔 끼우므로 코드 변경 없이 바로 적용됩니다.
+- 먼저 **18-1 · 18-2** (아파트 · 벽돌 · 사무실 · 유리 · 불탄 벽 — 거의 모든 지역에서 씀)부터, 나머지는 여유 있을 때
+
+| 장 | 파일 이름 | 3개 (왼쪽부터) | 바뀌는 외벽 |
+|---|---|---|---|
+| 18-1 ★ | `tex_tall1.png` | 아파트 · 빨간 벽돌 · 사무실 | f_apartment · f_brick · f_office |
+| 18-2 ★ | `tex_tall2.png` | 유리 고층 · 불탄 벽 · 연두색 아파트 | f_glass · f_burnt · f_apartment2 |
+| 18-3 | `tex_tall3.png` | 갈색 벽돌(실외기) · 회색 패널 사무실 · 초록 유리 | f_brick2 · f_office2 · f_glass2 |
+| 18-4 | `tex_tall4.png` | 불탄 벽 2 · 80년대 타일 · 빌라 | f_burnt2 · f_tile · f_villa |
+| 18-5 | `tex_tall5.png` | 복도식 아파트 · 간판틀 상가 · 모텔 | f_corridor · f_signframe · f_motel |
+| 18-6 | `tex_tall6.png` | 군 시설 · 석재 오피스 · 공사 비계 | f_military · f_stone · f_scaffold |
+
+**공통 문장** (아래 각 장의 `[ ]` 부분만 바꿔 씀):
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 image containing exactly 3 separate TALL flat building wall texture panels side by side, each panel a tall rectangle with width to height ratio 3:5 that fills the full image height, separated by thin vertical solid #FF00FF magenta stripes. Each panel is a FLAT FRONT ORTHOGRAPHIC view (no perspective, no isometric angle, no depth) of exactly ONE storey and ONE narrow window bay of a building wall, designed to repeat seamlessly: the left edge matches the right edge and the top edge matches the bottom edge, no border, no frame, no outline. The single window sits in the middle with plenty of wall around it. From left to right: [1) …; 2) …; 3) …]. Evenly lit, no cast shadows, no sky, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. No text, no letters, no numbers, no logos. Do not use pink or magenta inside the panels.
+```
+
+### 18-1 ★ · `tex_tall1.png`
+```
+1) a beige weathered Korean apartment wall with one aluminum window and a small balcony railing, water stains and cracks, the window faintly lit warm orange; 2) a dark red brick wall with one old window with a metal frame, a few bricks missing; 3) a gray concrete office wall with one dirty horizontal window and a dim fluorescent light inside
+```
+### 18-2 ★ · `tex_tall2.png`
+```
+1) a dark blue glass curtain wall of a skyscraper with thin metal mullions and a few cracked panes reflecting faint light; 2) a burnt soot-blackened concrete wall with one shattered empty window hole and scorch marks streaking upward; 3) a pale mint-green painted Korean apartment wall with one window, a rusty laundry rack outside and peeling paint
+```
+### 18-3 · `tex_tall3.png`
+```
+1) a brown brick wall with one window and a rusty air conditioner unit mounted below it, drip stains; 2) a light gray metal-panel office wall with one tinted window and visible panel seams and rivets; 3) a green-tinted glass curtain wall with thin dark mullions, one pane broken and patched with plywood
+```
+### 18-4 · `tex_tall4.png`
+```
+1) a fire-damaged plaster wall half collapsed showing bent rebar around one empty window hole; 2) a 1980s Korean building wall of small beige ceramic tiles with one aluminum window, some tiles fallen off; 3) a red-brick villa wall with one silver sliding window and a rusty railing
+```
+### 18-5 · `tex_tall5.png`
+```
+1) an apartment corridor side: an open outdoor walkway with a concrete parapet at the bottom and a dark door-less opening behind; 2) a commercial building wall with one empty rectangular signboard frame (blank) above one dirty window; 3) an old motel wall in faded beige plaster with one small frosted window and an air conditioner unit
+```
+### 18-6 · `tex_tall6.png`
+```
+1) a gray military concrete wall with one narrow slit window, painted hazard stripes and rust streaks; 2) a polished gray stone office wall with one dark tinted window, slightly cracked; 3) a wall covered by construction scaffolding pipes and torn green safety netting over one window
+```
+
+> 결과는 가운데 기둥 위주로 잘라 씁니다. 세 기둥이 똑같이 나오면(16-4처럼) 그중 하나만 쓰고, 나머지 이름은 기존 그림 유지 — 그 장만 다시 생성하세요.
 
 ---
 

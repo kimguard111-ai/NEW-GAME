@@ -133,6 +133,9 @@ const ART = {
     // props_turret.png (v1.31.2 · 윗줄 3개 사용)
     turret: { file: 'props_turret.png', rect: [4, 4, 258, 231] }, turret_flame: { file: 'props_turret.png', rect: [266, 4, 271, 246] }, turret_mortar: { file: 'props_turret.png', rect: [541, 4, 256, 230] },
   },
+  // v1.35.1 아이콘 그림 (프롬프트 17 · icons_gear / icons_items / icons_skills) — 키는 아이콘 이름 (vest · medkit · ammo_pistol · rapid · roll …)
+  // 예: vest: { file: 'icons_gear.png', rect: [x, y, w, h] } · 없으면 코드 아이콘
+  icons: {},
   // 소품 그림을 화면에 놓는 크기: w = 화면 가로(px, 확대 1배 기준) · y = 그림 아래쪽을 바닥 점보다 얼마나 아래에 둘지
   propFit: {
     lamp: { w: 66, y: 2 }, tree: { w: 92, y: 4 }, deadtree: { w: 78, y: 4 }, /* v1.21 실제 스케일 */ trash: { w: 34, y: 4 }, cone: { w: 13, y: 2 }, barrel: { w: 19, y: 3 },

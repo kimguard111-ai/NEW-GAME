@@ -7,7 +7,7 @@ const Icons = {
   cache: {}, urls: {}, code: {},
   cv(key) {
     // v1.7.1 무기·헬멧 그림(assets.js)을 등록하면 아이콘도 그 그림으로 (읽히기 전엔 코드 아이콘)
-    const art = typeof ART !== 'undefined' && (ART.weapons[key] || ART.helmets[key]);
+    const art = typeof ART !== 'undefined' && (ART.weapons[key] || ART.helmets[key] || (ART.icons && ART.icons[key])); // v1.35.1 방어구·소모품·탄약·스킬 아이콘 그림 (프롬프트 17)
     const useArt = !!(art && art.ready);
     const old = this.cache[key];
     if (old && old.art === useArt) return old;
@@ -22,7 +22,7 @@ const Icons = {
       g.drawImage(art.img, rx, ry, rw, rh, -rw * sc / 2, -rh * sc / 2, rw * sc, rh * sc);
     } else {
       g.scale(ICON_PX / 32, ICON_PX / 32); g.lineJoin = 'round'; g.lineCap = 'round';
-      (ICON_DRAW[key] || ICON_DRAW.unknown)(icoKit(g));
+      (ICON_DRAW[key] || ICON_DRAW[key.split('_')[0]] || ICON_DRAW.unknown)(icoKit(g)); // ammo_pistol 등은 그림이 없으면 ammo
     }
     return (this.cache[key] = c);
   },

@@ -482,7 +482,7 @@ const Sprites = {
   },
   loadAll() { // 무기·헬멧 그림까지 포함
     const cache = {}; // 한 파일에 여러 무기·헬멧(rect)이 들어 있으면 한 번만 읽음
-    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {})]) { // v1.18 소품 · v1.19 건물 질감 포함
+    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {}), ...Object.values(ART.icons || {})]) { // v1.18 소품 · v1.19 건물 질감 · v1.35.1 아이콘 포함
       let im = cache[s.file];
       if (!im) {
         im = cache[s.file] = new Image(); im.users = [];
