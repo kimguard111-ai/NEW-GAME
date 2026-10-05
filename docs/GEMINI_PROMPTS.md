@@ -579,6 +579,45 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 
 ---
 
+## 16. 바닥 · 터렛 · 남은 것 (v1.31.2) · 한 장에 여러 개 (격자)
+v1.31.2부터 **바닥(도로·인도·풀밭·흙·물·광장)** 과 **엔지니어 터렛 3종** 은 그림을 올리면 바로 붙습니다 (없으면 지금처럼 코드 그림).
+- 바닥 그림 한 장은 게임에서 **4×4칸에 나눠 펼침** → 칸마다 다른 부분이 보여 반복이 덜함. 그래서 **위에서 똑바로 내려다본 정사각형**, 네 변이 이어져야 함
+
+| 장 | 격자 | 파일 이름 |
+|---|---|---|
+| 16-1 | 3×2 | `tex_street.png` |
+| 16-2 | 3×1 | `props_turret.png` |
+| 16-3 | 1장 | `props_lamp.png` (가로등 다시) |
+| 16-4 | 1장 | `tex_vines.png` (15-2에서 빠진 담쟁이 벽) |
+
+### 16-1. 바닥 질감 6종 · `tex_street.png`
+📎 콘셉트 아트 · 순서: 아스팔트 · 인도 블록 · 풀밭 · 흙·잔해 · 물 · 광장 포장
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate SQUARE ground texture panels for a ruined post-apocalyptic Seoul, each seen from DIRECTLY ABOVE (top-down, orthographic, no perspective, no shadows of objects), placed in its own equal cell with thin magenta gaps. Each panel fills its cell edge to edge and tiles SEAMLESSLY on all four sides. In order, left to right, top to bottom: 1) cracked dark asphalt road with faded patches, oil stains and small potholes (no lane markings); 2) grey Korean sidewalk paving blocks, some missing or tilted, weeds in the cracks; 3) overgrown dark green grass with dry patches and small weeds; 4) packed brown dirt with scattered concrete crumbs, gravel and bits of brick; 5) murky dark green-grey water surface with faint ripples and floating debris specks; 6) a plaza of large square stone pavers, cracked, with dust in the joints. Evenly lit, low contrast so characters stand out on top. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background in the gaps. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 16-2. 엔지니어 터렛 3종 · `props_turret.png`
+📎 콘셉트 아트 · 순서: 기관총 터렛 · 화염 터렛 · 박격포 터렛
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 1 grid of 3 separate small deployable military turrets for a post-apocalyptic survivor engineer, each in its own equal cell, seen from a high three-quarter isometric angle (same angle as the concept image), each sitting on a compact tripod or base plate, gun barrel pointing to the RIGHT. In order: 1) a light machine-gun turret with an ammo box and a small armored shield, scrap-built; 2) a flamethrower turret with a fuel tank and a short wide nozzle, scorch marks; 3) a squat mortar turret with a short thick tube angled up and to the right, shell crates beside it. No muzzle fire, no smoke, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta on the objects.
+```
+
+### 16-3. 가로등 다시 · `props_lamp.png`
+📎 콘셉트 아트 — 12-1에서 받은 가로등에 **신호등이 붙어 있어** 보류 중
+```
+Match the art style of the attached concept image. ONE single Korean street lamp post for a ruined city: a tall grey metal pole with a single curved arm and one lamp head at the top (unlit), a little rust and a torn paper notice taped on the pole, seen from a high three-quarter isometric angle, lamp arm pointing to the RIGHT. ONLY the street lamp — NO traffic light, NO signs, NO wires, NO other objects. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No text, no letters, no numbers, no logos, no border.
+```
+
+### 16-4. 담쟁이 벽 · `tex_vines.png`
+📎 콘셉트 아트
+```
+Match the art style of the attached concept image. ONE flat building wall texture panel, a TALL RECTANGLE (width to height about 3:5), seen perfectly FRONT-ON (orthographic, no perspective): one storey of a grey concrete wall overgrown with dark green ivy vines around a single broken window, filling the image edge to edge, left and right edges continuing seamlessly. Evenly lit. Detailed dark pixel art, desaturated colors with warm orange highlights. No text, no letters, no numbers, no logos, no border.
+```
+
+> 15번 4장은 v1.31.2에 연결됨. Gemini가 이번에도 **정사각형에 가깝게** 그려서 외벽이 조금 옆으로 눌려 보입니다 — 신경 쓰이면 「**세로 그림 한 장씩**」(16-4처럼 3:5 한 장) 으로 다시 받는 게 확실합니다.
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |

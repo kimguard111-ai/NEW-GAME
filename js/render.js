@@ -35,10 +35,17 @@ const TILE_COLORS = {
 };
 
 // ---------------- 바닥 ----------------
+// v1.31.2 바닥 질감 (프롬프트 16번): 있으면 바탕색 대신 그림 — 그림 하나를 4×4칸에 걸쳐 펼침. 차선·횡단보도·풀 포기 같은 코드 디테일은 그 위에 그대로
+const GROUND_TEX = { [T.ROAD]: 'gr_asphalt', [T.CAR]: 'gr_asphalt', [T.WALK]: 'gr_sidewalk', [T.GRASS]: 'gr_grass', [T.RUBBLE]: 'gr_dirt', [T.WATER]: 'gr_water', [T.CAMP]: 'gr_plaza', [T.BARRICADE]: 'gr_plaza', [T.LANDMARK]: 'gr_dirt' };
+function groundTex(tx, ty, t, x, y) {
+  const a = ART.tex && ART.tex[GROUND_TEX[t]]; if (!a || !a.ready) return false;
+  const [rx, ry, rw, rh] = a.rect || [0, 0, a.img.width, a.img.height], q = 4;
+  ctx.drawImage(a.img, rx + (((tx % q) + q) % q) * rw / q, ry + (((ty % q) + q) % q) * rh / q, rw / q, rh / q, x, y, TILE + 0.6, TILE + 0.6);
+  return true;
+}
 function drawGroundTile(tx, ty, t) {
   const x = tx * TILE, y = ty * TILE, h = hash2(tx, ty);
-  ctx.fillStyle = TILE_COLORS[t];
-  ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
+  if (!groundTex(tx, ty, t, x, y)) { ctx.fillStyle = TILE_COLORS[t]; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); }
   if (t === T.ROAD || t === T.CAR) {
     const lx = tx % World.BLOCK, ly = ty % World.BLOCK, RW = World.ROADW;
     ctx.fillStyle = '#8a7a3a'; // 중앙선 (4차선: 2번째와 3번째 칸 사이)
@@ -366,6 +373,15 @@ function drawCarShape(cx, cy, vert, c, h, o = {}) {
 
 // v1.10 무너진 건물: 한 칸을 2×2 조각으로 나눠 높이가 들쭉날쭉한 콘크리트 + 철근 + 꺾인 바닥판
 function drawRuinTile(tx, ty, x0, y0, ht, b, h) {
+  // v1.31.2 잔해 그림이 있으면: 회색 상자 대신 칸마다 잔해 더미 (흙 바닥 + 더미 하나 · 크기·방향 칸마다 다르게). 막히는 칸인 건 그대로
+  const piles = ['rubble_a', 'rubble_b', 'slab', 'debris', 'rubble_a', 'rubble_b'].filter(propArt);
+  if (piles.length) {
+    const S = Iso.sx, Y = Iso.sy, k = hash2(tx * 7 + 1, ty * 13 + 5);
+    poly([S(x0, y0), Y(x0, y0, 1), S(x0 + TILE, y0), Y(x0 + TILE, y0, 1), S(x0 + TILE, y0 + TILE), Y(x0 + TILE, y0 + TILE, 1), S(x0, y0 + TILE), Y(x0, y0 + TILE, 1)], `rgb(${b - 30},${b - 36},${b - 42})`);
+    const key = piles[Math.floor(k * piles.length)], fit = ART.propFit[key] || { w: 60 };
+    drawPropArt(key, S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16), k > 0.5, (TILE * 2 * ISO_K * (1.0 + h * 0.35)) / fit.w);
+    return;
+  }
   const q = TILE / 2;
   const cols = (k) => { const c = b - 12 + Math.floor(k * 18); return [`rgb(${c},${c - 6},${c - 13})`, `rgb(${c - 38},${c - 42},${c - 48})`, `rgb(${c - 24},${c - 28},${c - 34})`]; };
   const nb = (dx, dy) => tileHeight(tx + dx, ty + dy);

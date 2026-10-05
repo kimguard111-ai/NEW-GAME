@@ -144,6 +144,7 @@ const ART = {
     in_food: { w: 30, y: 6 }, in_washer: { w: 26, y: 5 }, in_pc: { w: 32, y: 6 },
     in_bank: { w: 34, y: 6 }, in_hosp: { w: 34, y: 6 }, in_police: { w: 34, y: 6 }, in_crate: { w: 26, y: 5 }, in_crate_open: { w: 26, y: 5 },
     in_chair: { w: 18, y: 3 }, in_boxes: { w: 24, y: 4 }, in_debris: { w: 30, y: 4 }, in_bed: { w: 40, y: 7 },
+    turret: { w: 34, y: 4 }, turret_flame: { w: 34, y: 4 }, turret_mortar: { w: 34, y: 4 }, /* v1.31.2 포탑 */
     pole: { w: 30, y: 2 }, busstop: { w: 72, y: 10 }, pocha: { w: 74, y: 12 }, scooter: { w: 30, y: 4 }, subway: { w: 84, y: 14 }, cross: { w: 22, y: 2 }, /* v1.22 서울 거리 소품 */
   },
 
@@ -174,6 +175,21 @@ const ART = {
     fl_carpet: { file: 'tex_floor.png', rect: [7, 291, 270, 275] },
     fl_marble: { file: 'tex_floor.png', rect: [287, 291, 265, 275] },
     fl_concrete: { file: 'tex_floor.png', rect: [562, 291, 280, 274] },
+    // tex_ground.png (v1.31.2)
+    g_shutter: { file: 'tex_ground.png', rect: [7, 5, 191, 268] }, g_glass: { file: 'tex_ground.png', rect: [212, 4, 190, 269] }, g_awning: { file: 'tex_ground.png', rect: [417, 5, 190, 268] },
+    g_awning2: { file: 'tex_ground.png', rect: [622, 5, 190, 268] }, g_realty: { file: 'tex_ground.png', rect: [827, 5, 189, 267] }, g_salon: { file: 'tex_ground.png', rect: [7, 286, 191, 270] },
+    g_grille: { file: 'tex_ground.png', rect: [211, 286, 191, 270] }, g_salon2: { file: 'tex_ground.png', rect: [417, 286, 190, 270] }, g_karaoke: { file: 'tex_ground.png', rect: [622, 287, 191, 269] },
+    g_empty: { file: 'tex_ground.png', rect: [826, 286, 191, 270] },
+    // tex_facade3.png (v1.31.2)
+    f_tile: { file: 'tex_facade3.png', rect: [3, 3, 330, 330] }, f_villa: { file: 'tex_facade3.png', rect: [348, 3, 328, 330] }, f_corridor: { file: 'tex_facade3.png', rect: [691, 3, 330, 330] },
+    f_signframe: { file: 'tex_facade3.png', rect: [3, 348, 330, 328] }, f_motel: { file: 'tex_facade3.png', rect: [348, 348, 328, 328] }, f_military: { file: 'tex_facade3.png', rect: [691, 348, 330, 328] },
+    f_stone: { file: 'tex_facade3.png', rect: [3, 691, 329, 330] }, f_scaffold: { file: 'tex_facade3.png', rect: [348, 691, 328, 330] },
+    // tex_shopfront1.png (v1.31.2)
+    sf_conv: { file: 'tex_shopfront1.png', rect: [3, 3, 330, 333] }, sf_pharma: { file: 'tex_shopfront1.png', rect: [346, 3, 331, 333] }, sf_bank: { file: 'tex_shopfront1.png', rect: [692, 3, 329, 334] },
+    sf_cafe: { file: 'tex_shopfront1.png', rect: [3, 351, 330, 329] }, sf_hosp: { file: 'tex_shopfront1.png', rect: [347, 351, 330, 329] }, sf_mart: { file: 'tex_shopfront1.png', rect: [692, 351, 329, 329] },
+    // tex_shopfront2.png (v1.31.2)
+    sf_pc: { file: 'tex_shopfront2.png', rect: [3, 3, 329, 334] }, sf_police: { file: 'tex_shopfront2.png', rect: [346, 3, 332, 333] }, sf_food: { file: 'tex_shopfront2.png', rect: [692, 3, 329, 334] },
+    sf_elec: { file: 'tex_shopfront2.png', rect: [3, 351, 329, 329] }, sf_books: { file: 'tex_shopfront2.png', rect: [347, 351, 331, 329] }, sf_laundry: { file: 'tex_shopfront2.png', rect: [692, 351, 329, 329] },
   },
   // 지역마다 쓰는 외벽 (zone 번호 → 후보). 1층은 f_shop. 강남 유리 고층은 항상 f_glass
   // v1.25 실내 바닥 질감 (가공 도구 「v1.25 실내 바닥 질감 6종」 → tex 안에 붙여넣기). 2×2칸에 한 장을 펼침
@@ -193,7 +209,7 @@ const ART = {
     6: ['f_glass', 'f_office', 'f_glass2', 'f_office2', 'f_stone'],
     7: ['f_apartment', 'f_burnt', 'f_brick', 'f_apartment2', 'f_burnt2', 'f_corridor', 'f_villa', 'f_vines'] },
   // v1.31.1 일반 건물 1층 상가: 칸·면마다 이 중 하나 (f_shop + 프롬프트 15-1의 9종)
-  groundSet: ['f_shop', 'g_shutter', 'g_glass', 'g_awning', 'g_phone', 'g_grille', 'g_salon', 'g_realty', 'g_karaoke', 'g_empty'], // v1.31 변형(…2) 섞어 반복 줄이기
+  groundSet: ['f_shop', 'g_shutter', 'g_glass', 'g_awning', 'g_awning2', 'g_phone', 'g_grille', 'g_salon', 'g_salon2', 'g_realty', 'g_karaoke', 'g_empty'], // v1.31 변형(…2) 섞어 반복 줄이기
 
   // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
   landmarks: {

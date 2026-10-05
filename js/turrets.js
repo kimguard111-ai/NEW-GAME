@@ -62,6 +62,14 @@ const Turrets = {
   drawOne(t) {
     const sx = Iso.sx(t.x, t.y), sy = Iso.sy(t.x, t.y), K = ISO_K, col = t.mod === 'a' ? '#c8642a' : t.mod === 'b' ? '#6a7a4a' : '#4a6a8a';
     drawShadow(sx, sy, 14);
+    const ak = t.mod === 'a' ? 'turret_flame' : t.mod === 'b' ? 'turret_mortar' : 'turret';
+    if (propArt(ak)) { // v1.31.2 포탑 그림 (총구가 오른쪽) — 조준 방향이 왼쪽이면 뒤집음 · 섬광·남은 시간은 코드
+      drawPropArt(ak, sx, sy, Math.cos(t.a) - Math.sin(t.a) < 0);
+      const d = Iso.dir(t.a);
+      if (t.flash > 0 && t.mod !== 'a') { ctx.fillStyle = '#fff3a0'; ctx.beginPath(); ctx.arc(sx + d.x * 16, sy - 20 * K + d.y * 8, 3.5, 0, TAU); ctx.fill(); }
+      const k2 = 1 - t.t / t.life; ctx.strokeStyle = k2 < 0.25 ? '#ff6a4a' : '#9fe0ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy - 40 * K, 4, -Math.PI / 2, -Math.PI / 2 + TAU * k2); ctx.stroke(); ctx.lineWidth = 1;
+      return;
+    }
     ctx.strokeStyle = '#2a2c30'; ctx.lineWidth = 2; // 삼각대
     for (const q of [-2.2, -0.9, 0.6]) { ctx.beginPath(); ctx.moveTo(sx, sy - 10 * K); ctx.lineTo(sx + Math.cos(q) * 11, sy + Math.sin(q) * 5); ctx.stroke(); }
     drawBox(t.x - 7, t.y - 7, t.x + 7, t.y + 7, 22, col, '#2a2e34', '#3a3e44', 10, 10, 0);
