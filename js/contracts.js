@@ -2,9 +2,9 @@
 // 사건 목록(RaidEvents.list)에 ext: true 로 들어가고, 자기 함수(onStart · onFinish · tick · track · mini · draw)를 가짐
 
 const CONTRACT_TYPES = {
-  retrieve: { name: '물건 회수', icon: 'box', desc: '맵 어딘가의 물건을 찾아 들고 탈출', items: ['비행 기록 장치', '백신 샘플 상자', '암호 장부', '정찰 드론 메모리', '구호 물자 목록'] },
-  target:   { name: '표적 처치', icon: 'skull', desc: '현상금이 걸린 우두머리를 처치하고 탈출', names: ['「흉터」', '「까마귀」', '「도살꾼 박」', '「붉은 손」', '「외눈」', '「검은 개」'] },
-  escort:   { name: '생존자 호위', icon: 'medkit', desc: '갇힌 생존자를 데리고 탈출 지점까지 (생존자가 죽으면 실패)', names: ['김 간호사', '정비공 이씨', '꼬마 민준', '라디오 기사 한씨', '할머니 순자'] },
+  retrieve: { name: '물건 회수', icon: 'box', desc: '물건을 찾아 들고 나올 것', items: ['비행 기록 장치', '백신 샘플 상자', '암호 장부', '정찰 드론 메모리', '구호 물자 목록'] },
+  target:   { name: '표적 처치', icon: 'skull', desc: '현상금 걸린 놈을 잡고 나올 것', names: ['「흉터」', '「까마귀」', '「도살꾼 박」', '「붉은 손」', '「외눈」', '「검은 개」'] },
+  escort:   { name: '생존자 호위', icon: 'medkit', desc: '갇힌 사람을 데리고 나올 것. 죽게 두면 끝', names: ['김 간호사', '정비공 이씨', '꼬마 민준', '라디오 기사 한씨', '할머니 순자'] },
 };
 
 const Contracts = {
@@ -26,10 +26,10 @@ const Contracts = {
   // 출격 지도 위쪽에 붙는 계약 칸 (HTML) · 누르면 수락/취소
   html() {
     const p = G.player, cur = p.contract;
-    let h = `<div class="sum-head">${ICON('bounty')} 출격 계약 <span class="muted">— 하나만 · 그 맵에 출격하면 시작 · 완료하고 탈출하면 보상 · 죽으면 실패</span></div>`;
-    if (cur) h += `<div class="map-row cx" data-cx="cancel"><b style="color:#ffd76a">진행 중: ${this.title(cur)}</b> <span class="muted">${MAPS[cur.map].name} · ₵${fmt(cur.cr)} · 희귀 이상 장비 — 누르면 포기</span></div>`;
+    let h = `<div class="sum-head">${ICON('bounty')} 계약 게시판 <span class="muted">하나만 받을 수 있다. 끝내고 살아 돌아와야 돈을 준다.</span></div>`; // v1.39
+    if (cur) h += `<div class="map-row cx" data-cx="cancel"><b style="color:#e0a060">받은 계약: ${this.title(cur)}</b> <span class="muted">${MAPS[cur.map].name}, ₵${fmt(cur.cr)}</span></div>`;
     else this.board().forEach((c, i) => {
-      h += `<div class="map-row cx" data-cx="${i}"><b>${ICON(CONTRACT_TYPES[c.type].icon)} ${this.title(c)}</b> <span class="muted">${MAPS[c.map].name} · ${CONTRACT_TYPES[c.type].desc} · 보상 ₵${fmt(c.cr)} + 경험치 + ${c.rare >= 2 ? '희귀' : '고급'} 이상 장비</span></div>`;
+      h += `<div class="map-row cx" data-cx="${i}"><b>${ICON(CONTRACT_TYPES[c.type].icon)} ${this.title(c)}</b> <span class="muted">${MAPS[c.map].name}. ${CONTRACT_TYPES[c.type].desc}. ₵${fmt(c.cr)}과 ${c.rare >= 2 ? '희귀' : '쓸 만한'} 장비.</span></div>`;
     });
     return h;
   },
@@ -147,12 +147,12 @@ const Heli = {
 
 // ---------- 맵마다 고유 사건 ----------
 const MAP_EVENTS = {
-  myeongdong: { name: '지하상가 셔터', desc: '6초 동안 뜯어야 함 — 소리에 감염자 떼가 몰려옴' },
-  jongno:     { name: '약탈자 검문소', desc: '경비를 모두 쓰러뜨리면 보급함이 열림' },
-  yongsan:    { name: '잠긴 무기고', desc: '순찰 드론이 출입 카드를 갖고 있음 — 총기 · 탄약 4종' },
-  yeouido:    { name: '방사능 정화 장치', desc: '8초 가동 — 실험체가 몰려옴 · 경험치 · 부품' },
-  gangnam:    { name: '블랙선 서버 탈취', desc: '10초 내려받기 — 용병 두 무리 · 전자 부품 · 희귀 장비' },
-  jamsil:     { name: '변이 알 무더기', desc: '가까이 가면 60초 — 그 안에 알 3개를 깨야 함 (못 깨면 부화)' },
+  myeongdong: { name: '지하상가 셔터', desc: '셔터를 뜯으려면 6초, 그 소리에 감염자들이 몰려온다' },
+  jongno:     { name: '약탈자 검문소', desc: '약탈자 다섯이 지키는 보급함이 있다' },
+  yongsan:    { name: '잠긴 무기고', desc: '출입 카드는 순찰 드론이 갖고 있다. 안에 총과 탄약' },
+  yeouido:    { name: '방사능 정화 장치', desc: '돌리는 데 8초, 실험체들이 냄새를 맡고 온다' },
+  gangnam:    { name: '블랙선 서버 탈취', desc: '서버를 빼내는 데 10초, 용병들이 바로 출동한다' },
+  jamsil:     { name: '변이 알 무더기', desc: '알 세 개가 곧 깨어난다. 60초 안에 깨부숴라' },
 };
 const MapEvents = {
   make() {
@@ -196,7 +196,7 @@ const MapEvents = {
     if (!e) return;
     e.track = e.track || (e => `${D.name} (미니맵 주황 ◆)`);
     RaidEvents.list.push(e);
-    log(`${ICON('radio')} 무전: 이 지역 특이 사항 — ${D.name}. ${D.desc}`, '#ff9a3a');
+    log(`${ICON('radio')} 무전: "${D.name} 쪽에 뭔가 있다. ${D.desc}." (미니맵 주황 ◆)`, '#ff9a3a'); // v1.39 말투
   },
 };
 
@@ -207,27 +207,27 @@ function drawContractItem(e) {
   if (!drawPropArt('labcase', sx, sy)) drawBox(e.x - 9, e.y - 7, e.x + 9, e.y + 7, 12, '#c8a040', '#7a6020', '#9a7a2a', 0, 0, 0);
   const k = 0.5 + Math.sin(G.time * 5) * 0.5; ctx.fillStyle = `rgba(255,215,106,${0.25 + k * 0.3})`; ctx.beginPath(); ctx.ellipse(sx, sy, 18, 9, 0, 0, TAU); ctx.fill();
   if (Settings.light) addLight(sx, sy - 8, 70, 0.6, 'rgba(255,215,106,A)');
-  nameTag(sx, sy - 34, G.player.contract ? G.player.contract.what : '계약 물건', '#ffd76a', 'bold 11px sans-serif');
+  nameTag(sx, sy - 34, G.player.contract ? G.player.contract.what : '계약 물건', '#ffd76a', '11px BlackHan, sans-serif');
 }
 function drawEscort(e) {
   if (e.dead) return;
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -60 || sx > VW + 60 || sy < -80 || sy > VH + 60) return;
   drawShadow(sx, sy, 11);
   drawHuman(sx, sy, { s: 0.95, body: '#4a6a8a', skin: '#d9b48f', legs: '#3a3a44', aim: e.face || 0, flash: e.hitT > 0, walk: e.state === 'follow' ? e.walk * 6 : 0 });
-  if (e.state === 'wait') { ctx.fillStyle = `rgba(122,208,255,${0.5 + Math.sin(G.time * 4) * 0.3})`; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('?', sx, sy - 52); }
+  if (e.state === 'wait') { ctx.fillStyle = `rgba(122,208,255,${0.5 + Math.sin(G.time * 4) * 0.3})`; ctx.font = '16px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('?', sx, sy - 52); }
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(sx - 16, sy - 46, 32, 4); ctx.fillStyle = '#7ad0ff'; ctx.fillRect(sx - 16, sy - 46, 32 * Math.max(0, e.hp / e.maxHp), 4);
-  nameTag(sx, sy - 50, e.name, '#7ad0ff', 'bold 11px sans-serif');
+  nameTag(sx, sy - 50, e.name, '#7ad0ff', '11px BlackHan, sans-serif');
 }
 function drawMapEvent(e) {
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -80 || sx > VW + 80 || sy < -160 || sy > VH + 80) return;
   const k = 0.5 + Math.sin(G.time * 4 + e.x) * 0.5, id = e.kind.slice(2);
-  if (id === 'jamsil') { if (!e.done && e.state === 'count') nameTag(sx, sy - 70, `부화까지 ${Math.ceil(e.t)}초`, '#ff6a5a', 'bold 13px sans-serif'); return; } // 알은 적(둥지)으로 그려짐
+  if (id === 'jamsil') { if (!e.done && e.state === 'count') nameTag(sx, sy - 70, `부화까지 ${Math.ceil(e.t)}초`, '#ff6a5a', '13px BlackHan, sans-serif'); return; } // 알은 적(둥지)으로 그려짐
   const art = { myeongdong: 'container', jongno: 'crates', yongsan: 'locker', yeouido: 'generator', gangnam: 'radio' }[id];
   if (id === 'jongno' && !drawPropArt('sandbags', sx - 40, sy + 10)) drawBox(e.x - 40, e.y + 10, e.x - 10, e.y + 22, 10, '#6a5a3a', '#4a3e28', '#5a4e30', 0, 0, 0);
   if (!art || !drawPropArt(art, sx, sy)) drawBox(e.x - 14, e.y - 12, e.x + 14, e.y + 12, id === 'yongsan' ? 34 : 24, e.done ? '#3a3a3a' : '#6a6050', '#3a3428', '#4a4434', 0, 0, 0);
   if (!e.done) {
     ctx.fillStyle = `rgba(255,154,58,${0.4 + k * 0.5})`; ctx.fillRect(sx - 3, sy - 44, 6, 4);
     if (Settings.light) addLight(sx, sy - 20, 90, 0.6, 'rgba(255,154,58,A)');
-    nameTag(sx, sy - 54, e.name, '#ff9a3a', 'bold 11px sans-serif');
+    nameTag(sx, sy - 54, e.name, '#ff9a3a', '11px BlackHan, sans-serif');
   }
 }

@@ -25,7 +25,7 @@ const RaidEvents = {
     this.makeExit();
     Contracts.setup(); MapEvents.make(); // v1.34 출격 계약 · 맵 고유 사건
     const names = this.list.filter(e => !e.exitPart && !e.ext).map(e => EVENT_DEFS[e.kind].name);
-    if (names.length) log(`${ICON('radio')} 무전: 이 구역에서 ${names.join(' · ')} 신호가 잡힌다. (미니맵 노란 ◆)`, '#ffd76a');
+    if (names.length) log(`${ICON('radio')} 무전: "${names.join(', ')} 신호가 잡힌다." (미니맵 노란 ◆)`, '#ffd76a');
   },
 
   lvl() { const z = ZONES[World.zoneIndex()]; return randInt(z.lvl[0], z.lvl[1]); },
@@ -309,7 +309,7 @@ function drawRaidEvent(e) {
       ctx.strokeStyle = 'rgba(200,190,170,0.7)'; ctx.beginPath(); ctx.moveTo(sx - 28, ty); ctx.lineTo(sx - 8, Iso.sy(e.x, e.y, z + 22)); ctx.moveTo(sx + 28, ty); ctx.lineTo(sx + 8, Iso.sy(e.x, e.y, z + 22)); ctx.stroke();
     }
     if (Settings.light && !e.done) addLight(sx, sy - 10, 120, 0.8, 'rgba(255,110,60,A)');
-    if (e.state === 'landed' && !e.done) nameTag(sx, sy - 40, '보급 상자', '#ffd76a', 'bold 11px sans-serif', 'box');
+    if (e.state === 'landed' && !e.done) nameTag(sx, sy - 40, '보급 상자', '#ffd76a', '11px BlackHan, sans-serif', 'box');
   } else if (e.kind === 'survivor') {
     drawShadow(sx, sy, 14);
     if (!e.done) { // 벽에 기대 앉은 부상자 + 흰 천
@@ -318,17 +318,17 @@ function drawRaidEvent(e) {
       ctx.fillStyle = '#d9b48f'; ctx.beginPath(); ctx.arc(sx - 1, sy - 21, 5.5, 0, TAU); ctx.fill();
       ctx.fillStyle = '#eee'; ctx.fillRect(sx - 6, sy - 12, 10, 3);
       ctx.strokeStyle = '#ccc'; ctx.beginPath(); ctx.moveTo(sx + 10, sy - 8); ctx.lineTo(sx + 10, sy - 40); ctx.stroke(); ctx.fillStyle = `rgba(240,240,240,${0.7 + k * 0.3})`; ctx.fillRect(sx + 10, sy - 40, 12, 8);
-      nameTag(sx, sy - 52, '부상당한 생존자', '#8cf', 'bold 11px sans-serif');
+      nameTag(sx, sy - 52, '부상당한 생존자', '#8cf', '11px BlackHan, sans-serif');
     } else { ctx.fillStyle = '#eee'; ctx.fillRect(sx + 10, sy - 40, 12, 8); }
   } else if (e.kind === 'safe') {
     if (!drawPropArt('safe', sx, sy)) drawBox(e.x - 12, e.y - 10, e.x + 12, e.y + 10, 30, '#5a5e64', '#34373c', '#44484e', 0, 0, 0); // v1.18 그림
     ctx.fillStyle = e.done ? '#222' : e.state === 'locked' ? '#c83a2a' : '#40d070'; ctx.beginPath(); ctx.arc(Iso.sx(e.x, e.y + 10), Iso.sy(e.x, e.y + 10, 16), 4, 0, TAU); ctx.fill();
-    if (!e.done) nameTag(sx, sy - 44, e.state === 'locked' ? '잠긴 금고' : '금고 (열쇠 있음)', '#ffd76a', 'bold 11px sans-serif');
+    if (!e.done) nameTag(sx, sy - 44, e.state === 'locked' ? '잠긴 금고' : '금고 (열쇠 있음)', '#ffd76a', '11px BlackHan, sans-serif');
   } else if (e.kind === 'generator') {
     const j = e.state === 'on' ? Math.sin(G.time * 40) * 0.6 : 0;
     if (!drawPropArt('generator', sx + j, sy)) drawBox(e.x - 14 + j, e.y - 10, e.x + 14 + j, e.y + 10, 20, '#8a7a2a', '#5a4e18', '#6e6020', 0, 0, 0); // v1.18 그림
     ctx.fillStyle = e.state === 'on' ? '#40ff70' : `rgba(255,60,40,${0.5 + k * 0.5})`; ctx.fillRect(sx - 3, Iso.sy(e.x, e.y, 20) - 4, 6, 3);
-    if (e.state !== 'on') nameTag(sx, sy - 38, '발전기', '#ffd76a', 'bold 11px sans-serif');
+    if (e.state !== 'on') nameTag(sx, sy - 38, '발전기', '#ffd76a', '11px BlackHan, sans-serif');
     else if (Settings.light) addLight(sx, sy - 12, 90, 0.6, 'rgba(120,255,140,A)');
   }
 }
@@ -340,10 +340,10 @@ function drawSpecialExit(ex) {
   const on = !ex.locked;
   ctx.strokeStyle = '#2a2c30'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx + 30, sy); ctx.lineTo(sx + 30, sy - 70); ctx.stroke(); ctx.lineWidth = 1;
   ctx.fillStyle = on ? '#9fffb0' : ex.special === 'pay' ? '#ffb040' : ex.special === 'heli' && !ex.gone ? '#7ad0ff' : '#444'; ctx.fillRect(sx + 24, sy - 76, 12, 6);
-  if (ex.special === 'heli' && !ex.gone) { ctx.strokeStyle = on ? '#9fffb0' : 'rgba(122,208,255,0.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(sx, sy, 30, 15, 0, 0, TAU); ctx.stroke(); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = ctx.strokeStyle; ctx.fillText('H', sx, sy + 5); ctx.lineWidth = 1; } // 헬기 착륙장
+  if (ex.special === 'heli' && !ex.gone) { ctx.strokeStyle = on ? '#9fffb0' : 'rgba(122,208,255,0.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(sx, sy, 30, 15, 0, 0, TAU); ctx.stroke(); ctx.font = '14px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = ctx.strokeStyle; ctx.fillText('H', sx, sy + 5); ctx.lineWidth = 1; } // 헬기 착륙장
   if (on && Settings.light) addLight(sx + 30, sy - 60, 140, 0.8, 'rgba(140,255,160,A)');
   else if (ex.special === 'pay' && Settings.light && Math.sin(G.time * 6) > 0) addLight(sx + 30, sy - 70, 70, 0.6, 'rgba(255,170,60,A)');
-  nameTag(sx, sy - 88, on ? '탈출 지점 (열림)' : ex.label, on ? '#7fe08a' : '#ffb060', 'bold 11px sans-serif');
+  nameTag(sx, sy - 88, on ? '탈출 지점 (열림)' : ex.label, on ? '#7fe08a' : '#ffb060', '11px BlackHan, sans-serif');
 }
 function drawKeyMark(e) {
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y) - 70 - Math.sin(G.time * 4) * 3;
@@ -361,7 +361,7 @@ function drawNest(e) {
     if (Settings.light) addLight(sx, sy - 18, 110, 0.7, lab ? 'rgba(100,255,140,A)' : 'rgba(255,60,90,A)');
     const w = 60, hp = Math.max(0, e.hp / e.maxHp);
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(sx - w / 2, sy - 70, w, 5); ctx.fillStyle = '#d33'; ctx.fillRect(sx - w / 2, sy - 70, w * hp, 5);
-    nameTag(sx, sy - 76, e.def.name, '#ff8a8a', 'bold 11px sans-serif');
+    nameTag(sx, sy - 76, e.def.name, '#ff8a8a', '11px BlackHan, sans-serif');
     return;
   }
   ctx.fillStyle = 'rgba(60,10,20,0.5)'; ctx.beginPath(); ctx.ellipse(sx, sy, 46, 22, 0, 0, TAU); ctx.fill();
@@ -377,5 +377,5 @@ function drawNest(e) {
   if (Settings.light) addLight(sx, sy - 18, 110, 0.7, lab ? 'rgba(100,255,140,A)' : 'rgba(255,60,90,A)');
   const w = 60, hp = Math.max(0, e.hp / e.maxHp);
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(sx - w / 2, sy - 58, w, 5); ctx.fillStyle = '#d33'; ctx.fillRect(sx - w / 2, sy - 58, w * hp, 5);
-  nameTag(sx, sy - 64, e.def.name, '#ff8a8a', 'bold 11px sans-serif');
+  nameTag(sx, sy - 64, e.def.name, '#ff8a8a', '11px BlackHan, sans-serif');
 }

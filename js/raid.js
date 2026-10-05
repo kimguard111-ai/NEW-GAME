@@ -14,7 +14,7 @@ const Raid = {
   // 출격 지도 (작전 장교 대화)
   openMap() {
     const p = G.player, btns = [], med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
-    let h = '"어디로 나갈 건가? 탈출 지점까지 살아서 돌아와야 주운 걸 챙길 수 있어." <span class="muted">맵 이름을 누르면 출격</span><br>'
+    let h = '"어디로 나갈 건가? 뭘 줍든 살아서 돌아와야 네 거야." <span class="muted">맵을 누르면 바로 나간다</span><br>'
       + `<div class="prep">출격 준비: ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${p.inventory.length}/${Camp.bagSize()}</b> · ₵${fmt(p.credits)}</div>`;
     btns.push([`${ICON('medkit')} +3 (120₵)`, () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
     for (const [k, a] of Object.entries(AMMO)) btns.push([`${ICON('ammo_' + k)} ${a.name} +${a.pack} (${a.price}₵)`, () => { if (p.credits < a.price) return log('크레딧이 부족합니다.', '#f88'); addAmmo(p, k, a.pack); p.credits -= a.price; SFX.play('ammo'); this.openMap(); }]); // v1.33 탄약 4종
@@ -58,8 +58,8 @@ const Raid = {
       if (best) [G.grave.x, G.grave.y] = best;
     }
     if (G.grave) log(`${ICON('skull')} 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
-    UI.toast(`출격 — ${MAPS[id].name}`, `탈출 지점 ${G.exits.length}곳 (미니맵 초록 ◎) · 주운 것은 탈출해야 확정`);
-    log(`${MAPS[id].name}에 진입했다. 탈출 지점: ${G.exits.map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(' · ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}`, '#8cf');
+    UI.toast(MAPS[id].name, `탈출구 ${G.exits.length}곳 — 미니맵 초록 ◎`); // v1.39
+    log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}.`, '#8cf'); // v1.39
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
     G.fade = { t: 0, life: 1.4, text: MAPS[id].name, sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17

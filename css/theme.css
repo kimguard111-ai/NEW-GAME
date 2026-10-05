@@ -125,3 +125,5 @@ body.touch .roster { padding: 28px 12px 8px; } body.touch #slot-row .slot .who {
 #panel-dialog { max-height: calc(100vh - 150px); display: flex; flex-direction: column; }
 #dialog-text { overflow-y: auto; min-height: 0; }
 #panel-stats, #panel-quest, #panel-skills, #panel-shop, #panel-inventory { max-height: calc(100vh - 90px); overflow-y: auto; }
+.map-row.cx b::after { content: ' ▶ 받기' !important; } .map-row.cx[data-cx="cancel"] b::after { content: ' ✕ 포기' !important; }
+#hud-zone .zone-sub { color: #5a5242 !important; font-family: 'Typer', monospace !important; letter-spacing: 0 !important; }

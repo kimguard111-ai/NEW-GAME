@@ -137,5 +137,5 @@ function drawGrave(g) {
   ctx.fillStyle = '#3a2a1e'; ctx.beginPath(); ctx.ellipse(sx, sy - 7, 11, 8, 0, 0, TAU); ctx.fill();
   ctx.fillStyle = '#d33'; ctx.fillRect(sx - 1.5, sy - 34 - k * 4, 3, 12); ctx.fillRect(sx - 5, sy - 30 - k * 4, 10, 3);
   if (Settings.light) addLight(sx, sy, 90, 0.7, 'rgba(255,60,60,A)');
-  nameTag(sx, sy - 46, '내 시체 가방', '#ff8a8a', 'bold 11px sans-serif', 'skull');
+  nameTag(sx, sy - 46, '내 시체 가방', '#ff8a8a', '11px BlackHan, sans-serif', 'skull');
 }

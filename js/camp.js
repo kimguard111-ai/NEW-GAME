@@ -82,7 +82,7 @@ function drawFacility(o) {
   const l = Camp.lv(o.fac), sx = Iso.sx(o.x, o.y), sy = Iso.sy(o.x, o.y), S = Iso.sx, Y = Iso.sy;
   if (!l && o.fac !== 'radio') { // 공사 예정 표지
     ctx.strokeStyle = '#5a4a2e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - 22); ctx.stroke(); ctx.lineWidth = 1;
-    ctx.fillStyle = '#8a6a3e'; ctx.fillRect(sx - 14, sy - 32, 28, 12); ctx.fillStyle = '#2a1e10'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('공사 예정', sx, sy - 26);
+    ctx.fillStyle = '#8a6a3e'; ctx.fillRect(sx - 14, sy - 32, 28, 12); ctx.fillStyle = '#2a1e10'; ctx.font = '8px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('공사 예정', sx, sy - 26);
     ctx.strokeStyle = 'rgba(255,200,60,0.35)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.ellipse(sx, sy, 34, 17, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
     return;
   }

@@ -1267,6 +1267,7 @@ function frame(now) {
 // ---------------- 타이틀 ----------------
 (function initTitle() {
   UI.init();
+  if (document.fonts) for (const f of ['12px BlackHan', '12px Typer', '12px Pen']) document.fonts.load(f); // v1.39 캔버스 글씨용 글꼴 미리 읽기
   Sprites.loadAll();
   document.getElementById('version-label').textContent = GAME_VERSION;
   const btnC = document.getElementById('btn-continue');

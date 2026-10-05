@@ -428,7 +428,7 @@ function drawDongNo(tx, ty, ht, ez, h) {
   if (ht < FLOOR_H * 4 || ez > ht - FLOOR_H * 2 || h < 0.3 || h > 0.36 || World.map === 'camp') return;
   if (World.tileAt(tx, ty - 1) !== T.BUILDING || World.height[(ty - 1) * World.W + tx] !== ht) return; // 넓은 벽에만
   ctx.save(); City.faceTransform(tx, ty, 'e', ht - 10);
-  ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.font = '11px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.fillStyle = 'rgba(235,232,220,0.75)'; ctx.fillText(`${101 + Math.floor(h * 1000) % 12}동`, TILE / 2, 0);
   ctx.fillStyle = 'rgba(80,120,170,0.55)'; ctx.fillRect(3, 14, TILE - 6, 2); // 단지 띠
   ctx.restore();
@@ -608,7 +608,7 @@ function drawHuman(sx, sy, o) {
 function nameTag(sx, y, text, color, font = '11px sans-serif', icon = null) {
   ctx.font = font; ctx.textAlign = 'center';
   if (icon) { const w = ctx.measureText(text).width; Icons.draw(icon, sx - w / 2 - 2, y - 4, 14); sx += 8; } // v1.5.1 캔버스 아이콘
-  ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillText(text, sx + 1, y + 1);
+  ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,11,8,0.85)'; ctx.strokeText(text, sx, y); ctx.lineWidth = 1; // v1.39 그림자 대신 외곽선
   ctx.fillStyle = color; ctx.fillText(text, sx, y);
 }
 
@@ -1067,20 +1067,20 @@ function drawEnemyTags(e, sx, sy, topY) {
   if (e.alertT > 0) { // v1.29 처음 알아챔 「!」 (튀어 오르며 나타남)
     const t = 0.9 - e.alertT, pop = t < 0.12 ? t / 0.12 * 1.3 : t < 0.2 ? 1.3 - (t - 0.12) / 0.08 * 0.3 : 1, by = topY - 20 - Math.min(t, 0.12) * 40;
     ctx.save(); ctx.globalAlpha = Math.min(1, e.alertT / 0.2); ctx.translate(sx, by); ctx.scale(pop, pop);
-    ctx.fillStyle = FACTION[e.type] === 'machine' ? '#5ad0ff' : '#ff3a2a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = FACTION[e.type] === 'machine' ? '#5ad0ff' : '#ff3a2a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.font = '18px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.strokeText('!', 0, 0); ctx.fillText('!', 0, 0); ctx.restore();
   }
   if (e.elite || e.bossName) {
-    nameTag(sx, topY - 2, `★ ${e.bossName || ELITES[e.elite].name}`, '#ffa53a', 'bold 12px sans-serif');
+    nameTag(sx, topY - 2, `★ ${e.bossName || ELITES[e.elite].name}`, '#ffa53a', '12px BlackHan, sans-serif');
   } else if (e.affix) {
     const A = ELITE_AFFIXES[e.affix];
-    nameTag(sx, topY - 4, `◆ Lv${e.level} ${A.name} ${e.def.name}`, A.color, 'bold 11px sans-serif');
+    nameTag(sx, topY - 4, `◆ Lv${e.level} ${A.name} ${e.def.name}`, A.color, '11px BlackHan, sans-serif');
     ctx.fillStyle = '#300'; ctx.fillRect(sx - 20, topY + 1, 40, 4);
     ctx.fillStyle = A.color; ctx.fillRect(sx - 20, topY + 1, 40 * e.hp / e.maxHp, 4);
   } else if (!e.def.boss) { // v1.28 일반 적은 이름표 없이 (마우스를 올리면 이름 · 레벨이 훨씬 높으면 붉은 !! · 맞으면 체력 바)
     const lvDiff = e.level - G.player.level, hover = !IS_TOUCH && Math.abs(input.mx - sx) < 26 && input.my > topY - 6 && input.my < sy + 6;
     if (hover) nameTag(sx, topY, `Lv${e.level} ${e.def.name}`, lvDiff >= 4 ? '#f66' : lvDiff >= 1 ? '#fc8' : lvDiff <= -4 ? '#999' : '#eee');
-    else if (lvDiff >= 4) nameTag(sx, topY, '!!', '#f66', 'bold 11px sans-serif');
+    else if (lvDiff >= 4) nameTag(sx, topY, '!!', '#f66', '11px BlackHan, sans-serif');
     if (e.hp < e.maxHp) {
       ctx.fillStyle = '#300'; ctx.fillRect(sx - 16, topY + 4, 32, 4);
       ctx.fillStyle = '#e33'; ctx.fillRect(sx - 16, topY + 4, 32 * e.hp / e.maxHp, 4);
@@ -1099,7 +1099,7 @@ function drawNpc(n) {
   }[n.id];
   if (!Sprites.draw(n.id, 'idle', G.time + n.x * 0.01, sx, sy, angleTo(n, G.player), false))
     drawHuman(sx, sy, { s: 1.05, skin: '#d9b48f', aim: angleTo(n, G.player), ...look });
-  nameTag(sx, sy - 50 * (ART.charScale || 1) - 4, n.name, '#ffd76a', 'bold 12px sans-serif');
+  nameTag(sx, sy - 50 * (ART.charScale || 1) - 4, n.name, '#ffd76a', '12px BlackHan, sans-serif');
   let mark = null;
   if (n.id === 'captain') {
     const p = G.player, c = Story.chapter(p);
@@ -1109,7 +1109,7 @@ function drawNpc(n) {
   else if (n.id === 'mechanic') mark = ['@settings', '#ddd'];
   if (mark && mark[0][0] === '@') Icons.draw(mark[0].slice(1), sx, sy - 72 + Math.sin(G.time * 3) * 3, 22); // 아이콘 표시
   else if (mark) {
-    ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = mark[1];
+    ctx.font = '20px BlackHan, sans-serif'; ctx.fillStyle = mark[1];
     ctx.fillText(mark[0], sx, sy - 66 + Math.sin(G.time * 3) * 3);
   }
 }
@@ -1352,7 +1352,7 @@ function render() {
       const k = 1 - e.windT / (e.windMax || 0.3), sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y);
       ctx.strokeStyle = `rgba(255,60,40,${0.4 + k * 0.5})`; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(sx, sy, (e.r + 16) * (1.4 - k * 0.4), (e.r + 16) * (0.7 - k * 0.2), 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
-      ctx.fillStyle = '#ff4030'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ff4030'; ctx.font = '16px BlackHan, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('!', sx, sy - (ART.height[e.type] || 44) * (e.scale || 1) - 10);
     }
   }
@@ -1448,7 +1448,7 @@ function render() {
 
   if (G.fade) { // v1.17 출격·귀환 화면 전환 (검게 → 밝게)
     G.fade.t += 1 / 60; const k = G.fade.t / G.fade.life;
-    if (k >= 1) G.fade = null; else { ctx.fillStyle = `rgba(4,5,8,${1 - k})`; ctx.fillRect(0, 0, VW, VH); if (G.fade.text && k < 0.7) { ctx.globalAlpha = 1 - k / 0.7; ctx.fillStyle = '#e8dcc0'; ctx.font = 'bold 26px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(G.fade.text, VW / 2, VH / 2 - 10); ctx.font = '13px sans-serif'; ctx.fillStyle = '#a89c80'; ctx.fillText(G.fade.sub || '', VW / 2, VH / 2 + 16); ctx.globalAlpha = 1; } }
+    if (k >= 1) G.fade = null; else { ctx.fillStyle = `rgba(4,5,8,${1 - k})`; ctx.fillRect(0, 0, VW, VH); if (G.fade.text && k < 0.7) { ctx.globalAlpha = 1 - k / 0.7; ctx.fillStyle = '#e8dcc0'; ctx.font = '26px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(G.fade.text, VW / 2, VH / 2 - 10); ctx.font = '13px sans-serif'; ctx.fillStyle = '#a89c80'; ctx.fillText(G.fade.sub || '', VW / 2, VH / 2 + 16); ctx.globalAlpha = 1; } }
   }
 
   // 목표 방향 화살표 + 거리
@@ -1460,7 +1460,7 @@ function render() {
     ctx.fillStyle = '#ffd76a'; ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(-6, -7); ctx.lineTo(-2, 0); ctx.lineTo(-6, 7); ctx.closePath(); ctx.stroke(); ctx.fill();
     ctx.restore(); ctx.lineWidth = 1;
-    nameTag(ax + ux * 22, ay + uy * 16 + 4, `${Math.round(dist(p, tg) / TILE * 2)}m`, '#ffd76a', 'bold 11px sans-serif');
+    nameTag(ax + ux * 22, ay + uy * 16 + 4, `${Math.round(dist(p, tg) / TILE * 2)}m`, '#ffd76a', '11px BlackHan, sans-serif');
   }
 
   // 5) 떠오르는 텍스트
@@ -1468,8 +1468,8 @@ function render() {
   for (const t of G.texts) {
     const sx = Iso.sx(t.x, t.y), sy = Iso.sy(t.x, t.y, t.z);
     ctx.globalAlpha = 1 - t.t / t.life;
-    ctx.font = `bold ${t.size}px sans-serif`;
-    ctx.fillStyle = '#000'; ctx.fillText(t.text, sx + 1, sy + 1);
+    ctx.font = `${t.size}px BlackHan, sans-serif`; ctx.lineJoin = 'round'; // v1.39 포스터 글꼴 + 외곽선
+    ctx.lineWidth = 3; ctx.strokeStyle = '#0c0b08'; ctx.strokeText(t.text, sx, sy); ctx.lineWidth = 1;
     ctx.fillStyle = t.color; ctx.fillText(t.text, sx, sy);
   }
   ctx.globalAlpha = 1;
@@ -1548,7 +1548,7 @@ function drawLandmark(l) {
   }
   ctx.restore();
   ctx.globalAlpha = 1;
-  if (G.player.found.includes(l.id)) nameTag(Iso.sx(l.x, l.y), Iso.sy(l.x, l.y) + l.size * 9, '★ ' + l.name, '#ffd76a', 'bold 12px sans-serif');
+  if (G.player.found.includes(l.id)) nameTag(Iso.sx(l.x, l.y), Iso.sy(l.x, l.y) + l.size * 9, '★ ' + l.name, '#ffd76a', '12px BlackHan, sans-serif');
 }
 
 // 희귀 이상 장비 빛기둥 (v0.16): 멀리서도 보이게
@@ -1611,8 +1611,8 @@ function drawShopSigns() {
     const ready = b.crates.some(c => G.time - c.openT > CRATE_RESTOCK);
     const [dx, dy] = b.door[0]; // 문 위 노란 간판에 상호
     ctx.save(); City.faceTransform(dx, dy, b.south ? 's' : 'e', 54 + 22); if (!b.south) ctx.translate(-TILE, 0);
-    ctx.fillStyle = '#2a1c08'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.name, TILE, 8); ctx.restore();
-    nameTag(Iso.sx(b.doorX, b.doorY), Iso.sy(b.doorX, b.doorY, 92), `${b.name}${ready ? ' ·상자' : ''}`, '#e0c070', 'bold 12px sans-serif', 'door');
+    ctx.fillStyle = '#2a1c08'; ctx.font = '11px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.name, TILE, 8); ctx.restore();
+    nameTag(Iso.sx(b.doorX, b.doorY), Iso.sy(b.doorX, b.doorY, 92), `${b.name}${ready ? ' ·상자' : ''}`, '#e0c070', '12px BlackHan, sans-serif', 'door');
   }
 }
 
@@ -1678,7 +1678,7 @@ function drawDrop(d) {
       ctx.fillRect(sx - 3 - r, gy - hgt, 6 + r * 2, hgt); ctx.globalAlpha = 1;
     }
     Icons.draw(d.item.key, sx, sy - 8, 20 + (r >= 3 ? 4 : 0)); // v1.5.1 캔버스 아이콘
-    if (d.landed) nameTag(sx, sy - 20 - (r >= 3 ? 4 : 0), itemName(d.item), c, r >= 3 ? 'bold 12px sans-serif' : undefined);
+    if (d.landed) nameTag(sx, sy - 20 - (r >= 3 ? 4 : 0), itemName(d.item), c, r >= 3 ? '12px BlackHan, sans-serif' : undefined);
   }
 }
 
