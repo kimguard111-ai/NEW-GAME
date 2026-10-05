@@ -6,6 +6,7 @@ const ART = {
   dir: 'assets/',
   title: 'title.png', // 타이틀 키아트 (예: 'title.png'). 없으면 코드로 그린 서울 야경
   charFill: 0.78, // 가공 도구와 같은 값 (대기 자세 키 / 칸 높이)
+  charScale: 0.8, // v1.21 실제 스케일: 사람 키 1.75m = 약 35단위 (1m = 20단위) — 캐릭터 그림 전체 배율
   feetPad: 4,     // 가공 도구와 같은 값 (칸 바닥 ~ 발)
   fps: { idle: 6, walk: 10, attack: 16, hit: 12, death: 10 },
   // 화면에 표시할 대기 자세 키 (px)
@@ -58,9 +59,9 @@ const ART = {
   },
   // 소품 그림을 화면에 놓는 크기: w = 화면 가로(px, 확대 1배 기준) · y = 그림 아래쪽을 바닥 점보다 얼마나 아래에 둘지
   propFit: {
-    lamp: { w: 34, y: 2 }, tree: { w: 62, y: 4 }, deadtree: { w: 52, y: 4 }, trash: { w: 34, y: 4 }, cone: { w: 13, y: 2 }, barrel: { w: 19, y: 3 },
-    hydrant: { w: 15, y: 2 }, bench: { w: 40, y: 6 }, signal: { w: 46, y: 2 },
-    car_a: { w: 60, y: 12 }, car_b: { w: 62, y: 12 }, car_c: { w: 60, y: 12 }, police: { w: 60, y: 12 }, bus: { w: 140, y: 26 }, car_burnt: { w: 60, y: 12 },
+    lamp: { w: 48, y: 2 }, tree: { w: 92, y: 4 }, deadtree: { w: 78, y: 4 }, /* v1.21 실제 스케일 */ trash: { w: 34, y: 4 }, cone: { w: 13, y: 2 }, barrel: { w: 19, y: 3 },
+    hydrant: { w: 15, y: 2 }, bench: { w: 40, y: 6 }, signal: { w: 64, y: 2 },
+    car_a: { w: 92, y: 18 }, car_b: { w: 96, y: 18 }, car_c: { w: 92, y: 18 }, police: { w: 92, y: 18 }, bus: { w: 210, y: 40 }, car_burnt: { w: 92, y: 18 }, /* v1.21 2칸 승용차 · 5칸 버스 */
     dumpster: { w: 38, y: 8 }, locker: { w: 24, y: 6 }, labcase: { w: 26, y: 6 }, bag: { w: 20, y: 3 }, safe: { w: 34, y: 8 }, airdrop: { w: 38, y: 8 }, generator: { w: 40, y: 8 }, nest: { w: 96, y: 12 }, mine: { w: 18, y: 3 },
     tent: { w: 86, y: 18 }, tent_medic: { w: 86, y: 18 }, crates: { w: 48, y: 10 }, workbench: { w: 56, y: 10 }, maptable: { w: 50, y: 10 }, radio: { w: 40, y: 8 }, campfire: { w: 36, y: 6 }, container: { w: 70, y: 16 }, sandbags: { w: 54, y: 8 },
     rubble_a: { w: 60, y: 10 }, rubble_b: { w: 56, y: 10 }, slab: { w: 64, y: 12 }, watertank: { w: 26, y: 6 }, acunit: { w: 24, y: 6 }, antenna: { w: 22, y: 2 }, tires: { w: 30, y: 5 }, cart: { w: 30, y: 5 }, debris: { w: 46, y: 8 },

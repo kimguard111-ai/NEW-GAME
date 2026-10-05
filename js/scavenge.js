@@ -27,7 +27,7 @@ const Scavenge = {
       let type = null;
       const wallNear = tt => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => World.tileAt(tx + dx, ty + dy) === tt);
       if (lab) { if (t === T.LFLOOR) type = wallNear(T.LWALL) ? 'labcase' : Math.random() < 0.3 ? 'bag' : null; } // 연구소: 벽 쪽 장비함
-      else if (t === T.CAR && !City.carSkip.has(ty * W + tx)) type = 'trunk';
+      else if (t === T.CAR && !City.busCells.has(ty * W + tx)) type = 'trunk'; // v1.21 승용차는 모두 소품(2칸)으로 그림 — 버스만 제외
       else if (t === T.WALK && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => World.tileAt(tx + dx, ty + dy) === T.BUILDING)) type = zone === 3 && Math.random() < 0.5 ? 'locker' : 'dumpster';
       else if ((t === T.WALK || t === T.RUBBLE || t === T.GRASS) && Math.random() < 0.3) type = 'bag';
       if (type) this.list.push({ type, x, y, tx, ty, looted: false });

@@ -6,8 +6,8 @@ const ISO_K = 0.9;
 const ZOOM_MIN = IS_TOUCH ? 0.6 : 1;
 // 고해상도 화면(폰) 선명하게: 캔버스를 기기 픽셀 비율로 그림 (모바일 성능을 위해 최대 1.5배, PC는 기존과 같은 1배)
 const RES = IS_TOUCH ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
-let ZOOM = IS_TOUCH ? clamp(Math.round(Math.min(window.innerWidth, window.innerHeight) / 560 * 10) / 10, 0.6, 1.4) : 1.4;
-try { const z = +localStorage.getItem('seoul2049-zoom'); if (z) ZOOM = clamp(z, ZOOM_MIN, 1.8); } catch (e) { /* 저장 불가 */ }
+let ZOOM = IS_TOUCH ? clamp(Math.round(Math.min(window.innerWidth, window.innerHeight) / 560 * 10) / 10 * 1.15, 0.6, 1.6) : 1.6; // v1.21 캐릭터가 작아진 만큼 기본 확대 ↑
+try { const z = +localStorage.getItem('seoul2049-zoom'); if (z) ZOOM = clamp(localStorage.getItem('seoul2049-zoom121') ? z : z * 1.15, ZOOM_MIN, 2.2); localStorage.setItem('seoul2049-zoom121', '1'); } catch (e) { /* 저장 불가 */ } // v1.21 저장된 확대도 한 번 ×1.15
 
 const Iso = {
   sx: (x, y) => (x - y) * ISO_K - G.cam.x,
@@ -44,9 +44,10 @@ function drawGroundTile(tx, ty, t) {
     ctx.fillStyle = '#8a7a3a'; // 중앙선 (4차선: 2번째와 3번째 칸 사이)
     if (lx === RW / 2 && ly > RW && ty % 2 === 0) ctx.fillRect(x - 2, y + 4, 4, 18);
     if (ly === RW / 2 && lx > RW && tx % 2 === 0) ctx.fillRect(x + 4, y - 2, 18, 4);
-    ctx.fillStyle = 'rgba(200,200,190,0.18)'; // 차선
-    if ((lx === 1 || lx === 3) && ly > RW && ty % 3 === 0) ctx.fillRect(x - 1, y + 6, 2, 12);
-    if ((ly === 1 || ly === 3) && lx > RW && tx % 3 === 0) ctx.fillRect(x + 6, y - 1, 12, 2);
+    // v1.21 왕복 2차선 (차선 하나 2칸 ≈ 3.2m — 예전 4차선 표시는 차선이 1.6m라 비현실적) · 가장자리 실선
+    ctx.fillStyle = 'rgba(200,200,190,0.22)';
+    if (lx === 0 && ly > RW) ctx.fillRect(x + 2, y, 1.5, TILE); if (lx === RW - 1 && ly > RW) ctx.fillRect(x + TILE - 3.5, y, 1.5, TILE);
+    if (ly === 0 && lx > RW) ctx.fillRect(x, y + 2, TILE, 1.5); if (ly === RW - 1 && lx > RW) ctx.fillRect(x, y + TILE - 3.5, TILE, 1.5);
     // 교차로 앞 횡단보도
     ctx.fillStyle = 'rgba(170,170,160,0.35)';
     if (ly === RW && lx < RW) for (let i = 0; i < 4; i++) ctx.fillRect(x + 2 + i * 8, y + 5, 4, 22);
@@ -203,14 +204,14 @@ function drawBox(x0, y0, x1, y1, h, top, south, east, sz, ez, win) {
 
 // 벽면 창문 (층마다 2개)
 function drawWindows(ax, ay, bx, by, z0, h, seed, side) {
-  for (let fz = 12; fz + 20 < h; fz += FLOOR_H) {
+  for (let fz = 16; fz + 30 < h; fz += FLOOR_H) { // v1.21 층 2.7m에 맞춘 창문 (높이 26)
     if (fz < z0) continue;
     for (let k = 0; k < 2; k++) {
       const u0 = 0.18 + k * 0.42, u1 = u0 + 0.24;
       const lit = hash2(seed * 31 + k + side * 7, fz) < (World.def && World.def.tall ? 0.22 : 0.12); // 강남은 불 켜진 창이 많음
       const ax0 = lerp(ax, bx, u0), ay0 = lerp(ay, by, u0), ax1 = lerp(ax, bx, u1), ay1 = lerp(ay, by, u1);
       poly([Iso.sx(ax0, ay0), Iso.sy(ax0, ay0, fz), Iso.sx(ax1, ay1), Iso.sy(ax1, ay1, fz),
-        Iso.sx(ax1, ay1), Iso.sy(ax1, ay1, fz + 17), Iso.sx(ax0, ay0), Iso.sy(ax0, ay0, fz + 17)], lit ? '#c9a24a' : '#16181c');
+        Iso.sx(ax1, ay1), Iso.sy(ax1, ay1, fz + 26), Iso.sx(ax0, ay0), Iso.sy(ax0, ay0, fz + 26)], lit ? '#c9a24a' : '#16181c');
     }
   }
 }
@@ -235,7 +236,7 @@ function drawSolidTile(o) {
   if (t === T.BUILDING) {
     const s = World.shade[ty * World.W + tx], ht = World.height[ty * World.W + tx] || 60;
     const b = 72 + Math.floor(s * 38);
-    const ruin = ht < 44, glass = World.def && World.def.tall && ht > FLOOR_H * 8; // v1.6 강남 유리 고층 빌딩: 푸른 유리 외벽
+    const ruin = ht < 44, glass = World.def && World.def.tall && ht > FLOOR_H * 5.5; // v1.21 층 높이가 커진 만큼 기준 층수 ↓ // v1.6 강남 유리 고층 빌딩: 푸른 유리 외벽
     const top = ruin ? `rgb(${b - 8},${b - 14},${b - 20})` : glass ? `rgb(${b - 22},${b - 10},${b + 6})` : `rgb(${b},${b - 3},${b - 8})`;
     const south = glass ? `rgb(${b - 52},${b - 40},${b - 22})` : `rgb(${b - 34},${b - 37},${b - 42})`, east = glass ? `rgb(${b - 40},${b - 28},${b - 10})` : `rgb(${b - 20},${b - 23},${b - 28})`;
     if (ruin) { drawRuinTile(tx, ty, x0, y0, ht, b, h); ctx.globalAlpha = 1; return; } // v1.10 무너진 건물
@@ -247,6 +248,7 @@ function drawSolidTile(o) {
       if (!glass && Settings.detail) drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h); // v1.10 1층 셔터·때
     }
     City.drawSign(tx, ty); // v1.2 한글 네온 간판
+    if (!glass && Settings.detail) drawDongNo(tx, ty, ht, ez, h); // v1.21 아파트 동 번호
     if (Settings.detail) drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass);
     else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 환풍기
   } else if (t === T.PROP && insideBid(tx, ty)) { // 실내 소품 (v0.15)
@@ -327,30 +329,30 @@ function drawSolidTile(o) {
 
 // v1.11 버려진 차: 바퀴 · 떠 있는 차체 · 유리창 운전석 · 앞뒤 등 · 녹 · 깨진 유리. vert = 세로 차선(길이가 y 방향)
 function drawCarShape(cx, cy, vert, c, h, o = {}) {
-  const L = o.L || 13, Wd = o.W || 8, S = Iso.sx, Y = Iso.sy;
+  const L = o.L || 13, Wd = o.W || 8, S = Iso.sx, Y = Iso.sy, k = o.k || 1; // k: 높이 배율 (v1.21 실제 스케일 승용차 1.45)
   const R = (a0, a1, b0, b1) => vert ? [cx + b0, cy + a0, cx + b1, cy + a1] : [cx + a0, cy + b0, cx + a1, cy + b1]; // a: 길이축, b: 폭축
   const front = h * 7 % 1 < 0.5 ? 1 : -1; // 앞쪽 방향
-  drawShadow(S(cx, cy), Y(cx, cy), 15);
-  for (const a of [-L + 3, L - 6]) for (const b of [-Wd, Wd - 3]) { const r = R(a, a + 3, b, b + 3); drawBox(r[0], r[1], r[2], r[3], 5, '#111', '#0a0a0a', '#0e0e0e', 0, 0, 0); } // 바퀴
+  drawShadow(S(cx, cy), Y(cx, cy), 15 * L / 13);
+  for (const a of [-L + 3 * k, L - 6 * k]) for (const b of [-Wd, Wd - 3 * k]) { const r = R(a, a + 3 * k, b, b + 3 * k); drawBox(r[0], r[1], r[2], r[3], 5 * k, '#111', '#0a0a0a', '#0e0e0e', 0, 0, 0); } // 바퀴
   const body = R(-L, L, -Wd, Wd);
-  drawBox(body[0], body[1], body[2], body[3], 11, c[0], c[1], c[2], 3, 3, 0);
+  drawBox(body[0], body[1], body[2], body[3], 11 * k, c[0], c[1], c[2], 3 * k, 3 * k, 0);
   // 운전석: 뒤쪽으로 치우친 짧은 상자, 옆면은 유리
-  const ca = front > 0 ? [-L + 3, L - 7] : [-L + 7, L - 3], cab = R(ca[0], ca[1], -Wd + 1.5, Wd - 1.5);
+  const ca = front > 0 ? [-L + 3 * k, L * 0.45] : [-L * 0.45, L - 3 * k], cab = R(ca[0], ca[1], -Wd + 1.5, Wd - 1.5);
   const glass = o.burnt ? '#0a0a0a' : '#1b2430', glassE = o.burnt ? '#0d0d0d' : '#24303e';
-  drawBox(cab[0], cab[1], cab[2], cab[3], o.tall ? 22 : 18, o.roof || c[0], glass, glassE, 11, 11, 0);
+  drawBox(cab[0], cab[1], cab[2], cab[3], (o.tall ? 22 : 18) * k, o.roof || c[0], glass, glassE, 11 * k, 11 * k, 0);
   if (!o.burnt && h * 13 % 1 < 0.35) { // 깨진 앞유리
-    ctx.strokeStyle = 'rgba(200,220,235,0.5)'; ctx.lineWidth = 1; const fx = S(cab[2], cab[3]), fy = Y(cab[2], cab[3], 15);
+    ctx.strokeStyle = 'rgba(200,220,235,0.5)'; ctx.lineWidth = 1; const fx = S(cab[2], cab[3]), fy = Y(cab[2], cab[3], 15 * k);
     ctx.beginPath(); ctx.moveTo(fx - 4, fy - 2); ctx.lineTo(fx, fy); ctx.lineTo(fx - 2, fy + 3); ctx.moveTo(fx, fy); ctx.lineTo(fx + 3, fy - 3); ctx.stroke();
   }
   // 앞뒤 등 (화면에 보이는 남·동쪽 끝)
   const endFace = vert ? cy + L : cx + L, lit = front > 0 ? (o.burnt ? '#332' : '#e8dca0') : '#a02020';
-  if (vert) { poly([S(cx - Wd + 1, endFace), Y(cx - Wd + 1, endFace, 7), S(cx - Wd + 4, endFace), Y(cx - Wd + 4, endFace, 7), S(cx - Wd + 4, endFace), Y(cx - Wd + 4, endFace, 9.5), S(cx - Wd + 1, endFace), Y(cx - Wd + 1, endFace, 9.5)], lit); poly([S(cx + Wd - 4, endFace), Y(cx + Wd - 4, endFace, 7), S(cx + Wd - 1, endFace), Y(cx + Wd - 1, endFace, 7), S(cx + Wd - 1, endFace), Y(cx + Wd - 1, endFace, 9.5), S(cx + Wd - 4, endFace), Y(cx + Wd - 4, endFace, 9.5)], lit); }
-  else { poly([S(endFace, cy - Wd + 1), Y(endFace, cy - Wd + 1, 7), S(endFace, cy - Wd + 4), Y(endFace, cy - Wd + 4, 7), S(endFace, cy - Wd + 4), Y(endFace, cy - Wd + 4, 9.5), S(endFace, cy - Wd + 1), Y(endFace, cy - Wd + 1, 9.5)], lit); poly([S(endFace, cy + Wd - 4), Y(endFace, cy + Wd - 4, 7), S(endFace, cy + Wd - 1), Y(endFace, cy + Wd - 1, 7), S(endFace, cy + Wd - 1), Y(endFace, cy + Wd - 1, 9.5), S(endFace, cy + Wd - 4), Y(endFace, cy + Wd - 4, 9.5)], lit); }
+  if (vert) { poly([S(cx - Wd + 1, endFace), Y(cx - Wd + 1, endFace, 7 * k), S(cx - Wd + 4, endFace), Y(cx - Wd + 4, endFace, 7 * k), S(cx - Wd + 4, endFace), Y(cx - Wd + 4, endFace, 9.5 * k), S(cx - Wd + 1, endFace), Y(cx - Wd + 1, endFace, 9.5 * k)], lit); poly([S(cx + Wd - 4, endFace), Y(cx + Wd - 4, endFace, 7 * k), S(cx + Wd - 1, endFace), Y(cx + Wd - 1, endFace, 7 * k), S(cx + Wd - 1, endFace), Y(cx + Wd - 1, endFace, 9.5 * k), S(cx + Wd - 4, endFace), Y(cx + Wd - 4, endFace, 9.5 * k)], lit); }
+  else { poly([S(endFace, cy - Wd + 1), Y(endFace, cy - Wd + 1, 7 * k), S(endFace, cy - Wd + 4), Y(endFace, cy - Wd + 4, 7 * k), S(endFace, cy - Wd + 4), Y(endFace, cy - Wd + 4, 9.5 * k), S(endFace, cy - Wd + 1), Y(endFace, cy - Wd + 1, 9.5 * k)], lit); poly([S(endFace, cy + Wd - 4), Y(endFace, cy + Wd - 4, 7 * k), S(endFace, cy + Wd - 1), Y(endFace, cy + Wd - 1, 7 * k), S(endFace, cy + Wd - 1), Y(endFace, cy + Wd - 1, 9.5 * k), S(endFace, cy + Wd - 4), Y(endFace, cy + Wd - 4, 9.5 * k)], lit); }
   // 문 이음새 (옆면)
   ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath();
-  if (vert) { const x = cx + Wd; ctx.moveTo(S(x, cy), Y(x, cy, 4)); ctx.lineTo(S(x, cy), Y(x, cy, 11)); } else { const y = cy + Wd; ctx.moveTo(S(cx, y), Y(cx, y, 4)); ctx.lineTo(S(cx, y), Y(cx, y, 11)); }
+  if (vert) { const x = cx + Wd; ctx.moveTo(S(x, cy), Y(x, cy, 4 * k)); ctx.lineTo(S(x, cy), Y(x, cy, 11 * k)); } else { const y = cy + Wd; ctx.moveTo(S(cx, y), Y(cx, y, 4 * k)); ctx.lineTo(S(cx, y), Y(cx, y, 11 * k)); }
   ctx.stroke();
-  if (h * 31 % 1 < 0.4 || o.burnt) { ctx.fillStyle = o.burnt ? 'rgba(0,0,0,0.4)' : 'rgba(90,50,25,0.45)'; ctx.beginPath(); ctx.ellipse(S(cx, cy) + (h - 0.5) * 10, Y(cx, cy, 11), 5, 2.5, 0, 0, TAU); ctx.fill(); } // 녹·그을음
+  if (h * 31 % 1 < 0.4 || o.burnt) { ctx.fillStyle = o.burnt ? 'rgba(0,0,0,0.4)' : 'rgba(90,50,25,0.45)'; ctx.beginPath(); ctx.ellipse(S(cx, cy) + (h - 0.5) * 10, Y(cx, cy, 11 * k), 5 * k, 2.5 * k, 0, 0, TAU); ctx.fill(); } // 녹·그을음
 }
 
 // v1.10 무너진 건물: 한 칸을 2×2 조각으로 나눠 높이가 들쭉날쭉한 콘크리트 + 철근 + 꺾인 바닥판
@@ -395,6 +397,17 @@ function drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h) {
 }
 
 // v1.10 옥상: 가장자리 난간(턱) · 실외기 · 물탱크 · 얼룩 · 안테나
+// v1.21 아파트 동 번호: 4층 넘는 건물의 동쪽 벽 위쪽에 '103동' 처럼 칠한 글씨
+function drawDongNo(tx, ty, ht, ez, h) {
+  if (ht < FLOOR_H * 4 || ez > ht - FLOOR_H * 2 || h < 0.3 || h > 0.36 || World.map === 'camp') return;
+  if (World.tileAt(tx, ty - 1) !== T.BUILDING || World.height[(ty - 1) * World.W + tx] !== ht) return; // 넓은 벽에만
+  ctx.save(); City.faceTransform(tx, ty, 'e', ht - 10);
+  ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillStyle = 'rgba(235,232,220,0.75)'; ctx.fillText(`${101 + Math.floor(h * 1000) % 12}동`, TILE / 2, 0);
+  ctx.fillStyle = 'rgba(80,120,170,0.55)'; ctx.fillRect(3, 14, TILE - 6, 2); // 단지 띠
+  ctx.restore();
+}
+
 function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
   const S = Iso.sx, Y = Iso.sy, lip = 3, rim = glass ? '#5a6878' : `rgb(${b + 12},${b + 8},${b + 2})`, rimS = glass ? '#2a3440' : `rgb(${b - 30},${b - 33},${b - 38})`;
   const edge = (dx, dy) => tileHeight(tx + dx, ty + dy) < ht - 4;
@@ -404,6 +417,13 @@ function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
   if (edge(-1, 0)) drawBox(x0, y0, x0 + lip, y1, ht + 4, rim, rimS, rimS, -1, ht, 0);
   if (edge(0, 1)) drawBox(x0, y1 - lip, x1, y1, ht + 4, rim, rimS, rimS, ht, -1, 0);
   if (edge(1, 0)) drawBox(x1 - lip, y0, x1, y1, ht + 4, rim, rimS, rimS, -1, ht, 0);
+  if (!glass && h > 0.42 && h < 0.428 && ht >= FLOOR_H * 3 && !edge(0, 1) && !edge(1, 0)) { // v1.21 옥상 교회 십자가 (빨간 네온)
+    const cx = S(x0 + 16, y0 + 16), cy = Y(x0 + 16, y0 + 16, ht), K = ISO_K, top = cy - 70 * K, on = Math.sin(G.time * 1.3 + tx) > -0.9;
+    ctx.strokeStyle = '#3a3a40'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, top + 30 * K); ctx.stroke();
+    ctx.fillStyle = on ? '#ff2a3a' : '#5a1a20'; ctx.fillRect(cx - 2, top, 4, 32 * K); ctx.fillRect(cx - 9 * K, top + 8 * K, 18 * K, 4);
+    if (on) { ctx.fillStyle = 'rgba(255,200,200,0.8)'; ctx.fillRect(cx - 0.5, top + 1, 1, 32 * K - 2); if (Settings.light && Light.list.length < LIGHT_CAP) addLight(cx, top + 14, 70, 0.6, 'rgba(255,40,60,A)'); }
+    ctx.lineWidth = 1; return;
+  }
   if (h < 0.055 && propArt(h < 0.04 ? 'acunit' : 'watertank')) drawPropArt(h < 0.04 ? 'acunit' : 'watertank', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht)); // v1.18 그림
   else if (h > 0.985 && propArt('antenna')) drawPropArt('antenna', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht));
   else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 실외기
@@ -458,7 +478,7 @@ const Sprites = {
     const [row, n] = s.anims[anim], fps = ART.fps[anim.replace('back_', '')] || 8;
     const once = /attack|hit|death/.test(anim);
     const f = once ? Math.min(n - 1, Math.floor(t * fps)) : Math.floor(t * fps) % n;
-    const sc = (ART.height[key] || ART.height[key.split('_')[0]] || 44) / (s.cell * ART.charFill);
+    const sc = (ART.height[key] || ART.height[key.split('_')[0]] || 44) / (s.cell * ART.charFill) * (ART.charScale || 1); // v1.21 실제 스케일
     let hd = s.heads && s.heads[anim] && s.heads[anim][f];
     // v1.15 무기를 머리 위로 휘두르는 프레임은 가공 도구가 무기 끝을 머리로 잡기도 함 → 기본 자세 머리에서 8px 넘게 벗어나면 기본 자세 x
     if (hd && /attack|hit/.test(anim) && s.heads.idle) {
@@ -500,7 +520,7 @@ function drawShadow(sx, sy, r) {
 
 // 서 있는 인물. o: {s 크기, body, skin, helmet, aim, gun(길이), blade(색), swing, flash, walk, claws}
 function drawHuman(sx, sy, o) {
-  const s = o.s || 1, d = Iso.dir(o.aim || 0);
+  const s = (o.s || 1) * (ART.charScale || 1), d = Iso.dir(o.aim || 0);
   const bob = o.walk ? Math.sin(o.walk * 12) * 1.2 * s : 0;
   const legA = o.walk ? Math.sin(o.walk * 12) * 2.5 * s : 0;
   const body = o.flash ? '#fff' : o.body, skin = o.flash ? '#fff' : o.skin;
@@ -624,7 +644,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     ctx.beginPath(); ctx.ellipse(sx, sy - 22, 20, 30, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
   }
   if (ui) return;
-  nameTag(sx, sy - 48, p.name, '#9fe08f', '12px sans-serif');
+  nameTag(sx, sy - 48 * (ART.charScale || 1) - 4, p.name, '#9fe08f', '12px sans-serif');
   if (p.reloadT > 0) {
     const b2 = WEAPONS[w.key];
     ctx.fillStyle = '#000'; ctx.fillRect(sx - 18, sy + 8, 36, 4);
@@ -634,6 +654,9 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
 
 // HUD 초상화 · 장비창 인물 (v1.1): 플레이어를 작은 캔버스에 그림 (발 위치 footY, 배율 sc)
 function drawPlayerInto(cv, sc, footY, aim = 0.6) {
+  const cs0 = ART.charScale; ART.charScale = 1; try { drawPlayerIntoInner(cv, sc, footY, aim); } finally { ART.charScale = cs0; } // 초상화·장비창은 원래 크기
+}
+function drawPlayerIntoInner(cv, sc, footY, aim) {
   const g = cv.getContext('2d'), p = G.player, saved = ctx, cam = { x: G.cam.x, y: G.cam.y }, a0 = p.aim, k0 = input.keys;
   g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
   ctx = g; g.setTransform(sc, 0, 0, sc, 0, 0);
@@ -783,7 +806,7 @@ function meleeSwing(p, w) {
 
 // 플레이어 손에 무기 그리기 (무기 그림이 있으면 그림, 없으면 코드로 그린 총·칼)
 function drawWeaponOverlay(sx, sy, w, p, fr) {
-  const b = WEAPONS[w.key], len = ART.weaponLen[w.key] || 26;
+  const b = WEAPONS[w.key], len = (ART.weaponLen[w.key] || 26) * (ART.charScale || 1);
   const swing = b.melee ? meleeSwing(p, w) : 0;
   const d = Iso.dir(p.aim + swing);
   let ang = Math.atan2(d.y, d.x);
@@ -854,7 +877,7 @@ function drawEnemy(e) {
     if (e.def.boss) { ctx.fillStyle = 'rgba(80,255,90,0.16)'; ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.7, e.r * 0.85, 0, 0, TAU); ctx.fill(); }
     const [anim, at] = animState(walk !== 0 && e.stunT <= 0, e.stunT > 0 ? Math.min(0.1, e.stunT) : e.hitT, e.lastAtk, ak);
     Sprites.draw(ak, anim, at, sx, sy - hz, f, flash);
-    topY = sy - hz - (ART.height[ak] || 44) - 6;
+    topY = sy - hz - (ART.height[ak] || 44) * (ART.charScale || 1) - 6;
   } else switch (e.type) {
     case 'zombie':
       drawShadow(sx, sy, e.r);
@@ -985,7 +1008,7 @@ function drawNpc(n) {
   }[n.id];
   if (!Sprites.draw(n.id, 'idle', G.time + n.x * 0.01, sx, sy, angleTo(n, G.player), false))
     drawHuman(sx, sy, { s: 1.05, skin: '#d9b48f', aim: angleTo(n, G.player), ...look });
-  nameTag(sx, sy - 50, n.name, '#ffd76a', 'bold 12px sans-serif');
+  nameTag(sx, sy - 50 * (ART.charScale || 1) - 4, n.name, '#ffd76a', 'bold 12px sans-serif');
   let mark = null;
   if (n.id === 'captain') {
     const p = G.player, c = Story.chapter(p);

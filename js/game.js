@@ -23,7 +23,7 @@ window.addEventListener('resize', resize);
 resize();
 // 마우스 휠: 카메라 확대 1.0 ~ 1.8
 function setZoom(z) {
-  ZOOM = clamp(Math.round(z * 10) / 10, ZOOM_MIN, 1.8);
+  ZOOM = clamp(Math.round(z * 10) / 10, ZOOM_MIN, 2.2); // v1.21 최대 확대 1.8 → 2.2 (캐릭터가 작아진 만큼)
   try { localStorage.setItem('seoul2049-zoom', ZOOM); } catch (e) { /* 저장 불가 */ }
   GroundCache.map.clear(); resize();
 }
@@ -180,7 +180,7 @@ function gunMuzzle(p, w) {
   if (!m || typeof Sprites === 'undefined') return def;
   const base = p.equip.armor && Sprites.get('player_' + p.equip.armor.key) ? 'player_' + p.equip.armor.key : 'player';
   if (!Sprites.get(base + '_' + grp)) return def; // 총을 든 몸 그림이 없으면 예전 방식
-  const H = ART.height.player || 44, f = Iso.dir(p.aim).x < 0 ? -1 : 1;
+  const H = (ART.height.player || 44) * (ART.charScale || 1), f = Iso.dir(p.aim).x < 0 ? -1 : 1; // v1.21 실제 스케일
   const dsx = f * H * m[0], dsy = -H * m[1] + 22 * ISO_K, ix = dsx / ISO_K, iy = dsy / ISO_K;
   const x = p.x + (ix + 2 * iy) / 2, y = p.y + (2 * iy - ix) / 2;
   if (World.solidAt(x, y)) return def; // 벽에 붙어 있으면 몸 앞에서

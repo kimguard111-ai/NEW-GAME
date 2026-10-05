@@ -15,7 +15,7 @@ const SHOP_STYLES = {
 };
 const SHOP_STYLE_OF = { 편의점: 'shelf', 약국: 'shelf', 마트: 'shelf', 서점: 'shelf', 전자상가: 'shelf', 카페: 'table', 분식집: 'table',
   은행: 'counter', 병원: 'counter', 파출소: 'counter', PC방: 'desk', 세탁소: 'washer' };
-const FLOOR_H = 36; // 한 층 높이 (v0.13: 24 → 36, 실제 스케일에 가깝게)
+const FLOOR_H = 54; // 한 층 높이 (v0.13: 24 → 36 · v1.21 → 54 = 2.7m, 1m = 20단위 실제 스케일)
 const SHOP_NAMES = ['편의점', '약국', '은행', '카페', '병원', '마트', 'PC방', '파출소', '분식집', '전자상가', '서점', '세탁소'];
 
 const World = {
@@ -56,7 +56,7 @@ const World = {
         const bz = def.zone;
         const fillB = (x0, y0, x1, y1, s) => {
           const tall = def.tall ? rng() < def.tall[0] : (bz === 2 || bz === 3) && rng() < 0.3; // v1.6 강남: 유리 고층 빌딩 숲
-          const h = FLOOR_H * (tall ? (def.tall ? def.tall[1] + Math.floor(rng() * def.tall[2]) : 8 + Math.floor(rng() * 5)) : 3 + Math.floor(rng() * 4));
+          const h = FLOOR_H * (tall ? (def.tall ? def.tall[1] + Math.floor(rng() * def.tall[2]) : 6 + Math.floor(rng() * 4)) : 3 + Math.floor(rng() * 4)); // v1.21 층이 높아진 만큼 고층 층수 ↓ (8~12 → 6~9)
           for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
             set(ox + x, oy + y, T.BUILDING);
             if (ox + x < W && oy + y < H) { this.shade[(oy + y) * W + ox + x] = s; this.height[(oy + y) * W + ox + x] = h; }
