@@ -174,6 +174,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       for (const s of SKILLS) p.skills[s.id] = true; // v1.16 시나리오: 스킬 모두 배운 상태
       p.credits = 5000; UI.closeAll();
     }
+    { let c0 = p.credits; B.earned = 0; Object.defineProperty(p, 'credits', { get: () => c0, set: v => { if (v > c0) B.earned += v - c0; c0 = v; }, enumerable: true, configurable: true }); } // v1.31 크레딧 수입 측정
     if (FIXMAP) B.mapFor = () => FIXMAP;
     B.deploy();
   }, [DODGE, START, FIXMAP]);
@@ -187,6 +188,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   console.log('경험치 출처:', JSON.stringify(s.expSrc));
   console.log('사망 원인 (죽기 전 8초 피해 1·2위):'); for (const [k, v] of Object.entries(await pg.evaluate(() => B.cause)).sort((a, b) => b[1] - a[1]).slice(0, 14)) console.log('  ' + k + ' ×' + v);
   console.log('상점 구매 ₵' + s.shop);
+  { const e = await pg.evaluate(() => [B.earned, G.time / 60]); console.log(`크레딧 수입 ₵${Math.round(e[0])} · 분당 ₵${Math.round(e[0] / e[1])} (판매·보상·주운 것 모두)`); } // v1.31
   console.log(`구르기 ${s.dodge} · 강화 시도 ${s.enh} · 보급 구매 ₵${s.bought}`);
   const R = await pg.evaluate(() => B.raids);
   const by = {}; for (const x of R) { const o = by[x.map] = by[x.map] || { n: 0, die: 0, min: 0, kills: 0 }; o.n++; if (!x.ok) o.die++; o.min += +x.min; o.kills += x.kills; }
