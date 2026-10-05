@@ -11,7 +11,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
   await pg.goto('file://' + require('path').resolve(__dirname, '../index.html')); await pg.evaluate(() => localStorage.clear()); await pg.reload();
   await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
-  await pg.evaluate(([DODGE, START, FIXMAP]) => {
+  await pg.evaluate(([DODGE, START, FIXMAP, FULL]) => {
     Settings.tips = false;
     const p = G.player;
     window.B = { raids: [], lvlT: { 1: 0 }, field: null, fieldKey: '', cur: null, seen: new WeakSet(), dodges: 0, dodgeTry: 0, enh: 0, bought: 0 };
@@ -172,18 +172,24 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       while (p.statPoints > 0) { p.stats[['dex', 'vit', 'agi'][p.statPoints % 3]]++; p.statPoints--; }
       p.credits = 1e7; G.shopLevel = -1; UI.openShop(); for (const it of G.shopStock) if (isUpgrade(p, it)) { const c = JSON.parse(JSON.stringify(it)); c.id = nextItemId++; c.plus = 4; addItem(c); UI.equip(c, c.kind === 'weapon' ? (WEAPONS[c.key].melee ? 'w2' : 'w1') : c.kind); }
       for (const s of SKILLS) p.skills[s.id] = true; // v1.16 시나리오: 스킬 모두 배운 상태
+      if (FULL) { // v1.31 시나리오 FULL=1: 스킬 5등급 · 트리 · 갈래 a · 특성(공격 갈래) · 패시브 단련 전부 — 다 키운 캐릭터 측정
+        for (const s of SKILLS) { p.srank[s.id] = SKILL_RANKS; p.smodOwned[s.id + '_a'] = true; p.skillMods[s.id] = 'a'; for (const k of ['r1', 'r2', 'cap']) p.stree[s.id + '_' + k] = true; }
+        PERK_TIERS.forEach((t, i) => { if (START >= t.lvl) p.perks[i] = t.perks.find(k => PERK_BRANCH[k.id] === 'atk').id; });
+        for (const b of Object.keys(PASSIVES)) for (const n of PASSIVES[b]) if (START >= n.lvl) p.passive[n.id] = true;
+        p.hotbar = SKILLS.map((s, i) => 'sk' + i).concat(['med', 'throw', 'util']); p.equip.belt = makeBelt(3, 20);
+      }
       p.credits = 5000; UI.closeAll();
     }
     { let c0 = p.credits; B.earned = 0; Object.defineProperty(p, 'credits', { get: () => c0, set: v => { if (v > c0) B.earned += v - c0; c0 = v; }, enumerable: true, configurable: true }); } // v1.31 크레딧 수입 측정
     if (FIXMAP) B.mapFor = () => FIXMAP;
     B.deploy();
-  }, [DODGE, START, FIXMAP]);
+  }, [DODGE, START, FIXMAP, !!process.env.FULL]);
   let shown = 0;
   for (let m = 0; m < MIN; m += 10) {
     const r = await pg.evaluate(() => { for (let i = 0; i < 30 * 600; i++) B.tick(); input.down = false; return { raids: B.raids, p: { lv: G.player.level, ch: G.player.quest.ch + '-' + G.player.quest.step, cr: G.player.credits, map: World.map } }; });
     for (; shown < r.raids.length; shown++) { const x = r.raids[shown]; console.log(`${x.t.padStart(4)}분 ${x.ok ? '탈출' : '사망'} ${x.map.padEnd(10)} ${x.min}분 처치${x.kills} Lv${x.lv} 장${x.ch} ${x.w} dps${x.dps} 방어${x.def} HP${x.hp} ₵${x.cr}`); }
   }
-  const s = await pg.evaluate(() => ({ shop: B.shop, expSrc: B.exp, lvlT: B.lvlT, dodge: `${B.dodges}/${B.dodgeTry}`, enh: B.enh, bought: B.bought, p: G.player.level }));
+  const s = await pg.evaluate(() => ({ shop: B.shop || 0, expSrc: B.exp, lvlT: B.lvlT, dodge: `${B.dodges}/${B.dodgeTry}`, enh: B.enh, bought: B.bought, p: G.player.level }));
   console.log('레벨 도달(게임 분):', JSON.stringify(s.lvlT));
   console.log('경험치 출처:', JSON.stringify(s.expSrc));
   console.log('사망 원인 (죽기 전 8초 피해 1·2위):'); for (const [k, v] of Object.entries(await pg.evaluate(() => B.cause)).sort((a, b) => b[1] - a[1]).slice(0, 14)) console.log('  ' + k + ' ×' + v);
