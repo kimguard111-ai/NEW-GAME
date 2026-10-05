@@ -77,6 +77,7 @@ const UI = {
     const p = G.player, hb = $('hotbar');
     hb.innerHTML = '';
     SKILLS.forEach((s, i) => {
+      if (!p.skills[s.id]) return; // v1.20 배운 스킬만 핫바에
       const d = document.createElement('div');
       d.className = 'hot' + (p.level < s.lvl || !p.skills[s.id] ? ' locked' : ''); d.dataset.act = 'sk' + i;
       d.title = `${s.name} (Lv${s.lvl}${p.skills[s.id] ? '' : ` · 상인에게서 배우기 ${fmt(s.price)}₵`}) - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;

@@ -203,7 +203,7 @@ function newPlayer(name) {
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0],
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
-    perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, // v1.16 배운 스킬 · 산 갈래 // v1.13 캠프 시설 단계
+    perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
     // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
     atkT: 0, reloadT: 0, hurtT: 0, swingT: 0, dead: false,
     bossKills: 0, totalKills: 0, pity: 0, respecs: 0, found: [], radT: 0,

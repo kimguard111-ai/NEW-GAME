@@ -151,12 +151,19 @@ function startGame(save, name) {
     for (const [k, v] of Object.entries(P.skillMods || {})) if (v) P.smodOwned[k + '_' + v] = true;
   }
   P.smodOwned = P.smodOwned || {};
+  if (save && !save.p.skillsV120) { // v1.20 기존 세이브도 스킬은 돈 주고 배우기: 배운 스킬·갈래를 초기화하고 그 값을 크레딧으로 돌려줌 (손해 없음)
+    let refund = 0;
+    for (const s of SKILLS) { if (P.skills[s.id]) refund += s.price; for (const k of ['a', 'b']) if (P.smodOwned[s.id + '_' + k]) refund += s.modPrice; }
+    P.skills = {}; P.smodOwned = {}; P.skillMods = {}; P.skillsV120 = true;
+    if (refund) { P.credits += refund; G.skillRefund = refund; }
+  }
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
   UI.buildHotbar();
   UI.refreshAll();
   if (G.welcome) { G.welcome = false; setTimeout(() => UI.welcome(), 600); }
+  if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았습니다 — 암시장 상인 박씨 「스킬 교범」`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }
   if (G.autoStory) { G.autoStory = false; Story.start(G.player); log('조작: WASD 이동 · 마우스 조준·사격 · Space 구르기(무적) · R 재장전 · 1~4 스킬', '#8cf'); }
   saveGame();
 }
