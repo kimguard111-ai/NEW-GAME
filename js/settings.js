@@ -10,7 +10,16 @@ const Settings = {
   bgm: true,     // v1.17 배경 음악
   musicVol: 0.5,
   volume: 0.7,
+  reverb: !(('ontouchstart' in window) || navigator.maxTouchPoints > 0), // v1.37 울림 (모바일은 기본 끔 — CPU)
+  ambient: true, // v1.37 환경음
+  xray: true,    // v1.37 건물에 가려진 적 투시 윤곽
+  keys: null,    // v1.37 조작 키 (null = 기본)
   load() { try { Object.assign(this, JSON.parse(localStorage.getItem('seoul2049-settings') || '{}')); } catch (e) { /* 저장 불가 */ } },
-  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips })); } catch (e) { /* 저장 불가 */ } },
+  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, keys: this.keys })); } catch (e) { /* 저장 불가 */ } },
 };
+// v1.37 키 바꾸기: 행동 → 키 (소문자 e.key). 벨트 1~8 · ESC 는 고정
+const KEY_DEFAULTS = { up: 'w', left: 'a', down: 's', right: 'd', dodge: ' ', reload: 'r', swap: 'q', interact: 'e', inventory: 'i', stats: 'c', skills: 'k', quest: 'j', settings: 'o', belt: 'b', throwNext: 't', utilNext: 'y' };
+const KEY_NAMES = { up: '위로 이동', left: '왼쪽 이동', down: '아래로 이동', right: '오른쪽 이동', dodge: '슬라이딩', reload: '재장전', swap: '무기 교체', interact: '상호작용', inventory: '가방', stats: '능력치', skills: '스킬', quest: '미션', settings: '설정', belt: '벨트 칸 등록', throwNext: '투척물 바꾸기', utilNext: '보조 장비 바꾸기' };
+function keyOf(act) { return (Settings.keys && Settings.keys[act]) || KEY_DEFAULTS[act]; }
+function keyLabel(k) { return k === ' ' ? 'Space' : k.startsWith('arrow') ? ({ arrowup: '↑', arrowdown: '↓', arrowleft: '←', arrowright: '→' })[k] : k.length === 1 ? k.toUpperCase() : k; }
 Settings.load();

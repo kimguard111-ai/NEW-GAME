@@ -3,7 +3,11 @@ const canvas = document.getElementById('game');
 let ctx = canvas.getContext('2d');
 let VW = 0, VH = 0;
 
-const SAVE_KEY = 'seoul2049-save-v1';
+// v1.37 세이브 슬롯 3개: 1번 = 예전 저장 자리 그대로 (기존 세이브 유지)
+const SAVE_BASE = 'seoul2049-save-v1';
+let SAVE_SLOT = 1; try { SAVE_SLOT = +localStorage.getItem('seoul2049-slot') || 1; } catch (e) { /* 저장 불가 */ }
+const slotKey = n => n === 1 ? SAVE_BASE : `${SAVE_BASE}-s${n}`;
+function saveKey() { return slotKey(SAVE_SLOT); }
 const MAP_SEED = 2049;
 
 const G = {
@@ -36,20 +40,23 @@ window.addEventListener('keydown', e => {
   input.keys[k] = true;
   if (k === 'escape' && G.paused) { Pause.toggle(); return; }
   if (!G.running || G.player.dead || G.paused) return;
-  if (k === 'r') startReload();
-  else if (k === 'q') swapWeapon();
-  else if (k === 'e') interact();
-  else if (k === ' ') { e.preventDefault(); dodge(); }
-  else if (k === 'i') UI.toggle('inventory');
-  else if (k === 'c') UI.toggle('stats');
-  else if (k === 'k') UI.toggle('skills'); // v1.26
-  else if (k === 'j') UI.toggle('quest');
-  else if (k === 'o') UI.toggle('settings');
-  else if (k === 'escape') { if (UI.anyOpen()) UI.closeAll(); else Pause.toggle(); }
-  else if (k >= '1' && k <= '8') Hotbar.use(+k - 1); // v1.24 벨트 칸
-  else if (k === 'b') Hotbar.edit();
-  else if (k === 't') Gadgets.cycle('throw');
-  else if (k === 'y') Gadgets.cycle('util');
+  if (UI.keyCapture) return; // v1.37 설정에서 키 바꾸는 중
+  if (k === ' ') e.preventDefault();
+  if (k === 'escape') { if (UI.anyOpen()) UI.closeAll(); else Pause.toggle(); return; }
+  if (k >= '1' && k <= '8') { Hotbar.use(+k - 1); return; } // v1.24 벨트 칸
+  const act = Object.keys(KEY_DEFAULTS).find(a => keyOf(a) === k); // v1.37 바꾼 키
+  if (act === 'reload') startReload();
+  else if (act === 'swap') swapWeapon();
+  else if (act === 'interact') interact();
+  else if (act === 'dodge') dodge();
+  else if (act === 'inventory') UI.toggle('inventory');
+  else if (act === 'stats') UI.toggle('stats');
+  else if (act === 'skills') UI.toggle('skills'); // v1.26
+  else if (act === 'quest') UI.toggle('quest');
+  else if (act === 'settings') UI.toggle('settings');
+  else if (act === 'belt') Hotbar.edit();
+  else if (act === 'throwNext') Gadgets.cycle('throw');
+  else if (act === 'utilNext') Gadgets.cycle('util');
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
@@ -79,12 +86,12 @@ function saveGame(silent = true) {
   if (!G.player) return;
   try {
     const p = { ...G.player, reloadT: 0, atkT: 0 };
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ ver: 2, p, nextItemId, bossT: G.bossT }));
+    localStorage.setItem(saveKey(), JSON.stringify({ ver: 2, p, nextItemId, bossT: G.bossT, savedAt: Date.now() }));
     if (!silent) log('게임이 저장되었습니다.', '#8f8');
   } catch (e) { /* 저장 불가 환경 */ }
 }
-function loadSave() {
-  try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+function loadSave(n = SAVE_SLOT) {
+  try { const s = localStorage.getItem(slotKey(n)); return s ? JSON.parse(s) : null; } catch (e) { return null; }
 }
 
 // ---------------- 시작 ----------------
@@ -219,10 +226,10 @@ function dodge() {
 // 현재 이동 입력 (월드 방향, 정규화 안 됨). 없으면 null
 function moveInput() {
   let mx = 0, my = 0, amt = 1;
-  if (input.keys['w'] || input.keys['arrowup']) my -= 1;
-  if (input.keys['s'] || input.keys['arrowdown']) my += 1;
-  if (input.keys['a'] || input.keys['arrowleft']) mx -= 1;
-  if (input.keys['d'] || input.keys['arrowright']) mx += 1;
+  if (input.keys[keyOf('up')] || input.keys['arrowup']) my -= 1; // v1.37 바꾼 키
+  if (input.keys[keyOf('down')] || input.keys['arrowdown']) my += 1;
+  if (input.keys[keyOf('left')] || input.keys['arrowleft']) mx -= 1;
+  if (input.keys[keyOf('right')] || input.keys['arrowright']) mx += 1;
   if (Touch.move) { mx = Touch.move.x; my = Touch.move.y; amt = Math.min(1, Touch.move.mag); } // 모바일 왼쪽 조이스틱
   if (!mx && !my) return null;
   // 화면 기준 방향 → 월드 방향 (쿼터뷰)
@@ -1261,17 +1268,24 @@ function frame(now) {
 (function initTitle() {
   UI.init();
   Sprites.loadAll();
-  const save = loadSave();
   document.getElementById('version-label').textContent = GAME_VERSION;
   const btnC = document.getElementById('btn-continue');
-  if (!save) btnC.disabled = true;
-  else btnC.textContent = `이어하기 (${save.p.name} Lv${save.p.level})`;
+  let save = null;
+  // v1.37 슬롯 고르기: 슬롯마다 이름 · 레벨 · 장 · 플레이 시간
+  const slots = () => {
+    save = loadSave();
+    document.getElementById('slot-row').innerHTML = [1, 2, 3].map(n => { const s = loadSave(n), p = s && s.p;
+      return `<button class="slot${n === SAVE_SLOT ? ' on' : ''}" data-slot="${n}"><b>슬롯 ${n}</b><br>${p ? `${p.name} · Lv${p.level}<br><small>${(p.quest && p.quest.ch) || 0}장 · ${Math.floor((p.playTime || 0) / 3600)}시간 ${Math.floor((p.playTime || 0) % 3600 / 60)}분</small>` : '<small>비어 있음</small>'}</button>`; }).join('');
+    document.querySelectorAll('#slot-row .slot').forEach(b => { b.onclick = () => { SAVE_SLOT = +b.dataset.slot; try { localStorage.setItem('seoul2049-slot', SAVE_SLOT); } catch (e) { /* */ } SFX.play('click'); slots(); }; });
+    btnC.disabled = !save; btnC.textContent = save ? `이어하기 (${save.p.name} Lv${save.p.level})` : '이어하기';
+  };
+  slots();
   document.getElementById('btn-new').onclick = () => {
-    if (save && !confirm('기존 저장 데이터가 삭제됩니다. 새로 시작할까요?')) return;
+    if (save && !confirm(`슬롯 ${SAVE_SLOT}의 「${save.p.name} Lv${save.p.level}」 저장이 지워집니다. 새로 시작할까요?`)) return;
     const name = document.getElementById('name-input').value.trim() || '생존자';
     startGame(null, name);
   };
-  btnC.onclick = () => startGame(save);
+  btnC.onclick = () => save && startGame(save);
   document.getElementById('btn-respawn').onclick = respawn;
   window.addEventListener('beforeunload', () => saveGame());
   requestAnimationFrame(frame);

@@ -135,7 +135,11 @@ const ART = {
   },
   // v1.35.1 아이콘 그림 (프롬프트 17 · icons_gear / icons_items / icons_skills) — 키는 아이콘 이름 (vest · medkit · ammo_pistol · rapid · roll …)
   // 예: vest: { file: 'icons_gear.png', rect: [x, y, w, h] } · 없으면 코드 아이콘
-  icons: {},
+  icons: {
+    vest: { file: 'icons_gear.png', rect: [4, 4, 160, 208] }, tactical: { file: 'icons_gear.png', rect: [168, 4, 194, 215] }, military: { file: 'icons_gear.png', rect: [366, 4, 226, 222] }, medkit: { file: 'icons_gear.png', rect: [792, 4, 155, 155] }, exo: { file: 'icons_gear.png', rect: [4, 230, 259, 261] }, belt: { file: 'icons_gear.png', rect: [267, 230, 234, 132] }, ammo: { file: 'icons_gear.png', rect: [505, 230, 222, 233] }, scrap: { file: 'icons_gear.png', rect: [731, 230, 196, 129] },
+    molotov: { file: 'icons_items.png', rect: [4, 4, 189, 246] }, flash: { file: 'icons_items.png', rect: [197, 4, 116, 231] }, mine: { file: 'icons_items.png', rect: [317, 4, 227, 174] }, stim: { file: 'icons_items.png', rect: [548, 4, 193, 204] }, ammo_pistol: { file: 'icons_items.png', rect: [745, 4, 194, 157] }, plate: { file: 'icons_items.png', rect: [4, 254, 176, 232] }, ammo_shell: { file: 'icons_items.png', rect: [184, 254, 195, 225] }, ammo_sniper: { file: 'icons_items.png', rect: [383, 254, 199, 124] }, ammo_auto: { file: 'icons_items.png', rect: [586, 254, 127, 254] },
+    rapid: { file: 'icons_skills.png', rect: [4, 4, 231, 238] }, grenade: { file: 'icons_skills.png', rect: [239, 4, 231, 238] }, heal: { file: 'icons_skills.png', rect: [474, 4, 231, 238] }, adren: { file: 'icons_skills.png', rect: [4, 246, 235, 240] }, turret: { file: 'icons_skills.png', rect: [243, 246, 233, 240] }, roll: { file: 'icons_skills.png', rect: [717, 246, 235, 240] },
+  },
   // 소품 그림을 화면에 놓는 크기: w = 화면 가로(px, 확대 1배 기준) · y = 그림 아래쪽을 바닥 점보다 얼마나 아래에 둘지
   propFit: {
     lamp: { w: 66, y: 2 }, tree: { w: 92, y: 4 }, deadtree: { w: 78, y: 4 }, /* v1.21 실제 스케일 */ trash: { w: 34, y: 4 }, cone: { w: 13, y: 2 }, barrel: { w: 19, y: 3 },
@@ -156,19 +160,20 @@ const ART = {
   // v1.19 건물 질감 (가공 도구의 「v1.19 건물 외벽 / 옥상 질감」). 외벽 = 건물 한 칸 × 한 층의 정면 그림, 옥상 = 위에서 본 바닥
   // 등록하면 건물 벽·옥상에 기울여 붙임 (없으면 코드로 그린 벽·창문)
   tex: { // v1.31 Gemini 질감 4장 — 외벽 6종 + 변형 5종 · 옥상 3종 · 실내 바닥 6종
+    // v1.35.1 외벽은 tex_tall1~6 (세로 3:5) 로 바뀜 — 아래 키들은 그 그림을 가리킴
     // tex_facade.png
-    f_apartment: { file: 'tex_facade.png', rect: [7, 7, 319, 266] },
-    f_brick: { file: 'tex_facade.png', rect: [336, 7, 316, 266] },
-    f_office: { file: 'tex_facade.png', rect: [662, 7, 317, 266] },
-    f_glass: { file: 'tex_facade.png', rect: [7, 283, 318, 266] },
-    f_burnt: { file: 'tex_facade.png', rect: [335, 283, 316, 266] },
+    f_apartment: { file: 'tex_tall1.png', rect: [3, 3, 332, 566] },
+    f_brick: { file: 'tex_tall1.png', rect: [346, 3, 332, 566] },
+    f_office: { file: 'tex_tall1.png', rect: [690, 3, 331, 566] },
+    f_glass: { file: 'tex_tall2.png', rect: [3, 3, 332, 566] },
+    f_burnt: { file: 'tex_tall2.png', rect: [346, 3, 332, 566] },
     f_shop: { file: 'tex_facade.png', rect: [661, 283, 317, 266] },
     // tex_facade2.png
-    f_apartment2: { file: 'tex_facade2.png', rect: [7, 7, 313, 251] },
-    f_brick2: { file: 'tex_facade2.png', rect: [330, 7, 312, 249] },
-    f_office2: { file: 'tex_facade2.png', rect: [652, 7, 312, 249] },
-    f_glass2: { file: 'tex_facade2.png', rect: [7, 268, 313, 250] },
-    f_burnt2: { file: 'tex_facade2.png', rect: [330, 268, 312, 250] },
+    f_apartment2: { file: 'tex_tall2.png', rect: [689, 3, 332, 566] },
+    f_brick2: { file: 'tex_tall3.png', rect: [3, 3, 332, 566] },
+    f_office2: { file: 'tex_tall3.png', rect: [347, 3, 330, 566] },
+    f_glass2: { file: 'tex_tall3.png', rect: [689, 3, 332, 566] },
+    f_burnt2: { file: 'tex_tall4.png', rect: [3, 3, 332, 566] },
     // tex_roof.png
     r_concrete: { file: 'tex_roof.png', rect: [7, 7, 330, 342] },
     r_gravel: { file: 'tex_roof.png', rect: [347, 7, 330, 342] },
@@ -192,9 +197,9 @@ const ART = {
     g_grille: { file: 'tex_ground.png', rect: [211, 286, 191, 270] }, g_salon2: { file: 'tex_ground.png', rect: [417, 286, 190, 270] }, g_karaoke: { file: 'tex_ground.png', rect: [622, 287, 191, 269] },
     g_empty: { file: 'tex_ground.png', rect: [826, 286, 191, 270] },
     // tex_facade3.png (v1.31.2)
-    f_tile: { file: 'tex_facade3.png', rect: [3, 3, 330, 330] }, f_villa: { file: 'tex_facade3.png', rect: [348, 3, 328, 330] }, f_corridor: { file: 'tex_facade3.png', rect: [691, 3, 330, 330] },
-    f_signframe: { file: 'tex_facade3.png', rect: [3, 348, 330, 328] }, f_motel: { file: 'tex_facade3.png', rect: [348, 348, 328, 328] }, f_military: { file: 'tex_facade3.png', rect: [691, 348, 330, 328] },
-    f_stone: { file: 'tex_facade3.png', rect: [3, 691, 329, 330] }, f_scaffold: { file: 'tex_facade3.png', rect: [348, 691, 328, 330] },
+    f_tile: { file: 'tex_tall4.png', rect: [346, 3, 331, 566] }, f_villa: { file: 'tex_tall4.png', rect: [689, 3, 332, 566] }, f_corridor: { file: 'tex_tall5.png', rect: [3, 3, 332, 566] },
+    f_signframe: { file: 'tex_tall5.png', rect: [346, 3, 332, 566] }, f_motel: { file: 'tex_tall5.png', rect: [689, 3, 332, 566] }, f_military: { file: 'tex_tall6.png', rect: [3, 3, 333, 566] },
+    f_stone: { file: 'tex_tall6.png', rect: [345, 3, 333, 566] }, f_scaffold: { file: 'tex_tall6.png', rect: [689, 3, 332, 566] },
     // tex_shopfront1.png (v1.31.2)
     sf_conv: { file: 'tex_shopfront1.png', rect: [3, 3, 330, 333] }, sf_pharma: { file: 'tex_shopfront1.png', rect: [346, 3, 331, 333] }, sf_bank: { file: 'tex_shopfront1.png', rect: [692, 3, 329, 334] },
     sf_cafe: { file: 'tex_shopfront1.png', rect: [3, 351, 330, 329] }, sf_hosp: { file: 'tex_shopfront1.png', rect: [347, 351, 330, 329] }, sf_mart: { file: 'tex_shopfront1.png', rect: [692, 351, 329, 329] },

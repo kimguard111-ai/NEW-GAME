@@ -186,7 +186,7 @@ const Monsters = {
       if ((e.burstT -= dt) <= 0) { e.burstN--; e.burstT = 0.13; spawnEnemyBullet(e, e.aimA + rand(-0.06, 0.06), e.def.bulletSpeed, e.dmg * b, '#ffd040'); SFX.playAt('eshot', e.x, e.y); }
       return true;
     }
-    if (e.def.nade && !(e.aimT > 0) && !(e.burstN > 0)) { // v1.6 용병 수류탄: 플레이어 자리에 주황 원 → 1.2초 뒤 폭발 (구르거나 벗어나기)
+    if (e.def.nade && !(e.aimT > 0) && !(e.burstN > 0)) { // v1.6 용병 수류탄: 플레이어 자리에 주황 원 → 1.2초 뒤 폭발 (슬라이딩하거나 벗어나기)
       e.nadeT = (e.nadeT ?? rand(3, 6)) - dt;
       const los = World.lineOfSight(e, p), flush = !los && G.time - (e.seenT || -9) < 3; // v1.32 벽 뒤에 숨은 플레이어에게도 (넘겨 던짐)
       if (e.nadeT <= 0 && d > 140 && d < (e.def.nade === 'weak' ? 300 : 380) && (los || flush)) {

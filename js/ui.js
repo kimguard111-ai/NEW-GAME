@@ -104,7 +104,7 @@ const UI = {
     hb.appendChild(ed);
     const r = document.createElement('div'); // v0.16 슬라이딩 (벨트와 상관없이 항상)
     r.className = 'hot'; r.dataset.act = 'roll'; r.title = '슬라이딩: 무적으로 미끄러져 빠져나감 · 재사용 5초 (위급할 때)';
-    r.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'SPC'}</span><div class="icon">${ICON('roll')}</div>슬라이딩<div class="cd" id="cdroll"></div>`;
+    r.innerHTML = `<span class="key">${IS_TOUCH ? '' : keyOf('dodge') === ' ' ? 'SPC' : keyLabel(keyOf('dodge'))}</span><div class="icon">${ICON('roll')}</div>슬라이딩<div class="cd" id="cdroll"></div>`;
     hb.appendChild(r);
     if (!IS_TOUCH) hb.onclick = e => { // PC: 칸을 눌러도 사용 · 빈 칸·벨트 칸은 등록 창
       const hot = e.target.closest('.hot'); if (!hot) return;
@@ -443,6 +443,11 @@ const UI = {
       + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
       + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="2.2" step="0.1" value="${ZOOM}"></div>`
       + opt('tips', '도움말 팁', '처음 겪는 상황에서 한 번씩 안내')
+      + opt('reverb', '울림', '바깥 메아리 · 실내 울림 (끄면 가벼워짐 — 모바일 기본 끔)')
+      + opt('ambient', '환경음', '바람 · 먼 총성 · 사이렌 같은 맵 분위기 소리')
+      + opt('xray', '가려진 적 윤곽', '건물 뒤에 있는 적을 붉은 윤곽으로 보여 줌')
+      + `<div class="set-row"><button id="btn-lowspec">저사양 모드 (한 번에 가볍게)</button> <span class="muted">조명 · 세부 묘사 · 울림 · 환경음 끔</span></div>`
+      + (IS_TOUCH ? '' : `<hr style="border-color:#333"><b>조작 키</b> <span class="muted">— 누르고 새 키 입력 · 겹치면 서로 바뀜 · 벨트 1~8 · ESC 는 고정</span><div class="key-grid">${Object.keys(KEY_DEFAULTS).map(a => `<span class="key-row">${KEY_NAMES[a]} <button class="key-btn" data-key="${a}">${keyLabel(keyOf(a))}</button></span>`).join('')}</div><button id="btn-keyreset">기본 키로</button>`)
       + `<hr style="border-color:#333"><b>세이브 백업</b> <span class="muted">— 다른 기기·브라우저로 옮길 때</span><br>`
       + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
@@ -451,7 +456,7 @@ const UI = {
     $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };
     $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
     $('btn-export').onclick = () => {
-      saveGame(); const ta = $('save-code'), raw = localStorage.getItem(SAVE_KEY) || '';
+      saveGame(); const ta = $('save-code'), raw = localStorage.getItem(saveKey()) || '';
       ta.value = btoa(unescape(encodeURIComponent(raw))); ta.classList.remove('hidden'); ta.select();
       const ok = () => log('세이브 코드를 복사했습니다. 다른 기기의 설정 → 불러오기에 붙여넣으세요.', '#8f8'), manual = () => log('아래 코드를 직접 복사하세요 (길게 눌러 전체 선택).', '#8cf');
       try { navigator.clipboard.writeText(ta.value).then(ok, manual); } catch (e) { manual(); }
@@ -462,11 +467,27 @@ const UI = {
       try {
         const raw = decodeURIComponent(escape(atob(ta.value.trim()))), s = JSON.parse(raw);
         if (!s || !s.p || !s.p.name) throw new Error('bad');
-        if (!confirm(`${s.p.name} Lv${s.p.level} 세이브로 바꿀까요? 지금 진행은 덮어씌워집니다.`)) return;
-        G.running = false; localStorage.setItem(SAVE_KEY, raw); location.reload();
+        if (!confirm(`${s.p.name} Lv${s.p.level} 세이브를 지금 슬롯(${SAVE_SLOT})에 불러올까요? 이 슬롯의 진행은 덮어씌워집니다.`)) return;
+        G.running = false; localStorage.setItem(saveKey(), raw); location.reload();
       } catch (e) { log('세이브 코드가 올바르지 않습니다.', '#f66'); }
     };
     $('zoom-range').oninput = e => { setZoom(+e.target.value); $('zoom-val').textContent = ZOOM.toFixed(1) + '배'; };
+    $('btn-lowspec').onclick = () => { Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.map.clear(); UI.refreshSettings(); log('저사양 모드: 조명 · 세부 묘사 · 울림 · 환경음을 껐습니다.', '#8cf'); };
+    // v1.37 키 바꾸기: 버튼 누름 → 다음 키 입력으로 바꿈 (겹치면 서로 맞바꿈)
+    $('settings-body').querySelectorAll('.key-btn').forEach(b => { b.onclick = () => {
+      b.textContent = '키 입력…'; b.classList.add('wait');
+      UI.keyCapture = ev => {
+        ev.preventDefault(); ev.stopPropagation(); const k = ev.key.toLowerCase(); UI.keyCapture = null; window.removeEventListener('keydown', UI.keyCaptureFn, true);
+        if (k === 'escape' || (k >= '1' && k <= '8')) { UI.refreshSettings(); return; }
+        const act = b.dataset.key, keys = { ...KEY_DEFAULTS, ...(Settings.keys || {}) }, other = Object.keys(keys).find(a => a !== act && keys[a] === k);
+        if (other) keys[other] = keys[act];
+        keys[act] = k; Settings.keys = keys; Settings.save(); UI.refreshSettings(); UI.buildHotbar();
+        log(`${KEY_NAMES[act]}: ${keyLabel(k)}${other ? ` (${KEY_NAMES[other]}는 ${keyLabel(keys[other])}로)` : ''}`, '#8cf');
+      };
+      UI.keyCaptureFn = ev => UI.keyCapture && UI.keyCapture(ev);
+      window.addEventListener('keydown', UI.keyCaptureFn, true);
+    }; });
+    if ($('btn-keyreset')) $('btn-keyreset').onclick = () => { Settings.keys = null; Settings.save(); UI.refreshSettings(); UI.buildHotbar(); log('조작 키를 기본으로 되돌렸습니다.', '#8cf'); };
   },
 
   // ---------------- 임무 ----------------

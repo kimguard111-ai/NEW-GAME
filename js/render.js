@@ -629,7 +629,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   const sx = Iso.sx(p.x, p.y), sy = Iso.sy(p.x, p.y);
   drawShadow(sx, sy, p.r);
   const w = curWeapon(), b = w ? WEAPONS[w.key] : null;
-  const moving = input.keys['w'] || input.keys['a'] || input.keys['s'] || input.keys['d'];
+  const moving = !!moveInput(); // v1.37 바꾼 키도
   // 장비 외형: 방어구 → 옷 색, 헬멧 → 머리 장비 (그림이 없을 때의 코드 그래픽)
   const arm = p.equip.armor, hel = p.equip.helmet;
   const LOOK = { vest: ['#3e5f3a', '#2c3a2c'], tactical: ['#6b6447', '#3e3a2a'], military: ['#3d4a5c', '#262e3a'], exo: ['#7d848c', '#4a4f55'] };
@@ -1619,6 +1619,7 @@ function drawShopSigns() {
 // v1.32 건물에 가려진 적: 건물 위에 붉은 투시 윤곽 (모습은 그대로 보이게 반투명으로 한 번 더)
 const Xray = { c: null };
 function drawXray() {
+  if (!Settings.xray) return; // v1.37 설정
   const list = G.enemies.filter(e => e.occl && e.hp > 0 && !enemyCloaked(e));
   if (!list.length) return;
   const W = canvas.width, H = canvas.height;

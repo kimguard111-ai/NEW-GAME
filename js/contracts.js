@@ -83,7 +83,7 @@ const Contracts = {
     const p = G.player;
     if (e.state !== 'follow' || e.dead) return;
     const d = Math.hypot(p.x - e.x, p.y - e.y);
-    if (d > 460) { const a = rand(0, TAU); e.x = p.x + Math.cos(a) * 40; e.y = p.y + Math.sin(a) * 40; } // 너무 떨어지면 따라잡음
+    if (d > 460) { for (let i = 0; i < 12; i++) { const a = rand(0, TAU), x = p.x + Math.cos(a) * 40, y = p.y + Math.sin(a) * 40; if (!World.circleBlocked(x, y, 12) && Interiors.sameSpace({ x, y })) { e.x = x; e.y = y; break; } } } // 너무 떨어지면 따라잡음 (v1.37 벽 안으로 안 들어가게)
     else if (d > 48) { const sp = PlayerStats.speed(p) * 0.95 * dt, a = Math.atan2(p.y - e.y, p.x - e.x); World.move(e, Math.cos(a) * sp, Math.sin(a) * sp); e.walk += dt; e.face = a; }
     let hurt = 0;
     for (const o of G.enemies) if (o.hp > 0 && o.state === 'chase' && !o.def.ranged && Math.hypot(o.x - e.x, o.y - e.y) < o.r + 14 && (o.escT = (o.escT || 0) - dt) <= 0) { o.escT = o.def.atkCd * 1.2; hurt += o.dmg * 0.8; }

@@ -18,7 +18,7 @@ const Ambience = {
     const c = SFX.ctx; if (!c || !SFX.master) return false;
     if (!this.out) {
       this.out = c.createGain(); this.lp = c.createBiquadFilter(); this.lp.type = 'lowpass'; this.lp.frequency.value = 18000;
-      this.out.connect(this.lp); this.lp.connect(SFX.master); this.lp.connect(SFX.sends.city);
+      this.out.connect(this.lp); this.lp.connect(SFX.master);
       // 바람: 잡음 반복 → 천천히 흔들리는 저역 통과
       const n = c.sampleRate * 3, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); let last = 0;
       for (let i = 0; i < n; i++) { last = last * 0.985 + (Math.random() * 2 - 1) * 0.15; d[i] = last; } // 갈색 잡음
@@ -35,6 +35,7 @@ const Ambience = {
 
   update(dt) {
     if (!G.running || !Settings.sound || !this.ensure()) return;
+    if (Settings.ambient === false) { this.out.gain.setTargetAtTime(0, SFX.ctx.currentTime, 0.2); SFX.env(!!G.inside, !!(World.def && World.def.lab)); return; } // v1.37 끔
     const c = SFX.ctx, t = c.currentTime, A = AMBIENT[World.map] || AMBIENT.myeongdong, lab = !!(World.def && World.def.lab);
     if (this.mapId !== World.map) { this.mapId = World.map; this.timers = {}; }
     const inside = !!G.inside;

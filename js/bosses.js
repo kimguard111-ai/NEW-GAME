@@ -91,7 +91,7 @@ const Bosses = {
       G.shake = 18; hitstop(0.15);
       G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.8, color: '#ff5050', r: 300 });
       for (let i = 0; i < 6; i++) Monsters.strike(e.x + Math.cos(i / 6 * TAU) * 140, e.y + Math.sin(i / 6 * TAU) * 140, 60, 1.0, e.dmg * 0.8, 'rgba(140,220,70,', true);
-      UI.toast('키메라 탈피', '더 빨라졌다 — 장판 사이로 구르며 거리를 유지하라');
+      UI.toast('키메라 탈피', '더 빨라졌다 — 장판 사이로 빠지며 거리를 유지하라');
       log('키메라가 껍질을 찢고 나온다! 주변에 산성액이 튄다!', '#ff5050');
     }
     if (e.molted && e.skillT > 2.5) e.skillT = 2.5; // 탈피 후 패턴 간격 단축

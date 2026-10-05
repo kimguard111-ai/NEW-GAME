@@ -21,7 +21,7 @@ const SFX = {
     for (const [k, len, decay, tone] of [['city', 1.8, 2.6, 2400], ['room', 0.7, 3.5, 5000]]) {
       const cv = c.createConvolver(), g = c.createGain(), f = c.createBiquadFilter();
       cv.buffer = this.impulse(len, decay); f.type = 'lowpass'; f.frequency.value = tone; g.gain.value = k === 'city' ? 0.16 : 0;
-      this.bus.connect(g); g.connect(f); f.connect(cv); cv.connect(this.master); this.sends[k] = g;
+      this.bus.connect(g); g.connect(f); f.connect(cv); cv.connect(this.master); this.sends[k] = g; this.revOn = true;
     }
   },
   // 잡음이 줄어드는 반향 (스테레오)
@@ -34,6 +34,9 @@ const SFX = {
   // 매 프레임: 실내·연구소면 방 울림, 바깥이면 도시 메아리
   env(inside, lab) {
     if (!this.sends) return;
+    const on = Settings.reverb !== false; // v1.37 끄면 울림 연결을 끊음 (계산도 안 함)
+    if (on !== this.revOn) { this.revOn = on; for (const g of Object.values(this.sends)) { try { if (on) this.bus.connect(g); else this.bus.disconnect(g); } catch (e) { /* 이미 끊김 */ } } }
+    if (!on) return;
     const t = this.ctx.currentTime;
     this.sends.city.gain.setTargetAtTime(inside || lab ? 0.02 : 0.16, t, 0.3);
     this.sends.room.gain.setTargetAtTime(lab ? 0.42 : inside ? 0.32 : 0, t, 0.3);
