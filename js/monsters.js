@@ -169,7 +169,7 @@ const Monsters = {
   },
 
   // ---------------- 일반 적 공격 (v0.16: 보고 피할 수 있게 예고) ----------------
-  TELE: { zombie: 0.38, dog: 0.3, raider: 0.35, drone: 0.3, /* v1.7 드론 조준선 0.22→0.3: 용산 사망 1위, 보고 피할 시간 */ subject: 0.26, sentry: 0.45, merc: 0.38, shield: 0.45, stalker: 0.32 },
+  TELE: { zombie: 0.48, /* v1.33.1 0.38 → 0.48 (느려진 이동으로 피할 시간) */ dog: 0.3, raider: 0.35, drone: 0.3, /* v1.7 드론 조준선 0.22→0.3: 용산 사망 1위, 보고 피할 시간 */ subject: 0.26, sentry: 0.45, merc: 0.38, shield: 0.45, stalker: 0.32 },
   vol(e) { return clamp(1 - dist(e, G.player) / 900, 0.08, 1); },
   // 공격 처리. 이번 프레임에 멈춰 있어야 하면(예고·도약 중) true
   attack(e, dt, d, a) {

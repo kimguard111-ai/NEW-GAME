@@ -23,7 +23,8 @@ const RaidEvents = {
     const lab = !!(World.def && World.def.lab);
     for (const k of Camp.takePlan(World.map)) this['make_' + k](); // v1.13 미리 정해 둔 사건 (무전실에서 미리 보기)
     this.makeExit();
-    const names = this.list.filter(e => !e.exitPart).map(e => EVENT_DEFS[e.kind].name);
+    Contracts.setup(); MapEvents.make(); // v1.34 출격 계약 · 맵 고유 사건
+    const names = this.list.filter(e => !e.exitPart && !e.ext).map(e => EVENT_DEFS[e.kind].name);
     if (names.length) log(`${ICON('radio')} 무전: 이 구역에서 ${names.join(' · ')} 신호가 잡힌다. (미니맵 노란 ◆)`, '#ffd76a');
   },
 
@@ -97,8 +98,9 @@ const RaidEvents = {
   // 특수 탈출: 맵 안쪽 (시작점에서 700~1600px). 유료 or 전원
   makeExit() {
     const s = this.spot(700, 1600); if (!s) return;
-    const lab = World.def && World.def.lab;
-    if (!lab && Math.random() < 0.5) {
+    const lab = World.def && World.def.lab, r = Math.random();
+    if (!lab && r < 0.3) { Heli.make(s); return; } // v1.34 시간 제한 탈출 (헬기)
+    if (!lab && r < 0.65) {
       const cost = Math.round(this.maxLvl() * 30);
       G.exits.push({ ...s, special: 'pay', locked: true, cost, time: 2, label: `유료 탈출 (₵${fmt(cost)})` });
     } else {
@@ -122,6 +124,7 @@ const RaidEvents = {
   },
   // 버티기 시작 순간 (매복 등)
   onStart(e) {
+    if (e.ext) return e.onStart ? e.onStart(e) !== false : true; // v1.34 계약 · 고유 사건
     if (e.kind === 'survivor' && !e.ambushed) { e.ambushed = true; log('생존자: "놈들이 소리를 들었어요...!" — 매복이다!', '#ff8a5a'); this.squad(e.x, e.y, 4, { r0: 300, r1: 420, chase: true }); }
     if (e.kind === 'generator' && !e.loud) { e.loud = true; for (const o of G.enemies) if (!o.def.boss && dist(o, e) < 750) { o.state = 'chase'; o.heard = true; } log('발전기가 덜컹거리며 돈다 — 근처 적들이 몰려온다!', '#ff8a5a'); }
     if (e.kind === 'safe' && e.state === 'locked') { log('잠겨 있다. 열쇠 소지자(미니맵 노란 점)를 찾아야 한다.', '#aaa'); SFX.play('empty'); return false; }
@@ -137,6 +140,7 @@ const RaidEvents = {
       p.credits -= ex.cost; ex.locked = false; SFX.play('coin');
       log('무전: "차 보낸다. 2초만 버텨!"', '#7fe08a'); return;
     }
+    if (e.ext) { e.onFinish && e.onFinish(e); return; } // v1.34
     e.done = true;
     if (e.kind === 'airdrop') {
       drop('item', { item: randomGear(lvl, 1.2, 2, bias) });
@@ -188,7 +192,9 @@ const RaidEvents = {
       }
       log(this.alert >= 3 ? '추적대가 다가온다!' : '증원이 다가온다!', '#ff5a5a');
     }
+    Heli.update(dt); // v1.34
     for (const e of this.list) {
+      if (e.ext) { if (e.tick) e.tick(e, dt); continue; } // v1.34
       if (e.kind === 'airdrop') {
         if (e.state === 'wait' && (e.t -= dt) <= 0) { e.state = 'falling'; e.fall = 12; log(`${ICON('radio')} 무전: "보급기가 상자를 떨어뜨린다! 12초 뒤 낙하." (미니맵 노란 ◆)`, '#ffd76a'); UI.toast('보급 투하', '12초 뒤 낙하 — 먼저 가는 쪽이 갖는다'); }
         else if (e.state === 'falling' && (e.fall -= dt) <= 0) {
@@ -204,6 +210,7 @@ const RaidEvents = {
   },
   // 둥지 (updateEnemies 에서): 플레이어가 가까우면 7초마다 1~2마리 (최대 6마리)
   nestTick(e, dt, d) {
+    if (e.egg) { e.hitT -= dt; return; } // v1.34 잠실 변이 알: 낳지 않음
     e.hitT -= dt; e.kids = e.kids.filter(k => k.hp > 0);
     if (d > 750 || (e.spawnT -= dt) > 0) return;
     e.spawnT = 7;
@@ -219,6 +226,7 @@ const RaidEvents = {
   // 둥지 처치 보상 (killEnemy)
   onKill(e, dropAt) {
     if (!e.nest) return;
+    if (e.egg) { burst(e.x, e.y, '#6a1a2a', 12, 130, 0.4); floatText(e.x, e.y - 30, '알 파괴', '#ff9a3a', 13); return; } // v1.34
     Weekly.on('events'); Journal.onEvent(); // v1.15
     if (Math.random() < 0.5) dropAt('item', { item: randomGear(e.level, 1.2, 1, this.gearBias()) }); // v1.25 확정 → 50%
     dropAt('credits', { amount: e.level * 50 });
@@ -249,6 +257,7 @@ const RaidEvents = {
     const out = [];
     for (const e of this.list) {
       if (e.done || e.state === 'dead') continue;
+      if (e.ext) { out.push(e.track ? e.track(e) : null); continue; } // v1.34
       if (e.kind === 'airdrop') out.push(e.state === 'wait' ? null : e.state === 'falling' ? `보급 투하 ${Math.ceil(e.fall)}초` : '보급 상자 열기');
       else if (e.kind === 'survivor') out.push('부상당한 생존자 구조');
       else if (e.kind === 'safe') out.push(e.state === 'locked' ? '금고: 열쇠 소지자 처치' : '금고 열기');
@@ -257,7 +266,7 @@ const RaidEvents = {
     }
     const s = out.filter(Boolean);
     const al = this.alert ? ` · <b style="color:#ff8a5a">경보 ${this.alert}단계</b>` : ` · 경보까지 ${Math.max(0, Math.ceil((ALERT_AT[0] + Camp.alertDelay() - p.raid.t) / 60))}분`;
-    return `<br><span class="muted">${ICON('radio')} ${s.length ? s.join(' · ') : '사건 없음'}${al}</span>`;
+    return Contracts.trackerLine() + `<br><span class="muted">${ICON('radio')} ${s.length ? s.join(' · ') : '사건 없음'}${al}${Heli.line()}</span>`;
   },
 
   // 미니맵 표시
@@ -265,6 +274,7 @@ const RaidEvents = {
     const blink = Math.sin(G.time * 5) > -0.3;
     const dia = (x, y, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(x / TILE, y / TILE - 3); g.lineTo(x / TILE + 3, y / TILE); g.lineTo(x / TILE, y / TILE + 3); g.lineTo(x / TILE - 3, y / TILE); g.fill(); };
     for (const e of this.list) {
+      if (e.ext) { if (e.mini && !e.done) e.mini(g, e, blink); continue; } // v1.34
       if (e.done || e.state === 'dead' || (e.kind === 'airdrop' && e.state === 'wait')) continue;
       if (blink) dia(e.x, e.y, '#ffd76a');
       if (e.kind === 'safe' && e.state === 'locked' && e.carrier.hp > 0 && blink) { g.fillStyle = '#ffd76a'; g.fillRect(e.carrier.x / TILE - 2, e.carrier.y / TILE - 2, 4, 4); }
@@ -274,7 +284,7 @@ const RaidEvents = {
 
   // ---------- 그리기 ----------
   collect(objs) {
-    for (const e of this.list) if (e.kind !== 'nest' && e.kind !== 'trader') objs.push({ d: (e.x + e.y) / TILE + 0.05, draw: drawRaidEvent, ent: e });
+    for (const e of this.list) if (e.ext) { if (e.draw) objs.push({ d: (e.x + e.y) / TILE + 0.05, draw: e.draw, ent: e }); } else if (e.kind !== 'nest' && e.kind !== 'trader') objs.push({ d: (e.x + e.y) / TILE + 0.05, draw: drawRaidEvent, ent: e });
     for (const ex of G.exits || []) if (ex.special) objs.push({ d: (ex.x + ex.y) / TILE, draw: drawSpecialExit, ent: ex });
     for (const e of this.list) if (e.kind === 'safe' && e.state === 'locked' && e.carrier.hp > 0) objs.push({ d: (e.carrier.x + e.carrier.y) / TILE + 0.6, draw: drawKeyMark, ent: e.carrier });
   },
@@ -329,7 +339,8 @@ function drawSpecialExit(ex) {
   if (sx < -80 || sx > VW + 80 || sy < -160 || sy > VH + 80) return;
   const on = !ex.locked;
   ctx.strokeStyle = '#2a2c30'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx + 30, sy); ctx.lineTo(sx + 30, sy - 70); ctx.stroke(); ctx.lineWidth = 1;
-  ctx.fillStyle = on ? '#9fffb0' : ex.special === 'pay' ? '#ffb040' : '#444'; ctx.fillRect(sx + 24, sy - 76, 12, 6);
+  ctx.fillStyle = on ? '#9fffb0' : ex.special === 'pay' ? '#ffb040' : ex.special === 'heli' && !ex.gone ? '#7ad0ff' : '#444'; ctx.fillRect(sx + 24, sy - 76, 12, 6);
+  if (ex.special === 'heli' && !ex.gone) { ctx.strokeStyle = on ? '#9fffb0' : 'rgba(122,208,255,0.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(sx, sy, 30, 15, 0, 0, TAU); ctx.stroke(); ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = ctx.strokeStyle; ctx.fillText('H', sx, sy + 5); ctx.lineWidth = 1; } // 헬기 착륙장
   if (on && Settings.light) addLight(sx + 30, sy - 60, 140, 0.8, 'rgba(140,255,160,A)');
   else if (ex.special === 'pay' && Settings.light && Math.sin(G.time * 6) > 0) addLight(sx + 30, sy - 70, 70, 0.6, 'rgba(255,170,60,A)');
   nameTag(sx, sy - 88, on ? '탈출 지점 (열림)' : ex.label, on ? '#7fe08a' : '#ffb060', 'bold 11px sans-serif');

@@ -513,3 +513,8 @@ body.touch #loot-feed { right: 70px; bottom: 110px; }
 .growth { display: grid; gap: 4px; margin: 8px 0; }
 .gw-row { display: grid; grid-template-columns: 22px 120px 1fr; align-items: center; gap: 6px; padding: 4px 6px; background: #13161a; border: 1px solid #2c3138; border-radius: 6px; font-size: 13px; }
 .gw-row span { color: #aaa; font-size: 12px; line-height: 1.4; }
+/* v1.34 출격 계약 */
+.map-row.cx { cursor: pointer; padding: 3px 6px; border: 1px solid #3a3420; border-radius: 6px; background: #17150f; }
+.map-row.cx:hover { border-color: #ffd76a; background: #211d10; }
+.map-row.cx b::after { content: ' ▶ 수락'; color: #ffd76a; font-size: 11px; font-weight: normal; }
+.map-row.cx[data-cx="cancel"] b::after { content: ' ✕ 포기'; color: #ff8a5a; }
