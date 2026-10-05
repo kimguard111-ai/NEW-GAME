@@ -251,7 +251,7 @@ const PlayerStats = {
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {
     const w = p.equip[p.active];
-    return 175 * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (pas('t4') ? 1.04 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
+    return 150 /* v1.30 175 → 150 (실제 비율에선 거의 전력 질주) */ * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (pas('t4') ? 1.04 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
   rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1) / (p.buffs.stim > 0 ? 1.15 : 1),
