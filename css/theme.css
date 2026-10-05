@@ -1,0 +1,127 @@
+/* v1.38 UI 다시 입히기 — "생존자 캠프의 손때 묻은 장비"
+   매끈한 반투명 카드 · 둥근 모서리 · 금빛 발광 · 그라데이션 대신
+   각진 철판 · 마스킹 테이프 라벨 · 갱지 · 타자기 숫자 · 손글씨 명단 · 딱딱한 그림자
+   (style.css 위에 덮어씀 — 이 파일을 빼면 예전 모습) */
+
+@font-face { font-family: 'BlackHan'; src: url(../assets/fonts/BlackHanSans.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: 'Typer'; src: url(../assets/fonts/NanumGothicCoding.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: 'Pen'; src: url(../assets/fonts/NanumPenScript.woff2) format('woff2'); font-display: swap; }
+
+:root {
+  --pn: rgba(20,19,15,.92); --bd: #3e392d; --acc: #d8732a;
+  --steel: #1a1915; --steel2: #24221b; --edge: #4a4436;
+  --paper: #d8ccaa; --paper2: #cbbd96; --ink: #1c1a14; --rust: #8a4a22; --red: #b8352a;
+  --grain: repeating-linear-gradient(115deg, rgba(255,255,255,.018) 0 2px, transparent 2px 5px);
+  --tape: repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 3px, transparent 3px 7px);
+}
+.stencil, .panel-head, #hud-zone, #mm-label, #toast-title, .sum-head, #summary-title, .logo { font-family: 'BlackHan', "Malgun Gothic", sans-serif !important; font-weight: normal !important; }
+.mono, #weapon-ammo, .bar span, #hud-credits, #hud-lv, .hot .key, #menu-buttons i, #doll-stats, #version-label, .controls, #log, .key-btn, #st-text { font-family: 'Typer', "Malgun Gothic", monospace !important; }
+
+/* ---------- 버튼: 각진 철판 ---------- */
+button { border-radius: 0 !important; background: var(--steel2); border: 2px solid var(--edge); color: #e6dfcc;
+  box-shadow: 2px 2px 0 #000; transition: none; }
+button:hover { background: #2f2b21; border-color: var(--acc); color: #fff; }
+button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #000; }
+
+/* ---------- 창: 철판 + 테이프 라벨 ---------- */
+.panel, .summary-box { border-radius: 0 !important; background: var(--grain), var(--steel) !important; border: 2px solid #000 !important;
+  box-shadow: 0 0 0 1px var(--edge), 6px 6px 0 rgba(0,0,0,.55) !important; }
+.panel-head { position: relative; border-radius: 0 !important; background: var(--tape), var(--paper) !important; color: var(--ink) !important;
+  border-bottom: 2px solid #000 !important; font-size: 17px; letter-spacing: 1px; padding: 5px 12px 4px !important;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 3% 100%, 0 82%); }
+.panel-head .close { color: var(--ink) !important; font-family: 'Typer', monospace; font-weight: bold; }
+.panel-head .close:hover { color: var(--red) !important; }
+.panel .muted, .muted { color: #8f877a; }
+.inv-cell, .equip-slot, .doll .equip-slot { border-radius: 0 !important; background: #11100c !important; border-color: #2f2b22 !important; }
+#doll { border-radius: 0 !important; background: radial-gradient(ellipse at 50% 70%, #3a342a, #0f0e0b 75%) !important; border-color: #2f2b22 !important; }
+.map-row.go, .map-row.cx, .prep { border-radius: 0 !important; }
+.map-row.go { background: #14130f; border-color: #2f2b22; }
+.map-row.go:hover { border-color: var(--acc); background: #1e1b13; }
+.map-row.go b::after { color: var(--acc); }
+.sum-head { color: var(--acc) !important; font-size: 15px; letter-spacing: 1px; }
+#summary-title { letter-spacing: 2px !important; }
+#summary-title.ok { color: #9fbf6a !important; } #summary-title.bad { color: var(--red) !important; }
+
+/* ---------- HUD ---------- */
+#hud-top-left, #hud-weapon, #quest-tracker, #hud-zone, #interact-hint, #menu-buttons button, .hot {
+  border-radius: 0 !important; background: var(--grain), var(--pn) !important; border: 2px solid #000 !important;
+  box-shadow: 0 0 0 1px var(--edge), 3px 3px 0 rgba(0,0,0,.5) !important; }
+#portrait-box { border-radius: 0 !important; border: 2px solid #000 !important; box-shadow: 0 0 0 1px var(--edge); }
+#hud-name { font-family: 'BlackHan', sans-serif; font-size: 14px !important; color: var(--paper) !important; letter-spacing: 1px; }
+.bar { border-radius: 0 !important; border: 1px solid #000 !important; background: #0d0c0a !important; }
+.bar::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 9px, rgba(0,0,0,.55) 9px 10px); } /* 눈금 */
+.fill.hp { background: var(--red) !important; }
+.fill.exp { background: #b89a3a !important; }
+.fill.st { background: #6f8f8a !important; }
+.fill.bosshp { background: #7a2a8a !important; }
+#hud-credits .cr { color: #e0c27a; } #hud-credits .pt { color: #9fbf6a; }
+#hud-zone { color: var(--ink) !important; background: var(--tape), var(--paper) !important; letter-spacing: 2px !important; padding: 3px 16px !important; font-size: 16px; }
+#mm-wrap { filter: none; }
+#minimap { border-radius: 0 !important; border: 3px solid #000 !important; box-shadow: 0 0 0 2px var(--edge), 4px 4px 0 rgba(0,0,0,.55) !important; }
+#mm-label { border-radius: 0 !important; background: var(--tape), var(--paper) !important; color: var(--ink) !important; border: 1px solid #000 !important; transform: rotate(-3deg); }
+#quest-tracker { border-left: 2px solid #000 !important; padding-top: 22px !important; }
+#quest-tracker::before { content: '목표' !important; position: absolute; left: -2px; top: -2px; padding: 1px 10px; color: var(--ink) !important;
+  background: var(--tape), var(--paper); font-family: 'BlackHan', sans-serif; font-size: 13px !important; letter-spacing: 2px; font-weight: normal !important; }
+#quest-tracker b { color: #e0a060 !important; }
+#weapon-ammo { color: #efe6cf !important; letter-spacing: 0 !important; }
+#weapon-ammo small { color: #8f877a !important; }
+#weapon-name { font-family: 'BlackHan', sans-serif; font-size: 14px !important; color: var(--paper); letter-spacing: 1px; }
+#weapon-role { color: #7d766a !important; }
+#menu-buttons button { color: #cfc6b0 !important; }
+#menu-buttons button:hover, .hot:hover { box-shadow: 0 0 0 1px var(--acc), 3px 3px 0 rgba(0,0,0,.5) !important; }
+#menu-buttons i { color: var(--acc) !important; }
+.hot { color: #cfc6b0 !important; }
+.hot .key { color: var(--acc) !important; }
+.hot .cd { border-radius: 0 !important; background: rgba(0,0,0,.72) !important; }
+#log div { background: rgba(10,9,7,.6) !important; border-left: 2px solid #3e392d; }
+#tip { border-radius: 0 !important; background: var(--grain), rgba(22,20,15,.95) !important; border: 2px solid #000 !important; box-shadow: 0 0 0 1px var(--edge), 3px 3px 0 rgba(0,0,0,.5); color: #e6dfcc !important; }
+
+/* 알림: 도장 */
+#toast { background: rgba(16,15,12,.88) !important; border: 3px solid var(--acc); padding: 8px 36px 10px !important; box-shadow: 4px 4px 0 rgba(0,0,0,.6); }
+#toast-title { color: var(--acc) !important; text-shadow: none !important; font-size: 24px !important; letter-spacing: 3px; }
+#toast-sub { color: #d8cfba !important; }
+
+/* ---------- 타이틀: 포스터 + 생존자 명단 ---------- */
+.title-main { max-width: 470px !important; }
+.logo { font-size: 96px !important; letter-spacing: 0 !important; color: #e9e1cc !important; line-height: .95 !important;
+  text-shadow: 4px 4px 0 #000 !important; }
+.logo span { display: inline-block; margin-left: 14px; color: var(--red) !important; text-shadow: 4px 4px 0 #000 !important; transform: rotate(-4deg) translateY(-6px); }
+.logo small { display: block; font-family: 'Typer', monospace; font-size: 15px; letter-spacing: 9px; color: #a89f8a; margin-top: 10px; text-shadow: none; }
+.title-main h2 { font-family: 'Typer', monospace; font-size: 13px !important; letter-spacing: 1px !important; color: #b8ae96 !important; margin: 14px 0 16px !important; font-weight: normal; }
+.title-main #version-label { position: fixed; right: 14px; bottom: 10px; color: #6d6656; font-size: 12px; margin: 0 !important; }
+.roster { position: relative; background: var(--tape), linear-gradient(#0000 0 30px, rgba(0,0,0,.08) 30px 31px, #0000 31px) 0 6px / 100% 31px, var(--paper);
+  color: var(--ink); padding: 34px 18px 12px; transform: rotate(-1.2deg); box-shadow: 6px 8px 0 rgba(0,0,0,.6); border: 1px solid #000; margin-bottom: 16px; }
+.roster::before { content: '시청역 캠프 · 생존자 명단'; position: absolute; left: 12px; top: 6px; font-family: 'BlackHan', sans-serif; font-size: 15px; letter-spacing: 1px; color: var(--rust); }
+.roster::after { content: ''; position: absolute; right: 26px; top: -10px; width: 70px; height: 20px; background: rgba(220,210,170,.55); transform: rotate(6deg); box-shadow: 0 1px 0 rgba(0,0,0,.2); } /* 테이프 */
+#slot-row { display: block !important; margin: 0 0 6px !important; }
+#slot-row .slot { display: flex; width: 100%; align-items: baseline; gap: 10px; background: transparent !important; border: 0 !important; box-shadow: none !important;
+  color: var(--ink) !important; text-align: left !important; padding: 2px 4px !important; opacity: 1 !important; font-size: 13px; line-height: 1.6; }
+#slot-row .slot b { font-family: 'Typer', monospace; font-weight: normal; font-size: 12px; color: #6a604c; min-width: 46px; }
+#slot-row .slot .who { font-family: 'Pen', cursive; font-size: 24px; line-height: 1; color: #1a2a5a; }
+#slot-row .slot .meta { font-family: 'Typer', monospace; font-size: 11px; color: #5a5242; margin-left: auto; }
+#slot-row .slot .empty { font-family: 'Pen', cursive; font-size: 20px; color: #9a8f74; }
+#slot-row .slot.on { background: rgba(184,53,42,.12) !important; outline: 2px solid var(--red); outline-offset: -2px; }
+#slot-row .slot:hover { background: rgba(0,0,0,.06) !important; }
+.roster #name-input { width: 100% !important; margin: 6px 0 0 !important; background: transparent !important; border: 0 !important; border-bottom: 2px solid #5a5242 !important;
+  color: #1a2a5a !important; font-family: 'Pen', cursive !important; font-size: 26px !important; text-align: left !important; padding: 2px 4px !important; }
+.roster #name-input::placeholder { color: #9a8f74; }
+.title-main .title-buttons { display: flex; gap: 10px; }
+.title-main .title-buttons button { flex: 1; font-family: 'BlackHan', sans-serif; font-size: 20px !important; letter-spacing: 2px; padding: 10px 0 !important; margin: 0 !important; min-width: 0 !important;
+  background: var(--steel2) !important; border: 2px solid #000 !important; box-shadow: 0 0 0 1px var(--edge), 3px 3px 0 #000 !important; }
+.title-main .title-buttons button:first-child { background: var(--red) !important; color: #f2ead6 !important; }
+.title-main .title-buttons button:hover { box-shadow: 0 0 0 1px var(--acc), 3px 3px 0 #000 !important; }
+.title-main .title-buttons button:disabled { opacity: .45; }
+.title-main .controls { font-size: 11px !important; color: #7d766a !important; margin-top: 18px !important; line-height: 1.7; }
+.title-main .controls b { color: #b8ae96; font-weight: normal; }
+body.touch .logo { font-size: 52px !important; } body.touch .logo small { font-size: 11px; letter-spacing: 5px; }
+body.touch .roster { padding: 28px 12px 8px; } body.touch #slot-row .slot .who { font-size: 18px; }
+/* v1.38 손질 */
+.bar span { z-index: 2; } .bar::after { z-index: 1; }
+.bar .fill { position: relative; z-index: 0; }
+#log { font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif !important; }
+.logo small { letter-spacing: 3px !important; }
+.sum-head .muted, .sum-head span { font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif !important; font-size: 11px; letter-spacing: 0; }
+#panel-dialog { max-height: calc(100vh - 150px); display: flex; flex-direction: column; }
+#dialog-text { overflow-y: auto; min-height: 0; }
+#panel-stats, #panel-quest, #panel-skills, #panel-shop, #panel-inventory { max-height: calc(100vh - 90px); overflow-y: auto; }

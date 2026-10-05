@@ -1275,9 +1275,9 @@ function frame(now) {
   const slots = () => {
     save = loadSave();
     document.getElementById('slot-row').innerHTML = [1, 2, 3].map(n => { const s = loadSave(n), p = s && s.p;
-      return `<button class="slot${n === SAVE_SLOT ? ' on' : ''}" data-slot="${n}"><b>슬롯 ${n}</b><br>${p ? `${p.name} · Lv${p.level}<br><small>${(p.quest && p.quest.ch) || 0}장 · ${Math.floor((p.playTime || 0) / 3600)}시간 ${Math.floor((p.playTime || 0) % 3600 / 60)}분</small>` : '<small>비어 있음</small>'}</button>`; }).join('');
+      return `<button class="slot${n === SAVE_SLOT ? ' on' : ''}" data-slot="${n}"><b>No.${n}</b>${p ? `<span class="who">${p.name}</span><span class="meta">Lv${p.level} · ${(p.quest && p.quest.ch) || 0}장 · ${Math.floor((p.playTime || 0) / 3600)}h ${String(Math.floor((p.playTime || 0) % 3600 / 60)).padStart(2, '0')}m</span>` : '<span class="empty">— 빈칸 —</span>'}</button>`; }).join(''); // v1.38 명단 한 줄
     document.querySelectorAll('#slot-row .slot').forEach(b => { b.onclick = () => { SAVE_SLOT = +b.dataset.slot; try { localStorage.setItem('seoul2049-slot', SAVE_SLOT); } catch (e) { /* */ } SFX.play('click'); slots(); }; });
-    btnC.disabled = !save; btnC.textContent = save ? `이어하기 (${save.p.name} Lv${save.p.level})` : '이어하기';
+    btnC.disabled = !save; btnC.textContent = '이어서';
   };
   slots();
   document.getElementById('btn-new').onclick = () => {
