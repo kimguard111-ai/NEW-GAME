@@ -12,6 +12,35 @@ const Juice = {
       if (this.casings.length > 80) this.casings.shift();
     }
   },
+  // v1.29 적이 처음 알아챔: 머리 위 「!」 (0.9초) + 종류별 소리 (멀수록 작게)
+  spot(e, d) {
+    e.alertT = 0.9;
+    const v = clamp(1.2 - d / 600, 0.25, 1), fac = FACTION[e.type];
+    SFX.play(e.type === 'brute' || e.elite || e.fieldBoss ? 'roar' : fac === 'machine' ? 'beep' : fac === 'human' ? 'shout' : 'growl', v);
+  },
+  step(e, d) { SFX.play('estep', clamp(1 - d / 520, 0.15, 1) * (e.type === 'brute' ? 2.2 : 1)); },
+  // v1.29 주운 물건: 오른쪽 알림 카드 + 아이콘이 가방 버튼으로 날아감 (장비만)
+  flies: [],
+  loot(it, x, y) {
+    const r = it.rarity || 0, col = it.unique ? '#ff5aa0' : it.set ? SETS[it.set].color : RARITIES[r].color, up = it.kind !== 'cons' && isUpgrade(G.player, it);
+    const box = $('loot-feed'); if (!box) return;
+    const c = document.createElement('div'); c.className = 'loot-card r' + r; c.style.setProperty('--rc', col);
+    c.innerHTML = `${itemIcon(it)} <span>${itemName(it)}${it.count > 1 ? ' x' + it.count : ''}</span>${up ? ' <span class="up">▲</span>' : ''}${it.kind !== 'cons' && r >= 1 ? ` <small>${RARITIES[r].name}</small>` : ''}`;
+    box.appendChild(c); while (box.children.length > 5) box.firstChild.remove();
+    setTimeout(() => c.remove(), 3800);
+    if (it.kind === 'cons') return;
+    const bag = document.querySelector('#menu-buttons button[data-panel="inventory"]'); if (!bag) return;
+    const rc = bag.getBoundingClientRect();
+    this.flies.push({ key: it.key, x0: Iso.sx(x, y), y0: Iso.sy(x, y, 10), x1: (rc.left + rc.width / 2) / ZOOM, y1: (rc.top + rc.height / 2) / ZOOM, t: 0, col, bag });
+  },
+  drawFlies(dt) {
+    for (const f of this.flies) {
+      f.t += dt; const k = Math.min(1, f.t / 0.5), e = k * k * (3 - 2 * k), x = lerp(f.x0, f.x1, e), y = lerp(f.y0, f.y1, e) - Math.sin(k * Math.PI) * 60, s = 26 - k * 10;
+      ctx.save(); ctx.globalAlpha = 1 - Math.max(0, k - 0.85) / 0.15; ctx.shadowColor = f.col; ctx.shadowBlur = 10; ctx.drawImage(Icons.cv(f.key), x - s / 2, y - s / 2, s, s); ctx.restore();
+      if (k >= 1 && !f.done) { f.done = true; f.bag.style.setProperty('--rc', f.col); f.bag.classList.remove('pulse'); void f.bag.offsetWidth; f.bag.classList.add('pulse'); }
+    }
+    this.flies = this.flies.filter(f => !f.done);
+  },
   hit(kill) { this.hm = { t: 0, kill: kill || (this.hm && this.hm.kill && this.hm.t < 0.05) }; },
   update(dt) {
     this.spread = Math.max(0, this.spread - dt * 2.2);
@@ -45,7 +74,22 @@ const Juice = {
       ctx.restore();
     }
   },
+  // v1.29 화면 밖에서 다가오는 적: 화면 가장자리에 주황 화살표 (가까울수록 진하게)
+  drawApproach(psx, psy) {
+    const p = G.player; if (p.dead) return; let n = 0;
+    for (const e of G.enemies) {
+      if (e.hp <= 0 || e.state !== 'chase' || e.minion && n > 6) continue;
+      const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y);
+      if (sx > -10 && sx < VW + 10 && sy > -10 && sy < VH + 10) continue;
+      const d = dist(p, e); if (d > 700) continue;
+      const a = Math.atan2(sy - psy, sx - psx), k = clamp(1 - d / 700, 0.2, 1), r = Math.min(VW, VH) * 0.46;
+      ctx.save(); ctx.translate(psx, psy - 20); ctx.rotate(a); ctx.fillStyle = `rgba(255,150,40,${0.6 * k})`;
+      ctx.beginPath(); ctx.moveTo(r + 12, 0); ctx.lineTo(r, -7); ctx.lineTo(r + 3, 0); ctx.lineTo(r, 7); ctx.closePath(); ctx.fill(); ctx.restore();
+      if (++n > 10) break;
+    }
+  },
   drawHUD() { // 조준선 · 명중 표시 (화면 좌표 = 마우스)
+    this.drawFlies(1 / 60);
     if (IS_TOUCH || !G.player || G.player.dead || G.paused) return;
     const p = G.player, w = curWeapon(), b = w && WEAPONS[w.key], x = input.mx, y = input.my;
     ctx.save(); ctx.lineCap = 'round';

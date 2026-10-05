@@ -37,7 +37,7 @@ const SFX = {
 
   play(name, k = 1) {
     if (!this.ctx || !Settings.sound) return;
-    const now = performance.now(), gap = { hit: 35, ehit: 50, eshot: 60, coin: 40, step: 0 }[name] ?? 25;
+    const now = performance.now(), gap = { hit: 35, ehit: 50, eshot: 60, coin: 40, step: 0, growl: 260, roar: 600, shout: 300, beep: 300, estep: 70 }[name] ?? 25; // v1.29 적 소리는 겹치지 않게
     if (now - (this.last[name] || 0) < gap) return;
     this.last[name] = now;
     const v = k;
@@ -51,6 +51,12 @@ const SFX = {
       case 'sniper': this.noise(0.4, 1100, 0.6, 0.8 * v, 'lowpass', 0.2); this.tone(70, 0.3, 0.45 * v, 'sine', 0, 0.3); break;
       case 'swing': this.noise(0.14, 700, 1.5, 0.25 * v, 'bandpass', 3); break;
       case 'heavy': this.noise(0.22, 420, 1.2, 0.4 * v, 'bandpass', 2.5); this.tone(90, 0.18, 0.3 * v, 'sine', 0.05, 0.5); break; // v1.9 근접 마무리
+      // v1.29 적 반응 (처음 알아챔) · 발소리
+      case 'growl': this.noise(0.45, 260, 0.6, 0.35 * v, 'lowpass', 0.5); this.tone(95 + Math.random() * 30, 0.4, 0.22 * v, 'sawtooth', 0, 0.55); break; // 감염체: 낮은 울음
+      case 'roar': this.noise(0.7, 200, 0.5, 0.5 * v, 'lowpass', 0.4); this.tone(70, 0.6, 0.35 * v, 'sawtooth', 0, 0.5); break; // 덩치·네임드
+      case 'shout': this.tone(330 + Math.random() * 60, 0.09, 0.14 * v, 'square', 0, 0.85); this.tone(260, 0.12, 0.12 * v, 'square', 0.1, 0.8); break; // 약탈자·용병: 짧은 외침
+      case 'beep': this.tone(1500, 0.06, 0.12 * v, 'square'); this.tone(1900, 0.08, 0.12 * v, 'square', 0.09); break; // 기계: 경보음
+      case 'estep': this.noise(0.05, 180, 1.2, 0.12 * v, 'lowpass'); break;
       case 'casing': this.tone(2600 + Math.random() * 900, 0.03, 0.06 * v, 'triangle', 0, 0.8); this.tone(3400 + Math.random() * 600, 0.025, 0.04 * v, 'triangle', 0.05, 0.8); break; // v1.28 탄피 떨어지는 소리
       case 'hitmark': this.tone(2400, 0.025, 0.07 * v, 'square'); break; // v1.28 명중 확인
       case 'empty': this.tone(1200, 0.03, 0.12, 'square'); break;

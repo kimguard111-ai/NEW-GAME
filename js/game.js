@@ -809,6 +809,9 @@ function updateEnemies(dt) {
     if (!p.dead && !pSafe && same && d < e.def.aggro) e.state = 'chase';
     else if (e.state === 'chase' && (p.dead || pSafe || d > e.def.aggro * (e.heard ? 2.6 : 1.7) || (!same && Nav.dist && Nav.dist[Math.floor(e.y / TILE) * World.W + Math.floor(e.x / TILE)] < 0))) e.state = 'idle'; // 길이 없을 때만 포기
     if (e.assault && !p.dead) e.state = 'chase'; // 어설트 적은 항상 추격
+    if (e.state === 'chase' && e.prevSt !== 'chase' && !e.minion && G.time - (e.spotT || -99) > 8) { e.spotT = G.time; Juice.spot(e, d); } // v1.29 처음 알아챔: 「!」 + 울음
+    e.prevSt = e.state; e.alertT = (e.alertT || 0) - dt;
+    if (e.state === 'chase' && !e.def.flying && d < 520 && (e.stepT = (e.stepT || 0) - dt) <= 0) { e.stepT = e.type === 'brute' ? 0.55 : e.type === 'dog' ? 0.22 : 0.4; Juice.step(e, d); } // v1.29 다가오는 발소리
     if (e.def.boss) updateBoss(e, dt, d);
     if ((e.elite || e.patterns) && e.state === 'chase') Monsters.updateNamed(e, dt);
     if (e.affix && e.state === 'chase' && !e.announced) { e.announced = true; log(`${ICON('warn')} 엘리트: ${ELITE_AFFIXES[e.affix].name} ${e.def.name} (${ELITE_AFFIXES[e.affix].desc})`, ELITE_AFFIXES[e.affix].color); }
@@ -1087,7 +1090,7 @@ function updateDrops(dt) {
       else if (d.kind === 'item') {
         if (addItem(d.item)) {
           const r = d.item.rarity || 0, up = isUpgrade(p, d.item);
-          SFX.play('item', Math.min(4, r));
+          SFX.play('item', Math.min(4, r)); Juice.loot(d.item, d.x, d.y); // v1.29 알림 카드 · 가방으로 날아가는 아이콘
           log(`획득: ${itemName(d.item)}${d.item.count > 1 ? ' x' + d.item.count : ''}${up ? '  ▲ 장착 장비보다 좋음!' : ''}`, RARITIES[r].color);
           if (r >= 2) {
             floatText(p.x, p.y - 30, `${RARITIES[r].name} 장비!`, RARITIES[r].color, 16 + r * 2);
@@ -1152,6 +1155,7 @@ function update(dt) {
   Turrets.update(dt); // v1.26 포탑
   Juice.update(dt); // v1.28
   Journal.update(dt); // v1.15 업적
+  updateTension(dt); // v1.29 출격 긴장도 (음악 · 화면 톤)
   Music.update(dt); // v1.17 배경 음악
   if (!p.dead && p.hp < PlayerStats.maxHp(p) * 0.3 && World.map !== 'camp' && (G.beatT = (G.beatT || 0) - dt) <= 0) { G.beatT = 0.4 + p.hp / PlayerStats.maxHp(p) * 2.2; SFX.play('heart'); } // v1.17 저체력 심장 박동
   Nav.update(dt);
@@ -1201,6 +1205,20 @@ function update(dt) {
 
   G.saveT += dt;
   if (G.saveT > 20) { G.saveT = 0; Bounty.refresh(); Weekly.refresh(); saveGame(); } // 자정이 지나면 의뢰 갱신
+}
+
+// v1.29 출격 긴장도 0~1: 경보 단계 · 출격 시간 · 아직 확정 안 된 전리품 · 체력 · 다가오는 적. 캠프에서는 0
+// 음악(심장 박동·째깍임 층)과 화면 톤(가장자리 어둡게·붉게)이 따라감 — 전투 음악(쫓는 적 수)과는 따로
+function updateTension(dt) {
+  const p = G.player; let t = 0;
+  if (p && p.raid && !p.dead && World.map !== 'camp') {
+    let near = 0; for (const e of G.enemies) if (e.hp > 0 && e.state === 'chase' && Math.abs(e.x - p.x) + Math.abs(e.y - p.y) < 900) near++;
+    const mh = PlayerStats.maxHp(p), loot = p.inventory.filter(i => i && i.raid).length * 0.04 + (p.raid.credits || 0) / 4000;
+    t = (RaidEvents.alert || 0) * 0.15 + Math.min(0.2, p.raid.t / 1800) + Math.min(0.15, loot) + Math.max(0, 0.5 - p.hp / mh) * 0.8 + Math.min(0.35, near * 0.07);
+    if (G.extractT > 0) t += 0.25; // 탈출 중
+  }
+  t = clamp(t, 0, 1);
+  G.tension = (G.tension || 0) + (t - (G.tension || 0)) * Math.min(1, dt * (t > (G.tension || 0) ? 0.8 : 0.3));
 }
 
 // ---------------- 루프 ----------------

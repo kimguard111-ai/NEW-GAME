@@ -53,6 +53,12 @@ const Music = {
     if (step % 32 === 0) for (const [i, m] of ch.entries()) this.pad(mtof(m + 12 * (i === 0 ? 0 : 0)), t, eighth * 32 + 1.2, M, i);
     // 아르페지오: 짝수 박에 가끔 (전투가 세지면 줄어듦)
     if (step % 2 === 0 && Math.random() < M.arp * (1 - I * 0.6)) this.pluck(mtof(pick(ch) + 12 + (Math.random() < 0.3 ? 12 : 0)), t, 0.04);
+    // v1.29 긴장 층: 전투 전 압박 — 낮은 심장 박동(쿵-쿵) · 높으면 째깍이는 고음
+    const T = G.tension || 0;
+    if (T > 0.25 && I < 0.5) {
+      if (step % 8 === 0) { this.kick(t, 0.16 * T); this.kick(t + eighth * 0.45, 0.1 * T); }
+      if (T > 0.55 && step % 2 === 1) this.hat(t, 0.018 * T);
+    }
     if (I < 0.05) return;
     // 전투 층
     const root = ch[0] - 12;

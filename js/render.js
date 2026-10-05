@@ -991,6 +991,12 @@ function drawEnemy(e) {
     }
   }
   if (k !== 1) { ctx.restore(); topY = sy - (sy - topY) * k; }
+  if (e.alertT > 0) { // v1.29 처음 알아챔 「!」 (튀어 오르며 나타남)
+    const t = 0.9 - e.alertT, pop = t < 0.12 ? t / 0.12 * 1.3 : t < 0.2 ? 1.3 - (t - 0.12) / 0.08 * 0.3 : 1, by = topY - 20 - Math.min(t, 0.12) * 40;
+    ctx.save(); ctx.globalAlpha = Math.min(1, e.alertT / 0.2); ctx.translate(sx, by); ctx.scale(pop, pop);
+    ctx.fillStyle = FACTION[e.type] === 'machine' ? '#5ad0ff' : '#ff3a2a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeText('!', 0, 0); ctx.fillText('!', 0, 0); ctx.restore();
+  }
   if (e.elite || e.bossName) {
     nameTag(sx, topY - 2, `★ ${e.bossName || ELITES[e.elite].name}`, '#ffa53a', 'bold 12px sans-serif');
   } else if (e.affix) {
@@ -1341,6 +1347,11 @@ function render() {
   const tint = ZONES[G.zone].tint;
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(200,0,0,${p.hurtT})`; ctx.fillRect(0, 0, VW, VH); }
+  if ((G.tension || 0) > 0.15) { // v1.29 긴장도: 가장자리가 어둡고 붉어짐 (화면 가운데는 그대로)
+    const T = G.tension, gv = ctx.createRadialGradient(VW / 2, VH / 2, VH * 0.3, VW / 2, VH / 2, VH * 0.95);
+    gv.addColorStop(0, 'rgba(0,0,0,0)'); gv.addColorStop(1, `rgba(${Math.round(30 + T * 40)},0,0,${(T - 0.15) * 0.55})`);
+    ctx.fillStyle = gv; ctx.fillRect(0, 0, VW, VH);
+  }
   if (G.flash) { // v1.7.1 영웅·전설 드랍 번쩍임
     const f = G.flash; f.t += 1 / 60;
     if (f.t >= f.life) G.flash = null;
@@ -1353,6 +1364,7 @@ function render() {
     ctx.fillStyle = g3; ctx.fillRect(0, 0, VW, VH);
   }
   drawHitDirs(psx, psy); // v1.17 화면 밖에서 맞은 방향
+  Juice.drawApproach(psx, psy); // v1.29 다가오는 적
   Juice.drawHUD(); canvas.classList.toggle('aim', G.running && !p.dead); // v1.28 조준선
 
   if (G.fade) { // v1.17 출격·귀환 화면 전환 (검게 → 밝게)
@@ -1463,10 +1475,10 @@ function drawLandmark(l) {
 // 희귀 이상 장비 빛기둥 (v0.16): 멀리서도 보이게
 function drawDropBeams() {
   for (const d of G.drops) {
-    if (d.kind !== 'item' || d.item.kind === 'cons' || (d.item.rarity || 0) < 2 || !d.landed) continue;
+    if (d.kind !== 'item' || d.item.kind === 'cons' || !d.landed) continue; // v1.29 장비가 귀해진 만큼 일반·고급도 낮은 빛기둥
     if (d.item.rarity >= 4 && G.hitstop <= 0 && G.particles.length < 500 && Math.random() < 0.5) // 전설: 빛 입자가 계속 솟아오름
       G.particles.push({ x: d.x + rand(-10, 10), y: d.y + rand(-10, 10), vx: 0, vy: 0, z: 6, vz: rand(50, 90), t: 0, life: rand(0.8, 1.4), color: pick(['#ffa53a', '#ffd76a', '#fff3c0']), size: rand(2, 4) });
-    const r = d.item.rarity, sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y), h = 60 + r * 30, pul = 0.7 + Math.sin(G.time * 4 + d.x) * 0.3;
+    const r = d.item.rarity || 0, sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y), h = r < 2 ? 28 + r * 14 : 60 + r * 30, pul = (0.7 + Math.sin(G.time * 4 + d.x) * 0.3) * (r < 2 ? 0.5 : 1);
     const g = ctx.createLinearGradient(0, sy, 0, sy - h);
     const c = d.item.unique ? '#ff5aa0' : d.item.set ? SETS[d.item.set].color : RARITIES[r].color; // v1.12 고유 · 세트 색
     g.addColorStop(0, c + 'cc'); g.addColorStop(1, c + '00');

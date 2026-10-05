@@ -497,3 +497,15 @@ button.mini { font-size: 10px; padding: 1px 6px; margin-left: 6px; background: #
 .tn.up { box-shadow: inset 0 0 0 1px #e0b23a; } .tn.up span { color: #ffd76a; }
 .tn.use { border-color: #5aa8ff; }
 @media (max-height: 520px) { #panel-skills { top: 4px; } #skills-body { max-height: calc(100vh - 90px); padding: 6px 8px; } }
+
+/* v1.29 주운 장비 알림 (오른쪽, 아래에서 위로 쌓임) */
+#loot-feed { position: absolute; right: 12px; bottom: 175px; display: flex; flex-direction: column-reverse; gap: 4px; align-items: flex-end; pointer-events: none; }
+body.touch #loot-feed { right: 70px; bottom: 110px; }
+.loot-card { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; background: rgba(14,16,20,.88); border: 1px solid #3a3f48; border-left: 3px solid var(--rc, #888); border-radius: 4px; font-size: 13px; color: var(--rc, #ddd);
+  animation: lootIn .25s ease-out, lootOut .5s ease-in 3.2s forwards; }
+.loot-card .ico { width: 22px; height: 22px; } .loot-card .up { color: #6f6; font-weight: bold; } .loot-card small { color: #999; font-size: 11px; }
+.loot-card.r3, .loot-card.r4 { box-shadow: 0 0 12px var(--rc); font-weight: bold; }
+@keyframes lootIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes lootOut { to { opacity: 0; transform: translateY(-6px); } }
+#menu-buttons button.pulse { animation: bagPulse .45s ease-out; }
+@keyframes bagPulse { 0% { transform: scale(1); } 40% { transform: scale(1.25); border-color: var(--rc, #e0b23a); } 100% { transform: scale(1); } }
