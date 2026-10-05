@@ -20,10 +20,12 @@ const TIPS = {
   water:     () => '얕은 물에서는 사람도 적도 느려집니다. 쫓길 땐 물을 피하고, 근접형 적을 물가로 끌어들이세요.',
   melee:     () => `근접 무기는 계속 휘두르면 3타째에 강한 마무리(쇠파이프 강타 · 도끼 회전 베기 · 블레이드 돌진 찌르기)가 나갑니다. ${tipKey('Space', '구르기')} 직후 바로 공격하면 곧장 마무리 일격!`,
   events:    () => '이번 출격에 사건이 있습니다 (미니맵 노란 ◆ · 목표 창). 보급 투하·금고·둥지는 좋은 보상, 오래 머물면 경보 단계가 올라 적이 늘어납니다. 주황 점선 ◎은 조건을 채우면 열리는 특수 탈출.',
-  perk:      () => '특성을 고를 수 있습니다! 능력치 창(C) 가운데의 특성 칸에서 하나를 고르세요. 스킬마다 갈래(오른쪽 버튼 2개)도 캠프에서 고를 수 있습니다.',
+  perk:      () => '특성을 고를 수 있습니다! 능력치 창(C)의 특성 칸, 또는 「패시브 트리」에서 하나를 고르세요 (무료 · 의무병에게서 초기화). 같은 갈래로 3개 모으면 보너스. 스킬 갈래는 스킬 창(K)에서.',
   camp:      () => '캠프 시설을 지을 수 있습니다! 생존자 대장 한씨 → 「캠프 시설」. 의무실·사격장·창고 증축·작업대·무전실 — 크레딧과 고철·전자 부품이 듭니다.',
   gadget:    () => `투척물·보조 소모품을 얻었습니다! 벨트의 투척 칸(화염병·섬광탄·지뢰) · 보조 칸(자극제·방탄판)에서 씁니다 — 칸이 없으면 ${tipKey('B', '벨트 버튼')}로 등록. 종류 바꾸기: ${tipKey('T / Y', '칸 모서리 ↻')}`,
   skillshop: () => '스킬은 스킬 포인트로 배웁니다 (레벨 업마다 +1 · 장 완료마다 +1). 스킬 창(K)에서 배우고 등급(1~5)을 올립니다. 레벨이 되면 새 스킬이 열리고, 스킬마다 갈래 2개·숙련·궁극도 스킬 포인트로 배웁니다.',
+  sp:        () => `스킬 포인트(SP)가 있습니다! ${tipKey('K(스킬 창)', '스킬 버튼')}에서 새 스킬을 배우거나 등급을 올리세요. 레벨 업마다 +1 · 장 완료마다 +1 — 전부 배울 수는 없으니 골라서.`, // v1.30
+  belt:      () => `벨트 칸이 가득합니다. 더 좋은 벨트(상인 박씨 · 뒤지기)를 차면 칸이 2 · 4 · 6 · 8로 늘어납니다. 칸에 넣을 것은 ${tipKey('B', '벨트 버튼')}로 바꿉니다.`,
   extract:   () => '이번 출격에서 주운 장비·크레딧은 맵 끝의 초록 ◎ 탈출 지점에 5초 머물러야 확정됩니다. 죽으면 그것만 잃어요.',
 };
 
@@ -47,7 +49,9 @@ const Tips = {
     if (!p || p.dead || !Settings.tips) return;
     const near = (e, r) => e.hp > 0 && dist(e, p) < r;
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
-    if (World.map === 'camp' && !p.tips.includes('skillshop') && SKILLS.some(s => p.level >= s.lvl && !p.skills[s.id] && (p.sp || 0) >= SKILL_SP.root)) return this.show('skillshop');
+    if (World.map === 'camp' && !p.tips.includes('growth') && ((p.rec && p.rec.extracts) || p.deaths)) return Growth.show(); // v1.30 첫 출격 뒤 성장 안내 (한 번)
+    if (!p.tips.includes('sp') && (p.sp || 0) >= 1 && SKILLS.some(s => (!p.skills[s.id] && p.level >= s.lvl) || (p.skills[s.id] && srank(s.id) < SKILL_RANKS && p.level >= rankLvl(s, srank(s.id) + 1))) && !UI.anyOpen()) return this.show('sp');
+    if (!p.tips.includes('belt') && SKILLS.some((s, i) => p.skills[s.id] && !p.hotbar.slice(0, beltSlots(p)).includes('sk' + i)) && !p.hotbar.slice(0, beltSlots(p)).includes(null)) return this.show('belt');
     if (World.map === 'camp' && p.level >= 5 && p.credits >= FAC_COST[0].credits && !Object.values(p.camp || {}).some(Boolean) && !p.tips.includes('camp')) return this.show('camp');
     if (World.map === 'camp' && p.level >= 1) { this.show('deploy'); if (World.map === 'camp') return; }
     if (p.raid && p.raid.t > 4) this.show('extract');
@@ -71,5 +75,22 @@ const Tips = {
     if (p.inventory.filter(it => it.kind !== 'cons').length >= 12) return this.show('workshop');
     if (p.level >= 3 && p.bounty) return this.show('bounty');
     if (G.fieldBoss) return this.show('fieldboss');
+  },
+};
+
+// v1.30 성장 안내: 첫 출격(탈출이든 사망이든)을 마치고 캠프에 돌아오면 한 번 — 이 게임에서 강해지는 길 6가지를 한 화면에
+const Growth = {
+  show() {
+    const p = G.player; if (UI.anyOpen()) return; p.tips.push('growth');
+    const k = (pc, m) => tipKey(pc, m), row = (ic, t, d) => `<div class="gw-row">${ICON(ic)} <b>${t}</b><span>${d}</span></div>`;
+    UI.dialog('생존자 대장 한씨 — 강해지는 법', `"첫 출격 수고했네. 여기서 오래 살아남으려면 이것들을 챙기게."<div class="growth">`
+      + row('stats', `능력치 ${k('(C)', '')}`, '레벨 업마다 3점 — 근력·사격·체력·민첩 중 내 싸움 방식에')
+      + row('rapid', `스킬 ${k('(K)', '')}`, '레벨 업마다 SP 1 — 스킬을 배우고 등급(1~5)을 올림 · 전부는 못 배우니 골라서')
+      + row('tip', '특성 · 패시브 트리', 'Lv5마다 특성 하나 (무료) · 같은 갈래 3개면 보너스 · 단련은 크레딧')
+      + row('belt', `벨트 ${k('(B)', '')}`, '벨트 등급만큼 핫바 칸 2~8 · 칸에 스킬·구급상자·투척물을 직접 등록')
+      + row('settings', '정비공 최씨', '장비 강화(+10까지) · 분해해서 재료 · 옵션 재조정')
+      + row('map', '캠프 시설 (나)', '의무실·사격장·창고·작업대·무전실 — 크레딧과 재료로')
+      + `</div><span class="muted">좋은 장비는 상점보다 출격에서 나온다 · 주운 건 탈출해야 내 것</span>`, [['알겠습니다', () => UI.close('dialog')]]);
+    SFX.play('ui');
   },
 };

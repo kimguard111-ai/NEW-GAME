@@ -19,7 +19,7 @@ const CHAPTERS = [
       { type: 'kill', target: 'zombie', count: 8, text: '캠프 밖 명동 잔해의 감염자를 정리하라.',
         reward: { exp: 90, credits: 150, items: [['medkit', 2]], equip: 'vest' } },
       { type: 'reach', landmark: 'cathedral', text: '정찰조의 마지막 신호가 잡힌 명동성당으로 가라.',
-        reward: { exp: 150, credits: 150 } },
+        reward: { exp: 150, credits: 150, equip: 'smg' } }, // v1.30 정찰조가 남긴 기관단총 — 권총만으로 버티는 초반을 짧게
       { type: 'hunt', elite: 'glutton', text: '성당에 둥지를 튼 거대 감염체 「먹보」를 처치하라.',
         reward: { exp: 400, credits: 400, gear: 1 } },
     ] },

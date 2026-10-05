@@ -509,3 +509,7 @@ body.touch #loot-feed { right: 70px; bottom: 110px; }
 @keyframes lootOut { to { opacity: 0; transform: translateY(-6px); } }
 #menu-buttons button.pulse { animation: bagPulse .45s ease-out; }
 @keyframes bagPulse { 0% { transform: scale(1); } 40% { transform: scale(1.25); border-color: var(--rc, #e0b23a); } 100% { transform: scale(1); } }
+/* v1.30 성장 안내 */
+.growth { display: grid; gap: 4px; margin: 8px 0; }
+.gw-row { display: grid; grid-template-columns: 22px 120px 1fr; align-items: center; gap: 6px; padding: 4px 6px; background: #13161a; border: 1px solid #2c3138; border-radius: 6px; font-size: 13px; }
+.gw-row span { color: #aaa; font-size: 12px; line-height: 1.4; }
