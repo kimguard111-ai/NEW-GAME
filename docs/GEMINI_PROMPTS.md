@@ -1,4 +1,4 @@
-# Gemini 프롬프트 (v1.18) — 아트 종류별 한 번에 복붙
+# Gemini 프롬프트 (v1.19) — 아트 종류별 한 번에 복붙
 
 **프롬프트 1개 = 그림 1장 = 가공 1번.** 회색 상자를 통째로 복사해 Gemini에 붙여넣으세요.
 그림이 없는 것은 지금의 코드 그림을 그대로 쓰고, 등록한 것부터 하나씩 바뀝니다. 한꺼번에 다 만들 필요 없습니다.
@@ -45,6 +45,7 @@
 | 10 | 타이틀 키아트 | 1 | (가공 없음) | 첫 화면 |
 | 11 | **무기를 든 플레이어 몸** (v1.7.7 · 근접 v1.7.9) | 2~20 | player_long · player_pistol · player_vest_long … | 손과 총이 붙어 보임 |
 | 12 | **소품 · 맵 꾸미기** (v1.18) | 5 | v1.18 거리 소품 · 차량 · 맵 오브젝트 · 캠프 소품 · 잔해·옥상 장식 | 거리·캠프·사건 오브젝트가 전부 그림으로 |
+| 13 | **건물 외벽 · 옥상 질감** (v1.19) | 2 | v1.19 건물 외벽 질감 · 옥상 질감 | 모든 일반 건물의 벽·창문·1층 상가·옥상이 그림으로 |
 
 > 아이콘: 무기·헬멧은 2·5번을 등록하면 자동으로 그 그림이 됩니다. 방어구·구급상자·메뉴 아이콘은 코드로 그린 아이콘(46종)이 이미 통일돼 있어 따로 만들지 않아도 됩니다.
 
@@ -454,6 +455,36 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 ```
 
 > 소품이 너무 크거나 작게 보이면 `js/assets.js`의 `propFit`에서 그 키의 `w`(화면 가로 px)만 바꾸면 됩니다. 땅에서 떠 보이면 `y`를 키우세요.
+
+---
+
+## 13. 건물 외벽 · 옥상 질감 (v1.19) · 한 장에 여러 개 (격자)
+
+건물은 매 출격마다 크기·높이가 달라서 **통째 그림이 아니라 "질감"**을 씁니다. 게임이 건물 상자의 벽·옥상 면에 그림을 **기울여 붙이고, 층마다 반복**합니다 (1층은 상가 질감). 같은 블록의 건물은 같은 외벽을 씁니다.
+- 외벽 한 칸 = **건물 한 칸 너비 × 한 층 높이를 정면에서 본 평면 그림** (원근·기울임 없음). 가로:세로 = **8:9** (거의 정사각형, 세로가 조금 김)
+- 반복해서 이어 붙이므로 **위·아래·좌·우 끝이 자연스럽게 이어져야** 합니다 (가장자리에 테두리·그림자 금지)
+- 명암(남쪽 면은 어둡게)·건물마다 밝기 차이는 게임이 넣으므로 **고르게 밝게** 그립니다
+
+| 지역 | 쓰는 외벽 |
+|---|---|
+| 명동 · 종로 · 잠실 | 벽돌 · 아파트 (· 사무실 · 불탄 벽) |
+| 용산 · 여의도 | 사무실 · 불탄 벽 · 유리 |
+| 강남 | 유리 (고층은 항상) · 사무실 |
+지역별 후보는 `js/assets.js`의 `texZones`에서 바꿀 수 있습니다.
+
+### 13-1. 외벽 질감 6종 · 🔧 **v1.19 건물 외벽 질감 6종 (3×2)** · `tex_facade.png`
+📎 콘셉트 아트
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate flat building facade texture tiles for a post-apocalyptic Seoul, each tile a FLAT FRONT ORTHOGRAPHIC view (no perspective, no isometric angle, no depth), each tile a solid filled rectangle slightly taller than wide (width to height ratio 8:9), placed in its own equal cell with wide empty space between tiles. Each tile shows exactly ONE story of ONE narrow section of a building wall, designed to repeat seamlessly: the left edge matches the right edge and the top edge matches the bottom edge, no border, no frame, no outline around the tile. In order, left to right, top to bottom: 1) a beige weathered Korean apartment wall with two windows, small balcony railing, stains and cracks, one window faintly lit warm orange; 2) a dark red brick wall with two old windows with metal frames, one window boarded up; 3) a gray concrete office wall with a horizontal ribbon window, dirty glass, one dim fluorescent light inside; 4) a dark blue glass curtain wall of a skyscraper with thin metal mullions, a few cracked panes reflecting faint light; 5) a burnt soot-blackened concrete wall with two shattered empty window holes and scorch marks; 6) a ground floor storefront: a closed rusty metal roll-down shutter with graffiti and a blank dark sign band above it (no letters). Evenly lit, no shadows on the tiles, no sky, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no letters, no numbers, no grid lines between tiles. Do not use pink or magenta inside the tiles.
+```
+
+### 13-2. 옥상 질감 3종 · 🔧 **v1.19 옥상 질감 3종 (3×1)** · `tex_roof.png`
+📎 콘셉트 아트 · 하나가 옥상 4×4칸에 걸쳐 펼쳐지므로 무늬가 크고 고르게
+```
+Match the art style of the attached concept image. Create ONE image with 3 separate square flat rooftop floor textures side by side for a post-apocalyptic Seoul, each a solid filled SQUARE seen from DIRECTLY ABOVE (top-down orthographic, no perspective), placed in its own equal cell with wide empty space between them. Each texture must tile seamlessly: the left edge matches the right edge and the top edge matches the bottom edge, no border, no frame. From left to right: 1) a weathered gray concrete roof slab with expansion joints, cracks, water stains and a little moss; 2) a light brown gravel roof with scattered small stones, a few puddle marks and debris; 3) a dark patched tar waterproofing roof with seams, bubbles and old repair patches. Evenly lit, no shadows, no objects, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no letters, no numbers, no grid lines between tiles. Do not use pink or magenta inside the tiles.
+```
+
+> 이음매가 보이면: 해당 칸만 "seamless tileable texture, edges match exactly" 를 강조해 다시 생성하세요. 창문이 너무 크면 "smaller windows, more wall" 을 덧붙이세요.
 
 ---
 

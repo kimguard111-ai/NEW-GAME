@@ -85,6 +85,8 @@
           <option value="props_object">v1.18 맵 오브젝트 9종 (3×3)</option>
           <option value="props_camp">v1.18 캠프 소품 9종 (3×3)</option>
           <option value="props_deco">v1.18 잔해·옥상 장식 9종 (3×3)</option>
+          <option value="tex_facade">v1.19 건물 외벽 질감 6종 (3×2)</option>
+          <option value="tex_roof">v1.19 옥상 질감 3종 (3×1)</option>
         </optgroup>
         <optgroup label="플레이어 무기 (옆모습 1장)">
           <option value="w_pipe">w_pipe (쇠파이프)</option><option value="w_pistol">w_pistol (권총)</option><option value="w_axe">w_axe (소방 도끼)</option>
@@ -333,6 +335,9 @@ const ATLAS = {
   props_vehicle: { file: 'props_vehicle.png', cols: 3, rows: 2, target: 'props', keys: ['car_a', 'car_b', 'car_c', 'police', 'bus', 'car_burnt'] },
   props_object:  { file: 'props_object.png', cols: 3, rows: 3, target: 'props', keys: ['dumpster', 'locker', 'labcase', 'bag', 'safe', 'airdrop', 'generator', 'nest', 'mine'] },
   props_camp:    { file: 'props_camp.png', cols: 3, rows: 3, target: 'props', keys: ['tent', 'tent_medic', 'crates', 'workbench', 'maptable', 'radio', 'campfire', 'container', 'sandbags'] },
+  // v1.19 건물 질감 (js/assets.js 의 tex 안에 붙여넣기): 게임이 건물 벽·옥상 면에 기울여 붙임
+  tex_facade:    { file: 'tex_facade.png', cols: 3, rows: 2, target: 'tex', keys: ['f_apartment', 'f_brick', 'f_office', 'f_glass', 'f_burnt', 'f_shop'] },
+  tex_roof:      { file: 'tex_roof.png', cols: 3, rows: 1, target: 'tex', keys: ['r_concrete', 'r_gravel', 'r_tar'] },
   props_deco:    { file: 'props_deco.png', cols: 3, rows: 3, target: 'props', keys: ['rubble_a', 'rubble_b', 'slab', 'watertank', 'acunit', 'antenna', 'tires', 'cart', 'debris'] },
 };
 function processAtlas(cfg) {

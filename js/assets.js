@@ -66,6 +66,14 @@ const ART = {
     rubble_a: { w: 60, y: 10 }, rubble_b: { w: 56, y: 10 }, slab: { w: 64, y: 12 }, watertank: { w: 26, y: 6 }, acunit: { w: 24, y: 6 }, antenna: { w: 22, y: 2 }, tires: { w: 30, y: 5 }, cart: { w: 30, y: 5 }, debris: { w: 46, y: 8 },
   },
 
+  // v1.19 건물 질감 (가공 도구의 「v1.19 건물 외벽 / 옥상 질감」). 외벽 = 건물 한 칸 × 한 층의 정면 그림, 옥상 = 위에서 본 바닥
+  // 등록하면 건물 벽·옥상에 기울여 붙임 (없으면 코드로 그린 벽·창문)
+  tex: {
+  },
+  // 지역마다 쓰는 외벽 (zone 번호 → 후보). 1층은 f_shop. 강남 유리 고층은 항상 f_glass
+  texZones: { 0: ['f_apartment', 'f_brick'], 1: ['f_brick', 'f_apartment', 'f_office'], 2: ['f_brick', 'f_apartment'], 3: ['f_office', 'f_burnt', 'f_apartment'],
+    4: ['f_office', 'f_glass', 'f_burnt'], 6: ['f_glass', 'f_office'], 7: ['f_apartment', 'f_burnt', 'f_brick'] },
+
   // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
   landmarks: {
     // v1.7.3 Gemini 아트 6채

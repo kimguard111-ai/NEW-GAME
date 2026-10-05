@@ -240,8 +240,12 @@ function drawSolidTile(o) {
     const south = glass ? `rgb(${b - 52},${b - 40},${b - 22})` : `rgb(${b - 34},${b - 37},${b - 42})`, east = glass ? `rgb(${b - 40},${b - 28},${b - 10})` : `rgb(${b - 20},${b - 23},${b - 28})`;
     if (ruin) { drawRuinTile(tx, ty, x0, y0, ht, b, h); ctx.globalAlpha = 1; return; } // v1.10 무너진 건물
     const sz = tileHeight(tx, ty + 1), ez = tileHeight(tx + 1, ty);
-    drawBox(x0, y0, x1, y1, ht, top, south, east, sz, ez, tx * 977 + ty);
-    if (!glass && Settings.detail) drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h); // v1.10 1층 셔터·때
+    const fv = facadeVariant(tx, ty, glass);
+    if (fv) drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, sz, ez, fv, s); // v1.19 그림 질감
+    else {
+      drawBox(x0, y0, x1, y1, ht, top, south, east, sz, ez, tx * 977 + ty);
+      if (!glass && Settings.detail) drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h); // v1.10 1층 셔터·때
+    }
     City.drawSign(tx, ty); // v1.2 한글 네온 간판
     if (Settings.detail) drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass);
     else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 환풍기
@@ -428,7 +432,7 @@ const Sprites = {
   },
   loadAll() { // 무기·헬멧 그림까지 포함
     const cache = {}; // 한 파일에 여러 무기·헬멧(rect)이 들어 있으면 한 번만 읽음
-    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {})]) { // v1.18 소품 포함
+    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {})]) { // v1.18 소품 · v1.19 건물 질감 포함
       let im = cache[s.file];
       if (!im) {
         im = cache[s.file] = new Image(); im.users = [];
@@ -686,6 +690,59 @@ function drawHelmetOverlay(sx, sy, info, hel, color) {
   } else {
     ctx.fillStyle = color || '#333';
     ctx.beginPath(); ctx.ellipse(hx, hy + hw * 0.32, hw / 2, hw * 0.42, 0, Math.PI, TAU); ctx.fill();
+  }
+}
+
+// v1.19 건물 질감: 외벽은 층마다 반복 (1층은 상가), 옥상은 위에서 본 질감. 높이별로 외벽 한 줄을 미리 합쳐 캐시
+const TexCache = { strips: new Map() };
+function facadeVariant(tx, ty, glass) {
+  if (!ART.tex) return null;
+  const ok = k => { const a = ART.tex[k]; return a && a.ready ? k : null; };
+  if (glass && ok('f_glass')) return 'f_glass';
+  const list = (ART.texZones[World.zoneIndex(tx * TILE, ty * TILE)] || ART.texZones[1]).filter(ok);
+  if (!list.length) return null;
+  return list[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 7 + 3, Math.floor(ty / World.BLOCK) * 11 + 5) * list.length)]; // 같은 블록은 같은 외벽
+}
+function facadeStrip(v, ht) {
+  const key = v + '|' + ht;
+  let c = TexCache.strips.get(key);
+  if (c) return c;
+  const a = ART.tex[v], shop = ART.tex.f_shop && ART.tex.f_shop.ready && v !== 'f_glass' ? ART.tex.f_shop : null;
+  const PX = 2, W = TILE * PX, FH = FLOOR_H * PX, H = Math.ceil(ht * PX); // 월드 1 = 2px
+  c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  for (let f = 0, y = H - FH; y > -FH; f++, y -= FH) { // 아래층부터
+    const src = f === 0 && shop ? shop : a, [rx, ry, rw, rh] = src.rect || [0, 0, src.img.width, src.img.height];
+    g.drawImage(src.img, rx, ry, rw, rh, 0, y, W, FH);
+  }
+  TexCache.strips.set(key, c);
+  if (TexCache.strips.size > 80) TexCache.strips.delete(TexCache.strips.keys().next().value);
+  return c;
+}
+function drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, sz, ez, v, shade) {
+  const strip = facadeStrip(v, ht), PX = 2, dk = 0.12 - shade * 0.1; // 건물마다 밝기 조금 다르게
+  const face = (f, zb) => {
+    if (zb < 0 || zb >= ht) return;
+    ctx.save(); City.faceTransform(tx, ty, f, ht);
+    const off = f === 's' ? 0 : TILE * 0.5; // 두 면이 같은 무늬로 이어 보이지 않게
+    ctx.drawImage(strip, (off * PX) % strip.width, 0, strip.width - (off * PX) % strip.width, (ht - zb) * PX, 0, 0, TILE - off % TILE, ht - zb);
+    if (off) ctx.drawImage(strip, 0, 0, (off * PX) % strip.width, (ht - zb) * PX, TILE - off, 0, off, ht - zb);
+    ctx.fillStyle = `rgba(0,0,0,${(f === 's' ? 0.32 : 0.14) + dk})`; ctx.fillRect(0, 0, TILE, ht - zb); // 면마다 명암
+    ctx.restore();
+  };
+  face('s', sz); face('e', ez);
+  // 옥상
+  const roofs = ['r_concrete', 'r_gravel', 'r_tar'].filter(k => ART.tex[k] && ART.tex[k].ready);
+  if (roofs.length) {
+    const r = ART.tex[roofs[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 5 + 1, Math.floor(ty / World.BLOCK) * 3 + 7) * roofs.length)]];
+    const [rx, ry, rw, rh] = r.rect || [0, 0, r.img.width, r.img.height], q = 4, z = ZOOM * RES; // 질감 하나를 4×4칸에 걸쳐 펼침
+    ctx.save(); ctx.setTransform(ISO_K * z, ISO_K / 2 * z, -ISO_K * z, ISO_K / 2 * z, -G.cam.x * z, (-G.cam.y - ht * ISO_K) * z);
+    ctx.drawImage(r.img, rx + (((tx % q) + q) % q) * rw / q, ry + (((ty % q) + q) % q) * rh / q, rw / q, rh / q, x0, y0, TILE + 0.5, TILE + 0.5);
+    ctx.fillStyle = `rgba(0,0,0,${0.05 + dk})`; ctx.fillRect(x0, y0, TILE + 0.5, TILE + 0.5);
+    ctx.restore();
+  } else {
+    const b = 72 + Math.floor(shade * 38);
+    poly([Iso.sx(x0, y0), Iso.sy(x0, y0, ht), Iso.sx(x1, y0), Iso.sy(x1, y0, ht), Iso.sx(x1, y1), Iso.sy(x1, y1, ht), Iso.sx(x0, y1), Iso.sy(x0, y1, ht)], `rgb(${b},${b - 3},${b - 8})`);
   }
 }
 
