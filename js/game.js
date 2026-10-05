@@ -140,6 +140,9 @@ function startGame(save, name) {
   const P = G.player; P.stam = 100; // v1.8.1 근접 무기 공속↓·피해↑: 이미 가진 근접 무기도 같은 비율로 피해 보정 (초당 피해 유지)
     { const R = { pipe: 25 / 18, axe: 55 / 44, katana: 79 / 60 };
       for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || [])]) if (it && it.kind === 'weapon' && R[it.key] && !it.v181) { it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v181 = true; } }
+    { const R = { pistol: 18 / 14, sniper: 140 / 120, katana: 62 / 79 }; // v1.27 총기 밸런스: 가진 무기도 같은 비율로 (시체 가방 포함)
+      const graves = Object.values(P.graves || {}).flatMap(g => g.items || []);
+      for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves]) if (it && it.kind === 'weapon' && !it.v127) { if (R[it.key]) it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v127 = true; } }
     P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
   Bounty.refresh(); // v0.14 일일 의뢰
   Weekly.refresh(); // v1.15 주간 도전
