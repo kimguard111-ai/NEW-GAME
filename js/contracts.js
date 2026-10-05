@@ -207,7 +207,7 @@ function drawContractItem(e) {
   if (!drawPropArt('labcase', sx, sy)) drawBox(e.x - 9, e.y - 7, e.x + 9, e.y + 7, 12, '#c8a040', '#7a6020', '#9a7a2a', 0, 0, 0);
   const k = 0.5 + Math.sin(G.time * 5) * 0.5; ctx.fillStyle = `rgba(255,215,106,${0.25 + k * 0.3})`; ctx.beginPath(); ctx.ellipse(sx, sy, 18, 9, 0, 0, TAU); ctx.fill();
   if (Settings.light) addLight(sx, sy - 8, 70, 0.6, 'rgba(255,215,106,A)');
-  nameTag(sx, sy - 34, G.player.contract ? G.player.contract.what : '계약 물건', '#ffd76a', '11px BlackHan, sans-serif');
+  nameTag(sx, sy - 34, G.player.contract ? G.player.contract.what : '계약 물건', '#ffd76a', 'bold 11px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif');
 }
 function drawEscort(e) {
   if (e.dead) return;
@@ -216,18 +216,18 @@ function drawEscort(e) {
   drawHuman(sx, sy, { s: 0.95, body: '#4a6a8a', skin: '#d9b48f', legs: '#3a3a44', aim: e.face || 0, flash: e.hitT > 0, walk: e.state === 'follow' ? e.walk * 6 : 0 });
   if (e.state === 'wait') { ctx.fillStyle = `rgba(122,208,255,${0.5 + Math.sin(G.time * 4) * 0.3})`; ctx.font = '16px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('?', sx, sy - 52); }
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(sx - 16, sy - 46, 32, 4); ctx.fillStyle = '#7ad0ff'; ctx.fillRect(sx - 16, sy - 46, 32 * Math.max(0, e.hp / e.maxHp), 4);
-  nameTag(sx, sy - 50, e.name, '#7ad0ff', '11px BlackHan, sans-serif');
+  nameTag(sx, sy - 50, e.name, '#7ad0ff', 'bold 11px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif');
 }
 function drawMapEvent(e) {
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -80 || sx > VW + 80 || sy < -160 || sy > VH + 80) return;
   const k = 0.5 + Math.sin(G.time * 4 + e.x) * 0.5, id = e.kind.slice(2);
-  if (id === 'jamsil') { if (!e.done && e.state === 'count') nameTag(sx, sy - 70, `부화까지 ${Math.ceil(e.t)}초`, '#ff6a5a', '13px BlackHan, sans-serif'); return; } // 알은 적(둥지)으로 그려짐
+  if (id === 'jamsil') { if (!e.done && e.state === 'count') nameTag(sx, sy - 70, `부화까지 ${Math.ceil(e.t)}초`, '#ff6a5a', 'bold 13px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'); return; } // 알은 적(둥지)으로 그려짐
   const art = { myeongdong: 'container', jongno: 'crates', yongsan: 'locker', yeouido: 'generator', gangnam: 'radio' }[id];
   if (id === 'jongno' && !drawPropArt('sandbags', sx - 40, sy + 10)) drawBox(e.x - 40, e.y + 10, e.x - 10, e.y + 22, 10, '#6a5a3a', '#4a3e28', '#5a4e30', 0, 0, 0);
   if (!art || !drawPropArt(art, sx, sy)) drawBox(e.x - 14, e.y - 12, e.x + 14, e.y + 12, id === 'yongsan' ? 34 : 24, e.done ? '#3a3a3a' : '#6a6050', '#3a3428', '#4a4434', 0, 0, 0);
   if (!e.done) {
     ctx.fillStyle = `rgba(255,154,58,${0.4 + k * 0.5})`; ctx.fillRect(sx - 3, sy - 44, 6, 4);
     if (Settings.light) addLight(sx, sy - 20, 90, 0.6, 'rgba(255,154,58,A)');
-    nameTag(sx, sy - 54, e.name, '#ff9a3a', '11px BlackHan, sans-serif');
+    nameTag(sx, sy - 54, e.name, '#ff9a3a', 'bold 11px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif');
   }
 }

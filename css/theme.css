@@ -127,3 +127,6 @@ body.touch .roster { padding: 28px 12px 8px; } body.touch #slot-row .slot .who {
 #panel-stats, #panel-quest, #panel-skills, #panel-shop, #panel-inventory { max-height: calc(100vh - 90px); overflow-y: auto; }
 .map-row.cx b::after { content: ' ▶ 받기' !important; } .map-row.cx[data-cx="cancel"] b::after { content: ' ✕ 포기' !important; }
 #hud-zone .zone-sub { color: #5a5242 !important; font-family: 'Typer', monospace !important; letter-spacing: 0 !important; }
+/* v1.40.1 작은 글씨는 포스터 글꼴이 뭉개짐 → 일반 굵은 글꼴 */
+#weapon-name { font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif !important; font-weight: bold !important; font-size: 13px !important; letter-spacing: 0 !important; }
+#hud-name { font-size: 15px !important; }

@@ -117,7 +117,7 @@ const City = {
       const w = 11, h = s.text.length * 12 + 6;
       this.faceTransform(tx, ty, s.face, s.z + h + 10); ctx.translate(TILE - w - 3, 0);
       ctx.fillStyle = '#0d0d10'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = on ? s.color : '#333'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
-      ctx.fillStyle = on ? s.color : '#444'; ctx.font = '10px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillStyle = on ? s.color : '#444'; ctx.font = 'bold 10px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       [...s.text].forEach((ch, i) => ctx.fillText(ch, w / 2, 4 + i * 12));
     } else {
       const w = TILE - 2, h = 16;
@@ -173,8 +173,8 @@ function subwaySign(o) {
   ctx.fillStyle = '#2a2c30'; ctx.fillRect(px - 2, py - 74, 4, 74);
   ctx.fillStyle = '#e8e8e8'; ctx.fillRect(px - 16, py - 92, 32, 22);
   const lines = [[o.line, o.color]].concat(o.line2 ? [[o.line2, o.color2]] : []);
-  lines.forEach(([ln, col], i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px - 9 + i * 9, py - 85, 4.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '7px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ln, px - 9 + i * 9, py - 85); });
-  ctx.fillStyle = '#1a1a1a'; ctx.font = '8px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.name, px + (o.line2 ? 6 : 4), py - 76);
+  lines.forEach(([ln, col], i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px - 9 + i * 9, py - 85, 4.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 7px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ln, px - 9 + i * 9, py - 85); });
+  ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 8px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.name, px + (o.line2 ? 6 : 4), py - 76);
   if (Settings.light && Light.list.length < LIGHT_CAP) addLight(px, py - 80, 60, 0.5, 'rgba(220,240,255,A)');
 }
 
@@ -335,7 +335,7 @@ function drawCityProp(o) {
       drawBox(o.x - L - 3, o.y - Wd - 3, o.x + L + 3, o.y + Wd + 3, 54, '#2a6a4a', '#1a4a32', '#22583e', 50, 50, 0);
       const px = S(o.x + (o.side === 'x' ? L + 8 : -Wd), o.y + (o.side === 'x' ? -Wd : L + 8)), py = Y(o.x + (o.side === 'x' ? L + 8 : -Wd), o.y + (o.side === 'x' ? -Wd : L + 8));
       ctx.fillStyle = '#3a3e44'; ctx.fillRect(px - 1.5, py - 70, 3, 70);
-      ctx.fillStyle = '#1f6fbf'; ctx.fillRect(px - 9, py - 78, 18, 14); ctx.fillStyle = '#fff'; ctx.font = '7px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('정류장', px, py - 74); ctx.fillText(String(o.n), px, py - 67);
+      ctx.fillStyle = '#1f6fbf'; ctx.fillRect(px - 9, py - 78, 18, 14); ctx.fillStyle = '#fff'; ctx.font = 'bold 7px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('정류장', px, py - 74); ctx.fillText(String(o.n), px, py - 67);
       break;
     }
     case 'pocha': { // v1.21 포장마차: 주황 천막 + 플라스틱 의자 (버려진)
