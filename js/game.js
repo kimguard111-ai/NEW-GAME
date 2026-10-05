@@ -7,7 +7,7 @@ const SAVE_KEY = 'seoul2049-save-v1';
 const MAP_SEED = 2049;
 
 const G = {
-  player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [], fires: [], mines: [],
+  player: null, enemies: [], bullets: [], particles: [], drops: [], texts: [], effects: [], decals: [], grenades: [], fires: [], mines: [], turrets: [],
   npcs: [], corpses: [], elite: null, strikes: [], pools: [], assault: null, fieldBoss: null, fbT: 150, inside: null, cam: { x: 0, y: 0 }, time: 0, shake: 0, running: false,
   spawnT: 0, bossT: 0, boss: null, saveT: 0, darkness: 0.3, zone: 0, noAmmoT: 0, hitstop: 0,
   shopStock: null, shopLevel: -1,
@@ -42,6 +42,7 @@ window.addEventListener('keydown', e => {
   else if (k === ' ') { e.preventDefault(); dodge(); }
   else if (k === 'i') UI.toggle('inventory');
   else if (k === 'c') UI.toggle('stats');
+  else if (k === 'k') UI.toggle('skills'); // v1.26
   else if (k === 'j') UI.toggle('quest');
   else if (k === 'o') UI.toggle('settings');
   else if (k === 'escape') { if (UI.anyOpen()) UI.closeAll(); else Pause.toggle(); }
@@ -132,7 +133,7 @@ function startGame(save, name) {
     G.autoStory = true; // v0.16: 1장을 바로 시작 (캠프 대화 없이)
     G.welcome = true; // v1.15 첫 플레이 안내
   }
-  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.corpses = [];
+  G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.turrets = []; G.corpses = [];
   G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.exits = []; G.extractT = 0;
@@ -151,7 +152,7 @@ function startGame(save, name) {
   P.smodOwned = P.smodOwned || {}; P.stree = P.stree || {}; P.passive = P.passive || {}; // v1.22 스킬 트리 · v1.23 패시브
   if (save && !save.p.skillsV120) { // v1.20 기존 세이브도 스킬은 돈 주고 배우기: 배운 스킬·갈래를 초기화하고 그 값을 크레딧으로 돌려줌 (손해 없음)
     let refund = 0;
-    for (const s of SKILLS) { if (P.skills[s.id]) refund += s.price; for (const k of ['a', 'b']) if (P.smodOwned[s.id + '_' + k]) refund += s.modPrice; }
+    for (const s of SKILLS) { if (P.skills[s.id]) refund += s.price || 0; for (const k of ['a', 'b']) if (P.smodOwned[s.id + '_' + k]) refund += s.modPrice || 0; }
     P.skills = {}; P.smodOwned = {}; P.skillMods = {}; P.skillsV120 = true;
     if (refund) { P.credits += refund; G.skillRefund = refund; }
   }
@@ -161,11 +162,11 @@ function startGame(save, name) {
     if (!P.equip.belt) P.equip.belt = makeBelt(Math.min(3, Math.ceil(acts.length / 2) - 1));
   }
   if (!('belt' in P.equip)) P.equip.belt = null;
-  if (save && !save.p.spV125) { // v1.25 기존 세이브: 배운 것은 그대로 두고, 지금까지 받았을 SP에서 쓴 만큼 빼서 남은 SP를 줌 (크레딧 반환 없음)
-    let spent = 0;
-    for (const s of SKILLS) { if (P.skills[s.id]) spent += SKILL_SP.root; for (const k of ['a', 'b']) if (P.smodOwned[s.id + '_' + k]) spent += SKILL_SP[k]; for (const k of ['r1', 'r2', 'cap']) if (P.stree[s.id + '_' + k]) spent += SKILL_SP[k]; }
-    P.sp = Math.max(0, 1 + (P.level - 1) + (P.quest.ch || 0) - spent); P.spV125 = true;
+  P.srank = P.srank || {};
+  if (save && !save.p.spV126) { // v1.25·1.26 기존 세이브: 배운 것은 그대로(등급 1), 지금까지 받았을 SP(시작 1 + 레벨 업 + 장 완료)에서 쓴 만큼 빼고 남은 SP를 줌
+    P.sp = Math.max(0, 1 + (P.level - 1) + (P.quest.ch || 0) - spSpent(P)); P.spV125 = P.spV126 = true;
   }
+
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -372,8 +373,8 @@ function explode(x, y, dmg, r, opts = {}) {
 function useSkill(i) {
   const p = G.player, s = SKILLS[i];
   if (p.level < s.lvl) { log(`${s.name}: Lv${s.lvl}부터 배울 수 있습니다 (암시장 상인 박씨).`, '#aaa'); return; }
-  if (!p.skills[s.id]) { log(`${s.name}: 아직 배우지 않았습니다 — 스킬 트리에서 스킬 포인트로 (능력치 창 C)`, '#aaa'); SFX.play('empty'); return; } // v1.16
-  if (p.skillCd[i] > 0) return;
+  if (!p.skills[s.id]) { log(`${s.name}: 아직 배우지 않았습니다 — 스킬 창(K)에서 스킬 포인트로`, '#aaa'); SFX.play('empty'); return; } // v1.16
+  if ((p.skillCd[i] || 0) > 0) return;
   SFX.play(s.id === 'heal' ? 'heal' : 'skill');
   const m = smod(s.id); // v1.11 스킬 갈래
   if (s.id === 'rapid') {
@@ -391,7 +392,8 @@ function useSkill(i) {
     if (m === 'b') { p.buffs.shield = 4; G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.4, color: '#7ab8ff', r: 60 }); }
     floatText(p.x, p.y - 30, '+' + now, '#6f6', 16); burst(p.x, p.y, '#6f6', 16, 80);
     if (stree('heal', 'cap')) { p.invT = Math.max(p.invT || 0, 1.5); floatText(p.x, p.y - 46, '불굴', '#ffe08a', 13); } // v1.22
-  } else if (s.id === 'adren') {
+  } else if (s.id === 'turret') Turrets.place(p); // v1.26 엔지니어
+  else if (s.id === 'adren') {
     if (stree('adren', 'cap')) { // v1.22 전장의 함성
       for (const e of G.enemies) {
         if (e.hp <= 0 || e.nest || Math.hypot(e.x - p.x, e.y - p.y) > 180 + e.r) continue;
@@ -477,7 +479,7 @@ function gainExp(n) {
     log(`레벨 업! Lv${p.level} — 능력치 포인트 +3 · 스킬 포인트 +1 (C)`, '#ffd76a');
     SFX.play('levelup');
     const sk = SKILLS.find(s => s.lvl === p.level);
-    if (sk) log(`새 스킬을 배울 수 있다: ${sk.name} — 스킬 트리 (능력치 창 C · ${SKILL_SP.root} SP)`, '#7fd');
+    if (sk) log(`새 스킬을 배울 수 있다: ${sk.name} — 스킬 창 K · ${SKILL_SP.root} SP`, '#7fd');
     const pt = PERK_TIERS.find(t => t.lvl === p.level); // v1.11 특성 선택
     if (pt) { UI.toast(`특성 선택 — Lv${pt.lvl}`, `능력치 창(C)에서 ${pt.perks.map(k => k.name).join(' · ')} 중 하나`); log(`특성을 고를 수 있다: ${pt.perks.map(k => k.name).join(' · ')} (능력치 창 C)`, '#ffd76a'); }
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.8, color: '#ffd76a', r: 80 });
@@ -981,6 +983,7 @@ function updateGrenades(dt) {
     if (k >= 1) {
       g.done = true;
       if (g.kind) { Gadgets.land(g); continue; } // v1.14 화염병 · 섬광탄
+      if (g.tdmg) { explode(g.x, g.y, g.tdmg, g.tr, { small: true, knock: 14, stagger: 0.3 }); continue; } // v1.26 박격 포탑
       const base = SkillCalc.grenadeDmg(p) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1) * (perk('demolition') ? 1.3 : 1);
       const dmg = base * (g.child ? 0.35 : g.mod === 'b' ? 0.8 : 1) * (g.second ? 0.5 : 1), r = SkillCalc.grenadeR(p) * (g.child ? 0.55 : g.second ? 0.8 : 1);
       if (g.echo && !g.child) later.push({ sx: g.x, sy: g.y, x: g.x, y: g.y, tx: g.x, ty: g.y, t: 0, dur: 1, second: true }); // v1.22 연쇄 폭발
@@ -1120,7 +1123,7 @@ function update(dt) {
   p.rollCd = (p.rollCd || 0) - dt;
   if ((p.stamT = (p.stamT || 0) - dt) <= 0) p.stam = Math.min(100, p.stam + ROLL.regen * dt); // 스태미나 회복
   p.atkT -= dt; p.hurtT -= dt; p.swingT -= dt; if (G.time - (p.lastShot || -9) > 0.4) p.heat = Math.max(0, (p.heat || 0) - dt * 0.8); p.recoilT = (p.recoilT || 0) - dt; G.noAmmoT -= dt;
-  for (let i = 0; i < 4; i++) p.skillCd[i] = Math.max(0, p.skillCd[i] - dt);
+  for (let i = 0; i < SKILLS.length; i++) p.skillCd[i] = Math.max(0, (p.skillCd[i] || 0) - dt); // v1.26 스킬 5개
   p.buffs.rapid = Math.max(0, p.buffs.rapid - dt);
   p.buffs.adren = Math.max(0, p.buffs.adren - dt);
   p.invT = Math.max(0, (p.invT || 0) - dt);
@@ -1135,6 +1138,7 @@ function update(dt) {
   Scavenge.update(dt);
   RaidEvents.update(dt); // v1.10
   Gadgets.update(dt); // v1.14 지뢰
+  Turrets.update(dt); // v1.26 포탑
   Journal.update(dt); // v1.15 업적
   Music.update(dt); // v1.17 배경 음악
   if (!p.dead && p.hp < PlayerStats.maxHp(p) * 0.3 && World.map !== 'camp' && (G.beatT = (G.beatT || 0) - dt) <= 0) { G.beatT = 0.4 + p.hp / PlayerStats.maxHp(p) * 2.2; SFX.play('heart'); } // v1.17 저체력 심장 박동

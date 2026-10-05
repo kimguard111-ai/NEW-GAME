@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.25';
+const GAME_VERSION = 'v1.26';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -43,11 +43,12 @@ const WEAPONS = {
 // v1.9 근접 3타 콤보. 1·2타(MELEE_COMBO) → 3타 무기별 마무리(MELEE_FINISH). 값은 무기 기본치에 곱함
 // rate: 다음 공격까지 간격 배율 · arc: 고정 각도(없으면 arcMul) · lunge: 전진 거리(px) · stagger: 경직 추가(초) · crit: 치명타 확률 추가
 // 한 바퀴(3타) DPS ≈ 기존 ×1.15 — 콤보를 이어 갈수록 이득
-const MELEE_COMBO = { dmg: 0.85, rate: 0.8, range: 1, arcMul: 1, knock: 1, stagger: 0, lunge: 6 };
+// v1.26 공속 더 낮춤 (1·2타 0.8 → 1.0, 마무리 +0.15~0.2) · 대신 한 방 피해 ↑ → 3타 한 바퀴 DPS 약 -8%, 묵직하게
+const MELEE_COMBO = { dmg: 0.95, rate: 1.0, range: 1, arcMul: 1, knock: 1, stagger: 0, lunge: 6 };
 const MELEE_FINISH = {
-  pipe:   { name: '강타',      dmg: 1.7,  rate: 1.3,  range: 1.05, arcMul: 0.8, knock: 2.2, stagger: 0.5, lunge: 10, crit: 0.15 },
-  axe:    { name: '회전 베기', dmg: 1.4,  rate: 1.35, range: 1.1,  arc: Math.PI * 2, knock: 1.6, stagger: 0.3, lunge: 4 },
-  katana: { name: '돌진 찌르기', dmg: 1.75, rate: 1.2, range: 1.7,  arc: 0.55, knock: 0.8, stagger: 0.2, lunge: 34 },
+  pipe:   { name: '강타',      dmg: 1.9,  rate: 1.5,  range: 1.05, arcMul: 0.8, knock: 2.2, stagger: 0.5, lunge: 10, crit: 0.15 },
+  axe:    { name: '회전 베기', dmg: 1.55, rate: 1.5, range: 1.1,  arc: Math.PI * 2, knock: 1.6, stagger: 0.3, lunge: 4 },
+  katana: { name: '돌진 찌르기', dmg: 1.95, rate: 1.4, range: 1.7,  arc: 0.55, knock: 0.8, stagger: 0.2, lunge: 34 },
 };
 
 // 장비 추가 옵션 (v0.2). pct: 퍼센트 표시 · slot: weapon(모든 무기) / gun(총기만) / armor
@@ -256,6 +257,7 @@ const SKILLS = [
   { id: 'grenade', name: '수류탄',   icon: 'grenade', lvl: 3,  cd: 11, /* v1.16 8→11 */ stat: 'dex', price: 1200, modPrice: 3500 },
   { id: 'heal',    name: '응급 처치', icon: 'heal',  lvl: 6,  cd: 22, stat: 'vit', price: 2000, modPrice: 3500 },
   { id: 'adren',   name: '아드레날린', icon: 'adren', lvl: 10, cd: 40, stat: 'str', price: 5000, modPrice: 5000 },
+  { id: 'turret',  name: '포탑 설치', icon: 'turret', lvl: 8, cd: 20, stat: 'dex', eng: true }, // v1.26 엔지니어
 ];
 
 // v1.11 특성: 이 레벨이 되면 3개 중 1개 선택 (총 6개). 의무병의 능력치 초기화 때 함께 초기화
@@ -327,13 +329,18 @@ const SKILL_MODS = {
              b: { name: '소이탄', desc: '폭발 피해 -20% · 그 자리에 4초 불길 (초당 폭발 피해의 22%)' } },
   heal:    { a: { name: '재생 주사', desc: '즉시 절반 회복 + 6초 동안 나머지의 2배를 서서히 회복' },
              b: { name: '방어막', desc: '회복 + 4초 동안 받는 피해 -40%' } },
+  turret:  { a: { name: '화염 포탑', desc: '사거리가 짧은 대신 앞쪽 적 여럿을 한꺼번에 태움 (0.2초마다)' },
+             b: { name: '박격 포탑', desc: '느리지만 멀리(420) 포탄을 쏴 범위 폭발' } },
   adren:   { a: { name: '광폭', desc: '지속 중 처치할 때마다 지속 +1.5초 (최대 +8초)' },
              b: { name: '진통제', desc: '지속 중 받는 피해 -30% (피해 증가는 절반)' } },
 };
 
 // v1.25 스킬은 스킬 포인트(SP)로 배움: 시작 1 · 레벨 업마다 +1 · 장(챕터) 완료마다 +1 (Lv30까지 약 35) — 전부 배우려면 44라 골라야 함
 // price · modPrice (크레딧)는 v1.16~1.24 기록용으로 남김
-const SKILL_SP = { root: 1, r1: 1, r2: 2, a: 2, b: 2, cap: 3 };
+// v1.26 스킬 등급: 스킬마다 1~5등급 (등급마다 1 SP, 다음 등급은 2레벨마다) · 숙련 ← 2등급 · 숙달 ← 숙련 + 4등급 · 갈래 ← 5등급 · 궁극 ← 숙달 + 갈래
+const SKILL_SP = { root: 1, r1: 1, r2: 1, a: 1, b: 1, cap: 2 };
+const SKILL_RANKS = 5, RANK_BONUS = 0.06; // 등급마다 스킬 위력 +6% (5등급 +24%)
+const rankLvl = (s, r) => s.lvl + (r - 1) * 2; // r등급을 찍을 수 있는 레벨
 const skillResetCost = p => 300 + p.level * 120; // 캠프 상인 박씨: 스킬 초기화 (SP 전부 돌려받음)
 
 // v1.22 스킬 트리: 스킬마다 한 갈래 (배우기 → 숙련 → 숙달 → 갈래 a/b → 궁극). 모두 박씨에게서 크레딧으로 삼 · 되돌리기 없음
@@ -348,6 +355,9 @@ const SKILL_TREE = {
   heal:    { r1: { name: '지혈대', desc: '회복량 +10%p (최대 70%)', lvl: 9, price: 2500 },
              r2: { name: '처치 숙달', desc: '재사용 대기 -15%', lvl: 13, price: 4000 },
              cap: { name: '불굴', desc: '발동하면 1.5초 동안 피해를 받지 않음', lvl: 22, price: 9000 } },
+  turret:  { r1: { name: '보강 장갑', desc: '포탑 지속 +6초', lvl: 12, price: 0 },
+             r2: { name: '이중 설치', desc: '포탑을 동시에 2개까지', lvl: 16, price: 0 },
+             cap: { name: '자폭 프로토콜', desc: '포탑이 사라질 때 크게 폭발 (포탑 피해 ×6)', lvl: 22, price: 0 } },
   adren:   { r1: { name: '분노 조절', desc: '지속 +2초', lvl: 13, price: 5000 },
              r2: { name: '투지 숙달', desc: '재사용 대기 -15%', lvl: 16, price: 7000 },
              cap: { name: '전장의 함성', desc: '발동할 때 주변 적 1.5초 기절 (보스 0.4초)', lvl: 25, price: 12000 } },

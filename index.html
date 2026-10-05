@@ -117,6 +117,7 @@
     <button data-panel="inventory"><span class="ic" data-ico="bag"></span>가방<i>I</i></button>
     <button data-panel="quest"><span class="ic" data-ico="quest"></span>미션<i>J</i></button>
     <button data-panel="stats"><span class="ic" data-ico="stats"></span>능력치<i>C</i></button>
+    <button data-panel="skills"><span class="ic" data-ico="rapid"></span>스킬<i>K</i></button>
     <button data-panel="settings"><span class="ic" data-ico="settings"></span>설정<i>O</i></button>
     <button id="btn-pause"><span class="ic">⏸</span>정지<i>ESC</i></button>
   </div>
@@ -155,6 +156,12 @@
 <div id="panel-stats" class="panel hidden">
   <div class="panel-head">능력치 <span class="close">✕</span></div>
   <div id="stats-body"></div>
+</div>
+
+<div id="panel-skills" class="panel hidden"> <!-- v1.26 스킬 창 -->
+  <div class="panel-head">스킬 <span class="close">✕</span></div>
+  <div id="skills-body"></div>
+  <div id="skills-buttons"></div>
 </div>
 
 <div id="panel-quest" class="panel hidden">
@@ -217,6 +224,7 @@
 <script src="js/tips.js"></script>
 <script src="js/touch.js"></script>
 <script src="js/title.js"></script>
+<script src="js/turrets.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

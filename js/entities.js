@@ -204,14 +204,14 @@ function newPlayer(name) {
   const c = World.campCenter();
   return {
     name, x: c.x, y: c.y, r: 12, aim: 0, mapV: 4, mats: { scrap: 0, chip: 0 }, stash: [], raid: null, graves: {},
-    level: 1, exp: 0, credits: 150, statPoints: 0, sp: 1, spV125: true, // v1.25 스킬 포인트
+    level: 1, exp: 0, credits: 150, statPoints: 0, sp: 1, spV125: true, srank: {}, spV126: true, // v1.25 스킬 포인트
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
     hp: 1, reserve: 150,
     equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: null, helmet: null, belt: makeBelt(0) }, // v1.24 벨트 // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
     active: 'w1',
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
-    skillCd: [0, 0, 0, 0],
+    skillCd: [0, 0, 0, 0, 0],
     hotbar: ['med', 'throw', null, null, null, null, null, null], // v1.24 벨트 칸에 등록한 것 (sk0~3 · med · throw · util)
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
     perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, stree: {}, passive: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
@@ -267,14 +267,23 @@ const PlayerStats = {
 const STAT_NAMES = { str: '근력', dex: '사격', vit: '체력', agi: '민첩' };
 const statUp = (p, k) => Math.max(0, p.stats[k] - 5);
 const SkillCalc = {
-  rapidDur: p => (4 + Math.min(4, statUp(p, 'agi') * 0.1) + (stree('rapid', 'r1') ? 1.5 : 0)) * (smod('rapid') === 'b' ? 0.75 : 1),
+  rapidDur: p => (4 + Math.min(4, statUp(p, 'agi') * 0.1) + (stree('rapid', 'r1') ? 1.5 : 0)) * (smod('rapid') === 'b' ? 0.75 : 1) * rankMul('rapid'),
   grenadeR: p => (110 + Math.min(50, statUp(p, 'dex') * 2)) * (perk('demolition') ? 1.3 : 1) * (stree('grenade', 'r1') ? 1.15 : 1),
-  grenadeDmg: p => (30 + p.level * 6) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5), // v1.16 너프: 45+레벨×9 · 사격 능력치 전부 → 30+레벨×6 · 절반만
-  healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006) + (stree('heal', 'r1') ? 0.1 : 0),
+  grenadeDmg: p => (30 + p.level * 6) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5) * rankMul('grenade'), // v1.16 너프: 45+레벨×9 · 사격 능력치 전부 → 30+레벨×6 · 절반만
+  healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006) * rankMul('heal') + (stree('heal', 'r1') ? 0.1 : 0),
   adrenDur: p => 8 + (stree('adren', 'r1') ? 2 : 0), // v1.22
+  turretDmg: p => (6 + p.level * 2.4) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5) * Camp.dmgMul() * rankMul('turret'), // v1.26 포탑 한 발
+  turretDur: p => 14 + (stree('turret', 'r1') ? 6 : 0),
   cdMul: id => (1 - gearBonus(G.player, 'cdr')) * (stree(id, 'r2') ? 0.85 : 1) * (pas('t3') ? 0.94 : 1) * (branchOn('tac') ? 0.9 : 1), // v1.22 숙달 · v1.23 전술 단련·갈래 보너스
-  adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.5 : 1),
+  adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.5 : 1) * rankMul('adren'),
 };
+const srank = id => { const p = G.player; return p && p.skills && p.skills[id] ? Math.max(1, (p.srank && p.srank[id]) || 1) : 0; }; // v1.26 스킬 등급
+const rankMul = id => 1 + RANK_BONUS * Math.max(0, srank(id) - 1);
+function spSpent(p) { // 쓴 스킬 포인트 (등급 + 트리 노드)
+  let n = 0;
+  for (const s of SKILLS) { if (p.skills[s.id]) n += Math.max(1, (p.srank && p.srank[s.id]) || 1) * SKILL_SP.root; for (const k of ['a', 'b']) if (p.smodOwned[s.id + '_' + k]) n += SKILL_SP[k]; for (const k of ['r1', 'r2', 'cap']) if (p.stree && p.stree[s.id + '_' + k]) n += SKILL_SP[k]; }
+  return n;
+}
 const stree = (id, k) => !!(G.player && G.player.stree && G.player.stree[id + '_' + k]); // v1.22 스킬 트리
 function skillDesc(s, p) {
   const m = smod(s.id), base = skillBaseDesc(s, p);
@@ -286,6 +295,7 @@ function skillBaseDesc(s, p) {
     case 'rapid': return `${SkillCalc.rapidDur(p).toFixed(1)}초간 공격 속도 2배`;
     case 'grenade': return `반경 ${SkillCalc.grenadeR(p)} 폭발, 피해 ${Math.round(SkillCalc.grenadeDmg(p))}`;
     case 'heal': return `즉시 최대 체력 ${pc(SkillCalc.healPct(p))} 회복`;
+    case 'turret': return `${SkillCalc.turretDur(p)}초 동안 자동 포탑 (한 발 ${Math.round(SkillCalc.turretDmg(p))} · 사거리 ${TURRET.range}) · 커서 근처에 설치`;
     case 'adren': return `${SkillCalc.adrenDur(p)}초간 이동속도 +35%, 피해 +${pc(SkillCalc.adrenDmg(p))}, 재장전 +30%`;
   }
   return '';

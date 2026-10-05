@@ -45,8 +45,9 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     };
     // 캠프 정비: 장착·판매·보충·강화·능력치
     B.camp = () => {
-      for (const s of SKILLS) if (p.level >= s.lvl && !p.skills[s.id] && p.sp >= SKILL_SP.root) { p.sp -= SKILL_SP.root; p.skills[s.id] = true; } // v1.25 스킬 포인트
-      for (const s of SKILLS) if (p.stree[s.id + '_r2'] && !p.smodOwned[s.id + '_a'] && !p.smodOwned[s.id + '_b'] && p.sp >= SKILL_SP.a) { p.sp -= SKILL_SP.a; p.smodOwned[s.id + '_a'] = true; p.skillMods[s.id] = 'a'; } // v1.25 갈래
+      for (const s of SKILLS) if (p.level >= s.lvl && !p.skills[s.id] && p.sp >= SKILL_SP.root) { p.sp -= SKILL_SP.root; p.skills[s.id] = true; p.srank[s.id] = 1; } // v1.25 스킬 포인트
+      for (const s of SKILLS) while (p.skills[s.id] && srank(s.id) < SKILL_RANKS && p.level >= rankLvl(s, srank(s.id) + 1) && p.sp >= SKILL_SP.root) { p.sp -= SKILL_SP.root; p.srank[s.id] = srank(s.id) + 1; } // v1.26 등급
+      for (const s of SKILLS) if (p.stree[s.id + '_r2'] && srank(s.id) >= SKILL_RANKS && !p.smodOwned[s.id + '_a'] && !p.smodOwned[s.id + '_b'] && p.sp >= SKILL_SP.a) { p.sp -= SKILL_SP.a; p.smodOwned[s.id + '_a'] = true; p.skillMods[s.id] = 'a'; } // v1.25 갈래
       for (const s of SKILLS) for (const k of ['r1', 'r2', 'cap']) { const n = SKILL_TREE[s.id][k]; if (p.skills[s.id] && !p.stree[s.id + '_' + k] && UI.treeNode(s, k).pre && p.level >= n.lvl && p.sp >= SKILL_SP[k]) { p.sp -= SKILL_SP[k]; p.stree[s.id + '_' + k] = true; } } // v1.22 스킬 트리 · v1.25 SP
       for (const b of Object.keys(PASSIVES)) PASSIVES[b].forEach((n, i) => { if (!p.passive[n.id] && (i === 0 || p.passive[PASSIVES[b][i - 1].id]) && p.level >= n.lvl && p.credits >= n.price + 2500) { p.credits -= n.price; p.passive[n.id] = true; B.skillBuy = (B.skillBuy || 0) + n.price; } }); // v1.23 패시브 단련
       UI.openShop(); // 상인 진열품 중 더 좋은 것 구매 (사람처럼)
@@ -109,7 +110,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
         const a = angleTo(p, best);
         if (!input.down) { if (!World.move(p, Math.cos(a) * sp, Math.sin(a) * sp)) World.move(p, Math.cos(a + 1.2) * sp, Math.sin(a + 1.2) * sp); }
         else if (bd < 120 && !W.melee) World.move(p, -Math.cos(a) * sp * 0.8, -Math.sin(a) * sp * 0.8);
-        for (let i = 0; i < 4; i++) if (p.skills[SKILLS[i].id] && p.skillCd[i] <= 0 && bd < 320 && i !== 2) useSkill(i);
+        for (let i = 0; i < SKILLS.length; i++) if (p.skills[SKILLS[i].id] && (p.skillCd[i] || 0) <= 0 && bd < 320 && i !== 2) useSkill(i);
       } else {
         input.down = false;
         const dr = !leave && G.drops.filter(d => d.kind === 'item' && dist(d, p) < 450 && World.lineOfSight(p, d)).sort((a, b2) => dist(a, p) - dist(b2, p))[0];

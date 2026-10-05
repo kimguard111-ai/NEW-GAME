@@ -50,14 +50,15 @@ const UI = {
     if (name === 'stats') UI.refreshStats();
     if (name === 'quest') UI.refreshQuest();
     if (name === 'settings') UI.refreshSettings();
+    if (name === 'skills') UI.renderSkills(); // v1.26
   },
   close(name) {
     $('panel-' + name).classList.add('hidden');
     if (name === 'shop') { UI.shopOpen = false; UI.refreshInventory(); }
   },
   toggle(name) { UI.isOpen(name) ? UI.close(name) : UI.open(name); },
-  anyOpen() { return ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings', 'stash'].some(n => UI.isOpen(n)); },
-  closeAll() { ['inventory', 'stats', 'quest', 'shop', 'dialog', 'enhance', 'settings', 'stash'].forEach(n => UI.close(n)); },
+  anyOpen() { return ['inventory', 'stats', 'skills', 'quest', 'shop', 'dialog', 'enhance', 'settings', 'stash'].some(n => UI.isOpen(n)); },
+  closeAll() { ['inventory', 'stats', 'skills', 'quest', 'shop', 'dialog', 'enhance', 'settings', 'stash'].forEach(n => UI.close(n)); },
   refreshAll() { UI.refreshInventory(); UI.refreshStats(); UI.refreshQuest(); },
 
   // 내용이 바뀔 때만 innerHTML 교체 (아이콘 이미지 다시 읽기·깜빡임 방지)
@@ -380,14 +381,9 @@ const UI = {
       const own = Object.values(PASSIVES).flat().filter(n => pas(n.id)).map(n => n.name), bon = Object.keys(PASSIVE_BRANCHES).filter(branchOn).map(b => `<span style="color:${PASSIVE_BRANCHES[b].color}">★ ${PASSIVE_BRANCHES[b].name}: ${PASSIVE_BRANCHES[b].bonus}</span>`);
       if (own.length || bon.length) h += `<div class="stat-eff">${own.length ? '단련: ' + own.join(' · ') : ''}${bon.length ? (own.length ? '<br>' : '') + bon.join('<br>') : ''}</div>`;
     }
-    h += `<hr style="border-color:#333"><div class="muted">스킬 (연동 능력치를 올리면 강해짐 · 갈래는 캠프에서 바꿀 수 있음) <button id="btn-stree" class="smod">스킬 트리${p.sp ? ` <b class="r2">SP ${p.sp}</b>` : ''}</button></div>`;
-    const inCamp = World.map === 'camp';
-    for (const s of SKILLS) {
-      const locked = p.level < s.lvl || !p.skills[s.id], m = p.skillMods[s.id];
-      const own = k => p.smodOwned[s.id + '_' + k];
-      const mb = k => `<button class="smod${m === k ? ' sel' : ''}" ${!locked && inCamp && own(k) ? `data-smod="${s.id}:${k}"` : 'disabled'} title="${SKILL_MODS[s.id][k].desc}${own(k) ? '' : ` (스킬 트리 ${SKILL_SP[k]} SP)`}">${own(k) ? '' : ICON('lock')}${SKILL_MODS[s.id][k].name}</button>`;
-      h += `<div class="skill-row${locked ? ' locked' : ''}">${ICON(s.icon)} <b>${s.name}</b> <span class="tag">${STAT_NAMES[s.stat]}</span>${locked ? ` <span class="muted">${p.level < s.lvl ? `Lv${s.lvl}부터 · ` : ''}스킬 트리에서 배우기 ${SKILL_SP.root} SP</span>` : ''} <span class="smods">${mb('a')}${mb('b')}</span><br><span class="stat-eff">${skillDesc(s, p)}${['r1', 'r2', 'cap'].filter(k => stree(s.id, k)).map(k => ` · <span class="${k === 'cap' ? 'r4' : 'r2'}">${SKILL_TREE[s.id][k].name}</span>`).join('')}</span></div>`;
-    }
+    h += `<hr style="border-color:#333"><div class="muted">스킬은 따로 — <button id="btn-stree" class="smod">스킬 창 (K)${p.sp ? ` <b class="r2">SP ${p.sp}</b>` : ''}</button></div>`; // v1.26 스킬 창 분리
+    const learned = SKILLS.filter(s => p.skills[s.id]);
+    if (learned.length) h += `<div class="stat-eff">${learned.map(s => `${ICON(s.icon)} ${s.name} ${srank(s.id)}등급${p.skillMods[s.id] ? ` <span class="r2">[${SKILL_MODS[s.id][p.skillMods[s.id]].name}]</span>` : ''}`).join(' · ')}</div>`;
     const sets = Object.keys(SETS).filter(k => setCount(p, k) > 0); // v1.12 착용 중인 세트
     if (sets.length) h += '<hr style="border-color:#333">' + sets.map(k => { const S = SETS[k], n = setCount(p, k); return `<div class="setname" style="color:${S.color}">▣ ${S.name} 세트 ${n}/3</div><div class="setb${n >= 2 ? ' on' : ''}">(2) ${S.b2}</div><div class="setb${n >= 3 ? ' on' : ''}">(3) ${S.b3}</div>`; }).join('');
     h += `<hr style="border-color:#333">${wline('w1')}${wline('w2')}
@@ -609,42 +605,58 @@ const UI = {
     UI.close('dialog'); UI.open('stats'); UI.buildHotbar(); UI.refreshInventory(); saveGame();
   },
 
-  // v1.16 스킬 교범 (암시장 상인): 스킬 배우기 · 갈래 사기
-  // v1.22 스킬 트리: 스킬마다 세로 한 갈래 (배우기 → 숙련 → 숙달 → 갈래 a/b → 궁극). 노드를 눌러 설명 · 구입
-  skillShop() { this.skillTree(); },
-  treeNode(s, k) { // 노드 정보: 이름 · 설명 · 값 · 레벨 · 보유 · 선행 충족
-    const p = G.player, T = SKILL_TREE[s.id], has = !!p.skills[s.id];
-    if (k === 'root') return { name: s.name, desc: `${skillBaseDesc(s, p)} · 재사용 ${s.cd}초 · ${STAT_NAMES[s.stat]} 능력치로 강해짐`, sp: SKILL_SP.root, lvl: s.lvl, own: has, pre: true, icon: s.icon };
-    if (k === 'a' || k === 'b') return { name: SKILL_MODS[s.id][k].name, desc: SKILL_MODS[s.id][k].desc + ' · 둘 다 배우면 캠프 능력치 창(C)에서 바꿈', sp: SKILL_SP[k], lvl: s.lvl, own: !!p.smodOwned[s.id + '_' + k], pre: has, preTxt: s.name };
+  // v1.26 스킬 창 (K): 능력치 창에서 분리. 스킬마다 세로 한 갈래 — 1~5등급 → 숙련(2등급) → 숙달(4등급) → 갈래 a/b(5등급) → 궁극
+  // 모두 스킬 포인트(SP). 갈래 바꾸기 · 초기화는 캠프에서
+  skillShop() { UI.close('dialog'); UI.open('skills'); },
+  skillTree() { UI.close('stats'); UI.open('skills'); },
+  treeNode(s, k) { // 노드 정보: 이름 · 설명 · SP · 레벨 · 보유 · 선행 충족
+    const p = G.player, T = SKILL_TREE[s.id], rk = srank(s.id);
+    if (k === 'root') {
+      const next = Math.min(SKILL_RANKS, rk + 1), max = rk >= SKILL_RANKS;
+      return { name: s.name, rank: rk, max, desc: `${skillBaseDesc(s, p)} · 재사용 ${s.cd}초 · ${STAT_NAMES[s.stat]} 능력치로 강해짐<br>등급마다 위력 +${Math.round(RANK_BONUS * 100)}% (지금 ${rk}등급${rk ? ` · +${Math.round((rankMul(s.id) - 1) * 100)}%` : ''})`,
+        sp: SKILL_SP.root, lvl: rankLvl(s, next), own: max, pre: true, icon: s.icon, label: rk ? `${rk}/${SKILL_RANKS}` : '' };
+    }
+    if (k === 'a' || k === 'b') return { name: SKILL_MODS[s.id][k].name, desc: SKILL_MODS[s.id][k].desc + ' · 둘 다 배우면 캠프에서 바꿈', sp: SKILL_SP[k], lvl: rankLvl(s, SKILL_RANKS), own: !!p.smodOwned[s.id + '_' + k], pre: rk >= SKILL_RANKS, preTxt: `${s.name} ${SKILL_RANKS}등급`, mod: true };
     const n = T[k], own = stree(s.id, k);
-    const pre = k === 'r1' ? has : k === 'r2' ? stree(s.id, 'r1') : stree(s.id, 'r2') && (p.smodOwned[s.id + '_a'] || p.smodOwned[s.id + '_b']);
-    return { name: n.name, desc: n.desc, sp: SKILL_SP[k], lvl: n.lvl, own, pre: !!pre, preTxt: k === 'r1' ? s.name : k === 'r2' ? T.r1.name : `${T.r2.name} + 갈래 하나`, cap: k === 'cap' };
+    const pre = k === 'r1' ? rk >= 2 : k === 'r2' ? stree(s.id, 'r1') && rk >= 4 : stree(s.id, 'r2') && (p.smodOwned[s.id + '_a'] || p.smodOwned[s.id + '_b']);
+    return { name: n.name, desc: n.desc, sp: SKILL_SP[k], lvl: n.lvl, own, pre: !!pre, preTxt: k === 'r1' ? `${s.name} 2등급` : k === 'r2' ? `${T.r1.name} + ${s.name} 4등급` : `${T.r2.name} + 갈래 하나`, cap: k === 'cap' };
   },
   treeSel: null,
-  skillTree() {
-    const p = G.player;
-    let h = `<div class="st-head"><b class="r2">스킬 포인트 ${p.sp || 0}</b> <span class="muted">· 레벨 업마다 +1 · 장 완료마다 +1 · 노드를 눌러 설명을 보고 배우기 · 위에서부터 차례로 열림 · 전부 배울 수는 없음</span></div><div class="stree">`;
+  renderSkills() {
+    const p = G.player, inCamp = World.map === 'camp';
+    let h = `<div class="st-head"><b class="r2">스킬 포인트 ${p.sp || 0}</b> <span class="muted">· 레벨 업마다 +1 · 장 완료마다 +1 · 칸을 눌러 설명 · 위에서부터 차례로 열림 · 전부 배울 수는 없음</span></div><div class="stree sk5">`;
     for (const s of SKILLS) {
       const node = k => {
-        const n = this.treeNode(s, k), st = n.own ? 'own' : !n.pre ? 'lock' : p.level < n.lvl ? 'lvl' : 'avail', sel = this.treeSel === s.id + ':' + k;
-        return `<button class="tn ${st}${n.cap ? ' cap' : ''}${k === 'a' || k === 'b' ? ' half' : ''}${sel ? ' sel' : ''}" data-tn="${s.id}:${k}">${n.icon ? ICON(n.icon) + ' ' : ''}<b>${n.name}</b><span>${n.own ? '보유' : st === 'avail' ? n.sp + ' SP' : st === 'lvl' ? 'Lv' + n.lvl : ICON('lock')}</span></button>`;
+        const n = this.treeNode(s, k), up = k === 'root' && n.rank && !n.max && n.pre && p.level >= n.lvl;
+        const st = n.own ? 'own' : k === 'root' && n.rank ? (up ? 'own up' : 'own') : !n.pre ? 'lock' : p.level < n.lvl ? 'lvl' : 'avail', sel = this.treeSel === s.id + ':' + k;
+        const using = n.mod && p.skillMods[s.id] === k;
+        const lab = k === 'root' && n.rank ? n.label + (up ? ` · ＋${n.sp}SP` : n.max ? ' 최대' : ` · Lv${n.lvl}`) : n.own ? (using ? '사용 중' : '보유') : st === 'avail' ? n.sp + ' SP' : st === 'lvl' ? 'Lv' + n.lvl : ICON('lock');
+        return `<button class="tn ${st}${n.cap ? ' cap' : ''}${using ? ' use' : ''}${sel ? ' sel' : ''}" data-tn="${s.id}:${k}">${n.icon ? ICON(n.icon) + ' ' : ''}<b>${n.name}</b><span>${lab}</span></button>`;
       };
-      const line = on => `<i class="tl${on ? ' on' : ''}"></i>`, own = k => this.treeNode(s, k).own;
-      h += `<div class="st-col"><div class="st-title">${STAT_NAMES[s.stat]}</div>${node('root')}${line(own('root'))}${node('r1')}${line(own('r1'))}${node('r2')}${line(own('a') || own('b'))}<div class="st-pair">${node('a')}${node('b')}</div>${line(own('cap'))}${node('cap')}</div>`;
+      const line = on => `<i class="tl${on ? ' on' : ''}"></i>`, own = k => k === 'root' ? srank(s.id) >= 2 : this.treeNode(s, k).own;
+      h += `<div class="st-col"><div class="st-title">${s.eng ? '엔지니어' : STAT_NAMES[s.stat]}</div>${node('root')}${line(own('root'))}${node('r1')}${line(own('r1'))}${node('r2')}${line(own('a') || own('b'))}<div class="st-pair">${node('a')}${node('b')}</div>${line(own('cap'))}${node('cap')}</div>`;
     }
     h += '</div>';
     const btns = [];
     if (this.treeSel) {
       const [id, k] = this.treeSel.split(':'), s = SKILLS.find(q => q.id === id), n = this.treeNode(s, k);
-      const why = n.own ? '보유 중' : !n.pre ? `먼저 「${n.preTxt}」` : p.level < n.lvl ? `Lv${n.lvl}부터` : (p.sp || 0) < n.sp ? `스킬 포인트 부족 (${n.sp} SP 필요)` : '';
-      h += `<div class="st-detail"><b class="${n.cap ? 'r4' : 'r2'}">${n.name}</b> <span class="muted">${s.name} · Lv${n.lvl} · ${n.sp} SP</span><br>${n.desc}${why ? `<br><span class="muted">${why}</span>` : ''}</div>`;
-      if (!why) btns.push([`${n.name} 배우기 (${n.sp} SP)`, () => this.buyNode(s, k)]);
+      const isRoot = k === 'root', done = isRoot ? n.max : n.own;
+      const why = done ? (isRoot ? '최대 등급' : '보유 중') : !n.pre ? `먼저 「${n.preTxt}」` : p.level < n.lvl ? `Lv${n.lvl}부터` : (p.sp || 0) < n.sp ? `스킬 포인트 부족 (${n.sp} SP 필요)` : '';
+      h += `<div class="st-detail"><b class="${n.cap ? 'r4' : 'r2'}">${n.name}</b> <span class="muted">${s.name}${isRoot ? ` · ${n.rank}/${SKILL_RANKS}등급` : ''} · Lv${n.lvl} · ${n.sp} SP</span><br>${n.desc}${why ? `<br><span class="muted">${why}</span>` : ''}</div>`;
+      if (!why) btns.push([isRoot && n.rank ? `${n.rank + 1}등급 올리기 (${n.sp} SP)` : `${n.name} 배우기 (${n.sp} SP)`, () => this.buyNode(s, k)]);
+      if (n.mod && n.own) { // 갈래 바꾸기 (캠프)
+        const on = p.skillMods[s.id] === k;
+        if (inCamp) btns.push([on ? '기본형으로 쓰기' : '이 갈래로 쓰기', () => { p.skillMods[s.id] = on ? null : k; SFX.play('ui'); UI.buildHotbar(); saveGame(); this.renderSkills(); }]);
+        else h += '<div class="muted">갈래는 캠프에서 바꿀 수 있습니다.</div>';
+      }
     }
-    if (World.map === 'camp' && Object.keys(p.skills).length) btns.push([`스킬 초기화 (₵${fmt(skillResetCost(p))})`, () => this.resetSkills()]); // v1.25
-    btns.push(['닫기', () => { this.treeSel = null; UI.close('dialog'); }]);
-    const keep = $('dialog-text').scrollTop, same = $('dialog-name').textContent.startsWith('스킬 트리');
-    UI.dialog('스킬 트리', h, btns); if (same) $('dialog-text').scrollTop = keep;
-    $('dialog-text').querySelectorAll('[data-tn]').forEach(b => { b.onclick = () => { this.treeSel = b.dataset.tn; SFX.play('ui'); this.skillTree(); }; });
+    if (inCamp && Object.keys(p.skills).length) btns.push([`스킬 초기화 (₵${fmt(skillResetCost(p))})`, () => this.resetSkills()]);
+    btns.push(['닫기', () => { this.treeSel = null; UI.close('skills'); }]);
+    const body = $('skills-body'), keep = body.scrollTop;
+    body.innerHTML = h; body.scrollTop = keep;
+    const box = $('skills-buttons'); box.innerHTML = '';
+    for (const [label, fn] of btns) { const b = document.createElement('button'); b.innerHTML = label; b.onclick = fn; box.appendChild(b); }
+    body.querySelectorAll('[data-tn]').forEach(b => { b.onclick = () => { this.treeSel = b.dataset.tn; SFX.play('ui'); this.renderSkills(); }; });
   },
   buyNode(s, k) {
     const p = G.player;
@@ -654,19 +666,18 @@ const UI = {
     if ((p.sp || 0) < SKILL_SP[k]) { log('스킬 포인트가 부족합니다.', '#f88'); SFX.play('empty'); return; }
     p.sp -= SKILL_SP[k]; p.stree[s.id + '_' + k] = true;
     log(`스킬 트리: ${s.name} — ${n.name} (${n.desc})`, '#7fd'); UI.toast(k === 'cap' ? '궁극 기술' : '스킬 강화', `${s.name} — ${n.name}`);
-    SFX.play('levelup'); UI.refreshStats(); saveGame(); this.skillTree();
+    SFX.play('levelup'); UI.refreshStats(); saveGame(); this.renderSkills();
   },
-  // v1.25 스킬 초기화 (캠프 · 크레딧): 배운 스킬·갈래·트리를 지우고 SP를 전부 돌려줌
+  // v1.25 스킬 초기화 (캠프 · 크레딧): 배운 스킬·등급·갈래·트리를 지우고 SP를 전부 돌려줌
   resetSkills() {
     const p = G.player, cost = skillResetCost(p);
     if (p.credits < cost) { log('크레딧이 부족합니다.', '#f88'); SFX.play('empty'); return; }
     if (!confirm(`스킬을 모두 초기화하고 스킬 포인트를 돌려받을까요? (₵${fmt(cost)})`)) return;
-    let back = 0;
-    for (const s of SKILLS) { if (p.skills[s.id]) back += SKILL_SP.root; for (const k of ['a', 'b']) if (p.smodOwned[s.id + '_' + k]) back += SKILL_SP[k]; for (const k of ['r1', 'r2', 'cap']) if (p.stree[s.id + '_' + k]) back += SKILL_SP[k]; }
-    p.credits -= cost; p.sp = (p.sp || 0) + back; p.skills = {}; p.smodOwned = {}; p.skillMods = {}; p.stree = {};
+    const back = spSpent(p);
+    p.credits -= cost; p.sp = (p.sp || 0) + back; p.skills = {}; p.srank = {}; p.smodOwned = {}; p.skillMods = {}; p.stree = {};
     p.hotbar = p.hotbar.map(a => a && a.startsWith('sk') ? null : a);
     log(`스킬 초기화 — 스킬 포인트 ${back} 반환`, '#7fd'); SFX.play('ui');
-    UI.buildHotbar(); UI.refreshStats(); saveGame(); this.skillTree();
+    UI.buildHotbar(); UI.refreshStats(); saveGame(); this.renderSkills();
   },
   // v1.23 특성 고르기 (능력치 창 · 패시브 트리 공용)
   choosePerk(i, id) {
@@ -730,11 +741,13 @@ const UI = {
   buySkill(s, k) {
     const p = G.player, cost = k ? SKILL_SP[k] : SKILL_SP.root; // v1.25 스킬 포인트
     if ((p.sp || 0) < cost) { log('스킬 포인트가 부족합니다.', '#f88'); SFX.play('empty'); return; }
-    p.sp -= cost;
+    p.sp -= cost; p.srank = p.srank || {};
     if (k) { p.smodOwned[s.id + '_' + k] = true; if (!p.skillMods[s.id]) p.skillMods[s.id] = k; log(`스킬 갈래 획득: ${s.name} — ${SKILL_MODS[s.id][k].name}`, '#7fd'); }
-    else { p.skills[s.id] = true; const on = Hotbar.autoAdd('sk' + SKILLS.indexOf(s)), k = p.hotbar.indexOf('sk' + SKILLS.indexOf(s)) + 1; log(`스킬을 배웠다: ${s.name}${on ? ` [${k}번 칸]` : ' — 벨트 칸이 가득: B로 등록'}`, '#7fd'); UI.toast('스킬 습득', on ? `${s.name} — ${k}번 칸` : `${s.name} — 벨트 칸이 가득합니다 (B로 바꾸기)`); }
-    SFX.play('levelup'); UI.buildHotbar(); UI.refreshStats(); saveGame(); this.skillShop();
+    else if (p.skills[s.id]) { p.srank[s.id] = srank(s.id) + 1; log(`${s.name} ${p.srank[s.id]}등급 — 위력 +${Math.round((rankMul(s.id) - 1) * 100)}%`, '#7fd'); } // v1.26 등급
+    else { p.skills[s.id] = true; p.srank[s.id] = 1; const on = Hotbar.autoAdd('sk' + SKILLS.indexOf(s)), k = p.hotbar.indexOf('sk' + SKILLS.indexOf(s)) + 1; log(`스킬을 배웠다: ${s.name}${on ? ` [${k}번 칸]` : ' — 벨트 칸이 가득: B로 등록'}`, '#7fd'); UI.toast('스킬 습득', on ? `${s.name} — ${k}번 칸` : `${s.name} — 벨트 칸이 가득합니다 (B로 바꾸기)`); }
+    SFX.play('levelup'); UI.buildHotbar(); UI.refreshStats(); saveGame(); if (UI.isOpen('skills')) this.renderSkills();
   },
+
 
   // v1.15 첫 플레이 안내: 이 게임의 한 판 흐름 + 조작 (한 번만)
   welcome() {
@@ -745,7 +758,7 @@ const UI = {
       + `<b>2. 뒤지고 싸운다</b> 노란 반짝임 = 뒤질 곳 ${k('[E]', '(E 버튼)')} · 미니맵 노란 ◆ = 사건 · 붉은 예고(「!」·원·선)가 보이면 ${k('Space', '구르기 버튼')}로 구르기.<br>`
       + `<b>3. 탈출해야 내 것</b> 주운 장비·크레딧은 맵 끝 초록 ◎에 5초 머물러야 확정. 죽으면 그 자리에 시체 가방.<br>`
       + `<b>4. 캠프에서 성장</b> 레벨 업 능력치·특성 ${k('(C)', '(능력치 버튼)')} · 정비공 강화 · 대장 한씨의 캠프 시설 · 창고에 귀중품 보관.<br><br>`
-      + `<span class="muted">${k('WASD 이동 · 마우스 조준·클릭 공격 · R 재장전 · Q 무기 교체 · 1~8 벨트 칸 (스킬·구급상자·소모품, B로 등록) · I 가방 · J 임무', '왼쪽 끌기 이동 · 오른쪽 끌기 조준·공격 · 아래 칸 스킬·소모품')}</span></div>`,
+      + `<span class="muted">${k('WASD 이동 · 마우스 조준·클릭 공격 · R 재장전 · Q 무기 교체 · 1~8 벨트 칸 (스킬·구급상자·소모품, B로 등록) · K 스킬 · I 가방 · J 임무', '왼쪽 끌기 이동 · 오른쪽 끌기 조준·공격 · 아래 칸 스킬·소모품')}</span></div>`,
       [['출발하자', () => UI.close('dialog')]]);
   },
 
@@ -864,7 +877,7 @@ const Hotbar = {
       h += `<div class="hb-row"><span class="tag">${i + 1}</span> <select data-hb="${i}"><option value="">— 비움 —</option>${acts.map(([a, nm]) => `<option value="${a}"${p.hotbar[i] === a ? ' selected' : ''}>${nm}</option>`).join('')}</select></div>`;
     }
     h += '</div>';
-    if (SKILLS.some(s => !p.skills[s.id])) h += '<div class="muted">스킬은 스킬 트리(능력치 창 C)에서 스킬 포인트로 배우면 여기 목록에 나옵니다.</div>';
+    if (SKILLS.some(s => !p.skills[s.id])) h += '<div class="muted">스킬은 스킬 창(K)에서 스킬 포인트로 배우면 여기 목록에 나옵니다.</div>';
     UI.dialog('벨트 — 칸 등록', h, [['닫기', () => UI.close('dialog')]]);
     $('dialog-text').querySelectorAll('select[data-hb]').forEach(el => { el.onchange = () => { Hotbar.assign(+el.dataset.hb, el.value); SFX.play('ui'); Hotbar.edit(); }; });
   },
