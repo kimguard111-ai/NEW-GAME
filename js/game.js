@@ -184,7 +184,7 @@ function startGame(save, name) {
 // ---------------- 플레이어 행동 ----------------
 // 구르기 (v0.16): 0.28초 무적 돌진, 1초 쿨타임. 이동 중이면 그 방향, 아니면 조준 방향
 // v1.1: 쿨타임 대신 스태미나 50 소모 (최대 100 → 연속 2번), 초당 40 회복
-const ROLL = { dur: 0.28, speed: 540, cd: 0.35, cost: 50, regen: 40 };
+const ROLL = { dur: 0.28, speed: 490, /* v1.32 540 → 490 (이동 감속에 맞춰) */ cd: 0.35, cost: 50, regen: 40 };
 // v1.8.1 총구 위치: 총을 든 몸 그림이면 그림 속 총구(옆으로 · 어깨 높이)에서 쏘고, 조준점(커서)을 향해 날아감
 // 총알은 높이 22에서 그려지므로, 화면상 총구 위치에 맞는 바닥 좌표를 역산
 function gunMuzzle(p, w) {
@@ -604,6 +604,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
     else World.move(e, Math.cos(angle) * k, Math.sin(angle) * k);
     if (hit.stagger) e.stunT = Math.max(e.stunT, hit.stagger / wt);
   }
+  if (e.hp > 0) Monsters.react(e, dmg, angle, hit); // v1.32 휘청 · 넘어짐
   const big = dmg >= e.maxHp * 0.25 || crit;
   SFX.play(crit ? 'crit' : FACTION[e.type] === 'machine' ? 'metal' : 'hit', 0.8);
   if (Settings.dmgNum) floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : e.def.boss ? '#ffb0ff' : '#fff', crit ? 18 : big ? 15 : 13);
@@ -625,7 +626,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
     }
   }
   if (e.hp <= 0) {
-    e.lastHit = { crit, melee: hit.melee, fin: hit.fin, blast: hit.blast || hit.blastKill, a: angle };
+    e.lastHit = { crit, melee: hit.melee, fin: hit.fin, blast: hit.blast || hit.blastKill, fire: hit.fire, heavy: (hit.knock || 0) >= 9 || (hit.stagger || 0) >= 0.3, a: angle };
     killEnemy(e);
     if (w && w.legend === 'quickload' && w === curWeapon() && !hit.noProc) {
       w.loaded = magSize(w); p.reloadT = 0;
@@ -643,7 +644,6 @@ function killFx(e) {
     hitstop(0.06); G.shake = Math.max(G.shake, 6);
   } else if (h.blast) { // 폭발·산탄 코앞: 그을음 + 불씨, 시체가 밀려남
     burst(e.x, e.y, '#ff9a3a', 12, 220, 0.5, 3); burst(e.x, e.y, '#333', 8, 90, 0.8, 5);
-    const c = G.corpses[G.corpses.length - 1]; if (c && c.x === e.x && c.y === e.y) { c.x += Math.cos(a) * 18; c.y += Math.sin(a) * 18; }
   } else if (h.crit) { // 치명타 처치: 금빛 고리 + 높은 소리
     G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.35, color: '#ffe14a', r: e.r * 3.5 });
     burst(e.x, e.y, '#fff3a0', 10, 200, 0.3, 2); SFX.play('crit', 1.2); hitstop(0.04);
@@ -679,7 +679,14 @@ function killEnemy(e) {
   p.totalKills++;
   const ck = e.art && Sprites.get(e.art) ? e.art : e.type; // 보스 전용 그림이면 그 그림으로 쓰러짐
   if (Sprites.get(ck) && ART.sprites[ck].anims.death) {
-    G.corpses.push({ key: ck, x: e.x, y: e.y, face: e.face || 0, t0: G.time });
+    const h = e.lastHit || {}, a = h.a ?? 0, c = { key: ck, x: e.x, y: e.y, face: e.face || 0, t0: G.time, z: 0, vx: 0, vy: 0, vz: 0, kind: '' };
+    // v1.32 죽는 모습: 폭발 = 날아가며 돎 · 강한 한 방 = 뒤로 미끄러짐 · 불 = 검게 그을림 · 근접 마무리 = 빨리 쓰러짐 · 드론 = 떨어지며 연기
+    if (e.def.flying) { c.kind = 'fall'; c.z = 34; }
+    else if (h.fire) c.kind = 'burn';
+    else if (h.blast && !e.def.boss) { c.kind = 'blast'; const sp = 170 / Math.max(0.7, e.weight ?? e.def.weight); c.vx = Math.cos(a) * sp; c.vy = Math.sin(a) * sp; c.vz = 150; c.spin = (Math.random() < 0.5 ? -1 : 1) * rand(5, 9); }
+    else if (h.heavy || h.crit) { c.kind = 'slide'; c.vx = Math.cos(a) * 150; c.vy = Math.sin(a) * 150; }
+    else if (h.fin) c.kind = 'fin';
+    G.corpses.push(c);
     if (G.corpses.length > 30) G.corpses.shift();
   }
   if (FACTION[e.type] !== 'machine') G.decals.push({ x: e.x, y: e.y, r: e.r * rand(1, 1.6), a: rand(0, TAU) });
@@ -804,12 +811,13 @@ function updateEnemies(dt) {
     if (e.state !== 'chase' && !e.def.boss && !e.fieldBoss && !e.labBoss && Math.abs(e.x - p.x) + Math.abs(e.y - p.y) > 2200) continue; // v1.16 멀리 있는 적은 쉼 (사라지지 않음)
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt; e.revealT = (e.revealT || 0) - dt;
     const d = dist(e, p);
+    e.flinchT = (e.flinchT || 0) - dt; e.downT = (e.downT || 0) - dt; // v1.32 휘청 · 넘어짐
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); Monsters.interrupt(e); continue; } // 경직: 이동·공격 불가, 준비 중인 공격 끊김
     const same = Interiors.sameSpace(e); // 건물 안팎이 다르면 쫓지 않음 (벽 너머 길찾기 없음)
     if (!p.dead && !pSafe && same && d < e.def.aggro) e.state = 'chase';
     else if (e.state === 'chase' && (p.dead || pSafe || d > e.def.aggro * (e.heard ? 2.6 : 1.7) || (!same && Nav.dist && Nav.dist[Math.floor(e.y / TILE) * World.W + Math.floor(e.x / TILE)] < 0))) e.state = 'idle'; // 길이 없을 때만 포기
     if (e.assault && !p.dead) e.state = 'chase'; // 어설트 적은 항상 추격
-    if (e.state === 'chase' && e.prevSt !== 'chase' && !e.minion && G.time - (e.spotT || -99) > 8) { e.spotT = G.time; Juice.spot(e, d); } // v1.29 처음 알아챔: 「!」 + 울음
+    if (e.state === 'chase' && e.prevSt !== 'chase' && !e.minion && G.time - (e.spotT || -99) > 8) { e.spotT = G.time; Juice.spot(e, d); Monsters.packAlert(e); } // v1.29 처음 알아챔: 「!」 + 울음
     e.prevSt = e.state; e.alertT = (e.alertT || 0) - dt;
     if (e.state === 'chase' && !e.def.flying && d < 520 && (e.stepT = (e.stepT || 0) - dt) <= 0) { e.stepT = e.type === 'brute' ? 0.55 : e.type === 'dog' ? 0.22 : 0.4; Juice.step(e, d); } // v1.29 다가오는 발소리
     if (e.def.boss) updateBoss(e, dt, d);
@@ -842,14 +850,15 @@ function updateEnemies(dt) {
         else if (!los && !e.def.flying) { const na = Nav.dir(e); if (na !== null) moveA = na; }
         if (Math.random() < dt * 0.4) e.sideDir *= -1;
       }
-      if (!hold && d > e.r + p.r + 2) tryMoveSmart(e, moveA, spd * dt);
+      const ta = hold ? moveA : Monsters.tactics(e, dt, d, a, moveA, seen); // v1.32 엄폐 · 우회 · 무리
+      if (!hold && ta !== null && d > e.r + p.r + 2) tryMoveSmart(e, ta, spd * (e.tac === 'cover' ? 1.15 : 1) * dt);
       if (e.def.boss && d < e.r + p.r + 8 && e.atkT <= 0) {
         e.atkT = e.def.atkCd * (e.atkMul || 1); e.lastAtk = G.time;
         damagePlayer(e.dmg * Monsters.buff(e), e.x, e.y);
       }
     } else if (!Monsters.infight(e, dt)) { // 플레이어가 없으면 다른 세력과 싸움, 아니면 배회
       e.wanderT -= dt;
-      if (e.wanderT <= 0) { e.wanderT = rand(1.5, 4); e.wanderA = rand(0, TAU); e.wandering = Math.random() < 0.6; }
+      if (e.wanderT <= 0) { e.wanderT = rand(1.5, 4); e.wanderA = rand(0, TAU); e.wandering = Math.random() < 0.6; if (Math.random() < 0.7) Monsters.packWander(e); } // v1.32 감염체는 무리 쪽으로
       if (e.wandering) { tryMoveSmart(e, e.wanderA, e.speed * 0.35 * dt); e.face = e.wanderA; }
     }
   }
@@ -1014,7 +1023,7 @@ function updateGrenades(dt) {
   // v1.11 소이탄 불길: 0.5초마다 안의 적에게 피해
   for (const f of G.fires) {
     f.t += dt; f.tick -= dt;
-    if (f.tick <= 0) { f.tick = 0.5; for (const e of G.enemies) if (e.hp > 0 && Math.hypot(e.x - f.x, e.y - f.y) < f.r + e.r) damageEnemy(e, f.dmg, false, undefined, { noProc: true, blast: true }); }
+    if (f.tick <= 0) { f.tick = 0.5; for (const e of G.enemies) if (e.hp > 0 && Math.hypot(e.x - f.x, e.y - f.y) < f.r + e.r) damageEnemy(e, f.dmg, false, undefined, { noProc: true, blast: true, fire: true }); }
   }
   G.fires = G.fires.filter(f => f.t < f.life);
 }
@@ -1169,6 +1178,11 @@ function update(dt) {
   updateDrops(dt);
 
   for (const pt of G.particles) { pt.t += dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= 0.9; pt.vy *= 0.9; if (pt.vz) pt.z += pt.vz * dt; }
+  for (const c of G.corpses) { // v1.32 시체 움직임 (밀려나기 · 날아가기 · 떨어지기)
+    if (c.vx || c.vy) { const ox = c.x, oy = c.y; c.x += c.vx * dt; c.y += c.vy * dt; if (World.solidAt(c.x, c.y)) { c.x = ox; c.y = oy; c.vx = c.vy = 0; } const fr = c.z > 0 ? 0.99 : 0.82; c.vx *= fr; c.vy *= fr; if (Math.abs(c.vx) + Math.abs(c.vy) < 4) c.vx = c.vy = 0; }
+    if (c.z > 0 || c.vz) { c.vz -= 600 * dt; c.z = Math.max(0, c.z + c.vz * dt); if (c.z === 0) { if (c.kind === 'fall' && !c.landed) { c.landed = true; burst(c.x, c.y, '#ffc', 10, 160, 0.3, 2); G.effects.push({ type: 'boom', x: c.x, y: c.y, t: 0, life: 0.25, r: 22 }); } c.vz = 0; } }
+    if (c.kind === 'fall' && Math.random() < dt * 14 && G.time - c.t0 < 2.5) G.particles.push({ x: c.x + rand(-4, 4), y: c.y + rand(-4, 4), vx: rand(-10, 10), vy: rand(-10, 10), t: 0, life: 0.9, color: '#444', size: rand(3, 5), z: c.z + 10, vz: 30 });
+  }
   G.corpses = G.corpses.filter(c => G.time - c.t0 < 8);
   G.particles = G.particles.filter(pt => pt.t < pt.life);
   for (const t of G.texts) { t.t += dt; t.z += 36 * dt; }

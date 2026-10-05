@@ -42,7 +42,7 @@ const Turrets = {
         for (const e of G.enemies) {
           if (e.hp <= 0 || Math.hypot(e.x - t.x, e.y - t.y) > R + e.r) continue;
           const da = Math.abs(((Math.atan2(e.y - t.y, e.x - t.x) - a + Math.PI * 3) % TAU) - Math.PI);
-          if (da < 0.55) damageEnemy(e, dmg * 0.55, false, a, { knock: 1, noProc: true });
+          if (da < 0.55) damageEnemy(e, dmg * 0.55, false, a, { knock: 1, noProc: true, fire: true });
         }
         for (let i = 0; i < 4; i++) { const q = a + rand(-0.45, 0.45), v = rand(200, 420); G.particles.push({ x: t.x, y: t.y, vx: Math.cos(q) * v, vy: Math.sin(q) * v, t: 0, life: 0.35, color: i % 2 ? '#ff8a2a' : '#ffd27a', size: 4 }); }
       } else if (t.mod === 'b') { // 박격: 포물선으로 날아가 범위 폭발

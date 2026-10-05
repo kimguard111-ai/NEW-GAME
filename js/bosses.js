@@ -120,7 +120,7 @@ const Bosses = {
     const p = G.player, ph = this.titanPhase(e);
     if (ph > (e.phase || 1)) { // 페이즈 전환: 잠시 무적 + 충격파
       e.phase = ph; e.invulnT = 1.5; e.charge = 0;
-      if (ph === 3) e.speed = e.def.speed * 1.35;
+      if (ph === 3) e.speed = e.def.speed * ENEMY_SPEED * 1.35;
       G.shake = 22; hitstop(0.2);
       G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.9, color: '#7fff6a', r: 380 });
       const d = dist(e, p);

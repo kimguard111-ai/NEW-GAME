@@ -188,9 +188,12 @@ const Monsters = {
     }
     if (e.def.nade && !(e.aimT > 0) && !(e.burstN > 0)) { // v1.6 용병 수류탄: 플레이어 자리에 주황 원 → 1.2초 뒤 폭발 (구르거나 벗어나기)
       e.nadeT = (e.nadeT ?? rand(3, 6)) - dt;
-      if (e.nadeT <= 0 && d > 140 && d < 380 && World.lineOfSight(e, p)) {
-        e.nadeT = rand(9, 13) * (e.fireMul || 1); e.lastAtk = G.time;
-        this.strike(p.x + rand(-15, 15), p.y + rand(-15, 15), 72, 1.2, e.dmg * 2.2 * b, 'rgba(255,150,50,');
+      const los = World.lineOfSight(e, p), flush = !los && G.time - (e.seenT || -9) < 3; // v1.32 벽 뒤에 숨은 플레이어에게도 (넘겨 던짐)
+      if (e.nadeT <= 0 && d > 140 && d < (e.def.nade === 'weak' ? 300 : 380) && (los || flush)) {
+        e.nadeT = (e.def.nade === 'weak' ? rand(14, 20) : rand(9, 13)) * (e.fireMul || 1); e.lastAtk = G.time;
+        const tx = p.x + rand(-15, 15), ty = p.y + rand(-15, 15);
+        this.strike(tx, ty, 72, 1.2, e.dmg * (e.def.nade === 'weak' ? 1.8 : 2.2) * b, 'rgba(255,150,50,');
+        G.effects.push({ type: 'nade', x: e.x, y: e.y, x2: tx, y2: ty, t: 0, life: 0.75 }); // 날아가는 수류탄
         floatText(e.x, e.y - 40, '수류탄!', '#ffb040', 13);
         return true;
       }
@@ -243,6 +246,71 @@ const Monsters = {
     }
     if (d < e.r + p.r + 8 && e.atkT <= 0) { e.atkT = e.def.atkCd * (e.atkMul || 1); e.windT = e.windMax = this.TELE[e.type] || 0.3; return true; }
     return false;
+  },
+  // ---------------- v1.32 적 AI 2차: 엄폐 · 우회 · 무리 ----------------
+  // 추격 중 이동 방향을 고침. null = 제자리 (엄폐물 뒤에서 대기)
+  tactics(e, dt, d, a, moveA, los) {
+    const p = G.player;
+    if (los) e.seenT = G.time;
+    if (e.def.boss || e.fieldBoss || e.labBoss || e.def.flying || e.assault || !e.speed) return moveA;
+    const fac = FACTION[e.type];
+    if (e.flank === undefined) e.flank = (fac === 'human' || e.type === 'dog' || e.type === 'subject') && Math.random() < 0.55 ? (Math.random() < 0.5 ? 1 : -1) : 0;
+    if (e.swarm === undefined) e.swarm = fac === 'infected' ? rand(-0.45, 0.45) : 0;
+    // 엄폐: 총 든 사람(약탈자·용병)은 가까운 벽 뒤로 숨었다가 → 나와서 쏘고 → 다시 숨음
+    if (e.def.ranged && fac === 'human' && !e.def.shield && d < e.def.range * 1.25) {
+      e.tacT = (e.tacT ?? rand(0.5, 1.5)) - dt;
+      if (e.tac === 'cover' && e.cover) {
+        if (e.tacT <= 0 || World.lineOfSight(e.cover, p)) { e.tac = 'peek'; e.tacT = rand(1.8, 2.8); e.cover = null; } // 엄폐물이 소용없어지면 바로 나옴
+        else { const cd = Math.hypot(e.cover.x - e.x, e.cover.y - e.y); e.inCover = cd < 10; if (cd < 6) return null; return Math.atan2(e.cover.y - e.y, e.cover.x - e.x); }
+      }
+      e.inCover = false;
+      if (e.tac !== 'cover' && e.tacT <= 0 && los) {
+        const c = this.findCover(e, p);
+        if (c) { e.tac = 'cover'; e.cover = c; e.tacT = (e.hp < e.maxHp * 0.4 ? rand(2.4, 3.6) : rand(1.3, 2.2)); return Math.atan2(c.y - e.y, c.x - e.x); }
+        e.tac = 'peek'; e.tacT = rand(1.5, 2.5);
+      }
+    }
+    // 우회: 정면으로 오지 않고 옆으로 크게 돌아 들어옴 (가까워지면 곧장)
+    if (e.flank && los && !(e.def.ranged && d < e.def.range * 0.9)) moveA += e.flank * 0.8 * clamp((d - 110) / 220, 0, 1);
+    // 무리: 감염체는 한 줄로 따라오지 않고 퍼져서 에워쌈
+    if (e.swarm && los) moveA += e.swarm * clamp((d - 60) / 240, 0, 1);
+    return moveA;
+  },
+  // 플레이어 쪽으로 벽이 바로 앞에 있고, 플레이어에게서 안 보이는 자리
+  findCover(e, p) {
+    let best = null, bd = 1e9;
+    for (let i = 0; i < 24; i++) {
+      const ang = (i / 24) * TAU + (i % 2) * 0.13, r = 55 + (i % 4) * 52, x = e.x + Math.cos(ang) * r, y = e.y + Math.sin(ang) * r;
+      if (World.solidAt(x, y) || World.solidAt(x + 10, y) || World.solidAt(x - 10, y) || World.solidAt(x, y + 10) || World.solidAt(x, y - 10)) continue;
+      const pd = Math.hypot(p.x - x, p.y - y); if (pd < 150 || pd > e.def.range) continue;
+      const ta = Math.atan2(p.y - y, p.x - x);
+      if (![24, 38, 54].some(k => World.solidAt(x + Math.cos(ta) * k, y + Math.sin(ta) * k))) continue; // 바로 앞에 벽
+      if (World.lineOfSight({ x, y }, p) || !World.lineOfSight(e, { x, y })) continue;
+      const cd = Math.hypot(x - e.x, y - e.y); if (cd < bd) { bd = cd; best = { x, y }; }
+    }
+    return best;
+  },
+  // 감염체 하나가 알아채면 근처 무리도 함께 달려듦
+  packAlert(e) {
+    if (FACTION[e.type] !== 'infected' || e.def.boss) return;
+    for (const o of G.enemies) if (o !== e && o.hp > 0 && o.state !== 'chase' && FACTION[o.type] === 'infected' && !o.def.boss && Math.hypot(o.x - e.x, o.y - e.y) < 380) { o.state = 'chase'; o.prevSt = 'chase'; o.heard = true; o.alertT = 0.6 + Math.random() * 0.5; }
+  },
+  // 배회할 때 감염체는 가까운 동족 쪽으로 모임
+  packWander(e) {
+    if (FACTION[e.type] !== 'infected') return;
+    let n = null, nd = 340;
+    for (const o of G.enemies) { if (o === e || o.hp <= 0 || FACTION[o.type] !== 'infected') continue; const dd = Math.abs(o.x - e.x) + Math.abs(o.y - e.y); if (dd > 80 && dd < nd) { nd = dd; n = o; } }
+    if (n) { e.wanderA = Math.atan2(n.y - e.y, n.x - e.x) + rand(-0.6, 0.6); e.wandering = true; }
+  },
+  // v1.32 맞은 반응: 휘청(항상) · 넘어짐(크게 맞거나 폭발 · 가벼운 적만)
+  react(e, dmg, angle, hit) {
+    if (e.def.boss || e.hp <= 0) return;
+    e.flinchT = 0.16; e.flinchA = angle ?? e.flinchA ?? 0;
+    const wt = e.weight ?? e.def.weight, heavy = e.fieldBoss || e.labBoss || e.elite || e.patterns || e.def.flying || !e.def.speed || wt > 2.5;
+    if (heavy || G.time < (e.downCd || 0)) return;
+    if ((hit.blast && dmg >= e.maxHp * 0.18) || dmg >= e.maxHp * 0.32 || ((hit.stagger || 0) >= 0.3 && dmg >= e.maxHp * 0.2)) {
+      e.downT = 1.05; e.downCd = G.time + 3.5; e.stunT = Math.max(e.stunT, 1.05); this.interrupt(e);
+    }
   },
   // 경직되면 준비 중이던 공격이 끊김 (강한 무기 보상)
   interrupt(e) { e.windT = 0; e.aimT = 0; e.pounceT = 0; e.leapT = 0; e.burstN = 0; },

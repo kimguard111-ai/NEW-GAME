@@ -1,7 +1,8 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.31.3';
+const ENEMY_SPEED = 0.85; // v1.32 적 이동 속도 전체 배율 (플레이어 150 → 125에 맞춰)
+const GAME_VERSION = 'v1.32';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -171,7 +172,7 @@ const ENEMIES = {
   zombie: { name: '감염자',   hp: 40,  dmg: 8,  speed: 68,  r: 12, exp: 10, weight: 1, color: '#6b8f4e', atkCd: 1.0, aggro: 360 },
   dog:    { name: '변이견',   hp: 26,  dmg: 6,  speed: 155, r: 10, exp: 12, weight: 0.7, color: '#8a5a3c', atkCd: 0.7, aggro: 420 },
   raider: { name: '약탈자',   hp: 50,  dmg: 7,  speed: 92,  r: 12, exp: 18, weight: 1, color: '#b5523b', atkCd: 1.0, aggro: 460,
-            ranged: true, range: 320, fireCd: 1.2, bulletSpeed: 430 },
+            ranged: true, range: 320, fireCd: 1.2, bulletSpeed: 430, nade: 'weak' }, // v1.32 약탈자도 가끔 수류탄 (용병보다 드물고 약함)
   brute:  { name: '변이 거한', hp: 190, dmg: 22, speed: 56,  r: 20, exp: 45, weight: 2.5, color: '#7a4f8a', atkCd: 1.5, aggro: 360 },
   drone:  { name: '경비 드론', hp: 60,  dmg: 9,  speed: 115, r: 11, exp: 26, weight: 0.8, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
             ranged: true, range: 290, fireCd: 0.9, bulletSpeed: 480, flying: true },

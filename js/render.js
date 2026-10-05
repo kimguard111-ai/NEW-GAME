@@ -250,7 +250,7 @@ function drawSolidTile(o) {
     const south = glass ? `rgb(${b - 52},${b - 40},${b - 22})` : `rgb(${b - 34},${b - 37},${b - 42})`, east = glass ? `rgb(${b - 40},${b - 28},${b - 10})` : `rgb(${b - 20},${b - 23},${b - 28})`;
     if (ruin) { drawRuinTile(tx, ty, x0, y0, ht, b, h); ctx.globalAlpha = 1; return; } // v1.10 무너진 건물
     const sz = tileHeight(tx, ty + 1), ez = tileHeight(tx + 1, ty);
-    const fv = facadeVariant(tx, ty, glass);
+    const fv = facadeVariant(tx, ty, glass, ht);
     if (fv) drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, sz, ez, fv, s); // v1.19 그림 질감
     else {
       drawBox(x0, y0, x1, y1, ht, top, south, east, sz, ez, tx * 977 + ty);
@@ -752,14 +752,17 @@ const TexCache = { strips: new Map() };
 function shopFront(i) {
   const bd = World.buildings[World.bid[i]], sa = bd && ART.shopArt[bd.name], fk = sa && sa.front;
   if (!fk || !ART.tex[fk] || !ART.tex[fk].ready) return null;
-  const tx = i % World.W, ty = Math.floor(i / World.W), upper = facadeVariant(tx, ty, false) || fk;
-  return { front: fk, upper };
+  const tx = i % World.W, ty = Math.floor(i / World.W), upper = facadeVariant(tx, ty, false, tileHeight(tx, ty)) || fk;
+  const nd = bd.door ? Math.min(...bd.door.map(([dx, dy]) => Math.max(Math.abs(dx - tx), Math.abs(dy - ty)))) : 0;
+  return { front: nd <= 2 ? fk : null, upper }; // v1.32 가게 앞모습은 문 양옆 2칸까지만 (건물 둘레 전체가 같은 진열창이던 것) — 나머지는 일반 1층
 }
-function facadeVariant(tx, ty, glass) {
+const LOW_ONLY = new Set(['f_vines', 'f_scaffold', 'f_motel', 'f_villa']); // v1.32 담쟁이·비계·모텔·빌라는 4층 이하에만 (고층 전체를 덮으면 인위적)
+function facadeVariant(tx, ty, glass, ht = 0) {
   if (!ART.tex) return null;
   const ok = k => { const a = ART.tex[k]; return a && a.ready ? k : null; };
   if (glass) { const gl = ['f_glass', 'f_glass2'].filter(ok); if (gl.length) return gl[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 5 + 1, Math.floor(ty / World.BLOCK) * 3 + 7) * gl.length)]; } // v1.31 유리 외벽 2종
-  const list = (ART.texZones[World.zoneIndex(tx * TILE, ty * TILE)] || ART.texZones[1]).filter(ok);
+  let list = (ART.texZones[World.zoneIndex(tx * TILE, ty * TILE)] || ART.texZones[1]).filter(ok);
+  if (ht > FLOOR_H * 4.2) { const hi = list.filter(k => !LOW_ONLY.has(k)); if (hi.length) list = hi; }
   if (!list.length) return null;
   return list[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 7 + 3, Math.floor(ty / World.BLOCK) * 11 + 5) * list.length)]; // 같은 블록은 같은 외벽
 }
@@ -768,7 +771,9 @@ function groundVariant(tx, ty, f, v) {
   if (v.startsWith('f_glass')) return null;
   if (!TexCache.gList || G.time - TexCache.gT > 2) { TexCache.gT = G.time; TexCache.gList = (ART.groundSet || ['f_shop']).filter(k => ART.tex[k] && ART.tex[k].ready); } // 2초마다만 다시 거름
   const list = TexCache.gList;
-  return list.length ? list[Math.floor(hash2(tx * 13 + (f === 's' ? 1 : 7), ty * 7 + 3) * list.length)] : null;
+  if (!list.length) return null;
+  const run = f === 's' ? [Math.floor(tx / 3), ty] : [tx, Math.floor(ty / 3)]; // v1.32 가게 하나 = 3칸 (칸마다 다른 가게면 벽지처럼 보임)
+  return list[Math.floor(hash2(run[0] * 13 + (f === 's' ? 1 : 7), run[1] * 7 + 3) * list.length)];
 }
 function facadeStrip(v, ht, gk) {
   const key = v + '|' + ht + '|' + gk;
@@ -778,10 +783,21 @@ function facadeStrip(v, ht, gk) {
   const PX = 2, W = TILE * PX, FH = FLOOR_H * PX, H = Math.ceil(ht * PX); // 월드 1 = 2px
   c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
+  const seed = hash2(v.length * 7 + (v.charCodeAt(2) || 0), v.charCodeAt(v.length - 1) || 1);
   for (let f = 0, y = H - FH; y > -FH; f++, y -= FH) { // 아래층부터
     const src = f === 0 && shop ? shop : a, [rx, ry, rw, rh] = src.rect || [0, 0, src.img.width, src.img.height];
+    const flip = f > 0 && hash2(f * 3 + 1, Math.floor(seed * 97)) < 0.5; // v1.32 층마다 좌우 뒤집기 → 같은 얼룩이 위아래로 반복되지 않게
+    if (flip) { g.save(); g.translate(W, 0); g.scale(-1, 1); }
     g.drawImage(src.img, rx, ry, rw, rh, 0, y, W, FH);
+    if (flip) g.restore();
+    const j = hash2(f * 5 + 2, Math.floor(seed * 53)); // 층마다 밝기 조금씩
+    g.fillStyle = j < 0.5 ? `rgba(0,0,0,${(0.5 - j) * 0.16})` : `rgba(255,240,220,${(j - 0.5) * 0.06})`; g.fillRect(0, y, W, FH);
+    if (f > 0) { g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(0, y + FH - 3, W, 3); g.fillStyle = 'rgba(255,255,255,0.06)'; g.fillRect(0, y + FH - 5, W, 2); } // 층 사이 슬래브 선
   }
+  g.globalCompositeOperation = 'saturation'; g.fillStyle = 'rgba(128,128,128,0.28)'; g.fillRect(0, 0, W, H); // 채도 ↓ (밤 거리와 어울리게)
+  g.globalCompositeOperation = 'source-over';
+  const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(20,14,8,0.22)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); // 아래로 갈수록 때
+  g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(0, 0, W, 4); g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 4, W, 2); // 옥상 난간 턱
   TexCache.strips.set(key, c);
   if (TexCache.strips.size > 240) TexCache.strips.delete(TexCache.strips.keys().next().value); // v1.31.1 1층 변형만큼 넉넉히
   return c;
@@ -792,8 +808,9 @@ function drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, sz, ez, v, shade, front) {
   const face = (f, zb) => {
     if (zb < 0 || zb >= ht) return;
     const strip = facadeStrip(v, ht, front || groundVariant(tx, ty, f, v)); // v1.31.1 front = 들어갈 수 있는 상가의 가게 앞모습
-    ctx.save(); City.faceTransform(tx, ty, f, ht); if (mir) { ctx.translate(TILE, 0); ctx.scale(-1, 1); }
-    const off = f === 's' ? 0 : TILE * 0.5; // 두 면이 같은 무늬로 이어 보이지 않게
+    const alt = mir !== (((f === 's' ? tx : ty) & 1) === 1); // v1.32 칸마다 번갈아 뒤집기 → 이웃 칸과 가장자리가 이어짐 (칸마다 보이던 이음매)
+    ctx.save(); City.faceTransform(tx, ty, f, ht); if (alt) { ctx.translate(TILE, 0); ctx.scale(-1, 1); }
+    const off = 0;
     ctx.drawImage(strip, (off * PX) % strip.width, 0, strip.width - (off * PX) % strip.width, (ht - zb) * PX, 0, 0, TILE - off % TILE, ht - zb);
     if (off) ctx.drawImage(strip, 0, 0, (off * PX) % strip.width, (ht - zb) * PX, TILE - off, 0, off, ht - zb);
     ctx.fillStyle = `rgba(0,0,0,${(f === 's' ? 0.32 : 0.14) + dk})`; ctx.fillRect(0, 0, TILE, ht - zb); // 면마다 명암
@@ -893,9 +910,21 @@ function enemyCloaked(e) {
   return !armorLegend('nightVision') && e.def.cloak && !e.bossName && !e.elite && !e.affix && !(e.revealT > 0) && e.stunT <= 0 && !(e.pounceT > 0) && !(e.leapT > 0) && !(e.windT > 0)
     && dist(e, G.player) > 150;
 }
+// v1.32 맞은 반응: 휘청(맞은 쪽 반대로 기울었다 돌아옴) · 넘어짐(쓰러졌다가 일어남)
 function drawEnemy(e) {
+  const down = e.downT > 0 ? e.downT : 0, fl = e.flinchT > 0 ? e.flinchT / 0.16 : 0;
+  if ((!down && !fl) || e.nest) return drawEnemyBody(e);
+  const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y), dir = Iso.dir(e.flinchA || 0), sg = dir.x >= 0 ? 1 : -1;
+  let rot, ox = 0;
+  if (down) { const t = 1.05 - down; rot = sg * 1.35 * (t < 0.14 ? t / 0.14 : down < 0.3 ? down / 0.3 : 1); } // 쓰러짐 0.14초 → 누움 → 0.3초 동안 일어남
+  else { rot = sg * 0.22 * fl; ox = dir.x * 3 * fl; }
+  ctx.save(); ctx.translate(sx + ox, sy); ctx.rotate(rot); ctx.translate(-sx, -sy);
+  e._noTags = true; try { drawEnemyBody(e); } finally { ctx.restore(); e._noTags = false; }
+  if (!enemyCloaked(e)) drawEnemyTags(e, sx, sy, down ? sy - 26 : e._topY ?? sy - 44);
+}
+function drawEnemyBody(e) {
   if (e.nest) return drawNest(e); // v1.10
-  const sx = Iso.sx(e.x, e.y) + (e.stunT > 0 ? Math.sin(G.time * 70) * 2 : 0), sy = Iso.sy(e.x, e.y); // 경직 중 흔들림
+  const sx = Iso.sx(e.x, e.y) + (e.stunT > 0 && !(e.downT > 0) ? Math.sin(G.time * 70) * 2 : 0), sy = Iso.sy(e.x, e.y); // 경직 중 흔들림
   if (sx < -120 || sy < -160 || sx > VW + 120 || sy > VH + 80) return;
   const flash = e.hitT > 0, f = e.face || 0;
   const walk = e.state === 'chase' || e.wandering ? G.time + e.x * 0.01 : 0;
@@ -1026,6 +1055,10 @@ function drawEnemy(e) {
     }
   }
   if (k !== 1) { ctx.restore(); topY = sy - (sy - topY) * k; }
+  e._topY = topY; if (!e._noTags) drawEnemyTags(e, sx, sy, topY);
+}
+// 머리 위 표시 (「!」 · 이름 · 체력 바) — 넘어져 몸이 기울어도 똑바로
+function drawEnemyTags(e, sx, sy, topY) {
   if (e.alertT > 0) { // v1.29 처음 알아챔 「!」 (튀어 오르며 나타남)
     const t = 0.9 - e.alertT, pop = t < 0.12 ? t / 0.12 * 1.3 : t < 0.2 ? 1.3 - (t - 0.12) / 0.08 * 0.3 : 1, by = topY - 20 - Math.min(t, 0.12) * 40;
     ctx.save(); ctx.globalAlpha = Math.min(1, e.alertT / 0.2); ctx.translate(sx, by); ctx.scale(pop, pop);
@@ -1262,12 +1295,16 @@ function render() {
   // 플레이어와 추격 중인 적을 가리는 앞쪽 건물은 반투명 (v0.11 고층 건물 대응)
   const watch = [{ d: pd, sx: psx, sy: psy, w: 60 }];
   for (const n of G.npcs) watch.push({ d: (n.x + n.y) / TILE, sx: Iso.sx(n.x, n.y), sy: Iso.sy(n.x, n.y, 18), w: 34 }); // v1.24 NPC도 가리면 반투명
-  for (const e of G.enemies) if (e.state === 'chase' && e.hp > 0) watch.push({ d: (e.x + e.y) / TILE, sx: Iso.sx(e.x, e.y), sy: Iso.sy(e.x, e.y, 18), w: 30 + e.r });
+  for (const e of G.enemies) { // v1.32 쫓지 않는 적도 (건물 뒤 배회하는 적이 안 보이던 것) · 가려진 적은 아래에서 투시 윤곽
+    e.occl = false; if (e.hp <= 0 || e.nest) continue;
+    const esx = Iso.sx(e.x, e.y), esy = Iso.sy(e.x, e.y, 18); if (esx < -80 || esx > VW + 80 || esy < -80 || esy > VH + 120) continue;
+    watch.push({ d: (e.x + e.y) / TILE, sx: esx, sy: esy, w: 30 + e.r, ent: e });
+  }
   for (const o of solids) {
     if (o.t !== T.BUILDING && o.t !== T.LWALL && !SHOP_TILES.has(o.t)) continue;
     const cx = o.tx * TILE + 16, cy = o.ty * TILE + 16;
     const sx = Iso.sx(cx, cy), ht = tileHeight(o.tx, o.ty), top = Iso.sy(cx, cy, ht) - 20, bot = Iso.sy(cx, cy) + 20;
-    for (const v of watch) if (o.d > v.d + 0.3 && Math.abs(sx - v.sx) < v.w && v.sy > top && v.sy < bot) { o.fade = true; break; }
+    for (const v of watch) if (o.d > v.d + 0.3 && Math.abs(sx - v.sx) < v.w && v.sy > top && v.sy < bot) { o.fade = true; if (v.ent) v.ent.occl = true; else break; }
   }
   const depth = e => (e.x + e.y) / TILE;
   for (const n of G.npcs) objs.push({ d: depth(n), draw: drawNpc, ent: n });
@@ -1294,6 +1331,8 @@ function render() {
   }
 
   drawShopSigns();
+  drawXray();
+  drawThrown();
 
   // v0.16 공격 예고: 조준선(원거리) · 붉은 ! (근접)
   for (const e of G.enemies) {
@@ -1572,13 +1611,45 @@ function drawShopSigns() {
   }
 }
 
+// v1.32 건물에 가려진 적: 건물 위에 붉은 투시 윤곽 (모습은 그대로 보이게 반투명으로 한 번 더)
+const Xray = { c: null };
+function drawXray() {
+  const list = G.enemies.filter(e => e.occl && e.hp > 0 && !enemyCloaked(e));
+  if (!list.length) return;
+  const W = canvas.width, H = canvas.height;
+  if (!Xray.c || Xray.c.width !== W || Xray.c.height !== H) { Xray.c = document.createElement('canvas'); Xray.c.width = W; Xray.c.height = H; }
+  const g = Xray.c.getContext('2d'), saved = ctx;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.setTransform(ZOOM * RES, 0, 0, ZOOM * RES, 0, 0);
+  ctx = g; try { for (const e of list) drawEnemy(e); } finally { ctx = saved; }
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-atop';
+  g.fillStyle = 'rgba(255,70,50,0.5)'; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over';
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.62; ctx.drawImage(Xray.c, 0, 0); ctx.restore();
+}
+
 function drawCorpse(c) {
   const t = G.time - c.t0, s = Sprites.get(c.key);
   if (!s) return;
   const fade = Math.max(0, 1 - Math.max(0, t - Sprites.dur(s, 'death') - 2.5) / 1.5);
-  ctx.globalAlpha = fade;
-  Sprites.draw(c.key, 'death', t, Iso.sx(c.x, c.y), Iso.sy(c.x, c.y), c.face, false);
-  ctx.globalAlpha = 1;
+  const sx = Iso.sx(c.x, c.y), sy = Iso.sy(c.x, c.y), at = c.kind === 'fin' ? t * 1.7 : c.kind === 'blast' && c.z > 0 ? 0 : t; // v1.32 죽는 모습 종류별
+  if (c.z > 0) drawShadow(sx, sy, 9);
+  ctx.save(); ctx.globalAlpha = fade;
+  if (c.kind === 'burn') ctx.filter = `brightness(${Math.max(0.35, 1 - t * 1.4)}) sepia(0.5)`; // 불: 검게 그을림
+  if (c.kind === 'blast' && c.z > 0) { const py = Iso.sy(c.x, c.y, c.z); ctx.translate(sx, py - 14); ctx.rotate(t * c.spin); ctx.translate(-sx, -(py - 14)); Sprites.draw(c.key, 'hit', 0, sx, py, c.face, false); }
+  else Sprites.draw(c.key, 'death', at, sx, Iso.sy(c.x, c.y, c.z || 0), c.face, false);
+  ctx.restore();
+  if (c.kind === 'burn' && t < 2.2 && Math.random() < 0.35) G.particles.push({ x: c.x + rand(-6, 6), y: c.y + rand(-6, 6), vx: 0, vy: 0, t: 0, life: 0.6, color: Math.random() < 0.5 ? '#ff8a2a' : '#555', size: rand(2, 4), z: rand(4, 14), vz: 40 });
+}
+// v1.32 던진 수류탄: 포물선으로 날아감 (떨어질 자리엔 이미 주황 원 예고)
+function drawThrown() {
+  for (const ef of G.effects) {
+    if (ef.type !== 'nade') continue;
+    const k = Math.min(1, ef.t / ef.life), x = lerp(ef.x, ef.x2, k), y = lerp(ef.y, ef.y2, k), z = 18 + Math.sin(Math.PI * k) * 90 - k * 18;
+    if (k >= 1) continue;
+    drawShadow(Iso.sx(x, y), Iso.sy(x, y), 3);
+    const sx = Iso.sx(x, y), sy = Iso.sy(x, y, z);
+    ctx.fillStyle = '#3a4030'; ctx.beginPath(); ctx.arc(sx, sy, 3.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffb040'; ctx.fillRect(sx - 0.8 + Math.cos(G.time * 30) * 2, sy - 0.8 + Math.sin(G.time * 30) * 2, 1.6, 1.6);
+  }
 }
 
 function drawDrop(d) {
