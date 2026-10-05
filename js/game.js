@@ -45,10 +45,8 @@ window.addEventListener('keydown', e => {
   else if (k === 'j') UI.toggle('quest');
   else if (k === 'o') UI.toggle('settings');
   else if (k === 'escape') { if (UI.anyOpen()) UI.closeAll(); else Pause.toggle(); }
-  else if (k >= '1' && k <= '4') useSkill(+k - 1);
-  else if (k === '5') quickMedkit();
-  else if (k === '6') Gadgets.use('throw'); // v1.14
-  else if (k === '7') Gadgets.use('util');
+  else if (k >= '1' && k <= '8') Hotbar.use(+k - 1); // v1.24 벨트 칸
+  else if (k === 'b') Hotbar.edit();
   else if (k === 't') Gadgets.cycle('throw');
   else if (k === 'y') Gadgets.cycle('util');
 });
@@ -150,13 +148,19 @@ function startGame(save, name) {
     for (const s of SKILLS) if (P.level >= s.lvl) P.skills[s.id] = true;
     for (const [k, v] of Object.entries(P.skillMods || {})) if (v) P.smodOwned[k + '_' + v] = true;
   }
-  P.smodOwned = P.smodOwned || {}; P.stree = P.stree || {}; P.passive = P.passive || {}; // v1.22 스킬 트리
+  P.smodOwned = P.smodOwned || {}; P.stree = P.stree || {}; P.passive = P.passive || {}; // v1.22 스킬 트리 · v1.23 패시브
   if (save && !save.p.skillsV120) { // v1.20 기존 세이브도 스킬은 돈 주고 배우기: 배운 스킬·갈래를 초기화하고 그 값을 크레딧으로 돌려줌 (손해 없음)
     let refund = 0;
     for (const s of SKILLS) { if (P.skills[s.id]) refund += s.price; for (const k of ['a', 'b']) if (P.smodOwned[s.id + '_' + k]) refund += s.modPrice; }
     P.skills = {}; P.smodOwned = {}; P.skillMods = {}; P.skillsV120 = true;
     if (refund) { P.credits += refund; G.skillRefund = refund; }
   }
+  if (save && !save.p.hotbar) { // v1.24 기존 세이브: 쓰던 칸(배운 스킬 + 구급상자 + 투척 + 보조)이 다 들어가는 벨트를 채워 줌
+    const acts = SKILLS.map((s, i) => P.skills[s.id] ? 'sk' + i : null).filter(Boolean).concat(['med', 'throw', 'util']);
+    P.hotbar = acts.concat(Array(HOT_MAX).fill(null)).slice(0, HOT_MAX);
+    if (!P.equip.belt) P.equip.belt = makeBelt(Math.min(3, Math.ceil(acts.length / 2) - 1));
+  }
+  if (!('belt' in P.equip)) P.equip.belt = null;
   G.running = true;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -164,7 +168,7 @@ function startGame(save, name) {
   UI.refreshAll();
   if (G.welcome) { G.welcome = false; setTimeout(() => UI.welcome(), 600); }
   if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았습니다 — 암시장 상인 박씨 「스킬 교범」`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }
-  if (G.autoStory) { G.autoStory = false; Story.start(G.player); log('조작: WASD 이동 · 마우스 조준·사격 · Space 구르기(무적) · R 재장전 · 1~4 스킬', '#8cf'); }
+  if (G.autoStory) { G.autoStory = false; Story.start(G.player); log('조작: WASD 이동 · 마우스 조준·사격 · Space 구르기(무적) · R 재장전 · 1~8 벨트 칸 (B: 칸 등록)', '#8cf'); }
   saveGame();
 }
 
@@ -414,7 +418,7 @@ function useItem(it) {
     p.reserve += 120; log('예비 탄약 +120', '#cc8');
   } else if (CONSUMABLES[it.key].slot) { // v1.14 투척물·보조: 가방에서 누르면 그 칸에 선택
     const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
-    log(`${it.name}을(를) ${slot === 'throw' ? '6번(투척)' : '7번(보조)'} 칸에 올렸다.`, '#cfe'); UI.buildHotbar(); return;
+    const on = Hotbar.autoAdd(slot), k = G.player.hotbar.indexOf(slot) + 1; log(`${it.name}을(를) ${slot === 'throw' ? '투척' : '보조'} 칸${on ? `(${k}번)` : ''}에 올렸다.${on ? '' : ' 벨트 칸이 가득 — B로 등록'}`, '#cfe'); UI.buildHotbar(); return; // v1.24
   } else return;
   it.count--;
   if (it.count <= 0) removeItem(it);

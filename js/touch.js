@@ -41,8 +41,8 @@ const Touch = {
       e.preventDefault();
       const act = hot.dataset.act || '', cyc = e.target.closest('[data-cyc]'); // v1.14 칸 종류로 구분
       if (cyc) Gadgets.cycle(cyc.dataset.cyc);
-      else if (act.startsWith('sk')) useSkill(+act.slice(2)); else if (act === 'med') quickMedkit();
-      else if (act === 'throw' || act === 'util') Gadgets.use(act); else dodge();
+      else if (act === 'edit' || act === 'empty') Hotbar.edit(); // v1.24 벨트 칸
+      else if (act === 'roll') dodge(); else Hotbar.use(+hot.dataset.slot);
     }, opts);
     // 시작 시 전체 화면 + 가로 고정 시도 (지원하는 브라우저만)
     for (const id of ['btn-new', 'btn-continue', 'btn-respawn']) document.getElementById(id).addEventListener('click', () => this.fullscreen());

@@ -479,3 +479,12 @@ button.mini { font-size: 10px; padding: 1px 6px; margin-left: 6px; background: #
 .tn.minor { flex-direction: row; gap: 6px; min-height: 22px; } .tn.key { min-height: 32px; }
 .stree.pt .tl { height: 6px; }
 .st-detail { position: sticky; bottom: -14px; box-shadow: 0 -6px 12px rgba(0,0,0,.6); }
+/* v1.24 벨트 · 핫바 칸 등록 */
+.doll { grid-template-rows: auto auto auto auto; grid-template-areas: "hel fig st" "arm fig st" "w1 fig w2" "blt blt blt"; }
+.doll .equip-slot[data-slot="belt"] { min-height: 34px; }
+#hotbar .hot { pointer-events: auto; cursor: pointer; }
+.hot.free { border-style: dashed; color: #777; } .hot.free .icon { color: #888; }
+.hot.edit { width: 40px; color: #c9b27a; } body.touch .hot.edit { width: 38px; }
+.hb-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; margin-top: 6px; }
+.hb-row { display: flex; align-items: center; gap: 6px; } .hb-row select { flex: 1; background: #15181d; color: #ddd; border: 1px solid #3a3f48; border-radius: 4px; padding: 3px; }
+.hb-row.off { opacity: .5; font-size: 12px; }

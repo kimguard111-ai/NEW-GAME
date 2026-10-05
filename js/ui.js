@@ -73,33 +73,43 @@ const UI = {
   },
 
   // ---------------- HUD ----------------
-  buildHotbar() {
-    const p = G.player, hb = $('hotbar');
+  buildHotbar() { // v1.24 벨트 칸 수만큼, 등록한 것만 (1~8 키) + 칸 등록 버튼 + 구르기
+    const p = G.player, hb = $('hotbar'), n = beltSlots(p);
     hb.innerHTML = '';
-    SKILLS.forEach((s, i) => {
-      if (!p.skills[s.id]) return; // v1.20 배운 스킬만 핫바에
-      const d = document.createElement('div');
-      d.className = 'hot' + (p.level < s.lvl || !p.skills[s.id] ? ' locked' : ''); d.dataset.act = 'sk' + i;
-      d.title = `${s.name} (Lv${s.lvl}${p.skills[s.id] ? '' : ` · 상인에게서 배우기 ${fmt(s.price)}₵`}) - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;
-      d.innerHTML = `<span class="key">${i + 1}</span><div class="icon">${ICON(s.icon)}</div>${s.name}<span class="sk-stat">${STAT_NAMES[s.stat]}</span><div class="cd" id="cd${i}"></div>`;
-      hb.appendChild(d);
-    });
-    const m = document.createElement('div');
-    m.className = 'hot'; m.title = '구급상자 사용'; m.dataset.act = 'med';
-    m.innerHTML = `<span class="key">5</span><div class="icon">${ICON('medkit')}</div>구급상자<span class="cnt" id="medcnt"></span>`;
-    hb.appendChild(m);
-    for (const [slot, key, cyc] of [['throw', '6', 'T'], ['util', '7', 'Y']]) { // v1.14 투척물 · 보조
-      const k = Gadgets.sel(slot), c = CONSUMABLES[k], n = Gadgets.count(k);
-      const d = document.createElement('div');
-      d.className = 'hot gad' + (n ? '' : ' empty'); d.dataset.act = slot;
-      d.title = `${c.name} — ${c.desc}\n${cyc}: 종류 바꾸기 (${GADGET_SLOTS[slot].map(x => CONSUMABLES[x].name).join(' · ')})`;
-      d.innerHTML = `<span class="key">${key}</span><div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" id="${slot}cnt">${n}</span><span class="cyc" data-cyc="${slot}">${IS_TOUCH ? '↻' : cyc}</span>`;
+    for (let i = 0; i < n; i++) {
+      const act = p.hotbar[i], d = document.createElement('div'), key = `<span class="key">${i + 1}</span>`;
+      d.dataset.slot = i; d.dataset.act = act || 'empty';
+      if (act && act.startsWith('sk')) {
+        const si = +act.slice(2), s = SKILLS[si];
+        d.className = 'hot' + (p.skills[s.id] ? '' : ' locked');
+        d.title = `${s.name} - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;
+        d.innerHTML = `${key}<div class="icon">${ICON(s.icon)}</div>${s.name}<span class="sk-stat">${STAT_NAMES[s.stat]}</span><div class="cd" id="cd${si}"></div>`;
+      } else if (act === 'med') {
+        d.className = 'hot'; d.title = '구급상자 사용';
+        d.innerHTML = `${key}<div class="icon">${ICON('medkit')}</div>구급상자<span class="cnt" id="medcnt"></span>`;
+      } else if (act === 'throw' || act === 'util') { // v1.14 투척물 · 보조
+        const cyc = act === 'throw' ? 'T' : 'Y', k = Gadgets.sel(act), c = CONSUMABLES[k], cnt = Gadgets.count(k);
+        d.className = 'hot gad' + (cnt ? '' : ' empty');
+        d.title = `${c.name} — ${c.desc}\n${cyc}: 종류 바꾸기 (${GADGET_SLOTS[act].map(x => CONSUMABLES[x].name).join(' · ')})`;
+        d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" id="${act}cnt">${cnt}</span><span class="cyc" data-cyc="${act}">${IS_TOUCH ? '↻' : cyc}</span>`;
+      } else { d.className = 'hot free'; d.title = '빈 칸 — 눌러서 스킬·구급상자·소모품 등록 (B)'; d.innerHTML = `${key}<div class="icon">＋</div>등록`; }
       hb.appendChild(d);
     }
-    const r = document.createElement('div'); // v0.16 구르기
+    const ed = document.createElement('div'); // 칸 등록 (벨트)
+    ed.className = 'hot edit'; ed.dataset.act = 'edit'; ed.title = `벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 ${n}칸 — 칸 등록 (B)`;
+    ed.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'B'}</span><div class="icon">${ICON('belt')}</div>${n}칸`;
+    hb.appendChild(ed);
+    const r = document.createElement('div'); // v0.16 구르기 (벨트와 상관없이 항상)
     r.className = 'hot'; r.dataset.act = 'roll'; r.title = '구르기: 짧은 무적 돌진 (적 공격 예고를 보고 피하기)';
     r.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'SPC'}</span><div class="icon">${ICON('roll')}</div>구르기<div class="cd" id="cdroll"></div>`;
     hb.appendChild(r);
+    if (!IS_TOUCH) hb.onclick = e => { // PC: 칸을 눌러도 사용 · 빈 칸·벨트 칸은 등록 창
+      const hot = e.target.closest('.hot'); if (!hot) return;
+      const cyc = e.target.closest('[data-cyc]'); if (cyc) return Gadgets.cycle(cyc.dataset.cyc);
+      if (hot.dataset.act === 'edit' || hot.dataset.act === 'empty') return Hotbar.edit();
+      if (hot.dataset.act === 'roll') return dodge();
+      Hotbar.use(+hot.dataset.slot);
+    };
   },
 
   updateHUD(dt) {
@@ -242,7 +252,7 @@ const UI = {
 
   // v1.15 가방 정렬: 소모품 → 무기 → 방어구 → 헬멧, 각각 고유·세트 → 등급 → 강화 → 레벨 높은 순
   sortBag() {
-    const p = G.player, ord = { cons: 0, weapon: 1, armor: 2, helmet: 3 };
+    const p = G.player, ord = { cons: 0, weapon: 1, armor: 2, helmet: 3, belt: 4 };
     p.inventory.sort((a, b) => (ord[a.kind] - ord[b.kind]) || ((b.unique ? 2 : b.set ? 1 : 0) - (a.unique ? 2 : a.set ? 1 : 0)) || ((b.rarity || 0) - (a.rarity || 0)) || ((b.plus || 0) - (a.plus || 0)) || ((b.ilvl || 0) - (a.ilvl || 0)) || String(a.key).localeCompare(String(b.key)));
     SFX.play('ui'); UI.refreshInventory();
   },
@@ -284,6 +294,7 @@ const UI = {
     const btns = box.querySelector('.btns');
     const add = (label, fn) => { const b = document.createElement('button'); b.innerHTML = label; b.onclick = fn; btns.appendChild(b); };
     if (it.kind !== 'cons') add(it.locked ? `${ICON('lock')} 잠금 해제` : `${ICON('lock')} 잠금`, () => { it.locked = !it.locked; SFX.play('ui'); UI.refreshInventory(); }); // v1.15 잠금: 판매·분해·버리기 막음
+    if (equippedSlot === 'belt') { add('칸 등록 (B)', () => Hotbar.edit()); return; } // v1.24 벨트는 바꿔 차기만
     if (equippedSlot) {
       add('장착 해제', () => UI.unequip(equippedSlot));
       return;
@@ -291,6 +302,7 @@ const UI = {
     if (it.kind === 'weapon') { add('주무기로 장착', () => UI.equip(it, 'w1')); add('보조무기로 장착', () => UI.equip(it, 'w2')); }
     if (it.kind === 'armor') add('장착', () => UI.equip(it, 'armor'));
     if (it.kind === 'helmet') add('장착', () => UI.equip(it, 'helmet'));
+    if (it.kind === 'belt') add('차기', () => { UI.equip(it, 'belt'); SKILLS.forEach((sk, i) => { if (G.player.skills[sk.id]) Hotbar.autoAdd('sk' + i); }); UI.buildHotbar(); }); // 칸이 늘면 못 넣었던 스킬을 채움
     if (it.kind === 'cons') add('사용', () => useItem(it));
     if (it.locked) return; // 잠긴 장비는 판매·버리기 버튼 없음
     if (UI.shopOpen) add(`판매 (${fmt(sellPrice)}₵)`, () => UI.sell(it, sellPrice));
@@ -529,7 +541,7 @@ const UI = {
   },
   enhanceList() {
     const p = G.player;
-    return [p.equip.w1, p.equip.w2, p.equip.armor, p.equip.helmet, ...p.inventory.filter(i => i.kind !== 'cons')].filter(Boolean);
+    return [p.equip.w1, p.equip.w2, p.equip.armor, p.equip.helmet, ...p.inventory.filter(i => i.kind !== 'cons' && i.kind !== 'belt')].filter(Boolean); // v1.24 벨트는 강화 없음
   },
   renderEnhance() {
     const p = G.player, list = $('enh-list'), box = $('enh-detail');
@@ -707,7 +719,7 @@ const UI = {
     if (p.credits < price) { log('크레딧이 부족합니다.', '#f88'); SFX.play('empty'); return; }
     p.credits -= price;
     if (k) { p.smodOwned[s.id + '_' + k] = true; if (!p.skillMods[s.id]) p.skillMods[s.id] = k; log(`스킬 갈래 획득: ${s.name} — ${SKILL_MODS[s.id][k].name}`, '#7fd'); }
-    else { p.skills[s.id] = true; log(`스킬을 배웠다: ${s.name} [${SKILLS.indexOf(s) + 1}]`, '#7fd'); UI.toast('스킬 습득', `${s.name} — ${SKILLS.indexOf(s) + 1}번 키`); }
+    else { p.skills[s.id] = true; const on = Hotbar.autoAdd('sk' + SKILLS.indexOf(s)), k = p.hotbar.indexOf('sk' + SKILLS.indexOf(s)) + 1; log(`스킬을 배웠다: ${s.name}${on ? ` [${k}번 칸]` : ' — 벨트 칸이 가득: B로 등록'}`, '#7fd'); UI.toast('스킬 습득', on ? `${s.name} — ${k}번 칸` : `${s.name} — 벨트 칸이 가득합니다 (B로 바꾸기)`); }
     SFX.play('levelup'); UI.buildHotbar(); UI.refreshStats(); saveGame(); this.skillShop();
   },
 
@@ -720,7 +732,7 @@ const UI = {
       + `<b>2. 뒤지고 싸운다</b> 노란 반짝임 = 뒤질 곳 ${k('[E]', '(E 버튼)')} · 미니맵 노란 ◆ = 사건 · 붉은 예고(「!」·원·선)가 보이면 ${k('Space', '구르기 버튼')}로 구르기.<br>`
       + `<b>3. 탈출해야 내 것</b> 주운 장비·크레딧은 맵 끝 초록 ◎에 5초 머물러야 확정. 죽으면 그 자리에 시체 가방.<br>`
       + `<b>4. 캠프에서 성장</b> 레벨 업 능력치·특성 ${k('(C)', '(능력치 버튼)')} · 정비공 강화 · 대장 한씨의 캠프 시설 · 창고에 귀중품 보관.<br><br>`
-      + `<span class="muted">${k('WASD 이동 · 마우스 조준·클릭 공격 · R 재장전 · Q 무기 교체 · 1~4 스킬 · 5 구급상자 · 6/7 소모품 · I 가방 · J 임무', '왼쪽 끌기 이동 · 오른쪽 끌기 조준·공격 · 아래 칸 스킬·소모품')}</span></div>`,
+      + `<span class="muted">${k('WASD 이동 · 마우스 조준·클릭 공격 · R 재장전 · Q 무기 교체 · 1~8 벨트 칸 (스킬·구급상자·소모품, B로 등록) · I 가방 · J 임무', '왼쪽 끌기 이동 · 오른쪽 끌기 조준·공격 · 아래 칸 스킬·소모품')}</span></div>`,
       [['출발하자', () => UI.close('dialog')]]);
   },
 
@@ -750,6 +762,7 @@ const UI = {
       for (const k of Object.keys(WEAPONS)) if (WEAPONS[k].lvl <= p.level + 2) stock.push(makeWeapon(k, p.level, rr));
       for (const k of Object.keys(ARMORS)) if (ARMORS[k].lvl <= p.level + 2) stock.push(makeArmor(k, p.level, rr));
       for (const k of Object.keys(HELMETS)) if (HELMETS[k].lvl <= p.level + 2) stock.push(makeHelmet(k, p.level, rr));
+      for (let t = 1; t <= 2; t++) if (BELTS[t].lvl <= p.level + 2) stock.push(makeBelt(t)); // v1.24 벨트 (특수부대 장구류는 뒤지기에서만)
       G.shopStock = stock;
     }
     UI.shopOpen = true;
@@ -803,5 +816,43 @@ const UI = {
     p.credits -= price;
     log(`구매: ${itemName(it)} (-${fmt(price)}₵)`, '#ffd76a');
     saveGame();
+  },
+};
+
+// v1.24 벨트 칸 (핫바). p.hotbar[i] = 'sk0'~'sk3' | 'med' | 'throw' | 'util' | null. 보이는 칸 = 벨트 등급 (2 · 4 · 6 · 8)
+const HOT_ACTS = () => SKILLS.map((s, i) => G.player.skills[s.id] ? ['sk' + i, s.name] : null).filter(Boolean).concat([['med', '구급상자'], ['throw', '투척물 (화염병·섬광탄·지뢰)'], ['util', '보조 (자극제·방탄판)']]);
+const Hotbar = {
+  use(i) {
+    const p = G.player;
+    if (i >= beltSlots(p)) { log(`${i + 1}번 칸이 없습니다 — 더 좋은 벨트가 필요합니다 (지금 ${beltSlots(p)}칸).`, '#aaa'); return; }
+    const act = p.hotbar[i];
+    if (!act) { log(`${i + 1}번 칸이 비어 있습니다 — B 또는 벨트 칸을 눌러 등록하세요.`, '#aaa'); return; }
+    if (act.startsWith('sk')) useSkill(+act.slice(2));
+    else if (act === 'med') quickMedkit();
+    else Gadgets.use(act);
+  },
+  assign(i, act) {
+    const p = G.player;
+    if (act) { const j = p.hotbar.indexOf(act); if (j >= 0) p.hotbar[j] = null; } // 한 가지는 한 칸에만
+    p.hotbar[i] = act || null;
+    UI.buildHotbar(); saveGame();
+  },
+  autoAdd(act) { // 새로 배운 스킬: 빈 칸이 있으면 자동 등록
+    const p = G.player;
+    if (p.hotbar.includes(act)) return true;
+    for (let i = 0; i < beltSlots(p); i++) if (!p.hotbar[i]) { p.hotbar[i] = act; UI.buildHotbar(); return true; }
+    return false;
+  },
+  edit() {
+    const p = G.player, n = beltSlots(p), acts = HOT_ACTS();
+    let h = `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>${n}칸</b> (벨트 등급마다 2 · 4 · 6 · 8칸) · 칸에 넣을 것을 고르세요. 구르기는 항상 따로 있습니다.</div><div class="hb-edit">`;
+    for (let i = 0; i < HOT_MAX; i++) {
+      if (i >= n) { h += `<div class="hb-row off"><span class="tag">${i + 1}</span> <span class="muted">${ICON('lock')} ${BELTS.find(b => b.slots > i).name} 이상</span></div>`; continue; }
+      h += `<div class="hb-row"><span class="tag">${i + 1}</span> <select data-hb="${i}"><option value="">— 비움 —</option>${acts.map(([a, nm]) => `<option value="${a}"${p.hotbar[i] === a ? ' selected' : ''}>${nm}</option>`).join('')}</select></div>`;
+    }
+    h += '</div>';
+    if (SKILLS.some(s => !p.skills[s.id])) h += '<div class="muted">스킬은 상인 박씨에게서 배우면 여기 목록에 나옵니다.</div>';
+    UI.dialog('벨트 — 칸 등록', h, [['닫기', () => UI.close('dialog')]]);
+    $('dialog-text').querySelectorAll('select[data-hb]').forEach(el => { el.onchange = () => { Hotbar.assign(+el.dataset.hb, el.value); SFX.play('ui'); Hotbar.edit(); }; });
   },
 };

@@ -102,6 +102,12 @@ function heldUnique(id) { const p = G.player, w = p && p.equip[p.active]; return
 function wornUnique(id) { const e = G.player && G.player.equip; return !!e && ((e.armor && e.armor.unique === id) || (e.helmet && e.helmet.unique === id)); }
 
 const GEAR_DEFS = k => WEAPONS[k] || ARMORS[k] || HELMETS[k];
+// v1.24 벨트: 등급(rarity)이 곧 핫바 칸 수
+function makeBelt(tier) {
+  const b = BELTS[Math.max(0, Math.min(3, tier))];
+  return { id: nextItemId++, kind: 'belt', key: 'belt', rarity: BELTS.indexOf(b), ilvl: b.lvl, plus: 0, name: b.name, affixes: [], isNew: true, value: b.price };
+}
+function beltSlots(p) { const b = p.equip.belt; return Math.max(2, b ? BELTS[b.rarity].slots : 2); }
 function makeGear(k, level, r) { return WEAPONS[k] ? makeWeapon(k, level, r) : ARMORS[k] ? makeArmor(k, level, r) : makeHelmet(k, level, r); }
 
 // 구버전(v0.1) 세이브의 아이템을 현재 구조로 보정
@@ -152,6 +158,7 @@ function itemReqLevel(it) {
   if (it.kind === 'weapon') return WEAPONS[it.key].lvl;
   if (it.kind === 'armor') return ARMORS[it.key].lvl;
   if (it.kind === 'helmet') return HELMETS[it.key].lvl;
+  if (it.kind === 'belt') return BELTS[it.rarity].lvl;
   return 1;
 }
 
@@ -165,6 +172,7 @@ function itemDesc(it) {
   }
   if (it.kind === 'armor') return `방어력 ${armorDef(it)} · 요구 Lv${ARMORS[it.key].lvl}`;
   if (it.kind === 'helmet') return `방어력 ${armorDef(it)}${HELMETS[it.key].radRes ? ` · 방사능 피해 -${HELMETS[it.key].radRes * 100}%` : ''} · 요구 Lv${HELMETS[it.key].lvl}`;
+  if (it.kind === 'belt') return `핫바 ${BELTS[it.rarity].slots}칸 · 칸마다 스킬·구급상자·소모품 등록 · 요구 Lv${BELTS[it.rarity].lvl}`;
   return CONSUMABLES[it.key].desc;
 }
 
@@ -197,11 +205,12 @@ function newPlayer(name) {
     level: 1, exp: 0, credits: 150, statPoints: 0,
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
     hp: 1, reserve: 150,
-    equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: null, helmet: null }, // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
+    equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: null, helmet: null, belt: makeBelt(0) }, // v1.24 벨트 // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
     active: 'w1',
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0],
+    hotbar: ['med', 'throw', null, null, null, null, null, null], // v1.24 벨트 칸에 등록한 것 (sk0~3 · med · throw · util)
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
     perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, stree: {}, passive: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
     // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
@@ -332,6 +341,7 @@ function isUpgrade(p, it) {
     const best = same.length ? Math.max(...same.map(w => weaponDps(p, w))) : 0;
     return weaponDps(p, it) > best * 1.02;
   }
+  if (it.kind === 'belt') return BELTS[it.rarity].slots > beltSlots(p); // v1.24
   if (it.kind === 'armor' || it.kind === 'helmet') {
     const cur = p.equip[it.kind];
     return armorEhp(p, it) > armorEhp(p) * 1.02 || (!!cur && it.affixes.length > cur.affixes.length && armorDef(it) >= armorDef(cur));

@@ -1212,6 +1212,7 @@ function render() {
   const pd = (p.x + p.y) / TILE, psx = Iso.sx(p.x, p.y), psy = Iso.sy(p.x, p.y, 18);
   // 플레이어와 추격 중인 적을 가리는 앞쪽 건물은 반투명 (v0.11 고층 건물 대응)
   const watch = [{ d: pd, sx: psx, sy: psy, w: 60 }];
+  for (const n of G.npcs) watch.push({ d: (n.x + n.y) / TILE, sx: Iso.sx(n.x, n.y), sy: Iso.sy(n.x, n.y, 18), w: 34 }); // v1.24 NPC도 가리면 반투명
   for (const e of G.enemies) if (e.state === 'chase' && e.hp > 0) watch.push({ d: (e.x + e.y) / TILE, sx: Iso.sx(e.x, e.y), sy: Iso.sy(e.x, e.y, 18), w: 30 + e.r });
   for (const o of solids) {
     if (o.t !== T.BUILDING && o.t !== T.LWALL && !SHOP_TILES.has(o.t)) continue;

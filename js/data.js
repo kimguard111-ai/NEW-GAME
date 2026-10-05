@@ -1,7 +1,7 @@
 // 게임 데이터 정의
 const TILE = 32;
 
-const GAME_VERSION = 'v1.23';
+const GAME_VERSION = 'v1.24';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -277,6 +277,16 @@ const PERK_TIERS = [
     { id: 'ghost', name: '그림자 걸음', desc: '구르기 재사용 -40% · 구르기 후 1초 동안 받는 피해 -50%' },
     { id: 'warlord', name: '전쟁군주', desc: '모든 스킬 재사용 대기 -25%' } ] },
 ];
+
+// v1.24 벨트 (장구류): 차는 벨트 등급만큼 핫바 칸 (2 · 4 · 6 · 8). 칸에는 배운 스킬 · 구급상자 · 투척물 · 보조를 직접 등록
+// 등급 = rarity (0 일반 ~ 3 영웅). 벨트가 없어도 기본 2칸
+const BELTS = [
+  { name: '낡은 허리띠', slots: 2, lvl: 1, price: 60 },
+  { name: '전술 벨트', slots: 4, lvl: 3, price: 900 },
+  { name: '전투 장구 벨트', slots: 6, lvl: 10, price: 4000 },
+  { name: '특수부대 장구류', slots: 8, lvl: 18, price: 12000 },
+];
+const HOT_MAX = 8;
 
 // v1.23 패시브 트리: 특성(위 PERK_TIERS)을 세 갈래로 나눠 트리로 보여 줌. 단계마다 고르는 규칙은 그대로 (3개 중 1개, 무료)
 // 특성 사이의 「단련」 노드는 크레딧으로 삼 (캠프에서, 위에서부터 차례로, 되돌리기 없음)

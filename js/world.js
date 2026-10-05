@@ -108,6 +108,11 @@ const World = {
         else if (d < this.safeR + 1.2) set(x, y, T.BARRICADE);
         else if (d < this.safeR + 3 && (this.tiles[y * W + x] === T.BUILDING || this.tiles[y * W + x] === T.CAR)) set(x, y, T.RUBBLE);
       }
+      // v1.24 카메라 쪽(남·동) 건물이 광장의 NPC를 가리지 않게 낮춤 (2층)
+      for (let y = this.cy - 22; y <= this.cy + 22; y++) for (let x = this.cx - 22; x <= this.cx + 22; x++) {
+        if (x < 0 || y < 0 || x >= W || y >= H || this.tiles[y * W + x] !== T.BUILDING) continue;
+        if ((x - this.cx) + (y - this.cy) > 2) this.height[y * W + x] = Math.min(this.height[y * W + x], FLOOR_H * 2);
+      }
     }
 
     // v1.6 석촌호수 (잠실): 맵 남동쪽 타원 호수 + 물가 산책로. 걸쳐진 상가는 validateShops 가 잔해로 바꿈
