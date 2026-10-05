@@ -535,6 +535,50 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 
 ---
 
+## 15. 외벽 다양화 (v1.31.1) · 한 장에 여러 개 (격자)
+
+건물 외벽은 **한 칸(약 1.6m) × 한 층(2.7m)** 크기의 그림을 층마다 쌓아 붙입니다. 그래서 그림 하나는 **세로로 긴 직사각형 (가로:세로 ≈ 3:5)** 이어야 합니다 (정사각형으로 만들면 옆으로 눌려 보임).
+- 15-1 **1층 상가 9종**: 일반 건물 1층에 칸·면마다 다른 가게가 들어감 → 거리가 가게들로 이어져 보임
+- 15-2 **위층 외벽 9종**: 지역마다 섞여 쓰임 (명동 상가 간판틀 · 종로 타일·빌라 · 용산 군 시설 · 여의도 석재 · 잠실 복도식 아파트 …)
+- 15-3·15-4 **들어갈 수 있는 상가 12종의 가게 앞모습**: 그 상가 외벽 1층 (위층은 지역 외벽). 문은 게임이 따로 그리므로 **문 없이 쇼윈도만**, 간판 자리는 비워 두기 (게임이 한글 간판을 씀)
+
+| 장 | 🔧 도구 이름 | 격자 | 파일 이름 |
+|---|---|---|---|
+| 15-1 | v1.31.1 1층 상가 9종 | 3×3 | `tex_ground.png` |
+| 15-2 | v1.31.1 위층 외벽 9종 | 3×3 | `tex_facade3.png` |
+| 15-3 | v1.31.1 상가 앞모습 1 (6종) | 3×2 | `tex_shopfront1.png` |
+| 15-4 | v1.31.1 상가 앞모습 2 (6종) | 3×2 | `tex_shopfront2.png` |
+
+공통 규칙: **정면에서 본 평평한 그림** (원근 없음, 기울이지 않음) · 칸마다 하나 · 칸 사이는 마젠타 · 글씨·숫자·로고 없음 · 좌우가 이어지게 (옆 칸에 같은 그림을 붙여도 자연스럽게)
+
+### 15-1. 1층 상가 9종 · `tex_ground.png`
+📎 콘셉트 아트
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate flat building texture panels for the ground floor of abandoned shops in a ruined post-apocalyptic Seoul, each panel a TALL RECTANGLE (width to height about 3:5), seen perfectly FRONT-ON (orthographic, no perspective, no angle), placed in its own equal cell with thin magenta gaps between them. Each panel shows ONE narrow shop bay exactly one storey high, filling the whole panel edge to edge, and its left and right edges continue seamlessly. In order, left to right, top to bottom: 1) a rolled-down rusty metal shutter covered in spray-paint graffiti shapes (no readable letters); 2) a shattered glass shop window with dark empty shelves behind; 3) a small restaurant front with a torn striped fabric awning and fogged window; 4) a mobile phone shop window with faded blank posters and an empty display; 5) a half-open steel grille gate with darkness behind; 6) a hair salon front with a spiral barber pole beside a dusty window; 7) a real-estate office glass front plastered with blank paper notices; 8) a karaoke entrance with dark tinted glass and a broken neon tube frame (unlit); 9) an empty boarded shop with plywood over the window and peeling paper. Each panel has a blank dark signboard band across the top (no text). Evenly lit, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background in the gaps. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 15-2. 위층 외벽 9종 · `tex_facade3.png`
+📎 콘셉트 아트
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate flat building wall texture panels for the UPPER floors of ruined buildings in post-apocalyptic Seoul, each panel a TALL RECTANGLE (width to height about 3:5), seen perfectly FRONT-ON (orthographic, no perspective), placed in its own equal cell with thin magenta gaps between them. Each panel shows exactly ONE storey and ONE window bay, filling the whole panel edge to edge, with left and right edges that continue seamlessly. In order, left to right, top to bottom: 1) a 1980s Korean building wall of small beige ceramic tiles with a single aluminum window, some tiles fallen off; 2) a red-brick villa wall with a silver sliding-sash veranda window and a rusty railing; 3) an apartment corridor side: open outdoor walkway with a concrete parapet and a door-less dark opening behind; 4) a commercial building wall with an empty rectangular signboard frame (blank) above a dirty window; 5) an old motel wall in faded pink-beige plaster with a small frosted window and an air conditioner unit; 6) a grey military concrete wall with a narrow slit window, stenciled stripes and rust streaks; 7) a polished grey stone office wall with a dark tinted window, cracked; 8) a wall covered by construction scaffolding pipes and torn green safety netting; 9) a concrete wall overgrown with ivy vines around a broken window. Evenly lit, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background in the gaps. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 15-3. 상가 앞모습 1 (6종) · `tex_shopfront1.png`
+📎 콘셉트 아트 · 순서: 편의점 · 약국 · 은행 · 카페 · 병원 · 마트
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate flat shop-front texture panels for abandoned Korean shops, each panel a TALL RECTANGLE (width to height about 3:5), seen perfectly FRONT-ON (orthographic, no perspective), placed in its own equal cell with thin magenta gaps. Each panel shows ONE storey of a shop front WITHOUT a door: a display window bay with a blank signboard band on top (no text), filling the panel edge to edge, left and right edges continuing seamlessly. In order, left to right, top to bottom: 1) a convenience store window with toppled snack shelves and a blank colored stripe band; 2) a pharmacy window with a green cross shape (no letters) and empty medicine shelves; 3) a bank front of heavy tinted glass and a closed steel security shutter half down; 4) a cafe window with wooden frame, hanging lamps (off) and chairs stacked inside; 5) a clinic front with frosted white glass and a red cross shape (no letters); 6) a supermarket window with shopping carts piled inside and torn sale posters (blank). Evenly lit, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background in the gaps. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 15-4. 상가 앞모습 2 (6종) · `tex_shopfront2.png`
+📎 콘셉트 아트 · 순서: PC방 · 파출소 · 분식집 · 전자상가 · 서점 · 세탁소
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate flat shop-front texture panels for abandoned Korean shops, each panel a TALL RECTANGLE (width to height about 3:5), seen perfectly FRONT-ON (orthographic, no perspective), placed in its own equal cell with thin magenta gaps. Each panel shows ONE storey of a shop front WITHOUT a door: a display window bay with a blank signboard band on top (no text), filling the panel edge to edge, left and right edges continuing seamlessly. In order, left to right, top to bottom: 1) a PC-bang front with dark tinted glass and faint monitor glow shapes inside; 2) a police box front in white and navy panels with a barred window and a dead blue lamp; 3) a snack restaurant window with steamed-up glass, a menu board shape (blank) and plastic stools; 4) an electronics shop window with stacked old TVs and phone boxes behind cracked glass; 5) a bookstore window with dusty books stacked and fallen; 6) a laundromat window showing a row of front-loading washing machines. Evenly lit, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background in the gaps. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+> 결과를 `art_raw/new/`에 위 파일 이름으로 올리면 가공해 연결합니다. 예전 외벽(13번)도 세로로 긴 비율로 다시 만들면 덜 눌려 보입니다 — 원하면 같은 이름으로 다시 올리세요.
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |

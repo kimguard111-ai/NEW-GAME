@@ -179,13 +179,21 @@ const ART = {
   // v1.25 실내 바닥 질감 (가공 도구 「v1.25 실내 바닥 질감 6종」 → tex 안에 붙여넣기). 2×2칸에 한 장을 펼침
   // 상가 이름 → 소품 그림 · 바닥 질감 · 장식 (없는 그림은 지금처럼 코드로 그림)
   shopArt: {
-    편의점: { obj: 'in_snack', floor: 'fl_tile' }, 약국: { obj: 'in_pharma', floor: 'fl_lino' }, 마트: { obj: 'in_mart', floor: 'fl_tile' },
-    서점: { obj: 'in_books', floor: 'fl_wood' }, 전자상가: { obj: 'in_elec', floor: 'fl_tile' }, 카페: { obj: 'in_cafe', floor: 'fl_wood' },
-    분식집: { obj: 'in_food', floor: 'fl_concrete' }, 은행: { obj: 'in_bank', floor: 'fl_marble' }, 병원: { obj: 'in_hosp', floor: 'fl_lino', deco: 'in_bed' },
-    파출소: { obj: 'in_police', floor: 'fl_marble' }, PC방: { obj: 'in_pc', floor: 'fl_carpet' }, 세탁소: { obj: 'in_washer', floor: 'fl_concrete' },
+    편의점: { obj: 'in_snack', floor: 'fl_tile', front: 'sf_conv' }, 약국: { obj: 'in_pharma', floor: 'fl_lino', front: 'sf_pharma' }, 마트: { obj: 'in_mart', floor: 'fl_tile', front: 'sf_mart' },
+    서점: { obj: 'in_books', floor: 'fl_wood', front: 'sf_books' }, 전자상가: { obj: 'in_elec', floor: 'fl_tile', front: 'sf_elec' }, 카페: { obj: 'in_cafe', floor: 'fl_wood', front: 'sf_cafe' },
+    분식집: { obj: 'in_food', floor: 'fl_concrete', front: 'sf_food' }, 은행: { obj: 'in_bank', floor: 'fl_marble', front: 'sf_bank' }, 병원: { obj: 'in_hosp', floor: 'fl_lino', deco: 'in_bed', front: 'sf_hosp' },
+    파출소: { obj: 'in_police', floor: 'fl_marble', front: 'sf_police' }, PC방: { obj: 'in_pc', floor: 'fl_carpet', front: 'sf_pc' }, 세탁소: { obj: 'in_washer', floor: 'fl_concrete', front: 'sf_laundry' },
   },
-  texZones: { 0: ['f_apartment', 'f_brick', 'f_apartment2'], 1: ['f_brick', 'f_apartment', 'f_office', 'f_brick2', 'f_apartment2'], 2: ['f_brick', 'f_apartment', 'f_brick2', 'f_apartment2'], 3: ['f_office', 'f_burnt', 'f_apartment', 'f_office2', 'f_burnt2'],
-    4: ['f_office', 'f_glass', 'f_burnt', 'f_office2', 'f_burnt2'], 6: ['f_glass', 'f_office', 'f_glass2', 'f_office2'], 7: ['f_apartment', 'f_burnt', 'f_brick', 'f_apartment2', 'f_burnt2'] }, // v1.31 변형(…2) 섞어 반복 줄이기
+  // v1.31.1 지역마다 외벽 후보 — 그림이 없는 키는 건너뜀 (f_tile·f_villa… 는 v1.31.1 프롬프트 15-2)
+  texZones: { 0: ['f_apartment', 'f_brick', 'f_apartment2', 'f_villa', 'f_tile'],
+    1: ['f_brick', 'f_apartment', 'f_office', 'f_brick2', 'f_apartment2', 'f_signframe', 'f_tile', 'f_motel'],
+    2: ['f_brick', 'f_apartment', 'f_brick2', 'f_apartment2', 'f_tile', 'f_villa', 'f_vines', 'f_signframe'],
+    3: ['f_office', 'f_burnt', 'f_apartment', 'f_office2', 'f_burnt2', 'f_military', 'f_scaffold'],
+    4: ['f_office', 'f_glass', 'f_burnt', 'f_office2', 'f_burnt2', 'f_stone', 'f_scaffold'],
+    6: ['f_glass', 'f_office', 'f_glass2', 'f_office2', 'f_stone'],
+    7: ['f_apartment', 'f_burnt', 'f_brick', 'f_apartment2', 'f_burnt2', 'f_corridor', 'f_villa', 'f_vines'] },
+  // v1.31.1 일반 건물 1층 상가: 칸·면마다 이 중 하나 (f_shop + 프롬프트 15-1의 9종)
+  groundSet: ['f_shop', 'g_shutter', 'g_glass', 'g_awning', 'g_phone', 'g_grille', 'g_salon', 'g_realty', 'g_karaoke', 'g_empty'], // v1.31 변형(…2) 섞어 반복 줄이기
 
   // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
   landmarks: {

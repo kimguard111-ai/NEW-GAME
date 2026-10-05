@@ -273,7 +273,9 @@ function drawSolidTile(o) {
     const i = ty * World.W + tx, s = World.shade[i], cut = insideBid(tx, ty), ht = tileHeight(tx, ty);
     const b = 92 + Math.floor(s * 30);
     const top = `rgb(${b + 6},${b - 10},${b - 26})`, south = `rgb(${b - 40},${b - 52},${b - 62})`, east = `rgb(${b - 24},${b - 36},${b - 46})`;
-    if (t === T.WALL) {
+    const sf = t === T.WALL && !cut && shopFront(i); // v1.31.1 들어갈 수 있는 상가 외벽 그림 (가게 앞모습 + 위층 외벽)
+    if (sf) drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), sf.upper, s, sf.front);
+    else if (t === T.WALL) {
       drawBox(x0, y0, x1, y1, ht, cut ? '#6a5a4c' : top, south, east, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), cut ? 0 : tx * 977 + ty);
     } else if (t === T.FLOOR || t === T.PROP) { // 지붕 (바깥에서만)
       drawBox(x0, y0, x1, y1, ht, `rgb(${b - 20},${b - 26},${b - 32})`, south, east, -1, -1, 0);
@@ -729,6 +731,13 @@ function drawHelmetOverlay(sx, sy, info, hel, color) {
 
 // v1.19 건물 질감: 외벽은 층마다 반복 (1층은 상가), 옥상은 위에서 본 질감. 높이별로 외벽 한 줄을 미리 합쳐 캐시
 const TexCache = { strips: new Map() };
+// v1.31.1 상가(들어갈 수 있는 건물) 외벽: 가게 종류별 앞모습 그림(sf_…)이 있으면 1층, 위층은 지역 외벽 — 없으면 null (코드 그림)
+function shopFront(i) {
+  const bd = World.buildings[World.bid[i]], sa = bd && ART.shopArt[bd.name], fk = sa && sa.front;
+  if (!fk || !ART.tex[fk] || !ART.tex[fk].ready) return null;
+  const tx = i % World.W, ty = Math.floor(i / World.W), upper = facadeVariant(tx, ty, false) || fk;
+  return { front: fk, upper };
+}
 function facadeVariant(tx, ty, glass) {
   if (!ART.tex) return null;
   const ok = k => { const a = ART.tex[k]; return a && a.ready ? k : null; };
@@ -737,11 +746,18 @@ function facadeVariant(tx, ty, glass) {
   if (!list.length) return null;
   return list[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 7 + 3, Math.floor(ty / World.BLOCK) * 11 + 5) * list.length)]; // 같은 블록은 같은 외벽
 }
-function facadeStrip(v, ht) {
-  const key = v + '|' + ht;
+// v1.31.1 1층 상가 그림: 칸·면마다 다른 가게 (가게가 줄지어 있는 거리처럼). 유리 고층은 1층도 유리
+function groundVariant(tx, ty, f, v) {
+  if (v.startsWith('f_glass')) return null;
+  if (!TexCache.gList || G.time - TexCache.gT > 2) { TexCache.gT = G.time; TexCache.gList = (ART.groundSet || ['f_shop']).filter(k => ART.tex[k] && ART.tex[k].ready); } // 2초마다만 다시 거름
+  const list = TexCache.gList;
+  return list.length ? list[Math.floor(hash2(tx * 13 + (f === 's' ? 1 : 7), ty * 7 + 3) * list.length)] : null;
+}
+function facadeStrip(v, ht, gk) {
+  const key = v + '|' + ht + '|' + gk;
   let c = TexCache.strips.get(key);
   if (c) return c;
-  const a = ART.tex[v], shop = ART.tex.f_shop && ART.tex.f_shop.ready && !v.startsWith('f_glass') ? ART.tex.f_shop : null;
+  const a = ART.tex[v], shop = gk && ART.tex[gk] && ART.tex[gk].ready ? ART.tex[gk] : null; // v1.31.1 1층 = 고른 상가 그림
   const PX = 2, W = TILE * PX, FH = FLOOR_H * PX, H = Math.ceil(ht * PX); // 월드 1 = 2px
   c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
@@ -750,14 +766,16 @@ function facadeStrip(v, ht) {
     g.drawImage(src.img, rx, ry, rw, rh, 0, y, W, FH);
   }
   TexCache.strips.set(key, c);
-  if (TexCache.strips.size > 80) TexCache.strips.delete(TexCache.strips.keys().next().value);
+  if (TexCache.strips.size > 240) TexCache.strips.delete(TexCache.strips.keys().next().value); // v1.31.1 1층 변형만큼 넉넉히
   return c;
 }
-function drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, sz, ez, v, shade) {
-  const strip = facadeStrip(v, ht), PX = 2, dk = 0.12 - shade * 0.1; // 건물마다 밝기 조금 다르게
+function drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, sz, ez, v, shade, front) {
+  const PX = 2, dk = 0.12 - shade * 0.1; // 건물마다 밝기 조금 다르게
+  const mir = hash2(Math.floor(tx / World.BLOCK) * 3 + 11, Math.floor(ty / World.BLOCK) * 5 + 2) < 0.5; // v1.31.1 블록 절반은 외벽을 좌우로 뒤집어 같은 그림도 달라 보이게
   const face = (f, zb) => {
     if (zb < 0 || zb >= ht) return;
-    ctx.save(); City.faceTransform(tx, ty, f, ht);
+    const strip = facadeStrip(v, ht, front || groundVariant(tx, ty, f, v)); // v1.31.1 front = 들어갈 수 있는 상가의 가게 앞모습
+    ctx.save(); City.faceTransform(tx, ty, f, ht); if (mir) { ctx.translate(TILE, 0); ctx.scale(-1, 1); }
     const off = f === 's' ? 0 : TILE * 0.5; // 두 면이 같은 무늬로 이어 보이지 않게
     ctx.drawImage(strip, (off * PX) % strip.width, 0, strip.width - (off * PX) % strip.width, (ht - zb) * PX, 0, 0, TILE - off % TILE, ht - zb);
     if (off) ctx.drawImage(strip, 0, 0, (off * PX) % strip.width, (ht - zb) * PX, TILE - off, 0, off, ht - zb);
