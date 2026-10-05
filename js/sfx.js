@@ -1,8 +1,11 @@
 // 효과음 (v0.16 재미 패치): 외부 파일 없이 WebAudio로 합성
 // SFX.play('이름', 세기, 좌우) — 같은 소리는 짧은 간격 안에 겹치지 않게 제한
 // v1.35 소리 패스: 울림 버스(바깥 = 긴 도시 메아리 · 실내 = 짧은 방 울림) · 좌우 위치(SFX.playAt) · 바닥별 발소리 · 무기별 장전 · UI 소리
+// v1.40 녹음/AI 소리 파일: 이름 → 파일 목록 (여러 개면 무작위로 골라 반복감 줄임). 파일이 있으면 합성음 대신 재생 (docs/SOUND_PROMPTS.md)
+// 예: pistol: ['pistol_1.mp3', 'pistol_2.mp3'] · 발소리 step_asphalt … · 장전 reload_shotgun … · 환경음 amb_wind(반복) amb_gun …
+const SOUND_FILES = {};
 const SFX = {
-  ctx: null, master: null, bus: null, dst: null, noiseBuf: null, last: {}, sends: null,
+  ctx: null, master: null, bus: null, dst: null, noiseBuf: null, last: {}, sends: null, bufs: {},
 
   // 브라우저는 첫 입력 뒤에만 소리를 허용 → 첫 키·클릭·터치에서 초기화
   unlock() {
@@ -15,6 +18,7 @@ const SFX = {
     const n = c.sampleRate * 0.5, buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
     this.noiseBuf = buf;
+    this.loadFiles();
     // 울림: 모든 효과음 → bus → (그대로) + (도시 메아리) + (방 울림)
     this.bus = c.createGain(); this.bus.connect(this.master); this.dst = this.bus;
     this.sends = {};
@@ -29,6 +33,19 @@ const SFX = {
     const c = this.ctx, n = Math.floor(c.sampleRate * len), b = c.createBuffer(2, n, c.sampleRate);
     for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, decay) * (i < c.sampleRate * 0.012 ? i / (c.sampleRate * 0.012) : 1); }
     return b;
+  },
+  loadFiles() { // 있는 파일만 (목록은 SOUND_FILES)
+    for (const [name, list] of Object.entries(SOUND_FILES)) for (const f of [].concat(list)) {
+      fetch('assets/sfx/' + f).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && this.ctx.decodeAudioData(a)).then(b => { if (b) (this.bufs[name] = this.bufs[name] || []).push(b); }).catch(() => { /* 없으면 합성음 */ });
+    }
+  },
+  // 파일 소리 재생 (있으면 true): 세기 · 좌우 · 음높이 살짝 흔들기
+  playFile(name, k = 1, pan = 0, rate = 1, delay = 0) {
+    const list = this.bufs[name]; if (!list || !list.length || !this.ctx) return false;
+    const c = this.ctx, s = c.createBufferSource(), g = c.createGain(); s.buffer = list[Math.floor(Math.random() * list.length)];
+    s.playbackRate.value = rate * (0.95 + Math.random() * 0.1); g.gain.value = k;
+    let out = this.dst; if (pan && c.createStereoPanner && out === this.bus) { const pn = c.createStereoPanner(); pn.pan.value = pan; pn.connect(this.bus); out = pn; }
+    s.connect(g); g.connect(out); s.start(c.currentTime + delay); return true;
   },
   setVolume() { if (this.master) this.master.gain.value = Settings.sound ? Settings.volume * 0.5 : 0; },
   // 매 프레임: 실내·연구소면 방 울림, 바깥이면 도시 메아리
@@ -74,6 +91,7 @@ const SFX = {
     const now = performance.now(), gap = { hit: 35, ehit: 50, eshot: 60, coin: 40, step: 0, growl: 260, roar: 600, shout: 300, beep: 300, estep: 70, error: 250, click: 40 }[name] ?? 25; // v1.29 적 소리는 겹치지 않게
     if (now - (this.last[name] || 0) < gap) return;
     this.last[name] = now;
+    if (this.playFile(name, name === 'item' ? 1 : k, pan)) return; // v1.40 파일이 있으면 그 소리
     let pn = null;
     if (pan && this.ctx.createStereoPanner) { pn = this.ctx.createStereoPanner(); pn.pan.value = pan; pn.connect(this.bus); this.dst = pn; }
     try { this.sound(name, k); } finally { this.dst = this.bus; }
@@ -82,9 +100,9 @@ const SFX = {
     const v = k, R = Math.random;
     switch (name) {
       // 무기 (v1.35: 딸깍 + 몸통 + 낮은 울림 — 꼬리는 울림 버스가 만듦)
-      case 'pistol': this.click(0.25 * v, 0, 4200); this.noise(0.1, 1900, 1.3, 0.5 * v); this.tone(170, 0.07, 0.24 * v, 'square', 0, 0.45); break;
-      case 'smg': this.click(0.15 * v, 0, 5000); this.noise(0.06, 2400, 1.5, 0.32 * v); this.tone(210 + R() * 20, 0.045, 0.13 * v, 'square', 0, 0.5); break;
-      case 'rifle': this.click(0.22 * v, 0, 3800); this.noise(0.1, 1500, 1.1, 0.45 * v); this.noise(0.16, 380, 0.8, 0.25 * v, 'lowpass', 0.5); this.tone(115, 0.09, 0.24 * v, 'sawtooth', 0, 0.4); break;
+      case 'pistol': this.click(0.25 * v, 0, 4200); this.noise(0.1, 1900, 1.3, 0.55 * v); this.tone(170, 0.07, 0.24 * v, 'square', 0, 0.45); this.tone(62, 0.09, 0.3 * v, 'sine', 0, 0.6); break; // v1.40 낮은 쿵
+      case 'smg': this.click(0.15 * v, 0, 5000); this.noise(0.06, 2400, 1.5, 0.36 * v); this.tone(210 + R() * 20, 0.045, 0.13 * v, 'square', 0, 0.5); this.tone(70, 0.05, 0.18 * v, 'sine', 0, 0.6); break;
+      case 'rifle': this.click(0.22 * v, 0, 3800); this.tone(55, 0.1, 0.32 * v, 'sine', 0, 0.6); this.noise(0.1, 1500, 1.1, 0.5 * v); this.noise(0.16, 380, 0.8, 0.25 * v, 'lowpass', 0.5); this.tone(115, 0.09, 0.24 * v, 'sawtooth', 0, 0.4); break;
       case 'lmg': this.click(0.18 * v, 0, 3400); this.noise(0.09, 1200, 1.0, 0.42 * v); this.noise(0.14, 300, 0.8, 0.28 * v, 'lowpass', 0.5); this.tone(95, 0.08, 0.22 * v, 'sawtooth', 0, 0.4); break;
       case 'shotgun': this.noise(0.3, 900, 0.7, 0.75 * v, 'lowpass', 0.3); this.tone(78, 0.22, 0.42 * v, 'sine', 0, 0.4);
         this.noise(0.05, 1400, 2, 0.16 * v, 'bandpass', 0, 0.34); this.noise(0.06, 900, 2, 0.18 * v, 'bandpass', 0, 0.44); break; // 펌프 착-칵
@@ -107,6 +125,9 @@ const SFX = {
       case 'reload': this.click(0.14, 0, 2200); this.click(0.14, 0.12, 3000); break;
       // 타격
       case 'hit': this.noise(0.06, 500, 1.5, 0.3 * v, 'lowpass'); break;
+      case 'impact': this.noise(0.05, 1100, 1.3, 0.32 * v); this.noise(0.09, 170, 1, 0.42 * v, 'lowpass'); this.tone(110, 0.07, 0.18 * v, 'sine', 0, 0.5); break; // v1.40 살에 박힘: 퍽
+      case 'impactCrit': this.noise(0.06, 1300, 1.3, 0.38 * v); this.noise(0.11, 160, 1, 0.5 * v, 'lowpass'); this.tone(1700, 0.06, 0.08 * v, 'triangle', 0, 0.6); this.tone(95, 0.09, 0.22 * v, 'sine', 0, 0.5); break;
+      case 'ricochet': this.tone(rand(2200, 3200), 0.16, 0.035 * v, 'sine', 0, 0.55); this.click(0.08 * v, 0, 3600); break; // 피융
       case 'crit': this.noise(0.08, 3000, 2, 0.3 * v); this.tone(1400, 0.07, 0.15 * v, 'triangle', 0, 0.6); break;
       case 'metal': this.tone(900 + R() * 300, 0.08, 0.15 * v, 'triangle', 0, 0.7); this.tone(2300 + R() * 400, 0.2, 0.04 * v, 'sine', 0.01, 0.98); break; // 쇳소리 + 잔향
       case 'kill': this.noise(0.18, 350, 0.9, 0.45 * v, 'lowpass', 0.4); this.tone(140, 0.12, 0.2 * v, 'sine', 0, 0.5); break;
@@ -147,6 +168,7 @@ const SFX = {
   reload(key, dur) {
     if (!this.ctx || !Settings.sound) return;
     const d = dur || 1.5;
+    if (this.playFile('reload_' + key, 0.9, 0, (this.bufs['reload_' + key] || [{}])[0].duration ? this.bufs['reload_' + key][0].duration / d : 1)) return; // v1.40 파일 (재장전 시간에 맞춰 빠르기 조절)
     if (key === 'shotgun') { const n = Math.max(2, Math.round(d / 0.32)); for (let i = 0; i < n; i++) { this.click(0.12, 0.15 + i * (d - 0.4) / n, 1600); this.noise(0.05, 700, 1.5, 0.08, 'bandpass', 0, 0.17 + i * (d - 0.4) / n); } this.noise(0.05, 1400, 2, 0.15, 'bandpass', 0, d - 0.18); this.noise(0.06, 900, 2, 0.16, 'bandpass', 0, d - 0.08); return; } // 한 발씩 넣고 펌프
     if (key === 'sniper') { this.click(0.16, 0.05, 2400); this.click(0.14, d * 0.45, 1800); this.click(0.15, d * 0.7, 2200); this.click(0.18, d - 0.12, 3000); return; } // 노리쇠 뒤로 · 탄창 · 노리쇠 앞으로
     if (key === 'lmg') { this.click(0.16, 0.08, 1500); this.noise(0.18, 500, 1, 0.12, 'bandpass', 0.6, d * 0.35); this.noise(0.1, 1200, 1.5, 0.1, 'bandpass', 0, d * 0.65); this.click(0.2, d - 0.15, 2000); return; } // 덮개 · 탄띠 · 덮개 닫음
@@ -158,6 +180,7 @@ const SFX = {
   // v1.35 바닥별 발소리
   step(surf, k = 1, pan = 0) {
     if (!this.ctx || !Settings.sound) return;
+    if (this.playFile('step_' + surf, k * 0.8, pan)) return; // v1.40 파일
     let pn = null;
     if (pan && this.ctx.createStereoPanner) { pn = this.ctx.createStereoPanner(); pn.pan.value = pan; pn.connect(this.bus); this.dst = pn; }
     const v = k * (0.85 + Math.random() * 0.3), f = 0.9 + Math.random() * 0.2;

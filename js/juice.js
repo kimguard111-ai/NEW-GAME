@@ -1,10 +1,34 @@
 // 손맛 (v1.28): 총구 섬광 · 탄피 · 조준선(반동에 따라 벌어짐) · 명중 표시(맞히면 흰 X, 처치하면 붉은 X)
 const Juice = {
   flashes: [], casings: [], hm: null, spread: 0,
-  reset() { this.flashes = []; this.casings = []; this.hm = null; },
+  impacts: [], smokes: [],
+  reset() { this.flashes = []; this.casings = []; this.hm = null; this.impacts = []; this.smokes = []; },
+  // v1.40 총알이 적에 맞음: 맞은 방향으로 튀는 피·불꽃 + 흰 섬광 + 몸이 휘청 + 묵직한 소리 (+ 큰 총은 아주 짧은 멈춤)
+  impact(e, b, a, crit) {
+    const mech = FACTION[e.type] === 'machine', wk = b.w && b.w.key, big = wk === 'shotgun' || wk === 'sniper' || wk === 'rifle' || wk === 'lmg';
+    const n = mech ? 7 : crit ? 10 : 6, c = Math.cos(a), s = Math.sin(a);
+    for (let i = 0; i < n; i++) { const aa = a + rand(-0.55, 0.55), sp = rand(140, crit ? 380 : 300); G.particles.push({ x: e.x - c * e.r * 0.4, y: e.y - s * e.r * 0.4, vx: Math.cos(aa) * sp, vy: Math.sin(aa) * sp, t: 0, life: rand(0.18, 0.38), color: mech ? (Math.random() < 0.5 ? '#fff2b0' : '#ffb040') : (Math.random() < 0.6 ? '#d42424' : '#7a0c0c'), size: rand(1.6, 3.2), z: 18 + rand(-4, 6), vz: rand(-30, 60) }); }
+    this.impacts.push({ x: e.x - c * e.r * 0.5, y: e.y - s * e.r * 0.5, t: 0, life: crit ? 0.09 : 0.06, r: crit ? 13 : big ? 10 : 7, col: mech ? '#fff6c0' : crit ? '#fff2a0' : '#ffffff' });
+    e.joltA = a; e.joltT = 0.09; e.joltK = big ? 5 : 3; // 맞은 쪽으로 몸이 툭 밀림 (그림만 · 무게와 상관없이)
+    e.flashT = 0.05;
+    SFX.playAt(mech ? 'metal' : crit ? 'impactCrit' : 'impact', e.x, e.y, big ? 1 : 0.8, 900);
+    if (Settings.shake && big) G.shake = Math.max(G.shake, crit ? 2.2 : 1.4);
+    if (wk === 'shotgun' && b.sid !== this.lastSid) { this.lastSid = b.sid; hitstop(0.022); } // 산탄: 한 발에 한 번만
+    else if (crit && big) hitstop(0.014);
+  },
+  // 벽·건물에 맞음: 불꽃 + 먼지 + 총알 자국 + 가끔 튕기는 소리
+  wall(x, y, a) {
+    const c = Math.cos(a), s = Math.sin(a);
+    for (let i = 0; i < 4; i++) { const aa = a + Math.PI + rand(-0.9, 0.9), sp = rand(80, 220); G.particles.push({ x: x - c * 3, y: y - s * 3, vx: Math.cos(aa) * sp, vy: Math.sin(aa) * sp, t: 0, life: rand(0.1, 0.22), color: Math.random() < 0.5 ? '#ffe08a' : '#fff', size: 1.5, z: 20, vz: rand(20, 90) }); }
+    for (let i = 0; i < 3; i++) G.particles.push({ x: x - c * 4, y: y - s * 4, vx: -c * rand(10, 40) + rand(-15, 15), vy: -s * rand(10, 40) + rand(-15, 15), t: 0, life: rand(0.35, 0.6), color: 'rgba(150,140,120,0.55)', size: rand(3, 5), z: 20, vz: 20 });
+    this.impacts.push({ x: x - c * 2, y: y - s * 2, t: 0, life: 0.05, r: 6, col: '#ffe8b0' });
+    if (Math.random() < 0.25) SFX.playAt('ricochet', x, y, 0.6, 700);
+  },
+  smoke(x, y, a, big) { for (let i = 0; i < (big ? 3 : 1); i++) this.smokes.push({ x: x + Math.cos(a) * rand(4, 14), y: y + Math.sin(a) * rand(4, 14), vx: Math.cos(a) * rand(8, 24) + rand(-8, 8), vy: Math.sin(a) * rand(8, 24) + rand(-8, 8), t: 0, life: rand(0.5, 0.9), r: rand(3, 5) * (big ? 1.4 : 1) }); if (this.smokes.length > 60) this.smokes.splice(0, this.smokes.length - 60); },
   shot(p, w, mx, my, a) {
     const b = WEAPONS[w.key], big = b.pellets || w.key === 'sniper';
-    this.flashes.push({ x: mx, y: my, a, t: 0, life: big ? 0.07 : 0.045, s: big ? 15 : w.key === 'lmg' || w.key === 'rifle' ? 11 : 8 });
+    this.flashes.push({ x: mx, y: my, a, t: 0, life: big ? 0.075 : 0.05, s: big ? 21 : w.key === 'lmg' || w.key === 'rifle' ? 15 : 12 }); // v1.40 더 크게
+    this.smoke(mx, my, a, big);
     this.spread = Math.min(1, this.spread + (big ? 0.7 : w.key === 'pistol' ? 0.35 : 0.18));
     if (Math.random() < (w.key === 'smg' || w.key === 'lmg' ? 0.6 : 1)) { // 탄피: 총 오른쪽으로 튀어 바닥에 굴러 떨어짐
       const side = a + Math.PI / 2 + rand(-0.4, 0.4), v = rand(60, 120);
@@ -46,6 +70,8 @@ const Juice = {
     this.spread = Math.max(0, this.spread - dt * 2.2);
     if (this.hm && (this.hm.t += dt) > (this.hm.kill ? 0.28 : 0.14)) this.hm = null;
     for (const f of this.flashes) f.t += dt;
+    for (const m of this.impacts) m.t += dt; this.impacts = this.impacts.filter(m => m.t < m.life);
+    for (const m of this.smokes) { m.t += dt; m.x += m.vx * dt; m.y += m.vy * dt; m.vx *= 0.94; m.vy *= 0.94; } this.smokes = this.smokes.filter(m => m.t < m.life);
     this.flashes = this.flashes.filter(f => f.t < f.life);
     for (const c of this.casings) {
       c.t += dt;
@@ -64,6 +90,9 @@ const Juice = {
       if (c.shell) { ctx.fillStyle = '#d8a842'; ctx.fillRect(0.8, -0.8, 0.8, 1.6); }
       ctx.restore();
     }
+    for (const m of this.smokes) { const k = m.t / m.life; ctx.fillStyle = `rgba(170,160,145,${0.18 * (1 - k)})`; ctx.beginPath(); ctx.arc(Iso.sx(m.x, m.y), Iso.sy(m.x, m.y, 22 + k * 14), m.r * (0.8 + k * 1.3), 0, TAU); ctx.fill(); } // v1.40 총구 연기
+    for (const m of this.impacts) { const k = 1 - m.t / m.life, sx = Iso.sx(m.x, m.y), sy = Iso.sy(m.x, m.y, 20); // v1.40 맞은 자리 섬광 (별 모양)
+      ctx.fillStyle = m.col; ctx.globalAlpha = k; ctx.beginPath(); for (let i = 0; i < 8; i++) { const r = (i % 2 ? 0.35 : 1) * m.r * (0.6 + 0.4 * k), aa = i / 8 * TAU + m.x; ctx.lineTo(sx + Math.cos(aa) * r, sy + Math.sin(aa) * r * 0.8); } ctx.fill(); ctx.globalAlpha = 1; }
     for (const f of this.flashes) {
       const sx = Iso.sx(f.x, f.y), sy = Iso.sy(f.x, f.y, 22), d = Iso.dir(f.a), k = 1 - f.t / f.life, s = f.s * (0.7 + k * 0.5);
       ctx.save(); ctx.translate(sx + d.x * s * 0.4, sy + d.y * s * 0.4); ctx.rotate(Math.atan2(d.y, d.x));

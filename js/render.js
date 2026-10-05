@@ -526,7 +526,7 @@ const Sprites = {
     ctx.save();
     ctx.translate(sx, sy + ART.feetPad * sc);
     if (d.x < 0) ctx.scale(-1, 1); // 그림은 오른쪽을 보는 기준, 왼쪽은 좌우 반전
-    if (flash && 'filter' in ctx) ctx.filter = 'brightness(2.6)';
+    if (flash && 'filter' in ctx) ctx.filter = flash === 2 ? 'brightness(4) saturate(0.15)' : 'brightness(2.6)'; // v1.40 맞은 순간은 하얗게
     ctx.drawImage(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
     ctx.restore();
     // 머리 위치 (가공 도구가 기록한 프레임별 값, 발 기준 칸 좌표)
@@ -613,13 +613,12 @@ function nameTag(sx, y, text, color, font = '11px sans-serif', icon = null) {
 }
 
 function drawPlayer(p) {
-  if (p.rollT > 0) { // v1.33 슬라이딩: 발부터 미끄러지며 뒤로 눕는 자세 (그림 기울이기) + 바닥 긁힌 자국 · 무적이라 살짝 푸른빛
+  if (p.rollT > 0) { // v1.33 슬라이딩: 발부터 미끄러지며 뒤로 눕는 자세 (그림 기울이기) + 바닥 긁힌 자국 (v1.40 푸른빛 없앰)
     const sx = Iso.sx(p.x, p.y), sy = Iso.sy(p.x, p.y), d = Iso.dir(p.rollA), sg = d.x >= 0 ? 1 : -1, k = p.rollT / ROLL.dur;
     const env = k > 0.82 ? (1 - k) / 0.18 : k < 0.2 ? k / 0.2 : 1; // 0.08초 만에 눕고 → 끝에서 일어남
     ctx.strokeStyle = 'rgba(40,36,30,0.45)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx - d.x * 34 * (1 - k * 0.5), sy - d.y * 34 * (1 - k * 0.5)); ctx.stroke(); ctx.lineWidth = 1;
     ctx.save(); ctx.translate(sx + d.x * 8 * env, sy + 2 * env); ctx.rotate(-sg * 1.05 * env); ctx.scale(1, 1 - 0.12 * env); ctx.translate(-sx, -sy);
     try { drawPlayerBody(p); } finally { ctx.restore(); }
-    ctx.globalAlpha = 0.18 * env; ctx.fillStyle = '#9fe0ff'; ctx.beginPath(); ctx.ellipse(sx, sy - 10, 16, 12, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
     return;
   }
   drawPlayerBody(p);
@@ -918,6 +917,11 @@ function enemyCloaked(e) {
 // v1.32 맞은 반응: 휘청(맞은 쪽 반대로 기울었다 돌아옴) · 넘어짐(쓰러졌다가 일어남)
 function drawEnemy(e) {
   const down = e.downT > 0 ? e.downT : 0, fl = e.flinchT > 0 ? e.flinchT / 0.16 : 0;
+  if (e.joltT > 0) { e.joltT -= 1 / 60; } // v1.40 맞으면 그림이 맞은 쪽으로 툭 밀렸다 돌아옴
+  if (e.joltT > 0 && !down && !e.nest) { const d = Iso.dir(e.joltA || 0), k = (e.joltT / 0.09) * (e.joltK || 3); ctx.save(); ctx.translate(d.x * k, d.y * k * 0.6); try { drawEnemyInner(e, down, fl); } finally { ctx.restore(); } return; }
+  drawEnemyInner(e, down, fl);
+}
+function drawEnemyInner(e, down, fl) {
   if ((!down && !fl) || e.nest) return drawEnemyBody(e);
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y), dir = Iso.dir(e.flinchA || 0), sg = dir.x >= 0 ? 1 : -1;
   let rot, ox = 0;
@@ -956,7 +960,7 @@ function drawEnemyBody(e) {
     drawShadow(sx, sy, e.r * (e.def.flying ? 0.8 : 1) / k);
     if (e.def.boss) { ctx.fillStyle = 'rgba(80,255,90,0.16)'; ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.7, e.r * 0.85, 0, 0, TAU); ctx.fill(); }
     const [anim, at] = animState(walk !== 0 && e.stunT <= 0, e.stunT > 0 ? Math.min(0.1, e.stunT) : e.hitT, e.lastAtk, ak);
-    Sprites.draw(ak, anim, at, sx, sy - hz, f, flash);
+    Sprites.draw(ak, anim, at, sx, sy - hz, f, e.flashT > 0 ? 2 : flash); if (e.flashT > 0) e.flashT -= 1 / 60;
     topY = sy - hz - (ART.height[ak] || 44) * (ART.charScale || 1) - 6;
   } else switch (e.type) {
     case 'zombie':
@@ -1362,9 +1366,10 @@ function render() {
   for (const b of G.bullets) {
     const sx = Iso.sx(b.x, b.y), sy = Iso.sy(b.x, b.y, 22);
     if (b.from === 'p') {
-      const tx = b.x - b.vx * 0.018, ty = b.y - b.vy * 0.018;
-      ctx.strokeStyle = b.color; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(Iso.sx(tx, ty), Iso.sy(tx, ty, 22)); ctx.stroke();
+      const tx = b.x - b.vx * 0.032, ty = b.y - b.vy * 0.032, ex = Iso.sx(tx, ty), ey = Iso.sy(tx, ty, 22); // v1.40 더 길고 밝은 예광
+      ctx.lineCap = 'round'; ctx.globalAlpha = 0.35; ctx.strokeStyle = b.color; ctx.lineWidth = b.crit ? 5 : 4;
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#fff8e0'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo((sx + ex) / 2, (sy + ey) / 2); ctx.stroke(); ctx.lineCap = 'butt';
     } else {
       ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(sx, sy, (b.r || 3) + 0.5, 0, TAU); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(sx, sy, (b.r || 3) * 0.4, 0, TAU); ctx.fill();

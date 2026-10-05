@@ -42,6 +42,7 @@ const Ambience = {
     SFX.env(inside, lab);
     this.out.gain.setTargetAtTime(0.8, t, 0.5); // 음량은 SFX.master 가 설정대로
     this.lp.frequency.setTargetAtTime(inside ? 700 : 18000, t, 0.25); // 실내: 바깥 소리가 벽에 막힘
+    if (!this.windFile && SFX.bufs.amb_wind) { this.windFile = true; const s = c.createBufferSource(); s.buffer = SFX.bufs.amb_wind[0]; s.loop = true; s.connect(this.wind); s.start(); this.windF.disconnect(); } // v1.40 바람 녹음이 있으면 그것을 반복
     this.wind.gain.setTargetAtTime((A.wind || 0) * 0.5 * (inside ? 0.5 : 1), t, 1.2);
     this.windF.frequency.setTargetAtTime(380 + Math.sin(G.time * 0.23) * 160 + Math.sin(G.time * 0.71) * 90, t, 0.4); // 바람이 일었다 잦아듦
     this.hum.gain.setTargetAtTime((A.hum ? 0.05 : A.drone ? 0.025 * A.drone : 0), t, 1);
@@ -49,7 +50,7 @@ const Ambience = {
     for (const k of Object.keys(A)) {
       if (!this[k + 'Fx']) continue;
       const rate = A[k]; if (this.timers[k] === undefined) this.timers[k] = rand(2, 10) / rate;
-      if ((this.timers[k] -= dt) <= 0) { this.timers[k] = rand(...(this.gap[k] || [8, 20])) / rate; this.with(rand(-0.8, 0.8), () => this[k + 'Fx'](c)); }
+      if ((this.timers[k] -= dt) <= 0) { this.timers[k] = rand(...(this.gap[k] || [8, 20])) / rate; this.with(rand(-0.8, 0.8), () => SFX.playFile('amb_' + k, 0.6) || this[k + 'Fx'](c)); } // v1.40 파일이 있으면 그 소리
     }
   },
   gap: { gun: [10, 26], siren: [25, 50], crow: [12, 30], moan: [9, 22], creak: [12, 28], dog: [14, 30], geiger: [1.5, 5], drip: [1.5, 5], alarm: [16, 34], heli: [30, 60], glass: [14, 30], water: [3, 7], insects: [6, 12], roar: [18, 36], fire: [0.3, 1.2], radio: [10, 24] },

@@ -350,18 +350,19 @@ function playerAttack() {
   const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
   const mz = gunMuzzle(p, w), mx = mz.x, my = mz.y, aim0 = mz.a;
   const life = b.range / b.speed;
+  const sid = (G.shotId = (G.shotId || 0) + 1); // v1.40 같은 한 발(산탄 여러 알) 표시
   for (let i = 0; i < pellets; i++) {
     const a = aim0 + rand(-spread, spread);
     const s = b.speed * rand(0.95, 1.05);
     const crit = Math.random() < cc + (first ? 0.1 : 0);
     G.bullets.push({
       x: mx, y: my, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, falloff: b.falloff,
-      dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w, frag: frag && i === 0,
+      dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w, frag: frag && i === 0, sid,
       color: crit ? '#ffef7a' : w.legend === 'boom' ? '#ff8a3a' : '#ffd27a',
     });
   }
   p.recoilT = 0.07;
-  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || w.key === 'sniper' ? 7 : w.key === 'lmg' || w.key === 'smg' ? 1.6 : 3; G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * k; G.kick.y -= d.y * k; } // v1.28 사격 반동이 화면에도
+  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || w.key === 'sniper' ? 9 : w.key === 'lmg' || w.key === 'smg' ? 2.2 : w.key === 'rifle' ? 3.5 : 4.5; G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * k; G.kick.y -= d.y * k; } // v1.28 사격 반동이 화면에도 // v1.40 반동 조금 더 세게
   Juice.shot(p, w, mx, my, aim0); // v1.28 총구 섬광 · 탄피
   if (w.key === 'sniper') { // v1.9 저격: 탄도가 잠깐 남음
     let ex = mx, ey = my; const c = Math.cos(aim0), sn = Math.sin(aim0);
@@ -979,7 +980,7 @@ function updateBullets(dt) {
     for (let s = 0; s < steps && b.life > 0; s++) {
       b.x += b.vx * dt / steps; b.y += b.vy * dt / steps;
       if (World.solidAt(b.x, b.y)) {
-        b.life = 0; burst(b.x, b.y, '#ccb', 3, 70, 0.2, 2); break;
+        b.life = 0; if (b.from === 'p') Juice.wall(b.x, b.y, Math.atan2(b.vy, b.vx)); else burst(b.x, b.y, '#ccb', 3, 70, 0.2, 2); break; // v1.40 벽 맞음
       }
       if (b.from === 'p') {
         for (const e of G.enemies) {
@@ -991,8 +992,9 @@ function updateBullets(dt) {
             const wb = b.w && WEAPONS[b.w.key];
             // v1.9 산탄총 코앞 사격: 크게 밀치고 경직
             const pb = wb && wb.pellets && b.maxLife - b.life < 0.1;
+            Juice.impact(e, b, Math.atan2(b.vy, b.vx), b.crit); // v1.40 타격감
             damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb });
-            if (wb && wb.key === 'sniper') hitstop(0.035);
+            if (wb && wb.key === 'sniper') hitstop(0.045);
             if (b.frag) explode(e.x, e.y, b.dmg * 0.6, 50, { small: true, knock: 8, stagger: 0.1 }); // v1.12 레이븐 파편
             if (b.pierce-- <= 0) { b.life = 0; break; }
           }
