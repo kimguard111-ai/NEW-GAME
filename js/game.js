@@ -61,9 +61,9 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
-canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; else if (e.button === 2 && G.running && !G.paused && !G.player.dead) dodge(); }); // v1.48 오른쪽 클릭 = 슬라이딩 (오른손으로)
-window.addEventListener('mouseup', e => { if (e.button === 0) input.down = false; });
-window.addEventListener('blur', () => { input.keys = {}; input.down = false; });
+canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; else if (e.button === 2) { if (Settings.rmbAim) input.aim = true; else if (G.running && !G.paused && !G.player.dead) dodge(); } }); // v1.49.9 오른쪽 클릭 = 조준 (설정에서 끄면 v1.48 슬라이딩)
+window.addEventListener('mouseup', e => { if (e.button === 0) input.down = false; else if (e.button === 2) input.aim = false; });
+window.addEventListener('blur', () => { input.keys = {}; input.down = false; input.aim = false; });
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.running && !G.paused && !G.player.dead) Pause.toggle(); }); // 탭을 떠나면 자동 일시정지
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -83,6 +83,9 @@ function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
   }
 }
 function curWeapon() { const p = G.player; return p.equip[p.active]; }
+// v1.49.9 조준 (PC 오른쪽 클릭 누르는 동안): 퍼짐 ↓ · 이동 60% · 시야를 커서 쪽으로 더. 0~1 (부드럽게 들어감)
+function adsOn() { const p = G.player, w = p && curWeapon(); return !IS_TOUCH && !!input.aim && !!w && !WEAPONS[w.key].melee && !p.dead && !UI.anyOpen(); }
+const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
 function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); }
 const KB_RATE = 18; // v1.49.7 밀려나는 속도가 줄어드는 빠르기 (총 거리 = 처음 속도 / KB_RATE)
@@ -386,7 +389,7 @@ function playerAttack() {
   if (w.key === 'lmg') p.heat = w.unique === 'titan' ? 1 : Math.min(1, (p.heat || 0) + 0.04); // v1.12 타이탄 심장포: 항상 예열
   const frag = w.unique === 'raven' && (p.ravenN = (p.ravenN || 0) + 1) % 3 === 0; // v1.12 레이븐: 3발째 파편
   p.lastShot = G.time;
-  const spread = b.spread * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
+  const spread = b.spread * lerp(ADS.hip, ADS.spread[w.key] ?? 0.6, ADS.k) * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
   const mz = gunMuzzle(p, w), mx = mz.x, my = mz.y, aim0 = mz.a;
   const life = b.range / b.speed;
   const sid = (G.shotId = (G.shotId || 0) + 1); // v1.40 같은 한 발(산탄 여러 알) 표시
@@ -1192,7 +1195,7 @@ function update(dt) {
       for (let i = 0; i < 2; i++) G.particles.push({ x: p.x + rand(-5, 5), y: p.y + rand(-5, 5), vx: -Math.cos(p.rollA) * rand(20, 60) + rand(-20, 20), vy: -Math.sin(p.rollA) * rand(20, 60) + rand(-20, 20), t: 0, life: rand(0.3, 0.55), color: 'rgba(150,140,120,0.55)', size: rand(4, 7), z: 2, vz: 14 }); // 바닥 먼지
     } else if (mv) {
       const { wx, wy, amt } = mv;
-      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt * World.slow(p.x, p.y); // v1.6 물속은 느림
+      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt * World.slow(p.x, p.y) * (1 - 0.4 * ADS.k); // v1.6 물속은 느림
       World.move(p, wx / l * sp, wy / l * sp);
       p.walkT = (p.walkT || 0) + dt;
     }
@@ -1278,7 +1281,9 @@ function update(dt) {
   const F = G.camF || (G.camF = { x: ctx0, y: cty0 }), L = G.camLead || (G.camLead = { x: 0, y: 0 }), KK = G.kick || (G.kick = { x: 0, y: 0 });
   if (Math.hypot(ctx0 - F.x, cty0 - F.y) > 300) { F.x = ctx0; F.y = cty0; } else { const k = 1 - Math.pow(0.00005, dt); F.x += (ctx0 - F.x) * k; F.y += (cty0 - F.y) * k; }
   const lead = Settings.camLead !== false && !p.dead && !UI.anyOpen() && !IS_TOUCH;
-  const lx = lead ? clamp((input.mx - VW / 2) * 0.2, -110, 110) : 0, ly = lead ? clamp((input.my - VH / 2) * 0.2, -70, 70) : 0, kl = 1 - Math.pow(0.02, dt);
+  ADS.k = clamp(ADS.k + (adsOn() ? dt / 0.15 : -dt / 0.12), 0, 1); // 0.15초에 들어가고 0.12초에 풀림
+  const far = curWeapon() && curWeapon().key === 'sniper' ? 1.6 : 1, lm = 0.2 + 0.22 * ADS.k * far, lcx = 110 + 120 * ADS.k * far, lcy = 70 + 80 * ADS.k * far; // 조준하면 커서 쪽으로 더 멀리 (저격총은 더)
+  const lx = lead || ADS.k > 0 ? clamp((input.mx - VW / 2) * lm, -lcx, lcx) : 0, ly = lead || ADS.k > 0 ? clamp((input.my - VH / 2) * lm, -lcy, lcy) : 0, kl = 1 - Math.pow(0.02, dt);
   L.x += (lx - L.x) * kl; L.y += (ly - L.y) * kl;
   const kd = Math.pow(0.0005, dt); KK.x *= kd; KK.y *= kd;
   G.cam.x = F.x + L.x + KK.x + rand(-G.shake, G.shake);

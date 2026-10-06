@@ -122,11 +122,15 @@ const Juice = {
     if (IS_TOUCH || !G.player || G.player.dead || G.paused) return;
     const p = G.player, w = curWeapon(), b = w && WEAPONS[w.key], x = input.mx, y = input.my;
     ctx.save(); ctx.lineCap = 'round';
+    if (ADS.k > 0 && b && !b.melee) { // v1.49.9 조준 중: 화면 가장자리를 살짝 어둡게
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); const W = ctx.canvas.width, H = ctx.canvas.height, gr = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.7);
+      gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, `rgba(0,0,0,${0.38 * ADS.k})`); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); ctx.restore();
+    }
     if (!b || b.melee) { // 근접: 작은 점 + 사거리 원 느낌의 짧은 호
       ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU); ctx.stroke();
       ctx.strokeStyle = '#e8e2d0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU); ctx.stroke();
     } else {
-      const reload = p.reloadT > 0, gap = 5 + (b.spread || 0) * 70 * (1 - gearBonus(p, 'accuracy', w)) + this.spread * 10, len = 6;
+      const reload = p.reloadT > 0, gap = (5 + (b.spread || 0) * 70 * (1 - gearBonus(p, 'accuracy', w)) + this.spread * 10) * lerp(ADS.hip, ADS.spread[w.key] ?? 0.6, ADS.k), len = 6 - ADS.k * 2; // v1.49.9 조준하면 좁아짐
       for (const pass of [0, 1]) {
         ctx.strokeStyle = pass ? (reload ? '#8a8a8a' : '#f2ecd8') : 'rgba(0,0,0,0.55)'; ctx.lineWidth = pass ? 1.6 : 3.4;
         ctx.beginPath();

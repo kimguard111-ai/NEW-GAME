@@ -9,7 +9,7 @@ const HINTS = [
     far: '노란 화살표를 따라 <b>작전 장교 윤씨</b>에게', guide: () => G.npcs.find(n => n.id === 'deploy'), done: p => World.map !== 'camp' },
   { id: 'grave', when: p => p.raid && G.grave, keys: [], text: '내 시체 가방이 이 맵에 있다. 붉은 화살표를 따라가자', touch: '', max: 7, ring: '✚',
     guide: () => G.grave, done: () => !G.grave },
-  { id: 'aim', when: p => p.raid && G.enemies.some(e => e.hp > 0 && dist(e, p) < 420 && !enemyCloaked(e) && World.lineOfSight(p, e)), keys: ['mouse'], text: '조준하고 클릭. 누르고 있으면 계속 쏜다', touch: '화면 오른쪽을 끌어서 조준 · 사격 (놓으면 멈춤)',
+  { id: 'aim', when: p => p.raid && G.enemies.some(e => e.hp > 0 && dist(e, p) < 420 && !enemyCloaked(e) && World.lineOfSight(p, e)), keys: ['mouse'], text: '클릭으로 쏜다. 오른쪽 클릭을 누르고 있으면 정확하게 조준', touch: '화면 오른쪽을 끌어서 조준 · 사격 (놓으면 멈춤)',
     done: p => G.time - (p.lastShot || -9) < 0.3 },
   { id: 'reload', when: p => { const w = curWeapon(); return p.raid && w && !WEAPONS[w.key].melee && !WEAPONS[w.key].infinite && w.loaded <= magSize(w) * 0.3 && !(p.reloadT > 0); }, keys: ['reload'], text: '탄창이 비기 전에 재장전', touch: '탄창 그림을 눌러 재장전',
     done: p => p.reloadT > 0 },

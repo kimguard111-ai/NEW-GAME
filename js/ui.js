@@ -101,7 +101,7 @@ const UI = {
         sk.appendChild(d);
       }
       const r = document.createElement('div'); // 슬라이딩 (오른쪽 클릭으로도)
-      r.className = 'hot'; r.dataset.act = 'roll'; r.title = '슬라이딩: 무적으로 미끄러져 빠져나감 · 재사용 5초 · 오른쪽 클릭으로도';
+      r.className = 'hot'; r.dataset.act = 'roll'; r.title = '슬라이딩: 무적으로 미끄러져 빠져나감 · 재사용 5초' + (Settings.rmbAim ? '' : ' · 오른쪽 클릭으로도');
       r.innerHTML = `<span class="key">${keyOf('dodge') === ' ' ? 'SPC' : keyLabel(keyOf('dodge'))}</span><div class="icon">${ICON('roll')}</div>슬라이딩<div class="cd" id="cdroll"></div>`;
       hb.appendChild(r);
       hb.onclick = e => {
@@ -437,6 +437,7 @@ const UI = {
     $('settings-body').innerHTML = opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
       + opt('detail', '세부 묘사', '옥상·1층·도로·차 디테일 (끄면 가벼워짐)')
       + opt('shake', '화면 흔들림', '타격·폭발 시 화면 흔들림')
+      + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 슬라이딩)'))
       + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
       + opt('sound', '효과음', '총소리·타격·획득 소리')

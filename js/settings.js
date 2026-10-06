@@ -3,6 +3,7 @@ const Settings = {
   light: true,   // 조명 효과 (끄면 단순 어둠 — 가벼움)
   shake: true,   // 화면 흔들림
   camLead: true, // v1.28 조준 방향으로 시야 내밀기
+  rmbAim: true,  // v1.49.9 PC 오른쪽 클릭 = 조준 (끄면 예전처럼 슬라이딩)
   dmgNum: true,  // 피해 숫자
   detail: true,  // v1.11 세부 묘사 (옥상 난간·물탱크 · 1층 셔터 · 도로 마모 · 차 디테일)
   tips: true,    // 도움말 팁 (v1.0)
@@ -18,7 +19,7 @@ const Settings = {
   keys: null,    // v1.37 조작 키 (null = 기본)
   fullscreen: true, // v1.45.2 모바일: 화면을 처음 누르면 전체 화면 (나갔다가도 다시 누르면 돌아감)
   load() { try { Object.assign(this, JSON.parse(localStorage.getItem('seoul2049-settings') || '{}')); } catch (e) { /* 저장 불가 */ } },
-  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, outline: this.outline, keys: this.keys, fullscreen: this.fullscreen })); } catch (e) { /* 저장 불가 */ } },
+  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, outline: this.outline, keys: this.keys, fullscreen: this.fullscreen, camLead: this.camLead, rmbAim: this.rmbAim, mip: this.mip })); } catch (e) { /* 저장 불가 */ } },
 };
 // v1.37 키 바꾸기: 행동 → 키 (소문자 e.key). 벨트 1~8 · ESC 는 고정
 const KEY_DEFAULTS = { up: 'w', left: 'a', down: 's', right: 'd', dodge: ' ', reload: 'r', swap: 'q', interact: 'e', inventory: 'i', stats: 'c', skills: 'k', quest: 'j', settings: 'o', belt: 'b', compCmd: 'f', useMed: 'x' };
