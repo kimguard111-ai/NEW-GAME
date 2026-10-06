@@ -49,7 +49,7 @@ const Touch = {
       const act = hot.dataset.act || '', cyc = e.target.closest('[data-cyc]'); // v1.14 칸 종류로 구분
       if (cyc) Gadgets.cycle(cyc.dataset.cyc);
       else if (act === 'edit' || act === 'empty') Hotbar.edit(); // v1.24 벨트 칸
-      else if (act === 'roll') dodge(); else Hotbar.use(+hot.dataset.slot);
+      else if (act === 'roll') dodge(); else if (hot.dataset.cons) Hotbar.useCons(act); else Hotbar.use(+hot.dataset.slot);
     }, opts);
     // 시작 시 전체 화면 + 가로 고정 시도 (지원하는 브라우저만)
     for (const id of ['btn-new', 'btn-continue', 'btn-respawn']) document.getElementById(id).addEventListener('click', () => this.fullscreen());

@@ -349,3 +349,41 @@ body.touch .doll { grid-template-areas: "hel arm" "w1 w2" "blt blt" "st st" !imp
 body.touch .doll .equip-slot { min-height: 30px !important; }
 body.touch #doll-stats { line-height: 1.3; font-size: 9px; }
 body.touch #item-detail .btns { flex-wrap: wrap; gap: 3px; } body.touch #item-detail .btns button { padding: 2px 6px; font-size: 10.5px; white-space: nowrap; }
+/* v1.48 하단 칸: [소모품] [스킬(벨트)] [슬라이딩] — 무엇이 스킬인지 바로 구분 */
+#hotbar { align-items: flex-end; gap: 10px !important; }
+.hb-group { position: relative; display: flex; gap: 4px; padding: 12px 4px 4px; border: 1px solid #2f2b22; background: rgba(12,11,8,.55); }
+.hb-group .hb-label { position: absolute; left: 4px; top: -1px; font-family: 'BlackHan', "Malgun Gothic", sans-serif; font-size: 10px; letter-spacing: 1px; color: #8f8670; }
+.hb-group.cons { border-color: #3a4a2a; } .hb-group.cons .hb-label { color: #9fbf6a; }
+.hb-group.skills { border-color: #2a3a52; } .hb-group.skills .hb-label { color: #7ab0e8; }
+.hb-group.skills .hot.free { opacity: .55; }
+body.touch #hotbar { gap: 6px !important; }
+body.touch .hb-group { padding: 10px 3px 3px; gap: 3px; } body.touch .hb-group .hb-label { font-size: 8.5px; }
+/* v1.48 설정: 넓게 · 두 칸 (스크롤 없이) */
+#panel-settings { width: min(860px, 96vw) !important; left: 50% !important; right: auto !important; transform: translateX(-50%); top: 40px !important; }
+#settings-body { max-height: none !important; overflow: visible !important; columns: 2; column-gap: 22px; font-size: 12.5px !important; line-height: 1.45 !important; padding: 8px 14px !important; }
+#settings-body > * { break-inside: avoid; }
+#settings-body .set-row { margin: 3px 0 !important; }
+#settings-body hr { margin: 4px 0; }
+#settings-body .key-grid { gap: 2px 8px; }
+#settings-body .key-btn { padding: 1px 6px; min-width: 34px; }
+body.touch #panel-settings.panel { transform: none !important; left: 2vw !important; width: 96vw !important; }
+body.touch #settings-body { columns: 3; column-gap: 12px; font-size: 10.5px !important; line-height: 1.35 !important; }
+body.touch #settings-body .muted { font-size: 9.5px; }
+/* 패시브 트리: 칸을 납작하게 */
+#panel-ptree .tn, .st-col .tn { padding: 2px 4px !important; min-height: 0 !important; line-height: 1.25; }
+.st-col .tn.key { min-height: 30px !important; } .st-col .tn.minor { min-height: 20px !important; }
+.st-col .tl { height: 4px !important; }
+body.touch .st-col .tn { font-size: 10px; } body.touch .st-col .tn span { font-size: 9px; }
+body.touch .st-col .tn.key { min-height: 24px !important; } body.touch .st-col .tn.minor { min-height: 16px !important; }
+body.touch .st-col .tn { display: flex !important; flex-direction: row !important; justify-content: center; align-items: center; gap: 6px; padding: 1px 4px !important; }
+body.touch .st-col .tn b, body.touch .st-col .tn span { display: inline !important; }
+body.touch .st-col .tn.key { min-height: 20px !important; } body.touch .st-col .tn.minor { min-height: 15px !important; font-size: 9px; }
+body.touch .st-head .muted { font-size: 9px; } body.touch .pt-bonus { margin-bottom: 1px; font-size: 9px; } body.touch .st-title { font-size: 10px; margin: 0; }
+body.touch .st-col .tl { height: 2px !important; }
+body.touch #quest-body, body.touch #panel-quest .tab-body { font-size: 11px; line-height: 1.4; }
+body.touch #panel-quest .tabs button, body.touch #panel-quest [data-tab] { padding: 3px 6px !important; font-size: 11px !important; }
+body.touch .stash-grid > div { height: 33px !important; }
+body.touch #panel-stash .shop-hint { font-size: 10px; padding: 2px 8px; }
+body.touch #log { width: 22vw !important; }
+body.touch .hot { width: 40px !important; height: 40px !important; }
+body.touch #interact-hint { bottom: 64px !important; }

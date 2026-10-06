@@ -80,6 +80,22 @@ const UI = {
   buildHotbar() { // v1.24 벨트 칸 수만큼, 등록한 것만 (1~8 키) + 칸 등록 버튼 + 슬라이딩
     const p = G.player, hb = $('hotbar'), n = beltSlots(p);
     hb.innerHTML = '';
+    // v1.48 소모품 칸 (구급상자 · 투척물 · 보조) — 벨트와 따로, 항상 있음
+    const cons = document.createElement('div'); cons.className = 'hb-group cons'; cons.innerHTML = '<span class="hb-label">소모품</span>';
+    for (const act of ['med', 'throw', 'util']) {
+      const d = document.createElement('div'), ka = { med: 'useMed', throw: 'useThrow', util: 'useUtil' }[act], key = `<span class="key">${IS_TOUCH ? '' : keyLabel(keyOf(ka))}</span>`;
+      d.dataset.act = act; d.dataset.cons = '1';
+      if (act === 'med') { d.className = 'hot'; d.title = '구급상자 사용'; d.innerHTML = `${key}<div class="icon">${ICON('medkit')}</div>구급상자<span class="cnt" id="medcnt"></span>`; }
+      else {
+        const cyc = act === 'throw' ? 'T' : 'Y', k = Gadgets.sel(act), c = CONSUMABLES[k], cnt = Gadgets.count(k);
+        d.className = 'hot gad' + (cnt ? '' : ' empty');
+        d.title = `${c.name} — ${c.desc}\n${cyc}: 종류 바꾸기 (${GADGET_SLOTS[act].map(x => CONSUMABLES[x].name).join(' · ')})`;
+        d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" id="${act}cnt">${cnt}</span><span class="cyc" data-cyc="${act}">${IS_TOUCH ? '↻' : cyc}</span>`;
+      }
+      cons.appendChild(d);
+    }
+    hb.appendChild(cons);
+    const sk = document.createElement('div'); sk.className = 'hb-group skills'; sk.innerHTML = '<span class="hb-label">스킬</span>'; hb.appendChild(sk);
     for (let i = 0; i < n; i++) {
       const act = p.hotbar[i], d = document.createElement('div'), key = `<span class="key">${i + 1}</span>`;
       d.dataset.slot = i; d.dataset.act = act || 'empty';
@@ -88,30 +104,24 @@ const UI = {
         d.className = 'hot' + (p.skills[s.id] ? '' : ' locked');
         d.title = `${s.name} - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;
         d.innerHTML = `${key}<div class="icon">${ICON(s.icon)}</div>${s.name}<span class="sk-stat">${STAT_NAMES[s.stat]}</span><div class="cd" id="cd${si}"></div>`;
-      } else if (act === 'med') {
-        d.className = 'hot'; d.title = '구급상자 사용';
-        d.innerHTML = `${key}<div class="icon">${ICON('medkit')}</div>구급상자<span class="cnt" id="medcnt"></span>`;
-      } else if (act === 'throw' || act === 'util') { // v1.14 투척물 · 보조
-        const cyc = act === 'throw' ? 'T' : 'Y', k = Gadgets.sel(act), c = CONSUMABLES[k], cnt = Gadgets.count(k);
-        d.className = 'hot gad' + (cnt ? '' : ' empty');
-        d.title = `${c.name} — ${c.desc}\n${cyc}: 종류 바꾸기 (${GADGET_SLOTS[act].map(x => CONSUMABLES[x].name).join(' · ')})`;
-        d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" id="${act}cnt">${cnt}</span><span class="cyc" data-cyc="${act}">${IS_TOUCH ? '↻' : cyc}</span>`;
-      } else { d.className = 'hot free'; d.title = '빈 칸 — 눌러서 스킬·구급상자·소모품 등록 (B)'; d.innerHTML = `${key}<div class="icon">＋</div>등록`; }
-      hb.appendChild(d);
+      } else { d.className = 'hot free'; d.title = '빈 스킬 칸 — 눌러서 배운 스킬 등록 (B)'; d.innerHTML = `${key}<div class="icon">＋</div>스킬`; }
+      sk.appendChild(d);
     }
     const ed = document.createElement('div'); // 칸 등록 (벨트)
     ed.className = 'hot edit'; ed.dataset.act = 'edit'; ed.title = `벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 ${n}칸 — 칸 등록 (B)`;
-    ed.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'B'}</span><div class="icon">${ICON('belt')}</div>${n}칸`;
-    hb.appendChild(ed);
+    ed.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'B'}</span><div class="icon">${ICON('belt')}</div>등록`;
+    sk.appendChild(ed);
+    if (!IS_TOUCH) { // 모바일은 오른쪽 아래 슬라이딩 버튼 (오른손)
     const r = document.createElement('div'); // v0.16 슬라이딩 (벨트와 상관없이 항상)
     r.className = 'hot'; r.dataset.act = 'roll'; r.title = '슬라이딩: 무적으로 미끄러져 빠져나감 · 재사용 5초 (위급할 때)';
     r.innerHTML = `<span class="key">${IS_TOUCH ? '' : keyOf('dodge') === ' ' ? 'SPC' : keyLabel(keyOf('dodge'))}</span><div class="icon">${ICON('roll')}</div>슬라이딩<div class="cd" id="cdroll"></div>`;
-    hb.appendChild(r);
+    r.title += ' · 오른쪽 클릭으로도'; hb.appendChild(r); }
     if (!IS_TOUCH) hb.onclick = e => { // PC: 칸을 눌러도 사용 · 빈 칸·벨트 칸은 등록 창
       const hot = e.target.closest('.hot'); if (!hot) return;
       const cyc = e.target.closest('[data-cyc]'); if (cyc) return Gadgets.cycle(cyc.dataset.cyc);
       if (hot.dataset.act === 'edit' || hot.dataset.act === 'empty') return Hotbar.edit();
       if (hot.dataset.act === 'roll') return dodge();
+      if (hot.dataset.cons) return Hotbar.useCons(hot.dataset.act);
       Hotbar.use(+hot.dataset.slot);
     };
   },
@@ -887,16 +897,15 @@ const ItemTip = {
     c.addEventListener('touchend', e => { clearTimeout(t); if (this.held) { e.preventDefault(); setTimeout(() => this.hide(), 1400); } }); // 길게 눌렀으면 옮기지 않음
   },
 };
-const HOT_ACTS = () => SKILLS.map((s, i) => G.player.skills[s.id] ? ['sk' + i, s.name] : null).filter(Boolean).concat([['med', '구급상자'], ['throw', '투척물 (화염병·섬광탄·지뢰)'], ['util', '보조 (자극제·방탄판)']]);
+const HOT_ACTS = () => SKILLS.map((s, i) => G.player.skills[s.id] ? ['sk' + i, s.name] : null).filter(Boolean); // v1.48 벨트 = 스킬만 (소모품은 따로)
 const Hotbar = {
+  useCons(act) { if (act === 'med') quickMedkit(); else Gadgets.use(act); }, // v1.48 소모품 칸
   use(i) {
     const p = G.player;
     if (i >= beltSlots(p)) { log(`${i + 1}번 칸이 없습니다 — 더 좋은 벨트가 필요합니다 (지금 ${beltSlots(p)}칸).`, '#aaa'); return; }
     const act = p.hotbar[i];
     if (!act) { log(`${i + 1}번 칸이 비어 있습니다 — B 또는 벨트 칸을 눌러 등록하세요.`, '#aaa'); return; }
     if (act.startsWith('sk')) useSkill(+act.slice(2));
-    else if (act === 'med') quickMedkit();
-    else Gadgets.use(act);
   },
   assign(i, act) {
     const p = G.player;
@@ -921,13 +930,13 @@ const Hotbar = {
       const k = Gadgets.sel(act), c = CONSUMABLES[k];
       return { ic: c.icon, nm: act === 'throw' ? '투척물' : '보조 장비', sub: GADGET_SLOTS[act].map(x => CONSUMABLES[x].name).join('·') };
     };
-    let h = `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>${n}칸</b> — 칸을 고르고, 아래에서 넣을 것을 누르세요.</div><div class="hbx-slots">`;
+    let h = `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>스킬 ${n}칸</b> — 칸을 고르고, 아래에서 스킬을 누르세요. 구급상자·투척물·보조 장비는 왼쪽 <b>소모품 칸</b>에 늘 있습니다.</div><div class="hbx-slots">`;
     for (let i = 0; i < HOT_MAX; i++) {
       if (i >= n) { h += `<div class="hbx-slot off"><span class="k">${i + 1}</span>${ICON('lock')}<small>${BELTS.find(b => b.slots > i).name}</small></div>`; continue; }
       const L = look(p.hotbar[i]);
       h += `<div class="hbx-slot${i === sel ? ' on' : ''}${p.hotbar[i] ? '' : ' empty'}" data-slot="${i}"><span class="k">${i + 1}</span>${L.ic ? ICON(L.ic) : '<b class="plus">＋</b>'}<small>${L.nm}</small></div>`;
     }
-    h += `</div><div class="hbx-head">${sel + 1}번 칸에 넣을 것</div><div class="hbx-pal">`;
+    h += `</div><div class="hbx-head">${sel + 1}번 칸에 넣을 스킬</div><div class="hbx-pal">${HOT_ACTS().length ? '' : '<span class="muted">아직 배운 스킬이 없다 — 스킬 창에서 스킬 포인트로 배우면 여기 나온다.</span>'}`;
     for (const [act] of HOT_ACTS()) {
       const L = look(act), at = p.hotbar.indexOf(act);
       h += `<div class="hbx-item${p.hotbar[sel] === act ? ' cur' : ''}" data-act="${act}">${ICON(L.ic)}<b>${L.nm}</b><small>${L.sub}${at >= 0 && at !== sel ? ` · 지금 ${at + 1}번` : ''}</small></div>`;

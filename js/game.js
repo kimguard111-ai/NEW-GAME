@@ -58,10 +58,13 @@ window.addEventListener('keydown', e => {
   else if (act === 'throwNext') Gadgets.cycle('throw');
   else if (act === 'utilNext') Gadgets.cycle('util');
   else if (act === 'compCmd') Companion.command(); // v1.44 동료 명령
+  else if (act === 'useMed') quickMedkit(); // v1.48 소모품은 벨트와 따로
+  else if (act === 'useThrow') Gadgets.use('throw');
+  else if (act === 'useUtil') Gadgets.use('util');
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
-canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; });
+canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; else if (e.button === 2 && G.running && !G.paused && !G.player.dead) dodge(); }); // v1.48 오른쪽 클릭 = 슬라이딩 (오른손으로)
 window.addEventListener('mouseup', e => { if (e.button === 0) input.down = false; });
 window.addEventListener('blur', () => { input.keys = {}; input.down = false; });
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.running && !G.paused && !G.player.dead) Pause.toggle(); }); // 탭을 떠나면 자동 일시정지
@@ -183,6 +186,7 @@ function startGame(save, name) {
     if (!P.equip.belt) P.equip.belt = makeBelt(Math.min(3, Math.ceil(acts.length / 2) - 1));
   }
   if (!('belt' in P.equip)) P.equip.belt = null;
+  if (save && !save.p.hb148) { const sk = (P.hotbar || []).filter(a => a && a.startsWith('sk')); P.hotbar = sk.concat(Array(HOT_MAX).fill(null)).slice(0, HOT_MAX); P.hb148 = true; } // v1.48 벨트 = 스킬만
   P.srank = P.srank || {};
   if (save && !save.p.ammo) { // v1.33 탄약 4종: 예전 예비 탄약은 기관총탄으로, 나머지는 시작 양
     const r = save.p.reserve ?? 150; P.ammo = Object.fromEntries(Object.entries(AMMO).map(([k, a]) => [k, k === 'auto' ? Math.max(a.start, r) : a.start])); delete P.reserve;
@@ -453,7 +457,7 @@ function useItem(it) {
     const [t, n] = giveAmmoUnits(p, 120); log(`${AMMO[t].name} +${n}`, '#cc8');
   } else if (CONSUMABLES[it.key].slot) { // v1.14 투척물·보조: 가방에서 누르면 그 칸에 선택
     const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
-    const on = Hotbar.autoAdd(slot), k = G.player.hotbar.indexOf(slot) + 1; log(`${it.name}을(를) ${slot === 'throw' ? '투척' : '보조'} 칸${on ? `(${k}번)` : ''}에 올렸다.${on ? '' : ' 벨트 칸이 가득 — B로 등록'}`, '#cfe'); UI.buildHotbar(); return; // v1.24
+    log(`${it.name}을(를) ${slot === 'throw' ? `투척물 칸 [${keyLabel(keyOf('useThrow'))}]` : `보조 장비 칸 [${keyLabel(keyOf('useUtil'))}]`}에 올렸다.`, '#cfe'); // v1.48 소모품 칸은 따로 UI.buildHotbar(); return; // v1.24
   } else return;
   if (Math.random() < gearBonus(p, 'gadSave')) { floatText(p.x, p.y - 44, '절약', '#9fe0ff', 12); UI.refreshInventory(); return; } // v1.25 벨트 옵션
   it.count--;

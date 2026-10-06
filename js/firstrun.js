@@ -17,8 +17,8 @@ const HINTS = [
     keys: ['dodge'], text: '붉은 예고가 보이면 슬라이딩 — 5초에 한 번', touch: '슬라이딩 버튼 — 5초에 한 번', done: p => G.time - (p.lastRoll || -9) < 0.5, max: 7 },
   { id: 'loot', when: p => p.raid && !G.search && Scavenge.near() && !Scavenge.near().hint, keys: ['interact'], text: '뒤지기 — 끝날 때까지 가만히', touch: 'E 버튼으로 뒤지기 — 끝날 때까지 가만히',
     done: p => !!G.search },
-  { id: 'heal', when: p => p.raid && p.hp < PlayerStats.maxHp(p) * 0.45 && p.hotbar.includes('med') && (p.inventory.find(i => i.key === 'medkit') || {}).count > 0,
-    keys: [() => String(G.player.hotbar.indexOf('med') + 1)], text: '구급상자', touch: '아래 칸의 구급상자', done: (p, h) => p.hp > h.hp0 + 5, max: 8 },
+  { id: 'heal', when: p => p.raid && p.hp < PlayerStats.maxHp(p) * 0.45 && (p.inventory.find(i => i.key === 'medkit') || {}).count > 0,
+    keys: ['useMed'], text: '구급상자', touch: '아래 소모품 칸의 구급상자', done: (p, h) => p.hp > h.hp0 + 5, max: 8 },
   { id: 'extract', when: p => p.raid && FirstRun.rookie() && (p.raid.t > 240 || Raid.allItems().filter(it => it.raid).length >= 3 || p.raid.kills >= 12), keys: [], text: '이만하면 됐다. 초록 ◎ 탈출 지점에 5초 서 있으면 주운 게 내 것이 된다', touch: '',
     max: 60, guide: () => FirstRun.nearestExit(), done: () => G.extractT > 0 },
 ];

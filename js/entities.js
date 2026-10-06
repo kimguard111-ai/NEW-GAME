@@ -212,7 +212,7 @@ function newPlayer(name) {
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0, 0],
-    hotbar: ['med', 'throw', null, null, null, null, null, null], // v1.24 벨트 칸에 등록한 것 (sk0~3 · med · throw · util)
+    hotbar: [null, null, null, null, null, null, null, null], hb148: true, // v1.48 벨트는 스킬만 · 처음엔 비움 (소모품은 따로) // v1.24 벨트 칸에 등록한 것 (sk0~3 · med · throw · util)
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
     perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, stree: {}, passive: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
     // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')
