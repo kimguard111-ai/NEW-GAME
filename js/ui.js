@@ -365,52 +365,42 @@ const UI = {
       vit: ['체력', '생존형', `최대 체력 +${up('vit') * 15} · 재생 +${(up('vit') * 0.25).toFixed(1)}/초`, '포인트당 최대 체력 +15, 재생 +0.25/초'],
       agi: ['민첩', '기동형', `이동·공속 +${pc(PlayerStats.agiMul(p))} · 치명타 +${(up('agi') * 0.8).toFixed(1)}%`, '포인트당 이동·공격속도 +0.8%, 치명타 +0.8% (속도 최대 30%)'],
     };
-    let h = `<div class="stat-row"><span>남은 포인트</span><b style="color:#ffd76a">${p.statPoints}</b></div><hr style="border-color:#333">`;
+    // v1.48 두 칸 배치 (스크롤 없이): 왼쪽 = 포인트 · 능력치 4 · 요약 수치 / 오른쪽 = 특성 한 줄씩 · 스킬 · 세트
+    let L = `<div class="stat-row"><span>남은 포인트</span><b style="color:#ffd76a">${p.statPoints}</b></div>`;
     for (const k of Object.keys(rows)) {
       const [n, role, eff, tip] = rows[k];
-      h += `<div class="stat-row" title="${tip}"><span>${n} <span class="tag">${role}</span></span><span><b>${st[k]}</b> <button data-stat="${k}" ${p.statPoints ? '' : 'disabled'}>+</button></span></div>
-        <div class="stat-eff">${eff}${(() => { const sk = SKILLS.find(s => s.stat === k); return sk ? ` · <span class="sk-link">${ICON(sk.icon)} ${sk.name} 강화</span>` : ''; })()}</div>`;
+      const sk = SKILLS.find(s2 => s2.stat === k);
+      L += `<div class="stat-row" title="${tip}"><span>${n} <span class="tag">${role}</span></span><span><b>${st[k]}</b> <button data-stat="${k}" ${p.statPoints ? '' : 'disabled'}>+</button></span></div>
+        <div class="stat-eff">${eff}${sk ? ` · <span class="sk-link">${ICON(sk.icon)} ${sk.name}</span>` : ''}</div>`;
     }
     const wline = sl => { const w = p.equip[sl]; return w ? `<div class="stat-row"><span>${sl === 'w1' ? '주무기' : '보조무기'} DPS <span class="muted">${itemName(w)}</span></span><b>${Math.round(weaponDps(p, w))}</b></div>` : ''; };
-    // v1.11 특성: 단계마다 3개 중 1개
-    h += '<hr style="border-color:#333"><div class="muted">특성 (5레벨마다 하나 선택 · 의무병의 능력치 초기화 때 함께 초기화) <button id="btn-ptree" class="smod">패시브 트리</button></div>';
-    PERK_TIERS.forEach((t, i) => {
-      const got = p.perks[i], open = p.level >= t.lvl;
-      h += `<div class="perk-tier${open ? '' : ' locked'}"><span class="tag">Lv${t.lvl}</span>`;
-      for (const k of t.perks) {
-        const sel = got === k.id, can = open && !got;
-        h += `<button class="perk${sel ? ' sel' : ''}" ${can ? `data-perk="${i}:${k.id}"` : 'disabled'} title="${k.desc}"><b>${k.name}</b><span>${k.desc}</span></button>`;
-      }
-      h += '</div>';
-    });
-    { // v1.23 단련 · 갈래 보너스 요약
-      const own = Object.values(PASSIVES).flat().filter(n => pas(n.id)).map(n => n.name), bon = Object.keys(PASSIVE_BRANCHES).filter(branchOn).map(b => `<span style="color:${PASSIVE_BRANCHES[b].color}">★ ${PASSIVE_BRANCHES[b].name}: ${PASSIVE_BRANCHES[b].bonus}</span>`);
-      if (own.length || bon.length) h += `<div class="stat-eff">${own.length ? '단련: ' + own.join(' · ') : ''}${bon.length ? (own.length ? '<br>' : '') + bon.join('<br>') : ''}</div>`;
-    }
-    h += `<hr style="border-color:#333"><div class="muted">스킬은 따로 — <button id="btn-stree" class="smod">스킬 창 (K)${p.sp ? ` <b class="r2">SP ${p.sp}</b>` : ''}</button></div>`; // v1.26 스킬 창 분리
-    const learned = SKILLS.filter(s => p.skills[s.id]);
-    if (learned.length) h += `<div class="stat-eff">${learned.map(s => `${ICON(s.icon)} ${s.name} ${srank(s.id)}등급${p.skillMods[s.id] ? ` <span class="r2">[${SKILL_MODS[s.id][p.skillMods[s.id]].name}]</span>` : ''}`).join(' · ')}</div>`;
-    const sets = Object.keys(SETS).filter(k => setCount(p, k) > 0); // v1.12 착용 중인 세트
-    if (sets.length) h += '<hr style="border-color:#333">' + sets.map(k => { const S = SETS[k], n = setCount(p, k); return `<div class="setname" style="color:${S.color}">▣ ${S.name} 세트 ${n}/3</div><div class="setb${n >= 2 ? ' on' : ''}">(2) ${S.b2}</div><div class="setb${n >= 3 ? ' on' : ''}">(3) ${S.b3}</div>`; }).join('');
-    h += `<hr style="border-color:#333">${wline('w1')}${wline('w2')}
+    let M = `<div class="st2-sum">${wline('w1')}${wline('w2')}
       <div class="stat-row"><span>최대 체력</span><span>${PlayerStats.maxHp(p)}</span></div>
       <div class="stat-row"><span>방어력</span><span>${PlayerStats.def(p)} (피해 -${(PlayerStats.dmgReduce(p) * 100).toFixed(0)}%)</span></div>
-      <div class="stat-row"><span>치명타 확률 / 피해</span><span>${(PlayerStats.crit(p) * 100).toFixed(1)}% / x${PlayerStats.critMul(p, curWeapon()).toFixed(2)}</span></div>
-      <div class="stat-row"><span>이동 속도</span><span>${PlayerStats.speed(p).toFixed(0)}</span></div>
-      <div class="stat-row"><span>체력 재생</span><span>${PlayerStats.regen(p).toFixed(1)}/초</span></div>
+      <div class="stat-row"><span>치명타</span><span>${(PlayerStats.crit(p) * 100).toFixed(1)}% · x${PlayerStats.critMul(p, curWeapon()).toFixed(2)}</span></div>
+      <div class="stat-row"><span>이동 속도 · 재생</span><span>${PlayerStats.speed(p).toFixed(0)} · ${PlayerStats.regen(p).toFixed(1)}/초</span></div>
       ${gearBonus(p, 'exp') ? `<div class="stat-row"><span>경험치 획득</span><span>+${pc(gearBonus(p, 'exp'))}</span></div>` : ''}
       <div class="stat-row" title="몬스터 장비 드랍이 ${PITY_DROPS}번 연속 영웅 미만이면 다음은 영웅 이상 확정"><span>영웅 장비 확정까지</span><span class="r3">${Math.max(0, PITY_DROPS - (p.pity || 0))}개</span></div>
-      <div class="stat-row"><span>처치 수</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div>
-      <div class="muted" style="margin-top:6px">능력치 초기화: 캠프의 의무병 이씨 (${respecCost(p) ? fmt(respecCost(p)) + '₵' : '첫 1회 무료'})</div>`;
-    $('stats-body').innerHTML = h;
-    $('stats-body').querySelectorAll('button[data-perk]').forEach(b => {
-      b.onclick = () => {
-        const [i, id] = b.dataset.perk.split(':'), t = PERK_TIERS[+i], k = t.perks.find(q => q.id === id);
-        if (p.perks[+i] || p.level < t.lvl) return;
-        if (!confirm(`특성 「${k.name}」 — ${k.desc}\n선택할까요? (의무병에게서 초기화 가능)`)) return;
-        UI.choosePerk(+i, id);
-      };
+      <div class="stat-row"><span>처치</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div></div>`;
+    // 특성: 단계마다 한 줄 (고르는 건 패시브 트리에서)
+    let R = `<div class="st2-head">특성 <button id="btn-ptree" class="smod">패시브 트리${PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i]) ? ' <b class="r2">고를 것 있음</b>' : ''}</button></div>`;
+    PERK_TIERS.forEach((t, i) => {
+      const got = p.perks[i], k = got && t.perks.find(q => q.id === got), open = p.level >= t.lvl;
+      R += `<div class="pk-row${open ? '' : ' locked'}"><span class="tag">Lv${t.lvl}</span>${k ? `<b title="${k.desc}">${k.name}</b> <span class="muted">${k.desc}</span>` : open ? `<button data-perkpick="${i}">3개 중 하나 고르기</button>` : '<span class="muted">잠김</span>'}</div>`;
     });
+    { // v1.23 단련 · 갈래 보너스 요약
+      const own = Object.values(PASSIVES).flat().filter(n => pas(n.id)).map(n => n.name), bon = Object.keys(PASSIVE_BRANCHES).filter(branchOn).map(b2 => `<span style="color:${PASSIVE_BRANCHES[b2].color}">★ ${PASSIVE_BRANCHES[b2].name}</span>`);
+      if (own.length || bon.length) R += `<div class="stat-eff">${own.length ? '단련: ' + own.join(' · ') : ''}${bon.length ? ' ' + bon.join(' ') : ''}</div>`;
+    }
+    const learned = SKILLS.filter(s2 => p.skills[s2.id]);
+    R += `<div class="st2-head">스킬 <button id="btn-stree" class="smod">스킬 창${IS_TOUCH ? '' : ' (K)'}${p.sp ? ` <b class="r2">SP ${p.sp}</b>` : ''}</button></div>`
+      + `<div class="stat-eff">${learned.length ? learned.map(s2 => `${ICON(s2.icon)} ${s2.name} ${srank(s2.id)}등급`).join(' · ') : '<span class="muted">아직 배운 스킬 없음</span>'}</div>`;
+    const sets = Object.keys(SETS).filter(k => setCount(p, k) > 0); // v1.12 착용 중인 세트
+    if (sets.length) R += sets.map(k => { const S = SETS[k], n = setCount(p, k); return `<div class="setname" style="color:${S.color}">▣ ${S.name} ${n}/3</div><div class="setb${n >= 2 ? ' on' : ''}">(2) ${S.b2}</div><div class="setb${n >= 3 ? ' on' : ''}">(3) ${S.b3}</div>`; }).join('');
+    R += `<div class="muted" style="margin-top:6px">능력치 초기화: 의무병 이씨 (${respecCost(p) ? fmt(respecCost(p)) + '₵' : '첫 1회 무료'})</div>`;
+    const h = `<div class="st2"><div class="st2-a">${L}</div><div class="st2-m">${M}</div><div class="st2-r">${R}</div></div>`;
+    $('stats-body').innerHTML = h;
+    $('stats-body').querySelectorAll('button[data-perkpick]').forEach(b => { b.onclick = () => UI.passiveTree(); }); // v1.48 특성은 패시브 트리에서 고름
     $('btn-stree').onclick = () => UI.skillTree(); // v1.22
     $('btn-ptree').onclick = () => UI.passiveTree(); // v1.23
     $('stats-body').querySelectorAll('button[data-smod]').forEach(b => {

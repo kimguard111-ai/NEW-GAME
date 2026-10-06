@@ -302,3 +302,50 @@ body.touch #panel-shop .shop-hint { font-size: 11px; }
 body.combat #log > div:not(:nth-last-child(-n+2)) { display: none; } /* 싸우는 중엔 최근 두 줄만 */
 body.combat #log { opacity: .7; }
 body:not(.touch) #tip { top: 62px; bottom: auto; } /* 도움말은 위쪽 가운데로 — 캐릭터 주변(아래 가운데)은 키 그림 · 상호작용만 */
+
+/* ---------- v1.48 스크롤 없이 보이는 창 ---------- */
+/* 능력치: 두 칸 (왼쪽 능력치·요약 / 오른쪽 특성·스킬·세트) */
+#panel-stats { width: min(760px, 96vw) !important; }
+.st2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.st2 .stat-row { padding: 2px 0; }
+.st2 .stat-eff { margin-bottom: 3px; }
+.st2-sum { margin-top: 6px; padding-top: 6px; border-top: 1px solid #2f2b22; font-size: 12px; }
+.st2-sum .stat-row { padding: 1px 0; }
+.st2-head { display: flex; justify-content: space-between; align-items: center; margin: 2px 0 4px; font-family: 'BlackHan', "Malgun Gothic", sans-serif; color: #e6dfcc; }
+.st2-head + .stat-eff { margin-bottom: 8px; }
+.pk-row { display: flex; align-items: baseline; gap: 6px; padding: 3px 0; border-bottom: 1px dashed #2a261d; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pk-row .muted { overflow: hidden; text-overflow: ellipsis; }
+.pk-row.locked { opacity: .45; }
+.pk-row button { padding: 1px 8px; font-size: 11px; }
+body.touch .st2 { font-size: 11px; gap: 2px 12px; } body.touch .st2 .stat-eff, body.touch .st2-sum, body.touch .pk-row { font-size: 10px; }
+body.touch .st2 .stat-row button { padding: 0 6px; }
+/* 모바일 가방: 장비 | 가방 칸 | 아이템 설명 — 설명이 칸 아래로 밀려 안 보이던 것 */
+body.touch .bag { display: grid; grid-template-columns: minmax(0, 238px) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 8px; flex: 1; min-width: 0; }
+body.touch .bag .bag-head { grid-column: 1; grid-row: 1; }
+body.touch .bag #inv-grid { grid-column: 1; grid-row: 2; align-content: start; }
+body.touch .bag #item-detail { grid-column: 2; grid-row: 1 / 3; border-top: 0; border-left: 1px solid #2f2b22; padding: 2px 8px; min-height: 0; overflow-y: auto; font-size: 11px; line-height: 1.45; }
+body.touch #inv-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 2px !important; }
+body.touch #inv-grid .inv-cell { height: 37px !important; font-size: 8px; padding-top: 0; }
+body.touch #inv-grid .inv-cell .icon .ico { width: 16px; height: 16px; }
+body.touch .doll { grid-template-columns: 86px 96px !important; gap: 3px !important; }
+body.touch .doll .equip-slot { min-height: 36px !important; font-size: 10px; padding: 2px 4px; }
+body.touch .doll .equip-slot label { font-size: 9px; }
+body.touch #doll-stats { font-size: 9.5px; line-height: 1.45; }
+body.touch #panel-inventory .inv-body { overflow: visible; }
+body.touch.shop-open .bag { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.st2 { grid-template-areas: "a r" "m r"; } .st2-a { grid-area: a; } .st2-m { grid-area: m; } .st2-r { grid-area: r; }
+body.touch .st2 { grid-template-columns: 1.15fr 0.9fr 1.1fr; grid-template-areas: "a m r"; }
+body.touch .st2-sum { margin-top: 0; padding-top: 0; border-top: 0; }
+body.touch .st2 .stat-row { font-size: 11px !important; padding: 0 !important; line-height: 1.5; }
+body.touch .st2 .stat-row .tag { font-size: 9px; padding: 0 3px; }
+body.touch .st2 .stat-eff { font-size: 9.5px !important; margin: 0 0 3px; line-height: 1.35; }
+body.touch .st2 .stat-eff .ico { width: 11px; height: 11px; }
+body.touch .st2 .stat-row button { height: 20px; line-height: 16px; }
+body.touch .pk-row { padding: 1px 0; } body.touch .pk-row button { padding: 0 6px; font-size: 10px; }
+body.touch .st2-head { font-size: 12px; margin: 0 0 2px; } body.touch .st2-head .smod { font-size: 10px; padding: 1px 6px; }
+body.touch #stats-body { padding: 6px 10px !important; }
+/* 모바일 가방: 장비칸 2줄로 납작하게 · 요약은 맨 아래 */
+body.touch .doll { grid-template-areas: "hel arm" "w1 w2" "blt blt" "st st" !important; align-content: start; }
+body.touch .doll .equip-slot { min-height: 30px !important; }
+body.touch #doll-stats { line-height: 1.3; font-size: 9px; }
+body.touch #item-detail .btns { flex-wrap: wrap; gap: 3px; } body.touch #item-detail .btns button { padding: 2px 6px; font-size: 10.5px; white-space: nowrap; }
