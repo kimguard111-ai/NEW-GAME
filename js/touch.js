@@ -30,11 +30,14 @@ const Touch = {
     const zoom = document.createElement('div'); zoom.id = 'mm-zoom'; document.getElementById('mm-wrap').appendChild(zoom); // v1.45.1 확대·축소는 미니맵 아래 모서리로
     btn('－', () => setZoom(ZOOM - 0.1), 'small', zoom);
     btn('＋', () => setZoom(ZOOM + 0.1), 'small', zoom);
-    btn('Q', () => swapWeapon());
-    btn('R', () => startReload());
-    btn('E', () => interact(), 'big');
+    // v1.50 오른손: 큰 슬라이딩 + 스킬 둥근 버튼(#touch-skills) · Q·R·E 는 작게 오른쪽 가장자리 (무기 창 아래)
     btn(ICON('roll'), () => dodge(), 'big roll'); // v0.16 슬라이딩
     document.getElementById('hud').appendChild(bar);
+    const side = document.createElement('div'); side.id = 'touch-side';
+    btn('E', () => interact(), 'e', side); btn('Q', () => swapWeapon(), '', side); btn('R', () => startReload(), '', side);
+    document.getElementById('hud').appendChild(side);
+    const wp = document.getElementById('hud-weapon'); wp.addEventListener('touchstart', e => { e.preventDefault(); if (G.running && !G.player.dead) swapWeapon(); }, opts); // 무기 창을 눌러도 교체
+    const ih = document.getElementById('interact-hint'); ih.addEventListener('touchstart', e => { e.preventDefault(); if (G.running && !G.player.dead) interact(); }, opts); // 「[E] …」 안내를 눌러도 상호작용
     // v1.45.1 목표 창: 누르면 접기/펴기 · 항상 캐릭터 창 바로 아래에
     const qt = document.getElementById('quest-tracker');
     qt.addEventListener('touchstart', e => { e.preventDefault(); qt.classList.toggle('min'); try { localStorage.setItem('seoul2049-qtmin', qt.classList.contains('min') ? '1' : ''); } catch (er) {} }, opts);
@@ -46,10 +49,8 @@ const Touch = {
       const hot = e.target.closest('.hot');
       if (!hot) return;
       e.preventDefault();
-      const act = hot.dataset.act || '', cyc = e.target.closest('[data-cyc]'); // v1.14 칸 종류로 구분
-      if (cyc) Gadgets.cycle(cyc.dataset.cyc);
-      else if (act === 'edit' || act === 'empty') Hotbar.edit(); // v1.24 벨트 칸
-      else if (act === 'roll') dodge(); else if (hot.dataset.cons) Hotbar.useCons(act); else Hotbar.use(+hot.dataset.slot);
+      const act = hot.dataset.act || ''; // v1.50 벨트(소모품) 칸
+      if (act === 'edit') Hotbar.edit(); else Hotbar.use(+hot.dataset.slot);
     }, opts);
     // 시작 시 전체 화면 + 가로 고정 시도 (지원하는 브라우저만)
     for (const id of ['btn-new', 'btn-continue', 'btn-respawn']) document.getElementById(id).addEventListener('click', () => this.fullscreen());

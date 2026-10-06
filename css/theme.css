@@ -436,3 +436,24 @@ body.touch #touch-skills:empty { display: none; }
 #err-note { position: fixed; left: 50%; top: 8px; transform: translateX(-50%); z-index: 200; max-width: min(640px, 94vw); padding: 8px 12px; font-size: 12px; line-height: 1.5;
   background: var(--grain), rgba(40,16,12,.97); border: 2px solid #000; box-shadow: 0 0 0 1px #b8352a, 3px 3px 0 rgba(0,0,0,.5); color: #f0dcc8; }
 #err-note b { color: #ff9a7a; } #err-note button { padding: 1px 8px; font-size: 11px; margin-left: 4px; }
+
+/* ---------- v1.50 모바일 오른손 배치: 큰 슬라이딩(구석) + 스킬 부채꼴 · Q·R·E 작게 오른쪽 가장자리 ---------- */
+body.touch #touch-buttons { display: block !important; right: 8px !important; bottom: 8px !important; width: auto !important; }
+body.touch #touch-buttons button.roll { width: 62px !important; height: 62px !important; border-radius: 50% !important; font-size: 20px !important; }
+body.touch #touch-buttons button.roll .ico { width: 30px; height: 30px; }
+#touch-side { display: none; }
+body.touch #touch-side { display: flex; flex-direction: column; gap: 4px; position: absolute; right: 8px; top: 172px; pointer-events: auto; }
+body.touch #touch-side button { width: 34px; height: 34px; padding: 0; font-size: 13px; font-weight: bold; border-radius: 50%; background: rgba(20,19,15,.75); }
+body.touch #touch-side button.e { border-color: #e0b23a; color: #e0b23a; }
+body.touch #touch-skills { display: block !important; position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; max-height: none; }
+body.touch #touch-skills .tsk { position: absolute; width: 50px; height: 50px; }
+body.touch #touch-skills .tsk:nth-child(1) { right: 80px; bottom: 10px; }
+body.touch #touch-skills .tsk:nth-child(2) { right: 70px; bottom: 70px; }
+body.touch #touch-skills .tsk:nth-child(3) { right: 12px; bottom: 82px; }
+body.touch #touch-skills .tsk:nth-child(4) { right: 138px; bottom: 10px; }
+body.touch #touch-skills .tsk.mini { width: 30px; height: 30px; border-color: #6a6250; background: rgba(20,19,15,.7); }
+body.touch #touch-skills .tsk.mini b { font-size: 14px; color: #cfc6b0; line-height: 1; } body.touch #touch-skills .tsk.mini span { font-size: 6.5px; }
+body.touch #touch-skills .tsk.mini:last-child { right: 130px; bottom: 72px; } /* 「＋ 스킬」 등록 */
+body.touch #interact-hint { pointer-events: auto; }
+body.touch #hud-weapon { pointer-events: auto; }
+.hbx-item.none { opacity: .45; }

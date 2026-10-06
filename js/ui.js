@@ -77,57 +77,48 @@ const UI = {
   },
 
   // ---------------- HUD ----------------
-  buildHotbar() { // v1.24 벨트 칸 수만큼, 등록한 것만 (1~8 키) + 칸 등록 버튼 + 슬라이딩
+  buildHotbar() { // v1.50 [벨트 = 소모품 칸] (하단 가운데) · [스킬 퀵바 4칸] (PC: 그 옆 · 모바일: 오른쪽 아래 둥근 버튼) · 슬라이딩
     const p = G.player, hb = $('hotbar'), n = beltSlots(p);
     hb.innerHTML = '';
-    // v1.48 소모품 칸 (구급상자 · 투척물 · 보조) — 벨트와 따로, 항상 있음
-    const cons = document.createElement('div'); cons.className = 'hb-group cons'; cons.innerHTML = '<span class="hb-label">소모품</span>';
-    for (const act of ['med', 'throw', 'util']) {
-      const d = document.createElement('div'), ka = { med: 'useMed', throw: 'useThrow', util: 'useUtil' }[act], key = `<span class="key">${IS_TOUCH ? '' : keyLabel(keyOf(ka))}</span>`;
-      d.dataset.act = act; d.dataset.cons = '1';
-      if (act === 'med') { d.className = 'hot'; d.title = '구급상자 사용'; d.innerHTML = `${key}<div class="icon">${ICON('medkit')}</div>구급상자<span class="cnt" id="medcnt"></span>`; }
-      else {
-        const cyc = act === 'throw' ? 'T' : 'Y', k = Gadgets.sel(act), c = CONSUMABLES[k], cnt = Gadgets.count(k);
-        d.className = 'hot gad' + (cnt ? '' : ' empty');
-        d.title = `${c.name} — ${c.desc}\n${cyc}: 종류 바꾸기 (${GADGET_SLOTS[act].map(x => CONSUMABLES[x].name).join(' · ')})`;
-        d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" id="${act}cnt">${cnt}</span><span class="cyc" data-cyc="${act}">${IS_TOUCH ? '↻' : cyc}</span>`;
-      }
-      cons.appendChild(d);
-    }
-    hb.appendChild(cons);
-    const sk = document.createElement('div'); sk.className = 'hb-group skills'; sk.innerHTML = '<span class="hb-label">스킬</span>'; hb.appendChild(sk);
-    // v1.48.2 모바일: 배운 스킬은 오른쪽 아래(엄지) 둥근 버튼으로 · 하단엔 「등록」만
-    let ts = $('touch-skills'); if (IS_TOUCH && !ts) { ts = document.createElement('div'); ts.id = 'touch-skills'; $('hud').appendChild(ts); ts.addEventListener('touchstart', e => { const h = e.target.closest('[data-slot]'); if (!h) return; e.preventDefault(); if (G.running && !G.player.dead) Hotbar.use(+h.dataset.slot); }, { passive: false }); }
-    if (ts) ts.innerHTML = '';
+    const belt = document.createElement('div'); belt.className = 'hb-group cons'; belt.innerHTML = '<span class="hb-label">벨트 · 소모품</span>'; hb.appendChild(belt);
     for (let i = 0; i < n; i++) {
-      if (IS_TOUCH) { const act = p.hotbar[i]; if (act && act.startsWith('sk')) { const si = +act.slice(2), s = SKILLS[si], d = document.createElement('div'); d.className = 'tsk'; d.dataset.slot = i; d.innerHTML = `${ICON(s.icon)}<span>${s.name}</span><div class="cd" id="cd${si}"></div>`; ts.appendChild(d); } continue; }
-      const act = p.hotbar[i], d = document.createElement('div'), key = `<span class="key">${i + 1}</span>`;
-      d.dataset.slot = i; d.dataset.act = act || 'empty';
-      if (act && act.startsWith('sk')) {
-        const si = +act.slice(2), s = SKILLS[si];
-        d.className = 'hot' + (p.skills[s.id] ? '' : ' locked');
-        d.title = `${s.name} - ${skillDesc(s, p)}\n연동 능력치: ${STAT_NAMES[s.stat]} (올릴수록 강해짐)`;
-        d.innerHTML = `${key}<div class="icon">${ICON(s.icon)}</div>${s.name}<span class="sk-stat">${STAT_NAMES[s.stat]}</span><div class="cd" id="cd${si}"></div>`;
-      } else { d.className = 'hot free'; d.title = '빈 스킬 칸 — 눌러서 배운 스킬 등록 (B)'; d.innerHTML = `${key}<div class="icon">＋</div>스킬`; }
-      sk.appendChild(d);
+      const k = p.hotbar[i], d = document.createElement('div'), key = `<span class="key">${IS_TOUCH ? '' : BELT_KEYS[i]}</span>`;
+      d.dataset.slot = i; d.dataset.act = k || 'empty';
+      if (k) { const c = CONSUMABLES[k], cnt = consCount(k); d.className = 'hot' + (cnt ? '' : ' empty'); d.title = `${c.name} — ${c.desc}`; d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" data-cnt="${k}">${cnt}</span>`; }
+      else { d.className = 'hot free'; d.title = '빈 칸 — 눌러서 소모품 등록 (B)'; d.innerHTML = `${key}<div class="icon">＋</div>비어 있음`; }
+      belt.appendChild(d);
     }
-    const ed = document.createElement('div'); // 칸 등록 (벨트)
-    ed.className = 'hot edit'; ed.dataset.act = 'edit'; ed.title = `벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 ${n}칸 — 칸 등록 (B)`;
-    ed.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'B'}</span><div class="icon">${ICON('belt')}</div>등록`;
-    sk.appendChild(ed);
-    if (!IS_TOUCH) { // 모바일은 오른쪽 아래 슬라이딩 버튼 (오른손)
-    const r = document.createElement('div'); // v0.16 슬라이딩 (벨트와 상관없이 항상)
-    r.className = 'hot'; r.dataset.act = 'roll'; r.title = '슬라이딩: 무적으로 미끄러져 빠져나감 · 재사용 5초 (위급할 때)';
-    r.innerHTML = `<span class="key">${IS_TOUCH ? '' : keyOf('dodge') === ' ' ? 'SPC' : keyLabel(keyOf('dodge'))}</span><div class="icon">${ICON('roll')}</div>슬라이딩<div class="cd" id="cdroll"></div>`;
-    r.title += ' · 오른쪽 클릭으로도'; hb.appendChild(r); }
-    if (!IS_TOUCH) hb.onclick = e => { // PC: 칸을 눌러도 사용 · 빈 칸·벨트 칸은 등록 창
-      const hot = e.target.closest('.hot'); if (!hot) return;
-      const cyc = e.target.closest('[data-cyc]'); if (cyc) return Gadgets.cycle(cyc.dataset.cyc);
-      if (hot.dataset.act === 'edit' || hot.dataset.act === 'empty') return Hotbar.edit();
-      if (hot.dataset.act === 'roll') return dodge();
-      if (hot.dataset.cons) return Hotbar.useCons(hot.dataset.act);
-      Hotbar.use(+hot.dataset.slot);
-    };
+    const ed = document.createElement('div'); ed.className = 'hot edit'; ed.dataset.act = 'edit'; ed.title = `벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 ${n}칸 — 칸 등록 (B)`;
+    ed.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'B'}</span><div class="icon">${ICON('belt')}</div>등록`; belt.appendChild(ed);
+    const learned = SKILLS.some(s => p.skills[s.id]);
+    if (!IS_TOUCH) {
+      const sk = document.createElement('div'); sk.className = 'hb-group skills'; sk.innerHTML = '<span class="hb-label">스킬</span>'; hb.appendChild(sk);
+      for (let i = 0; i < SKILLBAR; i++) {
+        const a = p.skillbar[i], d = document.createElement('div'), key = `<span class="key">${i + 1}</span>`;
+        d.dataset.sk = i;
+        if (a) { const si = +a.slice(2), s = SKILLS[si]; d.className = 'hot'; d.title = `${s.name} - ${skillDesc(s, p)}`; d.innerHTML = `${key}<div class="icon">${ICON(s.icon)}</div>${s.name}<div class="cd" id="cd${si}"></div>`; }
+        else { d.className = 'hot free'; d.title = learned ? '빈 스킬 칸 — 눌러서 등록' : '스킬은 스킬 창(K)에서 배운다'; d.innerHTML = `${key}<div class="icon">＋</div>스킬`; }
+        sk.appendChild(d);
+      }
+      const r = document.createElement('div'); // 슬라이딩 (오른쪽 클릭으로도)
+      r.className = 'hot'; r.dataset.act = 'roll'; r.title = '슬라이딩: 무적으로 미끄러져 빠져나감 · 재사용 5초 · 오른쪽 클릭으로도';
+      r.innerHTML = `<span class="key">${keyOf('dodge') === ' ' ? 'SPC' : keyLabel(keyOf('dodge'))}</span><div class="icon">${ICON('roll')}</div>슬라이딩<div class="cd" id="cdroll"></div>`;
+      hb.appendChild(r);
+      hb.onclick = e => {
+        const hot = e.target.closest('.hot'); if (!hot) return;
+        if (hot.dataset.act === 'edit') return Hotbar.edit();
+        if (hot.dataset.act === 'roll') return dodge();
+        if (hot.dataset.sk !== undefined) return Hotbar.useSkill(+hot.dataset.sk);
+        Hotbar.use(+hot.dataset.slot);
+      };
+    } else { // 모바일: 스킬은 오른쪽 아래 엄지 자리
+      let ts = $('touch-skills');
+      if (!ts) { ts = document.createElement('div'); ts.id = 'touch-skills'; $('hud').appendChild(ts);
+        ts.addEventListener('touchstart', e => { const h = e.target.closest('[data-sk]'); if (!h) return; e.preventDefault(); if (!G.running || G.player.dead) return; if (h.dataset.sk === 'edit') Hotbar.edit(undefined, 'skill'); else Hotbar.useSkill(+h.dataset.sk); }, { passive: false }); }
+      ts.innerHTML = '';
+      for (let i = 0; i < SKILLBAR; i++) { const a = p.skillbar[i]; if (!a) continue; const si = +a.slice(2), s = SKILLS[si], d = document.createElement('div'); d.className = 'tsk'; d.dataset.sk = i; d.innerHTML = `${ICON(s.icon)}<span>${s.name}</span><div class="cd" id="cd${si}"></div>`; ts.appendChild(d); }
+      if (learned) { const d = document.createElement('div'); d.className = 'tsk mini'; d.dataset.sk = 'edit'; d.innerHTML = '<b>＋</b><span>스킬</span>'; ts.appendChild(d); }
+    }
   },
 
   updateHUD(dt) {
@@ -182,7 +173,7 @@ const UI = {
     $('combo').classList.toggle('hidden', !live);
     if (live) { $('combo-n').textContent = `x${G.combo}`; $('combo-bar').style.width = (100 * (1 - (G.time - G.comboT) / 3)) + '%'; $('combo').style.color = G.combo >= 25 ? '#ffa53a' : G.combo >= 10 ? '#c77dff' : '#ffd76a'; }
     const med = p.inventory.find(i => i && i.key === 'medkit');
-    if ($('medcnt')) $('medcnt').textContent = med ? med.count : 0;
+    for (const el of document.querySelectorAll('#hotbar [data-cnt]')) { const c = consCount(el.dataset.cnt); el.textContent = c; el.parentNode.classList.toggle('empty', !c); } // v1.50 벨트 소모품 개수
     for (const slot of ['throw', 'util']) { const el = $(slot + 'cnt'); if (el) { const n = Gadgets.count(Gadgets.sel(slot)); el.textContent = n; el.parentNode.classList.toggle('empty', !n); el.parentNode.classList.toggle('none', !GADGET_SLOTS[slot].some(k => Gadgets.count(k))); } } // v1.48.2 가진 게 없으면 칸을 비움 // v1.14
 
     // 보스 바
@@ -322,7 +313,7 @@ const UI = {
     if (Companion.canGive(it) && !it.locked) add(`${COMPANIONS[G.player.comp].name}에게 주기`, () => Companion.give(it)); // v1.44
     if (it.kind === 'armor') add('장착', () => UI.equip(it, 'armor'));
     if (it.kind === 'helmet') add('장착', () => UI.equip(it, 'helmet'));
-    if (it.kind === 'belt') add('차기', () => { UI.equip(it, 'belt'); SKILLS.forEach((sk, i) => { if (G.player.skills[sk.id]) Hotbar.autoAdd('sk' + i); }); UI.buildHotbar(); }); // 칸이 늘면 못 넣었던 스킬을 채움
+    if (it.kind === 'belt') add('차기', () => { UI.equip(it, 'belt'); UI.buildHotbar(); }); // 칸이 늘면 못 넣었던 스킬을 채움
     if (it.kind === 'cons') add('사용', () => useItem(it));
     if (it.locked) return; // 잠긴 장비는 판매·버리기 버튼 없음
     if (UI.shopOpen) add(`판매 (${fmt(sellPrice)}₵)`, () => UI.sell(it, sellPrice));
@@ -709,7 +700,7 @@ const UI = {
     if (!confirm(`스킬을 모두 초기화하고 스킬 포인트를 돌려받을까요? (₵${fmt(cost)})`)) return;
     const back = spSpent(p);
     p.credits -= cost; p.sp = (p.sp || 0) + back; p.skills = {}; p.srank = {}; p.smodOwned = {}; p.skillMods = {}; p.stree = {};
-    p.hotbar = p.hotbar.map(a => a && a.startsWith('sk') ? null : a);
+    p.skillbar = [null, null, null, null]; // v1.50 스킬 퀵바
     log(`스킬 초기화 — 스킬 포인트 ${back} 반환`, '#7fd'); SFX.play('ui');
     UI.buildHotbar(); UI.refreshStats(); saveGame(); this.renderSkills();
   },
@@ -778,7 +769,7 @@ const UI = {
     p.sp -= cost; p.srank = p.srank || {};
     if (k) { p.smodOwned[s.id + '_' + k] = true; if (!p.skillMods[s.id]) p.skillMods[s.id] = k; log(`스킬 갈래 획득: ${s.name} — ${SKILL_MODS[s.id][k].name}`, '#7fd'); }
     else if (p.skills[s.id]) { p.srank[s.id] = srank(s.id) + 1; log(`${s.name} ${p.srank[s.id]}등급 — 위력 +${Math.round((rankMul(s.id) - 1) * 100)}%`, '#7fd'); } // v1.26 등급
-    else { p.skills[s.id] = true; p.srank[s.id] = 1; const on = Hotbar.autoAdd('sk' + SKILLS.indexOf(s)), k = p.hotbar.indexOf('sk' + SKILLS.indexOf(s)) + 1; log(`스킬을 배웠다: ${s.name}${on ? ` [${k}번 칸]` : ' — 벨트 칸이 가득: B로 등록'}`, '#7fd'); UI.toast('스킬 습득', on ? `${s.name} — ${k}번 칸` : `${s.name} — 벨트 칸이 가득합니다 (B로 바꾸기)`); }
+    else { p.skills[s.id] = true; p.srank[s.id] = 1; const on = Hotbar.autoAdd('sk' + SKILLS.indexOf(s), 'skill'), k = p.skillbar.indexOf('sk' + SKILLS.indexOf(s)) + 1; log(`스킬을 배웠다: ${s.name}${on ? ` [스킬 ${k}번 칸]` : ' — 스킬 퀵바가 가득: 퀵바 「＋」로 바꿔 넣기'}`, '#7fd'); UI.toast('스킬 습득', on ? `${s.name} — ${k}번 칸` : `${s.name} — 스킬 퀵바가 가득 (퀵바 ＋로 바꾸기)`); }
     SFX.play('levelup'); UI.buildHotbar(); UI.refreshStats(); saveGame(); if (UI.isOpen('skills')) this.renderSkills();
   },
 
@@ -879,7 +870,6 @@ const UI = {
   },
 };
 
-// v1.24 벨트 칸 (핫바). p.hotbar[i] = 'sk0'~'sk3' | 'med' | 'throw' | 'util' | null. 보이는 칸 = 벨트 등급 (2 · 4 · 6 · 8)
 // v1.47 아이템 툴팁: PC는 칸 위에 올리면, 모바일은 길게 누르면 (창고처럼 누르면 바로 옮겨지는 곳에서도 정보를 볼 수 있게)
 const ItemTip = {
   el: null, held: false,
@@ -901,58 +891,73 @@ const ItemTip = {
     c.addEventListener('touchend', e => { clearTimeout(t); if (this.held) { e.preventDefault(); setTimeout(() => this.hide(), 1400); } }); // 길게 눌렀으면 옮기지 않음
   },
 };
-const HOT_ACTS = () => SKILLS.map((s, i) => G.player.skills[s.id] ? ['sk' + i, s.name] : null).filter(Boolean); // v1.48 벨트 = 스킬만 (소모품은 따로)
+// v1.50 벨트 = 소모품 칸 (p.hotbar[i] = 'medkit' · 'molotov' … · 벨트 등급 2·3·4·6칸 · PC 5~0) / 스킬 퀵바 = p.skillbar (4칸 · PC 1~4 · 모바일은 오른쪽 둥근 버튼)
+const BELT_ITEMS = ['medkit', 'ammo', 'molotov', 'flash', 'mine', 'stim', 'plate'];
+const BELT_KEYS = ['5', '6', '7', '8', '9', '0'];
+const SKILLBAR = 4;
+const HOT_ACTS = () => SKILLS.map((s, i) => G.player.skills[s.id] ? ['sk' + i, s.name] : null).filter(Boolean);
+const consCount = k => { const it = G.player.inventory.find(i => i && i.kind === 'cons' && i.key === k); return it ? it.count : 0; };
 const Hotbar = {
-  useCons(act) { if (act === 'med') quickMedkit(); else Gadgets.use(act); }, // v1.48 소모품 칸
-  use(i) {
-    const p = G.player;
-    if (i >= beltSlots(p)) { log(`${i + 1}번 칸이 없습니다 — 더 좋은 벨트가 필요합니다 (지금 ${beltSlots(p)}칸).`, '#aaa'); return; }
-    const act = p.hotbar[i];
-    if (!act) { log(`${i + 1}번 칸이 비어 있습니다 — B 또는 벨트 칸을 눌러 등록하세요.`, '#aaa'); return; }
-    if (act.startsWith('sk')) useSkill(+act.slice(2));
+  useItem(k) { // 소모품 하나 쓰기
+    if (!k) return;
+    if (k === 'medkit') return quickMedkit();
+    if (k === 'ammo') { const it = G.player.inventory.find(i => i && i.kind === 'cons' && i.key === 'ammo'); if (it) useItem(it); else log('탄약 상자가 없습니다.', '#aaa'); return; }
+    const slot = CONSUMABLES[k].slot; G.player.gsel = G.player.gsel || {}; G.player.gsel[slot] = k; Gadgets.use(slot);
   },
-  assign(i, act) {
+  use(i) { // 벨트 칸
     const p = G.player;
-    if (act) { const j = p.hotbar.indexOf(act); if (j >= 0) p.hotbar[j] = null; } // 한 가지는 한 칸에만
-    p.hotbar[i] = act || null;
+    if (i >= beltSlots(p)) { log(`벨트 ${i + 1}번 칸이 없습니다 — 더 좋은 벨트가 필요합니다 (지금 ${beltSlots(p)}칸).`, '#aaa'); return; }
+    const k = p.hotbar[i];
+    if (!k) { log('빈 벨트 칸 — 눌러서 소모품을 넣으세요.', '#aaa'); return Hotbar.edit(i); }
+    this.useItem(k);
+  },
+  useSkill(i) {
+    const a = G.player.skillbar[i];
+    if (!a) { log('빈 스킬 칸 — 눌러서 스킬을 넣으세요.', '#aaa'); return Hotbar.edit(i, 'skill'); }
+    useSkill(+a.slice(2));
+  },
+  assign(i, act, mode = 'belt') {
+    const p = G.player, bar = mode === 'skill' ? p.skillbar : p.hotbar;
+    if (act) { const j = bar.indexOf(act); if (j >= 0) bar[j] = null; } // 한 가지는 한 칸에만
+    bar[i] = act || null;
     UI.buildHotbar(); saveGame();
   },
-  autoAdd(act) { // 새로 배운 스킬: 빈 칸이 있으면 자동 등록
-    const p = G.player;
-    if (p.hotbar.includes(act)) return true;
-    for (let i = 0; i < beltSlots(p); i++) if (!p.hotbar[i]) { p.hotbar[i] = act; UI.buildHotbar(); return true; }
+  autoAdd(act, mode = 'belt') { // 새로 배운 스킬 · 새로 얻은 소모품: 빈 칸이 있으면 자동 등록
+    const p = G.player, bar = mode === 'skill' ? p.skillbar : p.hotbar, n = mode === 'skill' ? SKILLBAR : beltSlots(p);
+    if (bar.includes(act)) return true;
+    for (let i = 0; i < n; i++) if (!bar[i]) { bar[i] = act; UI.buildHotbar(); return true; }
     return false;
   },
-  edit(sel) { // v1.45.1 칸을 누르고 → 넣을 것을 누름 (드롭다운 대신 그림 칸)
-    const p = G.player, n = beltSlots(p);
-    if (sel === undefined) { sel = p.hotbar.slice(0, n).indexOf(null); if (sel < 0) sel = 0; }
-    this.sel = sel = Math.min(sel, n - 1);
+  edit(sel, mode = 'belt') { // 칸을 누르고 → 넣을 것을 누름
+    const p = G.player, sk = mode === 'skill', n = sk ? SKILLBAR : beltSlots(p), bar = sk ? p.skillbar : p.hotbar;
+    if (sel === undefined) { sel = bar.slice(0, n).indexOf(null); if (sel < 0) sel = 0; }
+    this.sel = sel = Math.min(sel, n - 1); this.mode = mode;
     const look = act => {
       if (!act) return { ic: null, nm: '비어 있음', sub: '' };
       if (act.startsWith('sk')) { const s = SKILLS[+act.slice(2)]; return { ic: s.icon, nm: s.name, sub: '스킬' }; }
-      if (act === 'med') return { ic: 'medkit', nm: '구급상자', sub: `${(p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count}개` };
-      const k = Gadgets.sel(act), c = CONSUMABLES[k];
-      return { ic: c.icon, nm: act === 'throw' ? '투척물' : '보조 장비', sub: GADGET_SLOTS[act].map(x => CONSUMABLES[x].name).join('·') };
+      const c = CONSUMABLES[act]; return { ic: c.icon, nm: c.name, sub: `${consCount(act)}개` };
     };
-    let h = `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>스킬 ${n}칸</b> — 칸을 고르고, 아래에서 스킬을 누르세요. 구급상자·투척물·보조 장비는 왼쪽 <b>소모품 칸</b>에 늘 있습니다.</div><div class="hbx-slots">`;
-    for (let i = 0; i < HOT_MAX; i++) {
-      if (i >= n) { h += `<div class="hbx-slot off"><span class="k">${i + 1}</span>${ICON('lock')}<small>${BELTS.find(b => b.slots > i).name}</small></div>`; continue; }
-      const L = look(p.hotbar[i]);
-      h += `<div class="hbx-slot${i === sel ? ' on' : ''}${p.hotbar[i] ? '' : ' empty'}" data-slot="${i}"><span class="k">${i + 1}</span>${L.ic ? ICON(L.ic) : '<b class="plus">＋</b>'}<small>${L.nm}</small></div>`;
+    const max = sk ? SKILLBAR : HOT_MAX, keyOfSlot = i => sk ? String(i + 1) : BELT_KEYS[i];
+    let h = sk ? `<div class="muted">스킬 퀵바 <b>4칸</b> — 칸을 고르고 아래에서 스킬을 누르세요. ${IS_TOUCH ? '화면 오른쪽 아래 둥근 버튼으로 쓴다.' : '1~4 키로 쓴다.'}</div><div class="hbx-slots sk">`
+      : `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>소모품 ${n}칸</b> — 칸을 고르고 아래에서 넣을 것을 누르세요.${IS_TOUCH ? '' : ' 5~0 키로 쓴다.'} 좋은 벨트일수록 칸이 많다.</div><div class="hbx-slots">`;
+    for (let i = 0; i < max; i++) {
+      if (i >= n) { h += `<div class="hbx-slot off"><span class="k">${keyOfSlot(i)}</span>${ICON('lock')}<small>${BELTS.find(b => b.slots > i).name}</small></div>`; continue; }
+      const L = look(bar[i]);
+      h += `<div class="hbx-slot${i === sel ? ' on' : ''}${bar[i] ? '' : ' empty'}" data-slot="${i}"><span class="k">${IS_TOUCH ? i + 1 : keyOfSlot(i)}</span>${L.ic ? ICON(L.ic) : '<b class="plus">＋</b>'}<small>${L.nm}</small></div>`;
     }
-    h += `</div><div class="hbx-head">${sel + 1}번 칸에 넣을 스킬</div><div class="hbx-pal">${HOT_ACTS().length ? '' : '<span class="muted">아직 배운 스킬이 없다 — 스킬 창에서 스킬 포인트로 배우면 여기 나온다.</span>'}`;
-    for (const [act] of HOT_ACTS()) {
-      const L = look(act), at = p.hotbar.indexOf(act);
-      h += `<div class="hbx-item${p.hotbar[sel] === act ? ' cur' : ''}" data-act="${act}">${ICON(L.ic)}<b>${L.nm}</b><small>${L.sub}${at >= 0 && at !== sel ? ` · 지금 ${at + 1}번` : ''}</small></div>`;
+    const pal = sk ? HOT_ACTS().map(a => a[0]) : BELT_ITEMS;
+    h += `</div><div class="hbx-head">${sel + 1}번 칸에 넣을 ${sk ? '스킬' : '소모품'}</div><div class="hbx-pal">${pal.length ? '' : '<span class="muted">아직 배운 스킬이 없다 — 스킬 창에서 스킬 포인트로 배우면 여기 나온다.</span>'}`;
+    for (const act of pal) {
+      const L = look(act), at = bar.indexOf(act);
+      h += `<div class="hbx-item${bar[sel] === act ? ' cur' : ''}${!sk && !consCount(act) ? ' none' : ''}" data-act="${act}">${ICON(L.ic)}<b>${L.nm}</b><small>${L.sub}${at >= 0 && at !== sel ? ` · 지금 ${at + 1}번` : ''}</small></div>`;
     }
     h += `<div class="hbx-item clear" data-act=""><span class="x">✕</span><b>칸 비우기</b><small>&nbsp;</small></div></div>`;
-    if (SKILLS.some(s => !p.skills[s.id])) h += `<div class="muted" style="margin-top:6px">스킬은 스킬 창${IS_TOUCH ? '' : '(K)'}에서 배우면 여기 나옵니다. 슬라이딩은 항상 따로 있습니다.</div>`;
-    UI.dialog('벨트 — 칸 등록', h, [['닫기', () => UI.close('dialog')]]);
+    UI.dialog(sk ? '스킬 퀵바 — 칸 등록' : '벨트 — 소모품 칸', h, [[sk ? '벨트(소모품) 칸으로' : '스킬 퀵바로', () => this.edit(undefined, sk ? 'belt' : 'skill')], ['닫기', () => UI.close('dialog')]]);
     const box = $('dialog-text');
-    box.querySelectorAll('.hbx-slot[data-slot]').forEach(el => { el.onclick = () => { SFX.play('click'); this.edit(+el.dataset.slot); }; });
+    box.querySelectorAll('.hbx-slot[data-slot]').forEach(el => { el.onclick = () => { SFX.play('click'); this.edit(+el.dataset.slot, mode); }; });
     box.querySelectorAll('.hbx-item').forEach(el => { el.onclick = () => {
-      Hotbar.assign(sel, el.dataset.act); SFX.play('equip');
-      const next = p.hotbar.slice(0, n).indexOf(null); this.edit(el.dataset.act && next >= 0 ? next : sel); // 채우면 다음 빈 칸으로
+      Hotbar.assign(sel, el.dataset.act, mode); SFX.play('equip');
+      const next = bar.slice(0, n).indexOf(null); this.edit(el.dataset.act && next >= 0 ? next : sel, mode); // 채우면 다음 빈 칸으로
     }; });
   },
 };

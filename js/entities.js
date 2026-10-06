@@ -168,7 +168,7 @@ function itemDesc(it) {
   if (it.kind === 'weapon') {
     const b = WEAPONS[it.key];
     let s = `피해 ${Math.round(it.dmg * plusMul(it) * 10) / 10}${b.pellets ? ' x' + b.pellets : ''} · 공격간격 ${b.rate}s`;
-    s += b.melee ? ' · 근접' : ` · 탄창 ${b.mag} · 사거리 ${b.range}`;
+    s += b.melee ? ` · 근접 · 한 번에 최대 ${meleeTargets(it, false)}마리 (3타 ${meleeTargets(it, true)})` : ` · 탄창 ${b.mag} · 사거리 ${b.range}`; // v1.50
     if (b.pierce) s += ' · 관통';
     return s + ` · 요구 Lv${b.lvl}`;
   }
@@ -212,7 +212,7 @@ function newPlayer(name) {
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터
     skillCd: [0, 0, 0, 0, 0],
-    hotbar: [null, null, null, null, null, null, null, null], hb148: true, // v1.48 벨트는 스킬만 · 처음엔 비움 (소모품은 따로) // v1.24 벨트 칸에 등록한 것 (sk0~3 · med · throw · util)
+    hotbar: ['medkit', null, null, null, null, null], skillbar: [null, null, null, null], hb150: true, // v1.50 벨트 = 소모품 (구급상자 하나) · 스킬 퀵바는 따로 (처음엔 비움)
     buffs: { rapid: 0, adren: 0, regen: 0, shield: 0 },
     perks: [], skillMods: {}, camp: {}, skills: {}, smodOwned: {}, stree: {}, passive: {}, skillsV120: true, // v1.16 배운 스킬 · 산 갈래 · v1.20 새 규칙 적용됨 // v1.13 캠프 시설 단계
     // v1.11 특성 (단계별 id) · 스킬 갈래 (스킬 id → 'a'|'b')

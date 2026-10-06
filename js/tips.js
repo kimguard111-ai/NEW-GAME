@@ -23,10 +23,10 @@ const TIPS = {
   events:    () => '무전에 뭔가 잡혔다. 미니맵의 노란 ◆. 오래 머물수록 놈들이 늘어나니 욕심은 적당히. 주황 ◎은 조건을 채워야 열리는 탈출구다.',
   perk:      () => '특성을 하나 고를 수 있다. 능력치 창(C)이나 패시브 트리에서. 의무병 이씨가 나중에 초기화해 준다.',
   camp:      () => '한씨: "이제 캠프에 뭘 좀 지을 수 있겠어. 나한테 와서 「캠프 시설」을 봐."',
-  gadget:    () => `화염병·자극제는 벨트가 아니라 아래 <b>소모품 칸</b>에서 쓴다${tipKey(` (투척 [${keyLabel(keyOf('useThrow'))}] · 보조 [${keyLabel(keyOf('useUtil'))}])`, '')}. 가진 게 있을 때만 칸이 보인다. 종류는 ${tipKey('T / Y', '칸 모서리 ↻')}로 바꾼다.`, // v1.48.2
+  gadget:    () => `화염병·자극제 같은 소모품은 <b>벨트</b>(아래 가운데)에 들어간다${tipKey(' (5~0 키)', '')}. 벨트가 좋을수록 칸이 많고, 바꾸려면 ${tipKey('B', '「등록」 칸')}.`, // v1.50
   skillshop: () => '스킬은 스킬 포인트로 배운다. 레벨이 오르거나 장을 끝낼 때마다 하나씩. 다 배울 순 없으니 골라서.',
   sp:        () => `스킬 포인트가 남았다. ${tipKey('K', '스킬 버튼')}에서 새로 배우거나 올리자.`, // v1.30
-  belt:      () => `벨트(스킬 칸)가 꽉 찼다. 더 좋은 벨트를 차면 칸이 늘어난다. 넣을 것은 ${tipKey('B', '벨트 버튼')}로 바꾼다.`,
+  belt:      () => `벨트(소모품 칸)가 꽉 찼다. 더 좋은 벨트를 차면 칸이 늘어난다. 넣을 것은 ${tipKey('B', '「등록」 칸')}로 바꾼다.`, // v1.50
   extract:   () => '주운 건 아직 내 것이 아니다. 맵 끝 초록 ◎에서 5초 버텨야 챙길 수 있다. 죽으면 그것만 잃는다.',
 };
 
@@ -54,7 +54,7 @@ const Tips = {
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
     if (World.map === 'camp' && !p.tips.includes('growth') && ((p.rec && p.rec.extracts) || p.deaths)) return Growth.show(); // v1.30 첫 출격 뒤 성장 안내 (한 번)
     if (!p.tips.includes('sp') && (p.sp || 0) >= 1 && SKILLS.some(s => (!p.skills[s.id] && p.level >= s.lvl) || (p.skills[s.id] && srank(s.id) < SKILL_RANKS && p.level >= rankLvl(s, srank(s.id) + 1))) && !UI.anyOpen()) return this.show('sp');
-    if (!p.tips.includes('belt') && SKILLS.some((s, i) => p.skills[s.id] && !p.hotbar.slice(0, beltSlots(p)).includes('sk' + i)) && !p.hotbar.slice(0, beltSlots(p)).includes(null)) return this.show('belt');
+    if (!p.tips.includes('belt') && BELT_ITEMS.some(k => k !== 'ammo' && consCount(k) && !p.hotbar.slice(0, beltSlots(p)).includes(k)) && !p.hotbar.slice(0, beltSlots(p)).includes(null)) return this.show('belt'); // v1.50
     if (World.map === 'camp' && p.level >= 5 && p.credits >= FAC_COST[0].credits && !Object.values(p.camp || {}).some(Boolean) && !p.tips.includes('camp')) return this.show('camp');
     if (World.map === 'camp' && p.level >= 1) { this.show('deploy'); if (World.map === 'camp') return; }
     if (p.raid && p.raid.t > 4) this.show('extract');

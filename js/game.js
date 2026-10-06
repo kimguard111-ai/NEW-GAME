@@ -43,7 +43,8 @@ window.addEventListener('keydown', e => {
   if (UI.keyCapture) return; // v1.37 설정에서 키 바꾸는 중
   if (k === ' ') e.preventDefault();
   if (k === 'escape') { if (UI.anyOpen()) UI.closeAll(); else Pause.toggle(); return; }
-  if (k >= '1' && k <= '8') { Hotbar.use(+k - 1); return; } // v1.24 벨트 칸
+  if (k >= '1' && k <= '4') { Hotbar.useSkill(+k - 1); return; } // v1.50 스킬 퀵바 1~4
+  if (BELT_KEYS.includes(k)) { Hotbar.use(BELT_KEYS.indexOf(k)); return; } // 벨트(소모품) 5~0
   const act = Object.keys(KEY_DEFAULTS).find(a => keyOf(a) === k); // v1.37 바꾼 키
   if (act === 'reload') startReload();
   else if (act === 'swap') swapWeapon();
@@ -55,12 +56,8 @@ window.addEventListener('keydown', e => {
   else if (act === 'quest') UI.toggle('quest');
   else if (act === 'settings') UI.toggle('settings');
   else if (act === 'belt') Hotbar.edit();
-  else if (act === 'throwNext') Gadgets.cycle('throw');
-  else if (act === 'utilNext') Gadgets.cycle('util');
   else if (act === 'compCmd') Companion.command(); // v1.44 동료 명령
   else if (act === 'useMed') quickMedkit(); // v1.48 소모품은 벨트와 따로
-  else if (act === 'useThrow') Gadgets.use('throw');
-  else if (act === 'useUtil') Gadgets.use('util');
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
@@ -199,7 +196,12 @@ function startGame(save, name) {
     if (!P.equip.belt) P.equip.belt = makeBelt(Math.min(3, Math.ceil(acts.length / 2) - 1));
   }
   if (!('belt' in P.equip)) P.equip.belt = null;
-  if (save && !save.p.hb148) { const sk = (P.hotbar || []).filter(a => a && a.startsWith('sk')); P.hotbar = sk.concat(Array(HOT_MAX).fill(null)).slice(0, HOT_MAX); P.hb148 = true; } // v1.48 벨트 = 스킬만
+  if (save && !save.p.hb150) { // v1.50 옛 벨트(스킬) → 스킬 퀵바 · 벨트는 가진 소모품으로 채움
+    P.skillbar = (P.hotbar || []).filter(a => a && a.startsWith('sk')).concat([null, null, null, null]).slice(0, 4);
+    const own = BELT_ITEMS.filter(k => k !== 'ammo' && P.inventory.some(i => i && i.kind === 'cons' && i.key === k));
+    P.hotbar = (own.includes('medkit') ? own : ['medkit'].concat(own)).concat(Array(HOT_MAX).fill(null)).slice(0, HOT_MAX); P.hb150 = true;
+  }
+  P.skillbar = P.skillbar || [null, null, null, null];
   P.srank = P.srank || {};
   if (save && !save.p.ammo) { // v1.33 탄약 4종: 예전 예비 탄약은 기관총탄으로, 나머지는 시작 양
     const r = save.p.reserve ?? 150; P.ammo = Object.fromEntries(Object.entries(AMMO).map(([k, a]) => [k, k === 'auto' ? Math.max(a.start, r) : a.start])); delete P.reserve;
@@ -300,6 +302,9 @@ function finishReload() {
 // v1.9 기관총 예열: 연사할수록 최대 25% 빨라짐 (0.4초 쉬면 식기 시작)
 function gunRateMul(p, w) { return w.key === 'lmg' ? 1 - 0.25 * (p.heat || 0) : 1; }
 
+// v1.50 근접 무기 한 번에 때리는 적 수: 무기 기본 + 등급 (희귀·영웅 +1 · 전설 +2) · 3타 마무리 +1
+const MELEE_TARGETS = { pipe: 2, axe: 3, katana: 3 };
+function meleeTargets(w, fin) { return (MELEE_TARGETS[w.key] || 2) + [0, 0, 1, 1, 2][w.rarity || 0] + (fin ? 1 : 0); }
 function playerDamageMul(melee) {
   const p = G.player;
   let m = (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1);
@@ -336,6 +341,7 @@ function playerAttack() {
     const dmg = weaponDmg(w) * playerDamageMul(true) * M.dmg * (fin && perk('executioner') ? 1.4 : 1) * (fin && w.unique === 'goliath' ? 1.5 : 1) * (p.fangBuff ? 2 : 1);
     if (p.fangBuff) { p.fangBuff = false; floatText(p.x, p.y - 36, '굶주린 송곳니!', '#ff6a5a', 13); } // v1.12 붉은 이빨
     let hits = 0, anyCrit = false;
+    const inArc = [];
     for (const e of G.enemies) {
       if (e.hp <= 0) continue;
       const d = dist(p, e);
@@ -343,6 +349,10 @@ function playerAttack() {
       const da = Math.abs(((angleTo(p, e) - p.aim + Math.PI * 3) % TAU) - Math.PI);
       if (da > arc / 2 && d > e.r + p.r + 4) continue;
       if (!World.lineOfSight(p, e)) continue; // 벽 너머 타격 방지
+      inArc.push([d, e]);
+    }
+    inArc.sort((a, c) => a[0] - c[0]); // v1.50 가까운 순으로 무기 등급만큼만 (전에는 휘두른 범위의 적 전부)
+    for (const [, e] of inArc.slice(0, meleeTargets(w, fin))) {
       const crit = Math.random() < cc + (M.crit || 0);
       anyCrit = anyCrit || crit;
       damageEnemy(e, dmg * (crit ? critMul : 1), crit, angleTo(p, e), { knock: b.knock * M.knock, stagger: b.stagger + M.stagger, w, melee: true, fin });
@@ -470,7 +480,7 @@ function useItem(it) {
     const [t, n] = giveAmmoUnits(p, 120); log(`${AMMO[t].name} +${n}`, '#cc8');
   } else if (CONSUMABLES[it.key].slot) { // v1.14 투척물·보조: 가방에서 누르면 그 칸에 선택
     const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
-    log(`${it.name}을(를) ${slot === 'throw' ? `투척물 칸 [${keyLabel(keyOf('useThrow'))}]` : `보조 장비 칸 [${keyLabel(keyOf('useUtil'))}]`}에 올렸다.`, '#cfe'); // v1.48 소모품 칸은 따로 UI.buildHotbar(); return; // v1.24
+    const on = Hotbar.autoAdd(it.key); log(`${it.name}${on ? `을(를) 벨트 ${G.player.hotbar.indexOf(it.key) + 1}번 칸에 올렸다.` : ' — 벨트 칸이 가득 (B로 바꾸기)'}`, '#cfe'); // v1.50 벨트 = 소모품
   } else return;
   if (Math.random() < gearBonus(p, 'gadSave')) { floatText(p.x, p.y - 44, '절약', '#9fe0ff', 12); UI.refreshInventory(); return; } // v1.25 벨트 옵션
   it.count--;
@@ -482,10 +492,11 @@ function addItem(it) {
   const inv = G.player.inventory;
   if (it.kind === 'cons') {
     const ex = inv.find(i => i && i.kind === 'cons' && i.key === it.key);
-    if (ex) { ex.count += it.count; UI.refreshInventory(); return true; }
+    if (ex) { ex.count += it.count; UI.refreshInventory(); if (it.key !== 'ammo' && G.player.hotbar) Hotbar.autoAdd(it.key); return true; }
   }
   if (inv.length >= Camp.bagSize()) return false;
   inv.push(it); Journal.onItem(it); // v1.15 도감
+  if (it.kind === 'cons' && it.key !== 'ammo' && G.player.hotbar) Hotbar.autoAdd(it.key); // v1.50 새 소모품은 빈 벨트 칸에
   UI.refreshInventory();
   return true;
 }
