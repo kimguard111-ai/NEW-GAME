@@ -737,6 +737,56 @@ Match the art style of the attached concept image. Create ONE wide 16:9 image co
 
 ---
 
+## 20. 동료 · 캠프 사람들 · 캠프 꾸미기 (v1.49.1) — 남은 코드 그림
+동료 3명과 캠프 사람들은 지금 **플레이어 그림의 색만 바꿔** 쓰고 있어 나와 구분이 잘 안 됩니다. 캠프가 커질 때 생기는 꾸미기 4종은 코드로 그린 도형입니다.
+- 순서: **20-1 ~ 20-3 (동료 3명)** → 20-4 · 20-5 (캠프 사람들) → 20-6 (캠프 꾸미기)
+- 📎 **콘셉트 아트 + 플레이어 그림(`Player.png`)을 함께 첨부**하세요 — 같은 화풍 · 같은 크기(키)로 맞추기 위해서입니다. 단, **얼굴·옷은 플레이어와 확실히 다르게.**
+- 올리는 곳: `art_raw/new/` (파일 이름은 표대로)
+
+| 장 | 파일 이름 | 내용 | 줄 (프레임) |
+|---|---|---|---|
+| 20-1 ★ | `comp_assault.png` | 박 상병 (돌격 · 소총) | idle 4 · walk 6 · attack 3 · hit 2 · death 5 |
+| 20-2 ★ | `comp_sniper.png` | 윤 저격수 (저격총) | 같음 |
+| 20-3 ★ | `comp_medic.png` | 서 간호사 (권총 · 구급가방) | 같음 |
+| 20-4 | `resident_a.png` | 캠프 사람 남자 (작업복) | idle 4 · walk 6 |
+| 20-5 | `resident_b.png` | 캠프 사람 여자 · 노인 (두 사람을 한 장에 위아래로) | idle 4 · walk 6 (사람마다 2줄) |
+| 20-6 | `camp_growth.png` | 캠프 꾸미기 4종 (2×2 격자) | — |
+
+### 20-1 ★ · `comp_assault.png` — 박 상병
+```
+Match the art style and character size of the attached reference images. Create ONE sprite sheet of a NEW character (clearly different from the attached player): a young South Korean army sergeant survivor, short buzz-cut black hair, a worn olive-green military combat uniform with rolled sleeves, a dark green plate carrier vest with magazine pouches, a faded red-and-yellow sergeant rank patch on the chest, olive helmet clipped to his belt (bare head), black combat boots. He holds a black K2 assault rifle with both hands, the barrel pointing straight to the RIGHT, level. Rows: row 1: 4 frames of idle breathing while holding the rifle ready; row 2: 6 frames of a walk cycle keeping the rifle forward; row 3: 3 frames of firing with a small recoil, no muzzle flash, no bullets; row 4: 2 frames of getting hit and flinching; row 5: 5 frames of a death animation, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 20-2 ★ · `comp_sniper.png` — 윤 저격수
+```
+Match the art style and character size of the attached reference images. Create ONE sprite sheet of a NEW character (clearly different from the attached player): a lean South Korean woman sniper in her thirties, long black hair tied in a low ponytail, a hooded brown ghillie-style poncho with frayed burlap strips over a dark tactical jacket, fingerless gloves, a small scope pouch on the hip. She holds a long black bolt-action sniper rifle with both hands, the long barrel pointing straight to the RIGHT, level. Rows: row 1: 4 frames of idle breathing while holding the rifle low and ready; row 2: 6 frames of a walk cycle carrying the rifle forward; row 3: 3 frames of aiming and firing one heavy shot with a strong recoil, no muzzle flash, no bullets; row 4: 2 frames of getting hit and flinching; row 5: 5 frames of a death animation, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 20-3 ★ · `comp_medic.png` — 서 간호사
+```
+Match the art style and character size of the attached reference images. Create ONE sprite sheet of a NEW character (clearly different from the attached player): a South Korean nurse survivor in her twenties, short bob black hair, a dirty pale-blue nurse scrub top under an open grey cardigan, a white armband with a red cross on the left arm, a large red medical bag slung across her body, dark trousers and sneakers. She holds a small black pistol in her right hand pointing straight to the RIGHT, level. Rows: row 1: 4 frames of idle breathing with the pistol held low; row 2: 6 frames of a walk cycle; row 3: 3 frames of firing the pistol with a small recoil, no muzzle flash, no bullets; row 4: 2 frames of getting hit and flinching; row 5: 5 frames of a death animation, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 20-4 · `resident_a.png` — 캠프 사람 (남자)
+```
+Match the art style and character size of the attached reference images. Create ONE sprite sheet of an unarmed civilian survivor living in an underground subway-station camp: a middle-aged South Korean man, messy grey-streaked hair, a faded navy work jumper with patched knees, a knitted beanie, a canvas tool belt, worn rubber boots. No weapon. Rows: row 1: 4 frames of idle standing and breathing, hands relaxed; row 2: 6 frames of a calm walk cycle. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 20-5 · `resident_b.png` — 캠프 사람 (여자 · 노인)
+```
+Match the art style and character size of the attached reference images. Create ONE sprite sheet with TWO different unarmed civilian survivors living in an underground camp, stacked vertically. Character A (rows 1 and 2): a South Korean woman in her forties, hair tied up with a cloth scarf, a faded floral apron over a thick brown sweater, sleeves rolled up. Character B (rows 3 and 4): an old South Korean man with white hair and a slight stoop, a padded grey vest over a beige shirt, holding a short wooden walking stick. No weapons. Rows: row 1: 4 frames of character A idle; row 2: 6 frames of character A walking; row 3: 4 frames of character B idle; row 4: 6 frames of character B walking slowly with the stick. Same size in every frame (both adults the same height as the reference), all facing right, wide empty gaps between frames and between the two characters, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the characters.
+```
+
+### 20-6 · `camp_growth.png` — 캠프 꾸미기 4종 (2×2 격자)
+캠프 사람이 늘 때 생기는 것들입니다. 전구는 게임이 불빛을 얹으므로 **꺼진 전구**로 그립니다.
+```
+Match the art style of the attached concept image. Create ONE square image divided into a 2 by 2 grid of separate isometric props for a survivor camp inside a ruined Seoul subway station, each prop centered in its own cell with its base at the bottom of the cell, wide empty space around each prop, nothing touching between cells. Top-left: a laundry line strung between two short metal poles with a few faded shirts and towels hanging on it. Top-right: a small vegetable garden in old wooden crates and plastic buckets with green lettuce, scallions and chili plants. Bottom-left: a string of unlit light bulbs hanging between two leaning wooden poles, the bulbs dark and not glowing. Bottom-right: a handmade camp flag on a tall rusty pipe pole, a tattered white cloth with a simple painted dark-red circle symbol, fluttering slightly. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No shadows on the ground, no ground tiles, no text, no letters, no grid lines, no border. Do not use pink or magenta on the props.
+```
+
+> **결과가 이상할 때** — 동료가 플레이어와 너무 닮으면: 프롬프트 앞에 `Do NOT copy the attached player's face, hair or clothes; only match the drawing style and size.` 를 붙여 다시. 줄(프레임) 수가 틀리면 그 장만 다시 · 총이 왼쪽을 보면 다시 (오른쪽 기준, 왼쪽은 게임이 뒤집음).
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
