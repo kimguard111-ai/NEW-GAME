@@ -427,3 +427,12 @@ body.touch #touch-skills:empty { display: none; }
 .tsk .ico { width: 22px; height: 22px; }
 .tsk span { font-size: 7.5px; color: #cfe3ff; line-height: 1; margin-top: 1px; white-space: nowrap; max-width: 42px; overflow: hidden; }
 .tsk .cd { position: absolute; left: 0; bottom: 0; width: 100%; background: rgba(0,0,0,.65); pointer-events: none; }
+
+/* v1.49 첫 로딩 막대 · 오류 안내 */
+#load-bar { position: relative; width: min(360px, 80vw); height: 16px; margin: 8px auto 0; background: #11100c; border: 1px solid var(--edge); transition: opacity .5s; }
+#load-bar .lb-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, #8a4a22, #d8732a); transition: width .15s; }
+#load-bar span { position: relative; display: block; text-align: center; font-size: 10px; line-height: 16px; color: #e6dfcc; font-family: 'Typer', monospace; }
+#load-bar.done { opacity: 0; }
+#err-note { position: fixed; left: 50%; top: 8px; transform: translateX(-50%); z-index: 200; max-width: min(640px, 94vw); padding: 8px 12px; font-size: 12px; line-height: 1.5;
+  background: var(--grain), rgba(40,16,12,.97); border: 2px solid #000; box-shadow: 0 0 0 1px #b8352a, 3px 3px 0 rgba(0,0,0,.5); color: #f0dcc8; }
+#err-note b { color: #ff9a7a; } #err-note button { padding: 1px 8px; font-size: 11px; margin-left: 4px; }

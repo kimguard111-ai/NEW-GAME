@@ -9,7 +9,7 @@ const SFX = {
 
   // 브라우저는 첫 입력 뒤에만 소리를 허용 → 첫 키·클릭·터치에서 초기화
   unlock() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume(); return; } // v1.49 아이폰: 다른 앱 다녀오면 'interrupted'
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     const c = this.ctx = new AC();

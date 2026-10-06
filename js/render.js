@@ -473,12 +473,36 @@ function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
 }
 
 // ---------------- 스프라이트 (js/assets.js 에 등록된 그림) ----------------
+// v1.49 축소 캐시: 큰 원본(1024px 아틀라스)을 매 프레임 작게 줄여 그리던 것이 가장 무거웠음 → 화면에 그려질 크기로 한 번 줄여 두고 재사용
+const Mip = {
+  map: new Map(), n: 0, zoom: 0,
+  draw(img, rx, ry, rw, rh, dx, dy, dw, dh) {
+    const s = ZOOM * RES, tw = Math.max(1, Math.ceil(Math.abs(dw) * s / 4) * 4), th = Math.max(1, Math.ceil(Math.abs(dh) * s / 4) * 4);
+    if (!Settings.mip || rw < tw * 1.5 || rh < th * 1.5) return ctx.drawImage(img, rx, ry, rw, rh, dx, dy, dw, dh); // 별로 안 줄이면 그대로
+    if (this.zoom !== s) { this.map.clear(); this.zoom = s; }
+    if (img._mid === undefined) img._mid = ++this.n;
+    const key = `${img._mid}|${rx}|${ry}|${rw}|${rh}|${tw}|${th}`;
+    let c = this.map.get(key);
+    if (!c) {
+      if (this.map.size > 2500) this.map.clear();
+      c = document.createElement('canvas'); c.width = tw; c.height = th;
+      const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+      // 두 단계로 줄여 계단·흐림을 줄임
+      if (rw > tw * 3) { const m = document.createElement('canvas'); m.width = tw * 2; m.height = th * 2; const mg = m.getContext('2d'); mg.imageSmoothingQuality = 'high'; mg.drawImage(img, rx, ry, rw, rh, 0, 0, tw * 2, th * 2); g.drawImage(m, 0, 0, tw, th); }
+      else g.drawImage(img, rx, ry, rw, rh, 0, 0, tw, th);
+      this.map.set(key, c);
+    }
+    ctx.drawImage(c, 0, 0, tw, th, dx, dy, dw, dh);
+  },
+};
+
 const Sprites = {
+  total: 0, done: 0, // v1.49 첫 로딩 진행
   load() {
     for (const s of [...Object.values(ART.sprites), ...Object.values(ART.landmarks)]) {
-      const im = new Image(); s.ready = false; // 다시 읽을 때 이전 상태가 남지 않게
-      im.onload = () => { s.ready = true; };
-      im.onerror = () => console.warn('에셋을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
+      const im = new Image(); s.ready = false; Sprites.total++; // 다시 읽을 때 이전 상태가 남지 않게
+      im.onload = () => { s.ready = true; Sprites.done++; };
+      im.onerror = () => { Sprites.done++; console.warn('에셋을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file); };
       im.src = ART.dir + s.file; s.img = im;
     }
   },
@@ -487,9 +511,9 @@ const Sprites = {
     for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {}), ...Object.values(ART.icons || {}), ...Object.values(ART.signs || {})]) { // v1.18 소품 · v1.19 건물 질감 · v1.35.1 아이콘 포함
       let im = cache[s.file];
       if (!im) {
-        im = cache[s.file] = new Image(); im.users = [];
-        im.onload = () => { im.users.forEach(u => { u.ready = true; }); if (typeof GroundCache !== 'undefined') GroundCache.map.clear(); }; // v1.25 바닥 질감이 늦게 읽혀도 다시 그림
-        im.onerror = () => console.warn('무기·헬멧 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file);
+        im = cache[s.file] = new Image(); im.users = []; Sprites.total++;
+        im.onload = () => { Sprites.done++; im.users.forEach(u => { u.ready = true; }); if (typeof GroundCache !== 'undefined') GroundCache.map.clear(); }; // v1.25 바닥 질감이 늦게 읽혀도 다시 그림
+        im.onerror = () => { Sprites.done++; console.warn('무기·헬멧 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file); };
         im.src = ART.dir + s.file;
       }
       im.users.push(s); s.img = im; s.ready = false;
@@ -542,9 +566,9 @@ const Sprites = {
     ctx.save();
     ctx.translate(sx, sy + ART.feetPad * sc);
     if (d.x < 0) ctx.scale(-1, 1); // 그림은 오른쪽을 보는 기준, 왼쪽은 좌우 반전
-    if (ol && !flash) { const o = this.outline(s); if (o) { ctx.globalAlpha = ol; ctx.drawImage(o, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size); ctx.globalAlpha = 1; } } // v1.46 적 윤곽
+    if (ol && !flash) { const o = this.outline(s); if (o) { ctx.globalAlpha = ol; Mip.draw(o, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size); ctx.globalAlpha = 1; } } // v1.46 적 윤곽
     if (flash && 'filter' in ctx) ctx.filter = flash === 2 ? 'brightness(4) saturate(0.15)' : 'brightness(2.6)'; // v1.40 맞은 순간은 하얗게
-    ctx.drawImage(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
+    Mip.draw(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
     ctx.restore();
     // 머리 위치 (가공 도구가 기록한 프레임별 값, 발 기준 칸 좌표)
     return { anim, sc, flip: fr.flip, head: fr.head };
@@ -861,7 +885,7 @@ function drawPropArt(key, sx, sy, flip = false, k = 1) {
   const [rx, ry, rw, rh] = a.rect || [0, 0, a.img.width, a.img.height], fit = ART.propFit[key] || { w: 40, y: 4 };
   const w = fit.w * k, h = rh * w / rw;
   ctx.save(); ctx.translate(sx, sy + fit.y * k); if (flip !== !!a.mirror) ctx.scale(-1, 1); // v1.31 mirror: 반대 방향으로 그려진 그림
-  ctx.drawImage(a.img, rx, ry, rw, rh, -w * (a.ax ?? 0.5), -h, w, h); // ax = 바닥 점이 그림 가로 어디인지 (기본 가운데)
+  Mip.draw(a.img, rx, ry, rw, rh, -w * (a.ax ?? 0.5), -h, w, h); // v1.49 축소 캐시 · ax = 바닥 점이 그림 가로 어디인지 (기본 가운데)
   ctx.restore();
   return true;
 }

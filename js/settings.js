@@ -14,6 +14,7 @@ const Settings = {
   ambient: true, // v1.37 환경음
   xray: true,    // v1.37 건물에 가려진 적 투시 윤곽
   outline: true, // v1.46 적 붉은 윤곽선 · 발밑 고리
+  mip: true,     // v1.49 그림 축소 캐시 (끄면 원본을 매번 줄여 그림 — 문제 확인용)
   keys: null,    // v1.37 조작 키 (null = 기본)
   fullscreen: true, // v1.45.2 모바일: 화면을 처음 누르면 전체 화면 (나갔다가도 다시 누르면 돌아감)
   load() { try { Object.assign(this, JSON.parse(localStorage.getItem('seoul2049-settings') || '{}')); } catch (e) { /* 저장 불가 */ } },

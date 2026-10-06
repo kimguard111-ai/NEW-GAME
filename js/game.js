@@ -93,13 +93,25 @@ function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); }
 function saveGame(silent = true) {
   if (!G.player) return;
   try {
-    const p = { ...G.player, reloadT: 0, atkT: 0 };
-    localStorage.setItem(saveKey(), JSON.stringify({ ver: 2, p, nextItemId, bossT: G.bossT, savedAt: Date.now() }));
+    const p = { ...G.player, reloadT: 0, atkT: 0 }, key = saveKey();
+    const str = JSON.stringify({ ver: 2, p, nextItemId, bossT: G.bossT, savedAt: Date.now() });
+    // v1.49 백업: 2분마다 직전 저장을 「-bak」에 남김 (저장이 깨져도 그 전으로 돌아갈 수 있게)
+    const old = localStorage.getItem(key);
+    if (old && Date.now() - (G.bakT || 0) > 120000 && validSave(old)) { localStorage.setItem(key + '-bak', old); G.bakT = Date.now(); }
+    localStorage.setItem(key, str);
     if (!silent) log('게임이 저장되었습니다.', '#8f8');
-  } catch (e) { /* 저장 불가 환경 */ }
+  } catch (e) { if (!G.saveWarned) { G.saveWarned = true; log('저장하지 못했습니다 — 브라우저 저장 공간이 꽉 찼거나 막혀 있습니다. (설정 → 세이브 코드 만들기로 따로 보관하세요)', '#f88'); } }
 }
+function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(str) : str; return !!(s && s.p && s.p.name !== undefined && Array.isArray(s.p.inventory) && s.p.equip && s.p.stats); } catch (e) { return false; } }
 function loadSave(n = SAVE_SLOT) {
-  try { const s = localStorage.getItem(slotKey(n)); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+  try {
+    const s = localStorage.getItem(slotKey(n));
+    if (!s) return null;
+    if (validSave(s)) return JSON.parse(s);
+    const b = localStorage.getItem(slotKey(n) + '-bak'); // v1.49 깨진 저장 → 백업으로
+    if (b && validSave(b)) { const v = JSON.parse(b); v.fromBak = true; return v; }
+    return null;
+  } catch (e) { return null; }
 }
 
 // ---------------- 시작 ----------------
@@ -141,6 +153,7 @@ function startGame(save, name) {
       G.player.raid = null; log('지난 출격에서 무사히 돌아왔다. 가져온 물건은 확정되었다.', '#8cf');
     }
     log(`${G.player.name}님, 다시 오신 것을 환영합니다.`, '#e0b23a');
+    if (save.fromBak) { log('마지막 저장이 깨져 있어서 직전 백업(최대 2분 전)으로 불러왔습니다.', '#ffd76a'); saveGame(); } // v1.49
   } else {
     G.player = newPlayer(name || '생존자');
     G.player.hp = PlayerStats.maxHp(G.player);
@@ -1279,17 +1292,55 @@ function updateTension(dt) {
 // ---------------- 루프 ----------------
 let lastT = performance.now();
 function frame(now) {
+  requestAnimationFrame(frame); // v1.49 먼저 다음 프레임을 예약 — 오류가 나도 게임이 멈추지 않게
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   if (G.running) {
-    if (G.paused) { /* 일시정지: 그리기만 */ }
-    else if (G.hitstop > 0) G.hitstop -= dt; // 타격 정지 중에는 월드 정지
-    else update(dt);
-    render();
-    UI.updateHUD(dt);
+    try {
+      if (G.paused) { /* 일시정지: 그리기만 */ }
+      else if (G.hitstop > 0) G.hitstop -= dt; // 타격 정지 중에는 월드 정지
+      else update(dt);
+      render();
+      UI.updateHUD(dt);
+      FpsWatch.tick(dt);
+    } catch (e) { ErrNote.show(e); }
   }
-  requestAnimationFrame(frame);
 }
+
+// v1.49 버벅임 감지: 출격 중 8초 평균이 초당 24프레임 아래면 저사양 모드를 한 번 켜 줌 (설정에서 다시 켤 수 있음)
+const FpsWatch = {
+  acc: 0, n: 0, done: false,
+  tick(dt) {
+    if (this.done || !G.player || !G.player.raid || G.paused || !Settings.light) return;
+    this.acc += dt; this.n++;
+    if (this.acc < 8) return;
+    const fps = this.n / this.acc; this.acc = 0; this.n = 0;
+    if (fps >= 24) return;
+    this.done = true;
+    try { if (localStorage.getItem('seoul2049-autolow')) return; localStorage.setItem('seoul2049-autolow', '1'); } catch (e) { /* 무시 */ }
+    Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.map.clear();
+    UI.toast('화면이 버벅여서 저사양 모드를 켰다', `초당 ${Math.round(fps)}프레임 — 설정에서 조명 · 세부 묘사를 다시 켤 수 있다`);
+  },
+};
+
+// v1.49 오류 안내: 화면 위에 짧게 (게임은 계속 · 바로 저장) — 같은 오류는 한 번만
+const ErrNote = {
+  seen: new Set(), n: 0,
+  show(e) {
+    const msg = String(e && (e.message || e.reason || e)).slice(0, 160), where = e && e.stack ? String(e.stack).split('\n')[1] || '' : '';
+    if (this.seen.has(msg) || this.n >= 3) return; this.seen.add(msg); this.n++;
+    try { saveGame(); } catch (er) { /* 무시 */ }
+    let el = document.getElementById('err-note');
+    if (!el) { el = document.createElement('div'); el.id = 'err-note'; document.body.appendChild(el); }
+    el.innerHTML = `<b>문제가 생겼습니다</b> — 진행은 저장했고 게임은 계속됩니다. 계속 이상하면 새로고침하세요.<br><span class="muted">${msg.replace(/</g, '&lt;')} ${where.trim().replace(/</g, '&lt;').slice(0, 90)}</span> <button id="err-copy">내용 복사</button> <button id="err-close">닫기</button>`;
+    el.classList.remove('hidden');
+    document.getElementById('err-close').onclick = () => el.classList.add('hidden');
+    document.getElementById('err-copy').onclick = () => { try { navigator.clipboard.writeText(`${GAME_VERSION} ${msg} ${where}`); } catch (er) { /* 무시 */ } };
+    clearTimeout(this.t); this.t = setTimeout(() => el.classList.add('hidden'), 15000);
+  },
+};
+window.addEventListener('error', e => { if (e.error || e.message) ErrNote.show(e.error || e.message); });
+window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
 
 // ---------------- 타이틀 ----------------
 (function initTitle() {
@@ -1297,6 +1348,14 @@ function frame(now) {
   if (document.fonts) for (const f of ['12px BlackHan', '12px Typer', '12px Pen']) document.fonts.load(f); // v1.39 캔버스 글씨용 글꼴 미리 읽기
   Sprites.loadAll();
   document.getElementById('version-label').textContent = GAME_VERSION;
+  { // v1.49 첫 로딩: 그림을 다 받을 때까지 진행 막대 (느린 회선에서 빈 화면처럼 보이던 것)
+    const bar = document.createElement('div'); bar.id = 'load-bar'; bar.innerHTML = '<div class="lb-fill"></div><span>그림 불러오는 중…</span>';
+    document.querySelector('.title-main').appendChild(bar);
+    const t0 = performance.now(), tick = () => { const k = Sprites.total ? Sprites.done / Sprites.total : 0;
+      bar.firstChild.style.width = Math.round(k * 100) + '%'; bar.lastChild.textContent = `그림 불러오는 중… ${Sprites.done} / ${Sprites.total}`;
+      if (k >= 1 || performance.now() - t0 > 20000) { bar.classList.add('done'); setTimeout(() => bar.remove(), 600); } else setTimeout(tick, 120); };
+    tick();
+  }
   const btnC = document.getElementById('btn-continue');
   let save = null;
   // v1.37 슬롯 고르기: 슬롯마다 이름 · 레벨 · 장 · 플레이 시간
