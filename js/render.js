@@ -701,7 +701,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   let [anim, at] = animState(moving, p.hurtT, p.lastAtk, w && ART.weaponGroup[w.key] ? heldBody(p, w) : 'player');
   const baseKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
   // v1.7.7 무기를 든 몸 그림 (예: player_long, player_vest_pistol) 이 있으면 그걸 쓰고 무기를 따로 붙이지 않음
-  const heldKey = w && ART.weaponGroup[w.key] ? heldBody(p, w, true) : null; // v1.49.2 총마다 몸 그림 (없으면 장총 그룹)
+  const grp = w ? ART.weaponGroup[w.key] : null, heldKey = grp ? heldBody(p, w, true) : null; // v1.49.2 총마다 몸 그림 (없으면 장총 그룹)
   const bodyKey = heldKey || baseKey;
   let sxb = sx; // 몸을 그릴 x (총 반동으로 살짝 밀림)
   if (heldKey && (grp === 'long' || grp === 'pistol')) {
