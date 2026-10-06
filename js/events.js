@@ -156,6 +156,7 @@ const RaidEvents = {
       const near = Scavenge.list.filter(c => !c.looted).sort((a, b) => dist(a, p) - dist(b, p)).slice(0, 3);
       for (const c of near) c.marked = true;
       UI.toast('생존자 구조', `보답으로 근처 보급품 위치 ${near.length}곳을 알려 줬다 (미니맵 노란 점)`);
+      Settlement.rescue(); // v1.43 살아 나가면 캠프에 합류
       log('생존자: "고마워요. 이 근처에 숨겨 둔 물건이 있어요."', '#8cf');
     } else if (e.kind === 'safe') {
       drop('item', { item: randomGear(lvl, 1.5, 2, bias) }); drop('credits', { amount: lvl * 90 });

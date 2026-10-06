@@ -94,6 +94,7 @@ const Raid = {
   extract() {
     const p = G.player, r = p.raid;
     Contracts.onExtract(); // v1.34 계약 보상 (탈출 직전 판정: 호위 생존자가 곁에 있어야)
+    Settlement.onExtract(r); // v1.43 구한 사람 합류 · 캠프 사람들이 물건을 모아 둠
     const items = this.allItems().filter(it => it.raid);
     for (const it of items) delete it.raid;
     Journal.onExtract(r, r.credits); // v1.15 기록

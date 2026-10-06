@@ -180,8 +180,8 @@ const UI = {
     } else $('boss-bar').classList.add('hidden');
 
     const npc = !p.dead && nearestNpc();
-    const crate = !npc && Interiors.nearCrate(), sc = !npc && !crate && Raid.inRaid() && !G.search && Scavenge.near(), asl = !npc && !crate && !sc && Assault.available();
-    if (npc || crate || sc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : crate ? '[E] 보급 상자 열기' : sc ? Scavenge.hint(sc) : Assault.hint(asl); }
+    const gift = !npc && Settlement.near(p), crate = !npc && !gift && Interiors.nearCrate(), sc = !npc && !gift && !crate && Raid.inRaid() && !G.search && Scavenge.near(), asl = !npc && !gift && !crate && !sc && Assault.available();
+    if (npc || gift || crate || sc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : gift ? Settlement.hint() : crate ? '[E] 보급 상자 열기' : sc ? Scavenge.hint(sc) : Assault.hint(asl); }
     else $('interact-hint').classList.add('hidden');
 
     // 임무 추적 (챕터)
@@ -788,18 +788,18 @@ const UI = {
   },
 
   captainDialog(npc) {
-    const p = G.player, c = Story.chapter(p), bye = ['닫기', () => UI.close('dialog')], fac = ['캠프 시설', () => Camp.open()], comp = ['동료', () => Companion.open()]; // v1.13 · v1.41 동료
+    const p = G.player, c = Story.chapter(p), bye = ['닫기', () => UI.close('dialog')], fac = ['캠프 시설', () => Camp.open()], comp = ['동료', () => Companion.open()], ppl = ['캠프 사람들', () => Settlement.open()]; // v1.13 · v1.41 동료 · v1.43
     if (!c) {
-      UI.dialog(npc.name, '"자네 덕분에 서울에 다시 사람이 살 수 있게 됐어. 고맙네, 영웅."', [fac, comp, bye]);
+      UI.dialog(npc.name, '"자네 덕분에 서울에 다시 사람이 살 수 있게 됐어. 고맙네, 영웅."', [fac, comp, ppl, bye]);
     } else if (p.quest.active) {
       const st = c.steps[p.quest.step];
-      UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${st.text}"<br><span class="muted">끝나면 무전으로 연락하지. 캠프로 돌아올 필요 없네.</span>`, [fac, comp, bye]);
+      UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${st.text}"<br><span class="muted">끝나면 무전으로 연락하지. 캠프로 돌아올 필요 없네.</span>`, [fac, comp, ppl, bye]);
     } else if (p.level < c.minLevel) {
-      UI.dialog(npc.name, `"아직은 위험해. 좀 더 강해져서 오게."<br><span class="muted">${c.title} — Lv${c.minLevel} 이상</span>`, [fac, comp, bye]);
+      UI.dialog(npc.name, `"아직은 위험해. 좀 더 강해져서 오게."<br><span class="muted">${c.title} — Lv${c.minLevel} 이상</span>`, [fac, comp, ppl, bye]);
     } else {
       UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${c.intro}"<br><br><span class="muted">${c.steps.map((st, i) => `${i + 1}. ${Story.objective(st)}`).join('<br>')}</span>`, [
         ['수락', () => { UI.close('dialog'); Story.start(p); }],
-        fac, comp, ['나중에', () => UI.close('dialog')]]);
+        fac, comp, ppl, ['나중에', () => UI.close('dialog')]]);
     }
   },
 

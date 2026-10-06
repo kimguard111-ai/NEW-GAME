@@ -472,6 +472,7 @@ function removeItem(it) {
 function interact() {
   const npc = nearestNpc();
   if (npc) { UI.openNpc(npc); return; }
+  if (Settlement.near(G.player)) { Settlement.take(); return; } // v1.43 캠프 사람들이 모아 둔 것
   const crate = Interiors.nearCrate();
   if (crate) { Interiors.openCrate(crate); return; }
   const sc = Raid.inRaid() && Scavenge.near(); // v1.4 뒤지기 · 시체 가방
@@ -1189,6 +1190,7 @@ function update(dt) {
   Nav.update(dt);
   updateEnemies(dt);
   Companion.update(dt); // v1.41 동료
+  Settlement.update(dt); // v1.43 캠프 사람들
   Assault.update(dt);
   Bosses.updateField(dt);
   Bosses.updateLab(dt); // v1.5 연구소 키메라

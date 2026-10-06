@@ -104,8 +104,9 @@ const Contracts = {
     if (!c || !r || !r.contract) return;
     let ok = r.contract.done;
     if (c.type === 'escort') { const es = r.contract.escort; ok = es && es.state === 'follow' && !es.dead && Math.hypot(es.x - p.x, es.y - p.y) < 220; if (es && es.state === 'follow' && !ok && !es.dead) log(`${c.what}을(를) 두고 나왔다 — 계약은 그대로 남는다.`, '#aaa'); }
-    if (!ok) return;
+    if (!ok) return; if (!r.contract) return;
     p.credits += c.cr; gainExp(Math.round(PlayerStats.expNext(p.level) * c.exp));
+    if (c.type === 'escort') Settlement.rescue(c.what); // v1.43 호위한 사람은 캠프에 남음
     const g = randomGear(Math.max(c.lvl, p.level - 2), 1.0, c.rare, ZONES[MAPS[c.map].zone].gear);
     const where = addItem(g) ? '가방' : (p.stash.push(g), '창고');
     Workshop.gain(randInt(2, 4), c.type === 'escort' ? 2 : 1, '계약');

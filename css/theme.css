@@ -130,3 +130,4 @@ body.touch .roster { padding: 28px 12px 8px; } body.touch #slot-row .slot .who {
 /* v1.40.1 작은 글씨는 포스터 글꼴이 뭉개짐 → 일반 굵은 글꼴 */
 #weapon-name { font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif !important; font-weight: bold !important; font-size: 13px !important; letter-spacing: 0 !important; }
 #hud-name { font-size: 15px !important; }
+#summary-title, .title-box h1 { text-shadow: 3px 3px 0 #000 !important; } /* v1.43 남은 발광 제거 */
