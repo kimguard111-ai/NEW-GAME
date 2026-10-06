@@ -96,7 +96,11 @@ const UI = {
     }
     hb.appendChild(cons);
     const sk = document.createElement('div'); sk.className = 'hb-group skills'; sk.innerHTML = '<span class="hb-label">스킬</span>'; hb.appendChild(sk);
+    // v1.48.2 모바일: 배운 스킬은 오른쪽 아래(엄지) 둥근 버튼으로 · 하단엔 「등록」만
+    let ts = $('touch-skills'); if (IS_TOUCH && !ts) { ts = document.createElement('div'); ts.id = 'touch-skills'; $('hud').appendChild(ts); ts.addEventListener('touchstart', e => { const h = e.target.closest('[data-slot]'); if (!h) return; e.preventDefault(); if (G.running && !G.player.dead) Hotbar.use(+h.dataset.slot); }, { passive: false }); }
+    if (ts) ts.innerHTML = '';
     for (let i = 0; i < n; i++) {
+      if (IS_TOUCH) { const act = p.hotbar[i]; if (act && act.startsWith('sk')) { const si = +act.slice(2), s = SKILLS[si], d = document.createElement('div'); d.className = 'tsk'; d.dataset.slot = i; d.innerHTML = `${ICON(s.icon)}<span>${s.name}</span><div class="cd" id="cd${si}"></div>`; ts.appendChild(d); } continue; }
       const act = p.hotbar[i], d = document.createElement('div'), key = `<span class="key">${i + 1}</span>`;
       d.dataset.slot = i; d.dataset.act = act || 'empty';
       if (act && act.startsWith('sk')) {
@@ -179,7 +183,7 @@ const UI = {
     if (live) { $('combo-n').textContent = `x${G.combo}`; $('combo-bar').style.width = (100 * (1 - (G.time - G.comboT) / 3)) + '%'; $('combo').style.color = G.combo >= 25 ? '#ffa53a' : G.combo >= 10 ? '#c77dff' : '#ffd76a'; }
     const med = p.inventory.find(i => i && i.key === 'medkit');
     if ($('medcnt')) $('medcnt').textContent = med ? med.count : 0;
-    for (const slot of ['throw', 'util']) { const el = $(slot + 'cnt'); if (el) { const n = Gadgets.count(Gadgets.sel(slot)); el.textContent = n; el.parentNode.classList.toggle('empty', !n); } } // v1.14
+    for (const slot of ['throw', 'util']) { const el = $(slot + 'cnt'); if (el) { const n = Gadgets.count(Gadgets.sel(slot)); el.textContent = n; el.parentNode.classList.toggle('empty', !n); el.parentNode.classList.toggle('none', !GADGET_SLOTS[slot].some(k => Gadgets.count(k))); } } // v1.48.2 가진 게 없으면 칸을 비움 // v1.14
 
     // 보스 바
     const fb = G.fieldBoss && dist(G.fieldBoss, p) < 900 ? G.fieldBoss : G.labBoss && G.labBoss.hp > 0 && dist(G.labBoss, p) < 900 ? G.labBoss : null;

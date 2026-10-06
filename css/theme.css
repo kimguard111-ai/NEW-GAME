@@ -413,3 +413,17 @@ body.touch #quest-tracker.min { max-height: calc(1.3em * 2 + 14px) !important; }
 body.touch #quest-tracker.min::after { content: '＋'; }
 body.touch #hud-buffs { min-height: 0 !important; } body.touch #hud-buffs:empty { display: none; }
 body.touch #keyhint, body.touch #tip { top: 58px !important; }
+
+/* v1.48.2 투척물·보조: 가진 게 없으면 칸 숨김 (줍거나 사면 나타남) */
+.hb-group.cons .hot.gad.none { display: none !important; }
+/* 모바일 스킬: 오른쪽 아래 Q·R·E·슬라이딩 왼쪽에 둥근 버튼 (오른손 엄지) — 3개씩 위로 쌓고 넘치면 왼쪽 줄 */
+body.touch .hb-group.skills .hot.free, body.touch .hb-group.skills .hot[data-slot] { display: none !important; }
+body.touch .hb-group.skills { padding-top: 10px; }
+#touch-skills { display: none; }
+body.touch #touch-skills { display: flex; flex-direction: column-reverse; flex-wrap: wrap-reverse; align-content: flex-start; gap: 5px; position: absolute; right: 104px; bottom: 6px; max-height: 150px; pointer-events: auto; z-index: 12; }
+body.touch #touch-skills:empty { display: none; }
+.tsk { position: relative; width: 46px; height: 46px; border-radius: 50%; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(20,26,36,.85); border: 2px solid #5aa8ff; box-shadow: 0 0 0 1px #000, 2px 2px 0 rgba(0,0,0,.5); }
+.tsk .ico { width: 22px; height: 22px; }
+.tsk span { font-size: 7.5px; color: #cfe3ff; line-height: 1; margin-top: 1px; white-space: nowrap; max-width: 42px; overflow: hidden; }
+.tsk .cd { position: absolute; left: 0; bottom: 0; width: 100%; background: rgba(0,0,0,.65); pointer-events: none; }
