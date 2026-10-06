@@ -15,7 +15,7 @@ const FACTION = { zombie: 'infected', dog: 'infected', brute: 'infected', boss: 
 
 const Monsters = {
   // ---------------- 엘리트 ----------------
-  eliteChance(zone) { return 0.035 + Math.min(zone, 4) * 0.012; }, // 명동 약 5% ~ 여의도 약 8% (v1.7 이후 맵도 8%)
+  eliteChance(zone) { return FirstRun.rookie() ? 0 : 0.035 + Math.min(zone, 4) * 0.012; }, // v1.45 첫 출격엔 엘리트 없음 // 명동 약 5% ~ 여의도 약 8% (v1.7 이후 맵도 8%)
   rollAffix(type) {
     const keys = Object.keys(ELITE_AFFIXES).filter(k => !ELITE_AFFIXES[k].types || ELITE_AFFIXES[k].types.includes(type));
     return pick(keys);

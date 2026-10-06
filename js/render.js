@@ -1461,6 +1461,7 @@ function render() {
 
   // 목표 방향 화살표 + 거리
   const tg = !p.dead && Story.target(p);
+  if (!tg) FirstRun.drawArrow(psx, psy); // v1.45 첫 캠프: 윤씨 · 첫 출격: 가까운 탈출 지점
   if (tg && dist(p, tg) > 260) {
     const dx = Iso.sx(tg.x, tg.y) - psx, dy = Iso.sy(tg.x, tg.y) - (psy - 6), l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l;
     const ax = psx + ux * 54, ay = psy - 6 + uy * 40, bob = Math.sin(G.time * 5) * 3;

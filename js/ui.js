@@ -216,6 +216,7 @@ const UI = {
       if (p.level < itemReqLevel(it)) mark = '<span class="mark lvl">Lv' + itemReqLevel(it) + '</span>';
       else if (isUpgrade(p, it)) mark = '<span class="mark up">▲</span>';
       if (it.isNew) mark += '<span class="mark new">N</span>';
+      if (it.raid) mark += '<span class="mark raid">미확정</span>'; // v1.45 탈출해야 내 것
     }
     const nc = it.unique ? ' style="color:#ff5aa0"' : it.set ? ` style="color:${SETS[it.set].color}"` : ''; // v1.12 고유 · 세트
     if (it.locked) mark += `<span class="mark lock">${ICON('lock')}</span>`; // v1.15

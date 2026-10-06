@@ -28,7 +28,7 @@ const Raid = {
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨 — 출격 지도', h, btns);
     Contracts.bind($('dialog-text'), () => this.openMap());
-    $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); this.deploy(r.dataset.map); }; }); // v1.22 맵 이름을 눌러 바로 출격
+    $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격
   },
 
   deploy(id) {
@@ -45,6 +45,7 @@ const Raid = {
     G.exits = pts.filter(q => q !== start);
     p.x = start.x; p.y = start.y; p.hp = PlayerStats.maxHp(p); p.stam = 100;
     p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0 };
+    if (FirstRun.rookie()) G.fbT = 1e9; // v1.45 첫 출격엔 필드 보스 없음
     G.extractT = 0; G.search = null;
     Scavenge.generate(); // v1.4 뒤질 곳
     G.grave = p.graves[id] || null; // v1.4 지난번 시체 가방

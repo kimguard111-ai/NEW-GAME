@@ -137,6 +137,7 @@ function startGame(save, name) {
   } else {
     G.player = newPlayer(name || '생존자');
     G.player.hp = PlayerStats.maxHp(G.player);
+    G.player.tips = ['deploy', 'extract']; G.player.hints = []; // v1.45 같은 말은 키 그림 · 첫 출격 카드가 대신함
     log('대붕괴 20년 후, 서울. 시청역 생존자 캠프에서 눈을 떴다.', '#e0b23a');
     G.autoStory = true; // v0.16: 1장을 바로 시작 (캠프 대화 없이)
     G.welcome = true; // v1.15 첫 플레이 안내
@@ -155,6 +156,7 @@ function startGame(save, name) {
       const graves = Object.values(P.graves || {}).flatMap(g => g.items || []);
       for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves]) if (it && it.kind === 'weapon' && !it.v127) { if (R[it.key]) it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v127 = true; } }
     P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
+    if (!P.hints) P.hints = P.level > 2 || (P.rec && P.rec.extracts) || P.deaths ? HINTS.map(h => h.id).concat('rules') : []; // v1.45 키 그림 안내 (이미 해 본 사람은 건너뜀)
   Bounty.refresh(); // v0.14 일일 의뢰
   Weekly.refresh(); // v1.15 주간 도전
   Journal.ensure(P);
@@ -189,9 +191,9 @@ function startGame(save, name) {
   document.getElementById('hud').classList.remove('hidden');
   UI.buildHotbar();
   UI.refreshAll();
-  if (G.welcome) { G.welcome = false; setTimeout(() => UI.welcome(), 600); }
+  G.welcome = false; // v1.45 첫 안내 창 대신 그 순간의 키 그림 (FirstRun)
   if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았습니다 — 암시장 상인 박씨 「스킬 교범」`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }
-  if (G.autoStory) { G.autoStory = false; Story.start(G.player); log('조작: WASD 이동 · 마우스 조준·사격 · Space 슬라이딩(무적 · 재사용 5초) · R 재장전 · 1~8 벨트 칸 (B: 칸 등록)', '#8cf'); }
+  if (G.autoStory) { G.autoStory = false; Story.start(G.player); }
   saveGame();
 }
 
@@ -1140,6 +1142,7 @@ function update(dt) {
   const p = G.player;
   p.playTime += dt;
   Tips.update(dt);
+  FirstRun.update(dt); // v1.45
   if (!p.dead) {
     const mv = moveInput();
     if (p.rollT > 0) { // 슬라이딩 중: 빠르게 미끄러지다 감속

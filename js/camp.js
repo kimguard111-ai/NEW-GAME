@@ -26,7 +26,7 @@ const Camp = {
   enhanceBonus() { return this.lv('bench') >= 3 ? 0.05 : 0; },
   medkits() { return this.lv('med'); },
   raidHpMul() { return this.lv('med') >= 3 && G.player.raid ? 1.05 : 1; },
-  alertDelay() { return this.lv('radio') >= 2 ? 60 : 0; },
+  alertDelay() { return (this.lv('radio') >= 2 ? 60 : 0) + (FirstRun.rookie() ? 120 : 0); }, // v1.45 첫 출격은 경보 2분 늦게
 
   // 무전실: 맵마다 다음 출격의 사건을 미리 정해 둠 (출격하면 그대로 나옴)
   plan: {},
