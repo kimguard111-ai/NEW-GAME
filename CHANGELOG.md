@@ -106,7 +106,12 @@
 - v1.49.8: `a792823`
 - v1.49.9: `3cd33bd`
 - v1.49.10: `78994a9`
-- v1.49.11: 브랜치 최신
+- v1.49.11: `ec5eea3`
+- v1.49.12: 브랜치 최신
+
+## v1.49.12 — 군용 강화복 산탄총 몸 · 총기 부품 아이콘 12종
+- 군용 강화복 + 산탄총 → `player_military_shotgun` (대기 4 · 걷기 8 · 쏘기 4 · 맞음 2 · 쓰러짐 5) — 산탄총 몸 5종 완성 · 쏘기 1번 칸 총구 불꽃과 튀는 탄피는 지움
+- 총기 부품 아이콘 12종 등록 (`att_reddot` · `att_scope2` · `att_scope4` · `att_suppressor` · `att_comp` · `att_choke` · `att_vgrip` · `att_agrip` · `att_laser` · `att_extmag` · `att_dualmag` · `att_drum`) — 부품 시스템(v1.50)에서 씀
 
 ## v1.49.11 — 들어간 건물 실내 (단면 보기)
 | | 전 | 후 |
