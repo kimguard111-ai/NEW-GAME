@@ -137,7 +137,7 @@ const SFX = {
       case 'ehit': this.noise(0.1, 300, 1.0, 0.45 * v, 'lowpass'); this.tone(90, 0.1, 0.3 * v, 'sine', 0, 0.6); break; // 플레이어가 맞음
       case 'warn': this.tone(520, 0.12, 0.12 * v, 'square'); this.tone(520, 0.12, 0.12 * v, 'square', 0.16); break;
       // 플레이어
-      case 'dodge': this.noise(0.38, 700, 0.9, 0.3 * v, 'bandpass', 0.5); this.noise(0.3, 2400, 1.2, 0.08 * v, 'highpass'); break; // v1.33 슬라이딩: 바닥 긁는 소리
+      case 'dodge': this.noise(0.38, 700, 0.9, 0.3 * v, 'bandpass', 0.5); this.noise(0.3, 2400, 1.2, 0.08 * v, 'highpass'); break; // v1.33 회피: 바닥 긁는 소리
       case 'coin': this.tone(1320, 0.06, 0.12, 'square'); this.tone(1760, 0.08, 0.1, 'square', 0.05); break;
       case 'ammo': this.click(0.12, 0, 2600); this.click(0.1, 0.05, 3400); break;
       case 'item': { const r = k; // 등급별 차임

@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.50.4';
+const GAME_VERSION = 'v1.50.5';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -80,7 +80,7 @@ const AFFIXES = {
   medHeal: { name: '구급상자 회복', slot: 'belt', min: 0.10, max: 0.30, pct: true },
   gadDmg:  { name: '투척물 피해',   slot: 'belt', min: 0.10, max: 0.35, pct: true },
   cdr:     { name: '스킬 재사용 단축', slot: 'belt', min: 0.04, max: 0.10, pct: true },
-  rollStam:{ name: '슬라이딩 재사용 감소', slot: 'belt', min: 0.08, max: 0.20, pct: true },
+  rollStam:{ name: '회피 재사용 감소', slot: 'belt', min: 0.08, max: 0.20, pct: true },
   gadSave: { name: '소모품 절약 확률', slot: 'belt', min: 0.08, max: 0.20, pct: true },
 };
 
@@ -95,7 +95,7 @@ const LEGENDARY = {
   // v1.12 방어구 전설 (slot: armor)
   aegis:      { name: '반응 장갑', desc: '맞으면 20% 확률로 3초 방어막 (받는 피해 -40%, 재발동 10초)', slot: 'armor' },
   thorns:     { name: '가시 갑옷', desc: '맞으면 가까운 적 모두에게 받은 피해의 80% 반사', slot: 'armor' },
-  afterimage: { name: '잔상', desc: '슬라이딩이 끝난 자리에 충격파 (레벨×14 피해 · 경직)', slot: 'armor' },
+  afterimage: { name: '잔상', desc: '회피가 끝난 자리에 충격파 (레벨×14 피해 · 경직)', slot: 'armor' },
   survivor:   { name: '생존 본능', desc: '체력이 30% 아래로 떨어지면 아드레날린 자동 발동 (재발동 45초)', slot: 'armor' },
   // v1.12 헬멧 전설 (slot: helmet)
   nightVision:{ name: '야간 투시', desc: '어둠 -60% · 은신한 적이 항상 보임', slot: 'helmet' },
@@ -127,7 +127,7 @@ const UNIQUES = {
   hawk:    { from: 'hawk',    boss: '매',       key: 'sniper',  name: '「매」의 눈 저격소총', chance: 0.10,
              desc: '관통 +2 · 맞은 적 5초 동안 받는 피해 +25% (표식)' },
   shade:   { from: 'shade',   boss: '그림자',   key: 'exo',     name: '「그림자」 은신 외피', chance: 0.10,
-             desc: '슬라이딩 후 1.5초 동안 이동 속도 +40% · 받는 피해 -30%' },
+             desc: '회피 후 1.5초 동안 이동 속도 +40% · 받는 피해 -30%' },
   chimera: { from: 'chimera', boss: '키메라',   key: 'military', name: '「키메라」 재생 조직 갑옷', chance: 0.15,
              desc: '체력 재생 +3/초 · 체력 50% 이하에서 재생 3배' },
   titan:   { from: 'titan',   boss: '타이탄',   key: 'lmg',     name: '「타이탄」 방사능 심장포', chance: 0.15,
@@ -271,15 +271,15 @@ const SKILLS = [
 // v1.11 특성: 이 레벨이 되면 3개 중 1개 선택 (총 6개). 의무병의 능력치 초기화 때 함께 초기화
 const PERK_TIERS = [
   { lvl: 5, perks: [
-    { id: 'rollStrike', name: '슬라이딩 공격', desc: '슬라이딩이 끝나고 1.5초 동안 주는 피해 +30%' },
+    { id: 'rollStrike', name: '회피 공격', desc: '회피가 끝나고 1.5초 동안 주는 피해 +30%' },
     { id: 'scavenger', name: '청소부', desc: '뒤지기 속도 +40% · 뒤질 곳의 크레딧 +50%' },
     { id: 'thickSkin', name: '강인함', desc: '최대 체력 +12%' } ] },
   { lvl: 10, perks: [
     { id: 'lastRounds', name: '마지막 탄', desc: '탄창이 25% 이하일 때 치명타 확률 +25%' },
     { id: 'brawler', name: '싸움꾼', desc: '근접 공격으로 처치하면 최대 체력 4% 회복' },
-    { id: 'runner', name: '질주', desc: '이동 속도 +8% · 슬라이딩 재사용 -15%' } ] },
+    { id: 'runner', name: '질주', desc: '이동 속도 +8% · 회피 재사용 -15%' } ] },
   { lvl: 15, perks: [
-    { id: 'executioner', name: '처형 일격', desc: '근접 3타 마무리 · 슬라이딩 베기 피해 +40%' },
+    { id: 'executioner', name: '처형 일격', desc: '근접 3타 마무리 · 회피 베기 피해 +40%' },
     { id: 'steadyAim', name: '침착함', desc: '2초 동안 맞지 않으면 총기 피해 +15%' },
     { id: 'fieldMedic', name: '응급 요원', desc: '구급상자 회복량 +50% · 응급 처치 재사용 -30%' } ] },
   { lvl: 20, perks: [
@@ -292,7 +292,7 @@ const PERK_TIERS = [
     { id: 'bulletStorm', name: '탄막', desc: '탄창 용량 +30% · 재장전 속도 +20%' } ] },
   { lvl: 30, perks: [
     { id: 'apex', name: '정점 포식자', desc: '엘리트·네임드·보스·둥지에게 주는 피해 +20%' },
-    { id: 'ghost', name: '그림자 걸음', desc: '슬라이딩 재사용 -40% · 슬라이딩 후 1초 동안 받는 피해 -50%' },
+    { id: 'ghost', name: '그림자 걸음', desc: '회피 재사용 -40% · 회피 후 1초 동안 받는 피해 -50%' },
     { id: 'warlord', name: '전쟁군주', desc: '모든 스킬 재사용 대기 -25%' } ] },
 ];
 
@@ -314,14 +314,14 @@ const PERK_BRANCH = { rollStrike: 'atk', scavenger: 'tac', thickSkin: 'sur', las
   bulletStorm: 'atk', treasure: 'tac', secondWind: 'sur', apex: 'atk', warlord: 'tac', ghost: 'sur' };
 const PASSIVE_BRANCHES = {
   atk: { name: '공격', color: '#ff8a6a', bonus: '모든 피해 +8%' },
-  tac: { name: '전술', color: '#6ab4ff', bonus: '스킬 재사용 대기 -10% · 슬라이딩 재사용 -20%' },
+  tac: { name: '전술', color: '#6ab4ff', bonus: '스킬 재사용 대기 -10% · 회피 재사용 -20%' },
   sur: { name: '생존', color: '#6fdc6f', bonus: '최대 체력 +10%' },
 };
 const PASSIVES = {
   atk: [ { id: 'a1', name: '근접 단련', desc: '근접 피해 +6%', lvl: 7, price: 1500 }, { id: 'a2', name: '사격 단련', desc: '총기 피해 +6%', lvl: 12, price: 3000 },
          { id: 'a3', name: '급소 노리기', desc: '치명타 확률 +3%', lvl: 17, price: 5000 }, { id: 'a4', name: '치명상', desc: '치명타 피해 +15%', lvl: 22, price: 8000 },
          { id: 'a5', name: '살육', desc: '모든 피해 +5%', lvl: 27, price: 12000 } ],
-  tac: [ { id: 't1', name: '빠른 손', desc: '재장전 속도 +10%', lvl: 7, price: 1500 }, { id: 't2', name: '호흡 조절', desc: '슬라이딩 재사용 -10%', lvl: 12, price: 3000 },
+  tac: [ { id: 't1', name: '빠른 손', desc: '재장전 속도 +10%', lvl: 7, price: 1500 }, { id: 't2', name: '호흡 조절', desc: '회피 재사용 -10%', lvl: 12, price: 3000 },
          { id: 't3', name: '전술 훈련', desc: '스킬 재사용 대기 -6%', lvl: 17, price: 5000 }, { id: 't4', name: '경량 장비', desc: '이동 속도 +4%', lvl: 22, price: 8000 },
          { id: 't5', name: '현장 감각', desc: '뒤지기 속도 +25% · 경험치 +5%', lvl: 27, price: 12000 } ],
   sur: [ { id: 's1', name: '강골', desc: '최대 체력 +5%', lvl: 7, price: 1500 }, { id: 's2', name: '보호대', desc: '방어력 +8%', lvl: 12, price: 3000 },

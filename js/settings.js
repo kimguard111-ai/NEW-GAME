@@ -3,7 +3,7 @@ const Settings = {
   light: true,   // 조명 효과 (끄면 단순 어둠 — 가벼움)
   shake: true,   // 화면 흔들림
   camLead: true, // v1.28 조준 방향으로 시야 내밀기
-  rmbAim: true,  // v1.49.9 PC 오른쪽 클릭 = 조준 (끄면 예전처럼 슬라이딩)
+  rmbAim: true,  // v1.49.9 PC 오른쪽 클릭 = 조준 (끄면 예전처럼 회피)
   dmgNum: true,  // 피해 숫자
   detail: true,  // v1.11 세부 묘사 (옥상 난간·물탱크 · 1층 셔터 · 도로 마모 · 차 디테일)
   tips: true,    // 도움말 팁 (v1.0)
@@ -23,7 +23,7 @@ const Settings = {
 };
 // v1.37 키 바꾸기: 행동 → 키 (소문자 e.key). 벨트 1~8 · ESC 는 고정
 const KEY_DEFAULTS = { up: 'w', left: 'a', down: 's', right: 'd', dodge: ' ', reload: 'r', swap: 'q', interact: 'e', inventory: 'i', stats: 'c', skills: 'k', quest: 'j', settings: 'o', belt: 'b', compCmd: 'f', useMed: 'x' };
-const KEY_NAMES = { up: '위로 이동', left: '왼쪽 이동', down: '아래로 이동', right: '오른쪽 이동', dodge: '슬라이딩', reload: '재장전', swap: '무기 교체', interact: '상호작용', inventory: '가방', stats: '능력치', skills: '스킬', quest: '미션', settings: '설정', belt: '벨트(소모품) 칸 등록', compCmd: '동료 명령', useMed: '구급상자 (바로)' };
+const KEY_NAMES = { up: '위로 이동', left: '왼쪽 이동', down: '아래로 이동', right: '오른쪽 이동', dodge: '회피', reload: '재장전', swap: '무기 교체', interact: '상호작용', inventory: '가방', stats: '능력치', skills: '스킬', quest: '미션', settings: '설정', belt: '벨트(소모품) 칸 등록', compCmd: '동료 명령', useMed: '구급상자 (바로)' };
 function keyOf(act) { return (Settings.keys && Settings.keys[act]) || KEY_DEFAULTS[act]; }
 function keyLabel(k) { return k === ' ' ? 'Space' : k.startsWith('arrow') ? ({ arrowup: '↑', arrowdown: '↓', arrowleft: '←', arrowright: '→' })[k] : k.length === 1 ? k.toUpperCase() : k; }
 Settings.load();

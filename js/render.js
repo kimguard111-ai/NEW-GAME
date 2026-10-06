@@ -694,13 +694,9 @@ function nameTag(sx, y, text, color, font = '11px sans-serif', icon = null) {
 }
 
 function drawPlayer(p) {
-  if (p.rollT > 0) { // v1.33 슬라이딩: 발부터 미끄러지며 뒤로 눕는 자세 (그림 기울이기) + 바닥 긁힌 자국 (v1.40 푸른빛 없앰)
-    const sx = Iso.sx(p.x, p.y), sy = Iso.sy(p.x, p.y), d = Iso.dir(p.rollA), sg = d.x >= 0 ? 1 : -1, k = p.rollT / ROLL.dur;
-    const env = k > 0.82 ? (1 - k) / 0.18 : k < 0.2 ? k / 0.2 : 1; // 0.08초 만에 눕고 → 끝에서 일어남
-    ctx.strokeStyle = 'rgba(40,36,30,0.45)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx - d.x * 34 * (1 - k * 0.5), sy - d.y * 34 * (1 - k * 0.5)); ctx.stroke(); ctx.lineWidth = 1;
-    ctx.save(); ctx.translate(sx + d.x * 8 * env, sy + 2 * env); ctx.rotate(-sg * 1.05 * env); ctx.scale(1, 1 - 0.12 * env); ctx.translate(-sx, -sy);
-    try { drawPlayerBody(p); } finally { ctx.restore(); }
-    return;
+  if (p.rollT > 0) { // v1.50.5 회피: 처음 버전처럼 잔상 그림자 + 반투명 (무적 표시) — v1.33 슬라이딩(그림을 눕힘)은 어색해서 되돌림
+    ctx.globalAlpha = 0.25; drawShadow(Iso.sx(p.x - Math.cos(p.rollA) * 30, p.y - Math.sin(p.rollA) * 30), Iso.sy(p.x - Math.cos(p.rollA) * 30, p.y - Math.sin(p.rollA) * 30), p.r * 1.2);
+    ctx.globalAlpha = 0.55;
   }
   drawPlayerBody(p);
   ctx.globalAlpha = 1;
@@ -733,8 +729,8 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   let [anim, at] = animState(moving, p.hurtT, p.lastAtk, w && ART.weaponGroup[w.key] ? heldBody(p, w) : 'player');
   const baseKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
   // v1.7.7 무기를 든 몸 그림 (예: player_long, player_vest_pistol) 이 있으면 그걸 쓰고 무기를 따로 붙이지 않음
-  const grp = w ? ART.weaponGroup[w.key] : null, backKey = baseKey + '_back', useBack = !!(grp && grp !== 'blade' && grp !== 'heavy' && Sprites.get(backKey) && upAim(p));
-  p.backBody = useBack; const heldKey = grp && !useBack ? heldBody(p, w, true) : null; // v1.49.2 총마다 몸 그림 (없으면 장총 그룹) · v1.50.2 등 모습
+  const grp = w ? ART.weaponGroup[w.key] : null, backKey = baseKey + '_back', useBack = !ui && !!(grp && grp !== 'blade' && grp !== 'heavy' && Sprites.get(backKey) && upAim(p)); // v1.50.5 초상화(ui)는 조준 상태를 건드리지 않음 — 0.4초마다 오른쪽 보는 초상화가 상태를 지워 깜빡이던 것
+  if (!ui) p.backBody = useBack; const heldKey = grp && !useBack ? heldBody(p, w, true) : null; // v1.49.2 총마다 몸 그림 (없으면 장총 그룹) · v1.50.2 등 모습
   const bodyKey = useBack ? backKey : heldKey || baseKey;
   let sxb = sx; // 몸을 그릴 x (총 반동으로 살짝 밀림)
   if (heldKey && (grp === 'long' || grp === 'pistol')) {

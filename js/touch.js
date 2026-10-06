@@ -30,8 +30,8 @@ const Touch = {
     const zoom = document.createElement('div'); zoom.id = 'mm-zoom'; document.getElementById('mm-wrap').appendChild(zoom); // v1.45.1 확대·축소는 미니맵 아래 모서리로
     btn('－', () => setZoom(ZOOM - 0.1), 'small', zoom);
     btn('＋', () => setZoom(ZOOM + 0.1), 'small', zoom);
-    // v1.50 오른손: 큰 슬라이딩 + 스킬 둥근 버튼(#touch-skills) · Q·R·E 는 작게 오른쪽 가장자리 (무기 창 아래)
-    btn(ICON('roll'), () => dodge(), 'big roll'); // v0.16 슬라이딩
+    // v1.50 오른손: 큰 회피 + 스킬 둥근 버튼(#touch-skills) · Q·R·E 는 작게 오른쪽 가장자리 (무기 창 아래)
+    btn(ICON('roll'), () => dodge(), 'big roll'); // v0.16 회피
     document.getElementById('hud').appendChild(bar);
     const side = document.createElement('div'); side.id = 'touch-side';
     btn('E', () => interact(), 'e', side); btn('Q', () => swapWeapon(), '', side); btn('R', () => startReload(), '', side);

@@ -61,7 +61,7 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
-canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; else if (e.button === 2) { if (Settings.rmbAim) input.aim = true; else if (G.running && !G.paused && !G.player.dead) dodge(); } }); // v1.49.9 오른쪽 클릭 = 조준 (설정에서 끄면 v1.48 슬라이딩)
+canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; else if (e.button === 2) { if (Settings.rmbAim) input.aim = true; else if (G.running && !G.paused && !G.player.dead) dodge(); } }); // v1.49.9 오른쪽 클릭 = 조준 (설정에서 끄면 v1.48 회피)
 window.addEventListener('mouseup', e => { if (e.button === 0) input.down = false; else if (e.button === 2) input.aim = false; });
 window.addEventListener('blur', () => { input.keys = {}; input.down = false; input.aim = false; });
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.running && !G.paused && !G.player.dead) Pause.toggle(); }); // 탭을 떠나면 자동 일시정지
@@ -227,9 +227,9 @@ function startGame(save, name) {
 }
 
 // ---------------- 플레이어 행동 ----------------
-// 슬라이딩 (v1.33, 예전 슬라이딩): 0.42초 무적, 빠르게 미끄러지다 감속. 이동 중이면 그 방향, 아니면 조준 방향
+// 회피 (v1.33, 예전 회피): 0.42초 무적, 빠르게 미끄러지다 감속. 이동 중이면 그 방향, 아니면 조준 방향
 // 재사용 5초 — 위급할 때만 (예전: 스태미나 50 · 연속 2번). 기력 절약 효과들은 재사용 감소로 바뀜
-const ROLL = { dur: 0.42, speed: 400, cd: 5, minCd: 2, regen: 40 };
+const ROLL = { dur: 0.3, speed: 470, /* v1.50.5 처음 버전 회피처럼 짧고 빠르게 (0.42·400 → 0.3·470) */ cd: 5, minCd: 2, regen: 40 };
 function rollCdMax(p) { return Math.max(ROLL.minCd, ROLL.cd * (perk('ghost') ? 0.6 : 1) * (branchOn('tac') ? 0.8 : 1) * (perk('runner') ? 0.85 : 1) * (pas('t2') ? 0.9 : 1) * (1 - gearBonus(p, 'rollStam'))); }
 // v1.8.1 총구 위치: 총을 든 몸 그림이면 그림 속 총구(옆으로 · 어깨 높이)에서 쏘고, 조준점(커서)을 향해 날아감
 // 총알은 높이 22에서 그려지므로, 화면상 총구 위치에 맞는 바닥 좌표를 역산
@@ -251,7 +251,7 @@ function gunMuzzle(p, w) {
 function dodge() {
   const p = G.player;
   if (p.dead || p.rollT > 0) return;
-  if ((p.rollCd || 0) > 0) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, `슬라이딩 ${p.rollCd.toFixed(1)}초`, '#7ab8ff', 12); } return; }
+  if ((p.rollCd || 0) > 0) { if (G.time - (p.stamWarn || 0) > 0.6) { p.stamWarn = G.time; floatText(p.x, p.y - 30, `회피 ${p.rollCd.toFixed(1)}초`, '#7ab8ff', 12); } return; }
   let a = p.aim;
   const m = moveInput();
   if (m) a = Math.atan2(m.wy, m.wx);
@@ -331,7 +331,7 @@ function playerAttack() {
   const critMul = PlayerStats.critMul(p, w); let cc = PlayerStats.crit(p, w);
   if (b.melee) {
     // v1.9 근접 3타 콤보: 1·2타는 빠르게, 3타는 무기별 마무리 (쇠파이프 강타 · 도끼 회전 베기 · 칼 찌르기)
-    // 슬라이딩 직후 0.35초 안의 공격은 바로 마무리 일격 (슬라이딩 베기)
+    // 회피 직후 0.35초 안의 공격은 바로 마무리 일격 (회피 베기)
     const rolled = G.time - ((p.lastRoll || -9) + ROLL.dur) < 0.35 && (p.lastRoll || -9) > (p.rollAtk || -9);
     p.mStep = rolled ? 2 : G.time - (p.mLast || -9) < b.rate * 1.6 + 0.35 ? ((p.mStep || 0) + 1) % 3 : 0;
     p.mLast = G.time;
@@ -342,7 +342,7 @@ function playerAttack() {
     p.swingT = p.swingMax = fin ? 0.26 : 0.18; p.swingArc = arc; p.swingRange = range; p.swingFin = fin ? w.key : null;
     p.swingDir = p.mStep === 1 ? -1 : 1; // 2타는 반대 방향으로
     World.move(p, Math.cos(p.aim) * M.lunge * (rolled ? 1.5 : 1), Math.sin(p.aim) * M.lunge * (rolled ? 1.5 : 1)); // 휘두르며 전진
-    if (fin) { SFX.play('heavy'); if (rolled) floatText(p.x, p.y - 34, '슬라이딩 베기!', '#ffd27a', 13); }
+    if (fin) { SFX.play('heavy'); if (rolled) floatText(p.x, p.y - 34, '회피 베기!', '#ffd27a', 13); }
     const dmg = weaponDmg(w) * playerDamageMul(true) * M.dmg * (fin && perk('executioner') ? 1.4 : 1) * (fin && w.unique === 'goliath' ? 1.5 : 1) * (p.fangBuff ? 2 : 1);
     if (p.fangBuff) { p.fangBuff = false; floatText(p.x, p.y - 36, '굶주린 송곳니!', '#ff6a5a', 13); } // v1.12 붉은 이빨
     let hits = 0, anyCrit = false;
@@ -557,7 +557,7 @@ function damagePlayer(dmg, srcX, srcY) {
   const p = G.player;
   if (p.dead || World.inSafe(p.x, p.y)) return;
   if (p.invT > 0) return; // v1.11 두 번째 숨 무적
-  if (p.rollT > 0) { // 슬라이딩 무적
+  if (p.rollT > 0) { // 회피 무적
     if (G.time - (p.dodgeTxt || 0) > 0.4) { p.dodgeTxt = G.time; floatText(p.x, p.y - 30, '회피!', '#9fe0ff', 14); }
     return;
   }
@@ -897,7 +897,7 @@ function updateEnemies(dt) {
 
     if (e.state === 'chase') {
       const a = angleTo(e, p);
-      if (e.def.shield && !e.bossName) { const df = angDiff(a, e.face || 0), tr = 2.2 * dt; e.face = (e.face || 0) + clamp(df, -tr, tr); } // v1.6 방패병은 천천히 돌아섬 → 슬라이딩으로 뒤를 잡을 수 있음
+      if (e.def.shield && !e.bossName) { const df = angDiff(a, e.face || 0), tr = 2.2 * dt; e.face = (e.face || 0) + clamp(df, -tr, tr); } // v1.6 방패병은 천천히 돌아섬 → 회피로 뒤를 잡을 수 있음
       else e.face = a;
       let moveA = a, spd = e.speed * Monsters.buff(e) * ((e.slowT || 0) > G.time ? 0.65 : 1); // v1.12 독사 둔화
       const hold = !e.def.boss && Monsters.attack(e, dt, d, a); // v0.16 예고 공격 (예고·도약 중엔 정지)
@@ -1191,7 +1191,7 @@ function update(dt) {
   FirstRun.update(dt); // v1.45
   if (!p.dead) {
     const mv = moveInput();
-    if (p.rollT > 0) { // 슬라이딩 중: 빠르게 미끄러지다 감속
+    if (p.rollT > 0) { // 회피 중: 빠르게 미끄러지다 감속
       const sp = ROLL.speed * (0.3 + 0.7 * p.rollT / ROLL.dur);
       p.rollT -= dt;
       World.move(p, Math.cos(p.rollA) * sp * dt, Math.sin(p.rollA) * sp * dt);

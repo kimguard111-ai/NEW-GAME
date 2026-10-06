@@ -14,7 +14,7 @@ const HINTS = [
   { id: 'reload', when: p => { const w = curWeapon(); return p.raid && w && !WEAPONS[w.key].melee && !WEAPONS[w.key].infinite && w.loaded <= magSize(w) * 0.3 && !(p.reloadT > 0); }, keys: ['reload'], text: '탄창이 비기 전에 재장전', touch: '탄창 그림을 눌러 재장전',
     done: p => p.reloadT > 0 },
   { id: 'slide', when: p => p.raid && (G.enemies.some(e => e.hp > 0 && dist(e, p) < 400 && (e.windT > 0 || e.pounceT > 0 || e.aimT > 0)) || G.strikes.some(s => Math.hypot(s.x - p.x, s.y - p.y) < 300)),
-    keys: ['dodge'], text: '붉은 예고가 보이면 슬라이딩 (5초에 한 번)', touch: '슬라이딩 (5초에 한 번)', done: p => G.time - (p.lastRoll || -9) < 0.5, max: 7 },
+    keys: ['dodge'], text: '붉은 예고가 보이면 회피 (5초에 한 번)', touch: '회피 (5초에 한 번)', done: p => G.time - (p.lastRoll || -9) < 0.5, max: 7 },
   { id: 'loot', when: p => p.raid && !G.search && Scavenge.near() && !Scavenge.near().hint, keys: ['interact'], text: '뒤지는 동안은 가만히', touch: 'E 버튼으로 뒤지기. 끝날 때까지 가만히',
     done: p => !!G.search },
   { id: 'heal', when: p => p.raid && p.hp < PlayerStats.maxHp(p) * 0.45 && (p.inventory.find(i => i.key === 'medkit') || {}).count > 0,

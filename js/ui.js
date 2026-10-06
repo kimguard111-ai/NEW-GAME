@@ -77,7 +77,7 @@ const UI = {
   },
 
   // ---------------- HUD ----------------
-  buildHotbar() { // v1.50 [벨트 = 소모품 칸] (하단 가운데) · [스킬 퀵바 4칸] (PC: 그 옆 · 모바일: 오른쪽 아래 둥근 버튼) · 슬라이딩
+  buildHotbar() { // v1.50 [벨트 = 소모품 칸] (하단 가운데) · [스킬 퀵바 4칸] (PC: 그 옆 · 모바일: 오른쪽 아래 둥근 버튼) · 회피
     const p = G.player, hb = $('hotbar'), n = beltSlots(p);
     hb.innerHTML = '';
     const belt = document.createElement('div'); belt.className = 'hb-group cons'; belt.innerHTML = '<span class="hb-label">벨트 · 소모품</span>'; hb.appendChild(belt);
@@ -100,9 +100,9 @@ const UI = {
         else { d.className = 'hot free'; d.title = learned ? '빈 스킬 칸. 눌러서 등록' : '스킬은 스킬 창(K)에서 배운다'; d.innerHTML = `${key}<div class="icon">＋</div>스킬`; }
         sk.appendChild(d);
       }
-      const r = document.createElement('div'); // 슬라이딩 (오른쪽 클릭으로도)
-      r.className = 'hot'; r.dataset.act = 'roll'; r.title = '슬라이딩: 무적으로 미끄러져 빠져나감 · 재사용 5초' + (Settings.rmbAim ? '' : ' · 오른쪽 클릭으로도');
-      r.innerHTML = `<span class="key">${keyOf('dodge') === ' ' ? 'SPC' : keyLabel(keyOf('dodge'))}</span><div class="icon">${ICON('roll')}</div>슬라이딩<div class="cd" id="cdroll"></div>`;
+      const r = document.createElement('div'); // 회피 (오른쪽 클릭으로도)
+      r.className = 'hot'; r.dataset.act = 'roll'; r.title = '회피: 무적으로 미끄러져 빠져나감 · 재사용 5초' + (Settings.rmbAim ? '' : ' · 오른쪽 클릭으로도');
+      r.innerHTML = `<span class="key">${keyOf('dodge') === ' ' ? 'SPC' : keyLabel(keyOf('dodge'))}</span><div class="icon">${ICON('roll')}</div>회피<div class="cd" id="cdroll"></div>`;
       hb.appendChild(r);
       hb.onclick = e => {
         const hot = e.target.closest('.hot'); if (!hot) return;
@@ -129,7 +129,7 @@ const UI = {
     const p = G.player, mh = PlayerStats.maxHp(p), next = PlayerStats.expNext(p.level);
     $('hud-name').textContent = p.name;
     $('hud-lv').textContent = `Lv.${p.level}`;
-    { const cd = Math.max(0, p.rollCd || 0), mx = p.rollCdMax || ROLL.cd; $('st-fill').style.width = (100 * (1 - cd / mx)) + '%'; $('st-text').textContent = cd > 0 ? `슬라이딩 ${cd.toFixed(1)}초` : '슬라이딩 준비'; } // v1.33 기력 막대 → 슬라이딩 재사용
+    { const cd = Math.max(0, p.rollCd || 0), mx = p.rollCdMax || ROLL.cd; $('st-fill').style.width = (100 * (1 - cd / mx)) + '%'; $('st-text').textContent = cd > 0 ? `회피 ${cd.toFixed(1)}초` : '회피 준비'; } // v1.33 기력 막대 → 회피 재사용
     if ((UI.portT = (UI.portT || 0) - 0.08) <= 0) { UI.portT = 0.4; drawPlayerInto($('portrait'), 3.6, 210, 0.75); } // 초상화 (상반신)
     $('mm-label').textContent = ZONES[G.zone].name.split(' ')[0];
     $('hp-fill').style.width = clamp(100 * p.hp / mh, 0, 100) + '%';
@@ -168,7 +168,7 @@ const UI = {
     const prog = G.search ? [G.search.t / G.search.dur, G.search.target.grave ? '시체 가방 회수 중…' : '뒤지는 중…'] : G.extractT > 0 ? [G.extractT / EXTRACT_TIME, '탈출 중…'] : null; // 진행 바
     $('extract-bar').classList.toggle('hidden', !prog);
     if (prog) { $('extract-fill').style.width = (100 * prog[0]) + '%'; $('extract-label').textContent = prog[1]; }
-    if ($('cdroll')) $('cdroll').style.height = (100 * Math.max(0, p.rollCd || 0) / (p.rollCdMax || ROLL.cd)) + '%'; // v1.33 슬라이딩 재사용
+    if ($('cdroll')) $('cdroll').style.height = (100 * Math.max(0, p.rollCd || 0) / (p.rollCdMax || ROLL.cd)) + '%'; // v1.33 회피 재사용
     const live = G.combo >= 3 && G.time - G.comboT < 3; // 연속 처치 표시
     $('combo').classList.toggle('hidden', !live);
     if (live) { $('combo-n').textContent = `x${G.combo}`; $('combo-bar').style.width = (100 * (1 - (G.time - G.comboT) / 3)) + '%'; $('combo').style.color = G.combo >= 25 ? '#ffa53a' : G.combo >= 10 ? '#c77dff' : '#ffd76a'; }
@@ -439,7 +439,7 @@ const UI = {
     $('settings-body').innerHTML = opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
       + opt('detail', '세부 묘사', '옥상·1층·도로·차 디테일 (끄면 가벼워짐)')
       + opt('shake', '화면 흔들림', '타격·폭발 시 화면 흔들림')
-      + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 슬라이딩)'))
+      + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 회피)'))
       + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
       + opt('sound', '효과음', '총소리·타격·획득 소리')
@@ -787,7 +787,7 @@ const UI = {
     const k = (pc, m) => IS_TOUCH ? m : pc;
     UI.dialog('생존 수칙', `<div class="welcome">`
       + `<b>1. 출격</b> 캠프의 <b>작전 장교 윤씨</b>에게서 맵을 골라 나간다.<br>`
-      + `<b>2. 뒤지고 싸운다</b> 노란 반짝임 = 뒤질 곳 ${k('[E]', '(E 버튼)')} · 미니맵 노란 ◆ = 사건 · 붉은 예고(「!」·원·선)가 보이면 ${k('Space', '슬라이딩 버튼')}로 슬라이딩.<br>`
+      + `<b>2. 뒤지고 싸운다</b> 노란 반짝임 = 뒤질 곳 ${k('[E]', '(E 버튼)')} · 미니맵 노란 ◆ = 사건 · 붉은 예고(「!」·원·선)가 보이면 ${k('Space', '회피 버튼')}로 회피.<br>`
       + `<b>3. 탈출해야 내 것</b> 주운 장비·크레딧은 맵 끝 초록 ◎에 5초 머물러야 확정. 죽으면 그 자리에 시체 가방.<br>`
       + `<b>4. 캠프에서 성장</b> 레벨 업 능력치·특성 ${k('(C)', '(능력치 버튼)')} · 정비공 강화 · 대장 한씨의 캠프 시설 · 창고에 귀중품 보관.<br><br>`
       + `<span class="muted">${k('WASD 이동 · 마우스 조준·클릭 공격 · R 재장전 · Q 무기 교체 · 1~8 벨트 칸 (스킬·구급상자·소모품, B로 등록) · K 스킬 · I 가방 · J 임무', '왼쪽 끌기 이동 · 오른쪽 끌기 조준·공격 · 아래 칸 스킬·소모품')}</span></div>`,
