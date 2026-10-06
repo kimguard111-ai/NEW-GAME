@@ -982,11 +982,14 @@ function drawEnemyInner(e, down, fl) {
   if ((!down && !fl) || e.nest) return drawEnemyBody(e);
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y), dir = Iso.dir(e.flinchA || 0), sg = dir.x >= 0 ? 1 : -1;
   let rot, ox = 0;
-  if (down) { const t = 1.05 - down; rot = sg * 1.35 * (t < 0.14 ? t / 0.14 : down < 0.3 ? down / 0.3 : 1); } // 쓰러짐 0.14초 → 누움 → 0.3초 동안 일어남
+  // v1.49.6 크게 맞으면: 서 있는 그림을 77° 눕히던 것(뻣뻣하게 뒤로 드러눕는 것처럼 보임) → 뒤로 크게 휘청 + 머리 위 별 (경직 1초는 그대로)
+  if (down) { const t = 1.05 - down, env = t < 0.1 ? t / 0.1 : down < 0.3 ? down / 0.3 : 1; rot = sg * 0.16 * env; ox = dir.x * 8 * env; }
   else { rot = sg * 0.22 * fl; ox = dir.x * 3 * fl; }
   ctx.save(); ctx.translate(sx + ox, sy); ctx.rotate(rot); ctx.translate(-sx, -sy);
   e._noTags = true; try { drawEnemyBody(e); } finally { ctx.restore(); e._noTags = false; }
-  if (!enemyCloaked(e)) drawEnemyTags(e, sx, sy, down ? sy - 26 : e._topY ?? sy - 44);
+  const topY = e._topY ?? sy - 44;
+  if (down && !enemyCloaked(e)) for (let i = 0; i < 3; i++) { const a = G.time * 6 + i * TAU / 3; ctx.fillStyle = '#ffe27a'; ctx.beginPath(); ctx.arc(sx + ox + Math.cos(a) * 9, topY + 2 + Math.sin(a) * 3, 1.8, 0, TAU); ctx.fill(); }
+  if (!enemyCloaked(e)) drawEnemyTags(e, sx, sy, topY);
 }
 function drawEnemyBody(e) {
   if (e.nest) return drawNest(e); // v1.10

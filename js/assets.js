@@ -273,7 +273,7 @@ const ART = {
     spitter: { file: 'spitter.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     sentry: { file: 'sentry.png', cell: 128, w: 192, anims: { idle: [0, 8], attack: [1, 8], hit: [2, 2], walk: [3, 4], death: [4, 6] } },
     shield: { file: 'shield.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 10], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
-    stalker: { file: 'stalker.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 10], attack: [2, 4], hit: [3, 2], death: [4, 5, [3, 2, 4, 1, 0]] } },
+    stalker: { file: 'stalker.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 10], attack: [2, 4], hit: [3, 2, [0, 0]], death: [4, 5, [3, 2, 4, 1, 0]] } },
     boss: { file: 'boss.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 6] } },
     deploy: { file: 'deploy.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
     medic: { file: 'medic.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
@@ -304,7 +304,7 @@ const ART = {
     player_vest_pistol: { file: 'player_vest_pistol.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 3], death: [3, 5] }, headW: 20, heads: { idle: [[3,-98],[3,-98],[3,-102],[3,-98]], walk: [[4,-94],[-2,-97],[-1,-94],[2,-94],[2,-94],[-2,-94],[2,-94],[0,-94]], attack: [[-3,-98],[16,-95],[2,-92]], death: [[12,-77],[-49,-91],[-52,-70],[-53,-59],[-43,-50]] } },
     // v1.8.0 Gemini 아트: 보스 7종 · 둔기 든 몸 3종
     argos: { file: 'argos.png', cell: 128, w: 192, anims: { idle: [0, 4], attack: [1, 4], hit: [2, 2], death: [3, 5] } },
-    babel: { file: 'babel.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 3], hit: [3, 2], death: [4, 6] } },
+    babel: { file: 'babel.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 3], hit: [3, 2, [0, 0]], death: [4, 6] } },
     goliath: { file: 'goliath.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 7], attack: [2, 4], hit: [3, 2], death: [4, 6, [0, 1, 2, 3, 4]] } },
     hawk: { file: 'hawk.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     raven: { file: 'raven.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
