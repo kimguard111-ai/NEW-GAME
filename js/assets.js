@@ -57,13 +57,13 @@ const ART = {
   // 예: lamp: { file: 'props_street.png', rect: [0, 0, 120, 300] },
   // v1.47 간판 판 (글자 없는 판 · 한글은 게임이 씀) — 가로 5 · 세로 5 · 문 위 4 · 고장 3
   signs: {
-    wide: { file: 'signs/sign_wide.png', rects: [[16,10,992,204],[22,226,980,194],[18,432,988,198],[19,642,986,185],[6,833,1012,185]],
+    wide: { file: 'signs/sign_wide.png', rects: [[8,5,496,102],[11,113,490,97],[9,216,494,99],[10,321,493,92],[3,416,506,92]],
       ink: ['#ff6a4a', '#2a2622', '#7af0ff', '#fff2e0', '#ffe27a'], glow: ['#ff5a3a', null, '#3bd6ff', null, '#ffd23b'] },
-    tall: { file: 'signs/sign_tall.png', rects: [[12,11,187,551],[218,7,183,553],[420,9,185,553],[624,7,184,555],[827,11,185,552]],
+    tall: { file: 'signs/sign_tall.png', rects: [[6,6,94,276],[109,4,92,276],[210,4,92,276],[312,4,92,278],[414,6,92,276]],
       ink: ['#ff6a4a', '#2a2622', '#7af0ff', '#8aff8a', '#2a1c10'], glow: ['#ff5a3a', null, '#3bd6ff', '#5dff6a', null] },
-    door: { file: 'signs/sign_door.png', rects: [[16,6,992,208],[18,226,988,194],[13,432,997,356],[9,800,1006,218]],
+    door: { file: 'signs/sign_door.png', rects: [[8,3,496,104],[9,113,494,97],[6,216,498,178],[4,400,503,109]],
       ink: ['#2a1c08', '#1a2a4a', '#f2ecd8', '#f2e2c0'], bh: [1, 1, 0.55, 1] }, // bh: 판 높이 비율 (3번은 아래 차양 포함)
-    broken: { file: 'signs/sign_broken.png', rects: [[9,195,325,205],[350,195,324,178],[692,167,323,223]], ink: ['#9a7a5a', '#8a9aa8', '#7a6a5a'] },
+    broken: { file: 'signs/sign_broken.png', rects: [[4,98,162,102],[175,98,162,89],[346,84,162,112]], ink: ['#9a7a5a', '#8a9aa8', '#7a6a5a'] },
   },
   props: { // v1.31 Gemini 소품 8장 (64종) — 덩어리 추출로 자른 아틀라스 · mirror = 그림이 반대 방향이라 뒤집어 씀
     // props_street.png

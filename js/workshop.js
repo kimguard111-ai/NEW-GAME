@@ -59,9 +59,9 @@ const Workshop = {
       b.classList.toggle('on', b.dataset.ws === this.mode);
       b.onclick = () => this.open(b.dataset.ws);
     }
-    $('ws-hint').innerHTML = (this.mode === 'enhance' ? '강화 1단계마다 무기 피해·방어구 방어력 +8% (최대 +10). 장비는 파괴되지 않습니다.'
-      : this.mode === 'salvage' ? '장비를 분해해 재료를 얻습니다. 장착 중인 장비는 분해할 수 없습니다.'
-      : '추가 옵션 하나를 골라 다시 굴립니다. 다른 옵션은 그대로 유지됩니다.') + `<br><b>${this.matsText()}</b>`;
+    $('ws-hint').innerHTML = (this.mode === 'enhance' ? '최씨: "한 단계마다 무기 피해·방어력이 8%씩 오른다. +10까지. 실패해도 부서지진 않아."'
+      : this.mode === 'salvage' ? '최씨: "안 쓰는 건 뜯어서 고철·부품으로. 몸에 걸친 건 못 뜯는다."'
+      : '최씨: "옵션 하나만 골라서 다시 맞춰 주지. 나머지는 그대로 둔다."') + `<br><b>${this.matsText()}</b>`;
   },
   render() {
     this.tabs();

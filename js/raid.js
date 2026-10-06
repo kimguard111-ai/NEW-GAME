@@ -176,7 +176,7 @@ const Stash = {
       for (let i = 0; i < size; i++) {
         const it = list[i], c = document.createElement('div');
         c.className = 'inv-cell' + (it ? ' bc' + (it.rarity || 0) : '');
-        if (it) { c.innerHTML = UI.itemCell(it); c.title = itemName(it); c.onclick = () => onClick(it); }
+        if (it) { c.innerHTML = UI.itemCell(it); c.onclick = () => { ItemTip.hide(); onClick(it); }; ItemTip.attach(c, it); } // v1.47 툴팁
         el.appendChild(c);
       }
     };

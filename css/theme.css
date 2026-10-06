@@ -267,3 +267,33 @@ body.touch #touch-buttons button.big { width: 44px !important; height: 44px !imp
 body.touch #touch-buttons button .ico { width: 20px; height: 20px; }
 body.touch #hud-buffs { font-size: 9.5px !important; } body.touch #hud-lv { font-size: 9px !important; }
 body.touch .bar.small { height: 9px !important; } body.touch .bar.small span { font-size: 8px !important; line-height: 9px !important; }
+
+/* ---------- v1.47 남은 창 정리 ---------- */
+/* 상점: 상점(왼쪽) · 가방(오른쪽) 나란히 — 상점이 가방 장비칸을 덮던 것 */
+body.shop-open #panel-shop.panel { left: max(8px, calc(50% - 600px)); transform: none; width: 420px; }
+body.shop-open #panel-inventory.panel { left: auto; right: max(8px, calc(50% - 600px)); transform: none; width: min(760px, calc(100vw - 452px)); }
+body.touch.shop-open #panel-shop.panel { left: 1vw !important; width: 42vw !important; top: 4px !important; max-height: calc(100vh - 8px) !important; }
+body.touch.shop-open #panel-inventory.panel { left: 44vw !important; width: 55vw !important; }
+body.touch.shop-open .doll { display: none !important; } /* 상점에선 장비칸 대신 가방·설명만 */
+body.touch.shop-open #inv-grid { grid-template-columns: repeat(5, 1fr) !important; }
+body.touch #shop-list .shop-row, body.touch #shop-list > div { font-size: 11px; }
+/* 모바일: 모든 창은 화면 높이를 거의 다 쓰고 안에서 스크롤 · 닫기·강화 버튼이 아래로 잘리던 것 */
+body.touch .panel { top: 4px !important; max-height: calc(100vh - 8px) !important; display: flex; flex-direction: column; }
+body.touch .panel:not(.hidden) > :not(.panel-head) { min-height: 0; flex-shrink: 1; }
+body.touch #panel-skills.panel > :not(.panel-head), body.touch #panel-stats.panel > :not(.panel-head), body.touch #panel-quest.panel > :not(.panel-head),
+body.touch #panel-settings.panel > :not(.panel-head), body.touch #panel-shop.panel > #shop-list,
+body.touch #panel-stash.panel > .stash-body { overflow-y: auto; }
+body.touch #panel-enhance.panel { width: 96vw !important; }
+/* 모바일 창고: 가방 | 창고 두 칸 나란히 */
+body.touch .stash-body { flex-direction: row !important; gap: 8px; padding: 0 8px 8px; }
+body.touch .stash-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 3px; }
+body.touch .stash-grid > div { height: 40px !important; min-height: 0; font-size: 8.5px; }
+body.touch .stash-grid .icon .ico, body.touch .stash-grid .ico { width: 18px; height: 18px; }
+/* 아이템 툴팁 (PC: 올리면 · 모바일: 길게 누르면) */
+#item-tip { position: fixed; z-index: 60; max-width: 300px; padding: 8px 10px; pointer-events: none; font-size: 12px; line-height: 1.5;
+  background: var(--grain), rgba(18,17,13,.97); border: 2px solid #000; box-shadow: 0 0 0 1px var(--edge), 3px 3px 0 rgba(0,0,0,.5); color: #e6dfcc; }
+#item-tip b { font-size: 13px; }
+body.touch #panel-enhance.panel:not(.hidden) { display: block !important; overflow-y: auto; } /* 작업대는 창 전체가 한 번에 스크롤 (강화 버튼까지) */
+body.touch #ws-tabs button { padding: 4px 6px !important; font-size: 12px !important; height: auto !important; line-height: 1.4; }
+body.touch #panel-shop .shop-item { font-size: 11px !important; padding: 4px 6px !important; line-height: 1.4; }
+body.touch #panel-shop .shop-hint { font-size: 11px; }

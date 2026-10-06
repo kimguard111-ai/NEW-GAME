@@ -54,9 +54,10 @@ const UI = {
     if (name === 'skills') UI.renderSkills(); // v1.26
   },
   close(name) {
+    ItemTip.hide();
     if (!$('panel-' + name).classList.contains('hidden') && name !== 'dialog') SFX.play('close'); // v1.35
     $('panel-' + name).classList.add('hidden');
-    if (name === 'shop') { UI.shopOpen = false; UI.refreshInventory(); }
+    if (name === 'shop') { UI.shopOpen = false; document.body.classList.remove('shop-open'); UI.refreshInventory(); }
   },
   toggle(name) { UI.isOpen(name) ? UI.close(name) : UI.open(name); },
   anyOpen() { return ['inventory', 'stats', 'skills', 'quest', 'shop', 'dialog', 'enhance', 'settings', 'stash'].some(n => UI.isOpen(n)); },
@@ -247,7 +248,7 @@ const UI = {
       const it = p.inventory[i];
       const c = document.createElement('div');
       c.className = 'inv-cell' + (it ? ' bc' + (it.rarity || 0) : '') + (it && UI.selected === it ? ' sel' : '');
-      if (it) { c.innerHTML = UI.itemCell(it); c.onclick = () => { UI.selected = it; it.isNew = false; UI.refreshInventory(); }; }
+      if (it) { c.innerHTML = UI.itemCell(it); c.onclick = () => { ItemTip.hide(); UI.selected = it; it.isNew = false; UI.refreshInventory(); }; if (!IS_TOUCH) ItemTip.attach(c, it); } // v1.47 PC 툴팁
       grid.appendChild(c);
     }
     if (UI.selected && !p.inventory.includes(UI.selected) && !Object.values(p.equip).includes(UI.selected)) UI.selected = null;
@@ -515,7 +516,7 @@ const UI = {
         }
       });
     });
-    if (Story.done(p)) h += '<hr style="border-color:#333">모든 장을 완료했습니다. 당신은 서울의 영웅입니다!<br><span class="muted">타이탄은 4분마다 부활합니다.</span>';
+    if (Story.done(p)) h += '<hr style="border-color:#333">한씨: "서울에 다시 사람이 살 수 있게 됐네. 자네 덕이야."<br><span class="muted">타이탄은 4분마다 다시 나타난다.</span>';
     h += Bounty.panelHtml() + Weekly.panelHtml() + Assault.panelHtml(p);
     $('quest-body').innerHTML = h; Journal.bind($('quest-body'));
   },
@@ -820,7 +821,7 @@ const UI = {
       for (let t = 1; t <= 2; t++) if (BELTS[t].lvl <= p.level + 2) stock.push(makeBelt(t)); // v1.24 벨트 (특수부대 장구류는 뒤지기에서만)
       G.shopStock = stock;
     }
-    UI.shopOpen = true;
+    UI.shopOpen = true; document.body.classList.add('shop-open'); // v1.47 상점·가방 나란히
     $('btn-sell-junk').onclick = () => UI.sellJunk();
     UI.renderShop();
     UI.open('shop'); UI.open('inventory');
@@ -875,6 +876,27 @@ const UI = {
 };
 
 // v1.24 벨트 칸 (핫바). p.hotbar[i] = 'sk0'~'sk3' | 'med' | 'throw' | 'util' | null. 보이는 칸 = 벨트 등급 (2 · 4 · 6 · 8)
+// v1.47 아이템 툴팁: PC는 칸 위에 올리면, 모바일은 길게 누르면 (창고처럼 누르면 바로 옮겨지는 곳에서도 정보를 볼 수 있게)
+const ItemTip = {
+  el: null, held: false,
+  show(it, anchor) {
+    if (!this.el) { this.el = document.createElement('div'); this.el.id = 'item-tip'; document.body.appendChild(this.el); }
+    const p = G.player, req = itemReqLevel(it);
+    this.el.innerHTML = `<b class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</b>${req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : ''}<br>${itemHtml(it)}`;
+    this.el.style.display = 'block';
+    const r = anchor.getBoundingClientRect(), w = this.el.offsetWidth, h = this.el.offsetHeight;
+    let x = r.right + 6, y = r.top; if (x + w > innerWidth - 4) x = r.left - w - 6; if (x < 4) x = 4; if (y + h > innerHeight - 4) y = innerHeight - h - 4;
+    this.el.style.left = x + 'px'; this.el.style.top = Math.max(4, y) + 'px';
+  },
+  hide() { if (this.el) this.el.style.display = 'none'; },
+  attach(c, it) {
+    if (!IS_TOUCH) { c.addEventListener('mouseenter', () => this.show(it, c)); c.addEventListener('mouseleave', () => this.hide()); return; }
+    let t = null;
+    c.addEventListener('touchstart', () => { this.held = false; t = setTimeout(() => { this.held = true; this.show(it, c); }, 420); }, { passive: true });
+    c.addEventListener('touchmove', () => clearTimeout(t), { passive: true });
+    c.addEventListener('touchend', e => { clearTimeout(t); if (this.held) { e.preventDefault(); setTimeout(() => this.hide(), 1400); } }); // 길게 눌렀으면 옮기지 않음
+  },
+};
 const HOT_ACTS = () => SKILLS.map((s, i) => G.player.skills[s.id] ? ['sk' + i, s.name] : null).filter(Boolean).concat([['med', '구급상자'], ['throw', '투척물 (화염병·섬광탄·지뢰)'], ['util', '보조 (자극제·방탄판)']]);
 const Hotbar = {
   use(i) {
