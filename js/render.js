@@ -557,7 +557,7 @@ const Sprites = {
   frame(key, anim, t, faceA) {
     const s = this.get(key);
     if (!s) return null;
-    const d = Iso.dir(faceA || 0);
+    const d = typeof faceA === 'object' ? faceA : Iso.dir(faceA || 0); // v1.50.6 {x, y} 를 주면 그 방향으로 (좌우 깜빡임 막기)
     if (!s.anims[anim]) anim = s.anims.idle ? 'idle' : Object.keys(s.anims)[0];
     if (d.y < -0.35 && s.anims['back_' + anim]) anim = 'back_' + anim; // 등 돌린 그림이 있으면 사용
     const [row, n0, seq] = s.anims[anim], n = seq ? seq.length : n0, fps = ART.fps[anim.replace('back_', '')] || 8; // v1.49.5 seq = 칸 순서 (어색한 칸 빼기 · 거꾸로 그려진 줄 바로잡기)
@@ -616,7 +616,7 @@ function animState(moving, hitT, lastAtk, key) {
 // v1.49.2 총을 든 몸 그림 고르기: 총 전용(player_shotgun · player_vest_sniper …)이 있으면 그것 → 없으면 그룹(장총·권총…) → 없으면 null
 // v1.50.2 위로 겨눌 때: 등 모습 몸 그림(player_back · player_vest_back …, 프롬프트 23)이 있으면 그 몸 + 총을 몸 뒤로 세워 붙임. 없으면 지금처럼 옆모습 (v1.50.1 맨손 몸 + 총 돌리기는 어색해서 뺌)
 // 경계에서 깜빡이지 않게 들어갈 때 -0.8 · 나올 때 -0.68
-function upAim(p) { const y = Iso.dir(p.aim).y; p.upAim = p.upAim ? y < -0.68 : y < -0.8; return p.upAim; }
+function upAim(p) { const y = Iso.dir(p.aim).y; p.upAim = p.upAim ? y < -0.6 : y < -0.8; return p.upAim; } // v1.50.6 나올 때 -0.68 → -0.6 (여유 ↑)
 function heldBody(p, w, strict) {
   const arm = p.equip.armor, base = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player', grp = ART.weaponGroup[w.key];
   if (Sprites.get(base + '_' + w.key)) return base + '_' + w.key;
@@ -736,14 +736,18 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   if (heldKey && (grp === 'long' || grp === 'pistol')) {
     // v1.7.9 총을 든 몸: 사격 동작(고개가 크게 젖혀짐 · 연사 때 계속 재시작)은 쓰지 않고 조준 자세 그대로 몸만 뒤로 1~3px
     if (anim === 'attack') [anim, at] = moving ? ['walk', G.time] : ['idle', G.time];
-    if (p.recoilT > 0) sxb = sx - (Iso.dir(p.aim).x < 0 ? -1 : 1) * (b.pellets || w.key === 'sniper' ? 3 : 1.5) * p.recoilT / 0.07;
+    if (p.recoilT > 0) sxb = sx - (p.faceX || (Iso.dir(p.aim).x < 0 ? -1 : 1)) * (b.pellets || w.key === 'sniper' ? 3 : 1.5) * p.recoilT / 0.07;
   }
   if (Sprites.get(bodyKey)) {
     // 몸 그림(무기·헬멧 없음) + 헬멧을 머리에, 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
     // v1.7.5 무기는 이번 프레임의 머리 위치를 따라감 (걷기 흔들림·피격 젖힘과 함께 움직임) · 쓰러지는 중엔 손에서 놓음
-    const back = Iso.dir(p.aim).y < -0.15, fr = Sprites.frame(bodyKey, anim, at, p.aim), hold = w && !heldKey && !p.dead && fr.anim.indexOf('death') < 0;
+    // v1.50.6 좌우 보는 방향에 여유: 거의 정면 위·아래를 겨누면 커서가 몸 가운데를 살짝만 넘어도 몸·총이 좌우로 뒤집혀 깜빡이던 것 (카메라가 따라 움직이는 동안 특히)
+    const ad = Iso.dir(p.aim); if (!ui) p.faceX = ad.x > 0.12 ? 1 : ad.x < -0.12 ? -1 : (p.faceX || 1);
+    const fx = ui ? (ad.x < 0 ? -1 : 1) : p.faceX, face = { x: fx * Math.max(0.01, Math.abs(ad.x)), y: ad.y };
+    if (!ui) p.gunBack = p.gunBack ? ad.y < -0.05 : ad.y < -0.25; // v1.50.6 총을 몸 뒤/앞에 그리는 기준에도 여유 (-0.15 한 줄이라 그 근처에서 앞뒤로 깜빡)
+    const back = ui ? ad.y < -0.15 : p.gunBack, fr = Sprites.frame(bodyKey, anim, at, face), hold = w && !heldKey && !p.dead && fr.anim.indexOf('death') < 0;
     if (back && hold) drawWeaponOverlay(sx, sy, w, p, fr);
-    const info = Sprites.draw(bodyKey, anim, at, sxb, sy, p.aim, p.hurtT > 0);
+    const info = Sprites.draw(bodyKey, anim, at, sxb, sy, face, p.hurtT > 0);
     if (hel && info.anim.indexOf('death') < 0) drawHelmetOverlay(sxb, sy, info, hel, o.helmet);
     if (!back && hold) drawWeaponOverlay(sx, sy, w, p, info);
   } else drawHuman(sx, sy, o);
@@ -974,7 +978,7 @@ function drawWeaponOverlay(sx, sy, w, p, fr) {
   const art = ART.weapons[w.key];
   ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
   if (bk) ctx.scale(0.7, 1); // 등 모습: 카메라에서 멀어지는 쪽이라 짧아 보이게
-  if (Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게
+  if ((p.faceX ? p.faceX < 0 : Math.cos(ang) < 0) && !b.melee || b.melee && Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게 · v1.50.6 몸과 같은 좌우 기준
   if (art && art.ready) {
     const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height]; // rect: 한 장 안의 위치
     const sc = len / rw, grip = art.grip ?? ART.weaponGrip[w.key] ?? 0.3, h = rh * sc * (ART.weaponThickArt ?? 1); // v1.7.6 그림은 원래 두께 그대로 (과장은 코드 총용)

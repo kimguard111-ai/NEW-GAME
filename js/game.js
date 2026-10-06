@@ -239,7 +239,7 @@ function gunMuzzle(p, w) {
   if (!m || typeof Sprites === 'undefined') return def;
   const base = p.equip.armor && Sprites.get('player_' + p.equip.armor.key) ? 'player_' + p.equip.armor.key : 'player';
   if (!Sprites.get(base + '_' + grp) || p.backBody) return def; // 총을 든 몸 그림이 없거나 등 모습으로 위를 겨누면 예전 방식
-  const H = (ART.height.player || 44) * (ART.charScale || 1), f = Iso.dir(p.aim).x < 0 ? -1 : 1; // v1.21 실제 스케일
+  const H = (ART.height.player || 44) * (ART.charScale || 1), f = p.faceX || (Iso.dir(p.aim).x < 0 ? -1 : 1); // v1.50.6 몸과 같은 좌우 // v1.21 실제 스케일
   const dsx = f * H * m[0], dsy = -H * m[1] + 22 * ISO_K, ix = dsx / ISO_K, iy = dsy / ISO_K;
   const x = p.x + (ix + 2 * iy) / 2, y = p.y + (2 * iy - ix) / 2;
   if (World.solidAt(x, y)) return def; // 벽에 붙어 있으면 몸 앞에서
