@@ -50,7 +50,7 @@ const Icons = {
   draw(key, x, y, s) { ctx.drawImage(this.cv(key), x - s / 2, y - s / 2, s, s); },
 };
 function ICON(key, cls = '') { return `<img class="ico${cls ? ' ' + cls : ''}" src="${Icons.url(key)}" alt="">`; }
-function itemIcon(it, cls) { return ICON(it.key, cls); }
+function itemIcon(it, cls) { return ICON(it.kind === 'att' ? 'att_' + it.key : it.key, cls); } // v1.50 부품
 
 // 그리기 도구: 모든 도형은 채운 뒤 어두운 테두리 (작게 보여도 모양이 또렷하게)
 function icoKit(g) {

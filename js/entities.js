@@ -175,6 +175,7 @@ function itemDesc(it) {
   if (it.kind === 'armor') return `방어력 ${armorDef(it)} · 요구 Lv${ARMORS[it.key].lvl}`;
   if (it.kind === 'helmet') return `방어력 ${armorDef(it)}${HELMETS[it.key].radRes ? ` · 방사능 피해 -${HELMETS[it.key].radRes * 100}%` : ''} · 요구 Lv${HELMETS[it.key].lvl}`;
   if (it.kind === 'belt') return `핫바 ${BELTS[it.rarity].slots}칸 · 칸마다 스킬·구급상자·소모품 등록 · 요구 Lv${BELTS[it.rarity].lvl}`;
+  if (it.kind === 'att') return ATTACHMENTS[it.key].desc;
   return CONSUMABLES[it.key].desc;
 }
 
@@ -184,10 +185,12 @@ function affixText(a) {
 }
 
 // 아이템 설명 HTML (인벤토리·상점 공용)
-function itemHtml(it) {
+function itemHtml(it, noAtt) {
   if (it.kind === 'cons') return `<span class="muted">${itemDesc(it)}</span>`;
+  if (it.kind === 'att') return Attach.html(it); // v1.50
   let h = `<span class="muted">${itemDesc(it)}</span>`;
   if (it.kind === 'weapon') h += `<br><span class="role">${WEAPONS[it.key].role}</span>`;
+  if (it.kind === 'weapon' && it.att && !noAtt) for (const s in it.att) if (it.att[s]) h += `<br><span class="attline">⚙ ${it.att[s].name}: ${ATTACHMENTS[it.att[s].key].desc}</span>`; // v1.50 부품
   for (const a of it.affixes || []) h += `<br><span class="affix">◆ ${affixText(a)}</span>`;
   if (it.legend) h += `<br><span class="legend">★ ${LEGENDARY[it.legend].name}: ${LEGENDARY[it.legend].desc}</span>`;
   if (it.unique) h += `<br><span class="unique">◈ 고유 (${UNIQUES[it.unique].boss}): ${UNIQUES[it.unique].desc}</span>`;
@@ -308,7 +311,7 @@ function respecCost(p) { return p.respecs ? p.level * 80 : 0; }
 function pelletCount(w) { return (WEAPONS[w.key].pellets || 1) + gearBonus(G.player, 'pellets', w) + (w.unique === 'viper' ? 3 : 0); }
 function meleeReach(w) { const b = WEAPONS[w.key], r = gearBonus(G.player, 'reach', w) + (w.unique === 'babel' ? 0.3 : 0); return { range: b.range * (1 + r), arc: b.arc * (1 + r) }; }
 
-function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w)) * (perk('bulletStorm') ? 1.3 : 1)); }
+function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w)) * (perk('bulletStorm') ? 1.3 : 1) * attMul(w, 'mag')); } // v1.50 탄창 부품
 function weaponDmg(w) { return w.dmg * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }
 
 // 현재 능력치 기준 무기의 실제 초당 피해 (재장전 시간 포함). 장비 비교와 HUD에 사용

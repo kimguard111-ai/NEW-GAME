@@ -85,6 +85,7 @@ function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
 function curWeapon() { const p = G.player; return p.equip[p.active]; }
 // v1.49.9 조준 (PC 오른쪽 클릭 누르는 동안): 퍼짐 ↓ · 이동 60% · 시야를 커서 쪽으로 더. 0~1 (부드럽게 들어감)
 function adsOn() { const p = G.player, w = p && curWeapon(); return !IS_TOUCH && !!input.aim && !!w && !WEAPONS[w.key].melee && !p.dead && !UI.anyOpen(); }
+function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.spread[w.key] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
 const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
 function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); }
@@ -290,7 +291,7 @@ function startReload() {
     if (G.noAmmoT <= 0) { log(`${AMMO[b.ammo].name}이 없습니다! 다른 총이나 근접 무기로 교체(Q)하거나 출격 지도에서 사세요.`, '#f88'); G.noAmmoT = 2; SFX.play('empty'); }
     return;
   }
-  p.reloadT = p.reloadMax = b.reload * PlayerStats.reloadMul(p);
+  p.reloadT = p.reloadMax = b.reload * PlayerStats.reloadMul(p) * attMul(w, 'reload'); // v1.50 탄창 부품
   SFX.reload(w.key, p.reloadMax); // v1.35 무기별 장전 소리
 }
 
@@ -374,7 +375,7 @@ function playerAttack() {
   // 총소리 (v0.16): 근처의 배회하던 적이 소리를 듣고 몰려옴 (근접 무기는 조용함)
   if (G.time - (G.noiseT || -9) > 0.5) {
     G.noiseT = G.time;
-    const ln = w.key === 'sniper' ? 750 : 550;
+    const ln = (w.key === 'sniper' ? 750 : 550) * attMul(w, 'noise'); // v1.50 소음기
     for (const e of G.enemies) {
       if (e.state === 'chase' || e.hp <= 0 || e.minion || dist(e, p) > ln) continue;
       const nd = Nav.dist && Nav.dist[Math.floor(e.y / TILE) * World.W + Math.floor(e.x / TILE)];
@@ -383,13 +384,13 @@ function playerAttack() {
   }
   if (perk('lastRounds') && w.loaded <= magSize(w) * 0.25) cc += 0.25; // v1.11 마지막 탄
   if (!(w.legend === 'thrift' && Math.random() < 0.35) && !(p.buffs.rapid > 0 && smod('rapid') === 'b')) w.loaded--; // v1.11 탄약 보급: 소모 없음
-  const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false);
+  const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false) * attMul(w, 'dmg'), rapid = G.time - (p.lastShot || -9) < 0.3; // v1.50 rapid = 연사 중 (보정기·수직 손잡이)
   // v1.9 무기 손맛: 기관총 예열(연사할수록 정확·빨라짐) · 소총 첫 발 정조준(잠깐 쉬었다 쏘면 정확 + 치명타)
   const first = w.key === 'rifle' && G.time - (p.lastShot || -9) > 0.35;
   if (w.key === 'lmg') p.heat = w.unique === 'titan' ? 1 : Math.min(1, (p.heat || 0) + 0.04); // v1.12 타이탄 심장포: 항상 예열
   const frag = w.unique === 'raven' && (p.ravenN = (p.ravenN || 0) + 1) % 3 === 0; // v1.12 레이븐: 3발째 파편
   p.lastShot = G.time;
-  const spread = b.spread * lerp(ADS.hip, ADS.spread[w.key] ?? 0.6, ADS.k) * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
+  const spread = b.spread * adsSpreadMul(w) * attMul(w, 'spread') * (rapid ? attMul(w, 'autoSpread') : 1) * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
   const mz = gunMuzzle(p, w), mx = mz.x, my = mz.y, aim0 = mz.a;
   const life = b.range / b.speed;
   const sid = (G.shotId = (G.shotId || 0) + 1); // v1.40 같은 한 발(산탄 여러 알) 표시
@@ -404,7 +405,7 @@ function playerAttack() {
     });
   }
   p.recoilT = 0.07;
-  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || w.key === 'sniper' ? 9 : w.key === 'lmg' || w.key === 'smg' ? 2.2 : w.key === 'rifle' ? 3.5 : 4.5; G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * k; G.kick.y -= d.y * k; } // v1.28 사격 반동이 화면에도 // v1.40 반동 조금 더 세게
+  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || w.key === 'sniper' ? 9 : w.key === 'lmg' || w.key === 'smg' ? 2.2 : w.key === 'rifle' ? 3.5 : 4.5; const kk = k * attMul(w, 'kick'); G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * kk; G.kick.y -= d.y * kk; } // v1.28 사격 반동이 화면에도 // v1.40 반동 조금 더 세게
   Juice.shot(p, w, mx, my, aim0); // v1.28 총구 섬광 · 탄피
   if (w.key === 'sniper') { // v1.9 저격: 탄도가 잠깐 남음
     let ex = mx, ey = my; const c = Math.cos(aim0), sn = Math.sin(aim0);
@@ -507,6 +508,7 @@ function addItem(it) {
 function removeItem(it) {
   const inv = G.player.inventory, i = inv.indexOf(it);
   if (i >= 0) inv.splice(i, 1);
+  if (i >= 0 && it.att) { const back = Object.values(it.att).filter(Boolean); if (back.length) { inv.push(...back); it.att = null; log(`끼워 둔 부품 ${back.length}개는 가방으로 돌아왔다.`, '#9fd0ff'); } } // v1.50 총을 팔거나 분해해도 부품은 남김
 }
 
 function interact() {
@@ -784,6 +786,7 @@ function killEnemy(e) {
     if (Math.random() < 0.5) dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) }); // v1.25 확정 → 50%
     dropAt('credits', { amount: e.level * 40 });
     rollUnique(e.elite, e.level, dropAt); // v1.12 레이븐 · 바벨
+    if (Math.random() < 0.3) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품
     hitstop(0.12); G.shake = Math.max(G.shake, 10);
   }
   if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
@@ -794,6 +797,7 @@ function killEnemy(e) {
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.34) dropAt('ammo', { amount: randInt(15, 35) }); // v1.33 0.28 → 0.34 (탄약이 4종으로 나뉘어 권총도 탄이 필요)
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
+  if (Math.random() < (e.affix ? 0.06 : e.type === 'brute' ? 0.02 : 0.006)) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 (엘리트 6% · 거구 2% · 보통 0.6%)
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
   const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
@@ -1195,7 +1199,7 @@ function update(dt) {
       for (let i = 0; i < 2; i++) G.particles.push({ x: p.x + rand(-5, 5), y: p.y + rand(-5, 5), vx: -Math.cos(p.rollA) * rand(20, 60) + rand(-20, 20), vy: -Math.sin(p.rollA) * rand(20, 60) + rand(-20, 20), t: 0, life: rand(0.3, 0.55), color: 'rgba(150,140,120,0.55)', size: rand(4, 7), z: 2, vz: 14 }); // 바닥 먼지
     } else if (mv) {
       const { wx, wy, amt } = mv;
-      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt * World.slow(p.x, p.y) * (1 - 0.4 * ADS.k); // v1.6 물속은 느림
+      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt * World.slow(p.x, p.y) * (1 - ADS.k * (1 - clamp(0.6 * attMul(curWeapon(), 'adsMove'), 0.3, 1))) * attMul(curWeapon(), 'move'); // v1.50 앵글 손잡이 · 4배 · 드럼 // v1.6 물속은 느림
       World.move(p, wx / l * sp, wy / l * sp);
       p.walkT = (p.walkT || 0) + dt;
     }
@@ -1281,8 +1285,8 @@ function update(dt) {
   const F = G.camF || (G.camF = { x: ctx0, y: cty0 }), L = G.camLead || (G.camLead = { x: 0, y: 0 }), KK = G.kick || (G.kick = { x: 0, y: 0 });
   if (Math.hypot(ctx0 - F.x, cty0 - F.y) > 300) { F.x = ctx0; F.y = cty0; } else { const k = 1 - Math.pow(0.00005, dt); F.x += (ctx0 - F.x) * k; F.y += (cty0 - F.y) * k; }
   const lead = Settings.camLead !== false && !p.dead && !UI.anyOpen() && !IS_TOUCH;
-  ADS.k = clamp(ADS.k + (adsOn() ? dt / 0.15 : -dt / 0.12), 0, 1); // 0.15초에 들어가고 0.12초에 풀림
-  const far = curWeapon() && curWeapon().key === 'sniper' ? 1.6 : 1, lm = 0.2 + 0.22 * ADS.k * far, lcx = 110 + 120 * ADS.k * far, lcy = 70 + 80 * ADS.k * far; // 조준하면 커서 쪽으로 더 멀리 (저격총은 더)
+  const cw0 = curWeapon(); ADS.k = clamp(ADS.k + (adsOn() ? dt / (0.15 * attMul(cw0, 'adsTime')) : -dt / 0.12), 0, 1); // 0.15초에 들어가고 0.12초에 풀림
+  const far = (cw0 && cw0.key === 'sniper' ? 1.6 : 1) * attMul(cw0, 'adsLead'), lm = 0.2 + 0.22 * ADS.k * far, lcx = 110 + 120 * ADS.k * far, lcy = 70 + 80 * ADS.k * far; // 조준하면 커서 쪽으로 더 멀리 (저격총은 더)
   const lx = lead || ADS.k > 0 ? clamp((input.mx - VW / 2) * lm, -lcx, lcx) : 0, ly = lead || ADS.k > 0 ? clamp((input.my - VH / 2) * lm, -lcy, lcy) : 0, kl = 1 - Math.pow(0.02, dt);
   L.x += (lx - L.x) * kl; L.y += (ly - L.y) * kl;
   const kd = Math.pow(0.0005, dt); KK.x *= kd; KK.y *= kd;

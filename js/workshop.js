@@ -97,7 +97,14 @@ const Workshop = {
       if (need > Camp.lv('bench')) { h += `<div class="btns"><button disabled>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} <span class="muted">작업대 ${need}단계 필요</span></button></div>`; continue; }
       h += `<div class="btns"><button data-craft="${k}" ${this.canPay(CRAFTS[k]) ? '' : 'disabled'}>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} 제작 (${this.costText(CRAFTS[k])})</button></div>`;
     }
+    h += `<hr style="border-color:#333">총기 부품 제작 <span class="muted">(가방에서 총을 골라 끼움)</span><div class="att-craft">`;
+    for (const k of Object.keys(ATTACHMENTS)) {
+      const A = ATTACHMENTS[k], c = this.attCost(k), lock = c.bench > Camp.lv('bench');
+      h += `<button data-att="${k}" ${lock || !this.canPay(c) ? 'disabled' : ''} title="${A.desc} · ${A.guns.map(g => GUN_NAMES[g]).join('·')}">${ICON('att_' + k)} ${A.name} <span class="muted">${lock ? `작업대 ${c.bench}단계` : this.costText(c)}</span></button>`;
+    }
+    h += '</div>';
     box.innerHTML = h;
+    box.querySelectorAll('button[data-att]').forEach(b => { b.onclick = () => this.craftAtt(b.dataset.att); });
     if (it) $('ws-salvage').onclick = () => this.salvage(it);
     $('ws-bulk').onclick = () => this.bulkSalvage();
     box.querySelectorAll('button[data-craft]').forEach(b => { b.onclick = () => this.craft(b.dataset.craft); });
@@ -113,12 +120,19 @@ const Workshop = {
   },
   // 일반·고급 일괄 분해 (▲ 표시·강화된 장비 제외, 상점 일괄 판매와 같은 기준)
   bulkSalvage() {
-    const p = G.player, junk = p.inventory.filter(it => it.kind !== 'cons' && it.rarity <= 1 && !it.plus && !it.locked && !it.set && !isUpgrade(p, it));
+    const p = G.player, junk = p.inventory.filter(it => it.kind !== 'cons' && it.kind !== 'att' && it.rarity <= 1 && !it.plus && !it.locked && !it.set && !isUpgrade(p, it));
     if (!junk.length) { log('분해할 일반·고급 장비가 없습니다. (▲ 표시·강화된 장비는 제외)', '#aaa'); return; }
     let s = 0, c = 0;
     for (const it of junk) { const y = this.salvageYield(it); s += y.scrap; c += y.chip; removeItem(it); }
     this.gain(s, c, `장비 ${junk.length}개 일괄 분해`);
     this.sel = null; this.after();
+  },
+  // v1.50 부품 제작: 등급별 재료 · 작업대 단계
+  attCost(k) { const r = ATTACHMENTS[k].r; return [null, { scrap: 8, chip: 1, bench: 1 }, { scrap: 14, chip: 2, bench: 2 }, { scrap: 22, chip: 4, bench: 3 }][r]; },
+  craftAtt(k) {
+    const c = this.attCost(k); if (!this.canPay(c) || c.bench > Camp.lv('bench')) return;
+    if (!addItem(makeAttach(k))) { log('인벤토리가 가득 찼습니다.', '#f88'); return; }
+    this.pay(c); log(`제작: ${ATTACHMENTS[k].name} (가방에서 총을 골라 끼우기)`, '#9fd'); this.after();
   },
   craft(k) {
     if (!this.canPay(CRAFTS[k]) || (CRAFTS[k].bench || 0) > Camp.lv('bench')) return;

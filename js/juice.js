@@ -130,7 +130,7 @@ const Juice = {
       ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU); ctx.stroke();
       ctx.strokeStyle = '#e8e2d0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU); ctx.stroke();
     } else {
-      const reload = p.reloadT > 0, gap = (5 + (b.spread || 0) * 70 * (1 - gearBonus(p, 'accuracy', w)) + this.spread * 10) * lerp(ADS.hip, ADS.spread[w.key] ?? 0.6, ADS.k), len = 6 - ADS.k * 2; // v1.49.9 조준하면 좁아짐
+      const reload = p.reloadT > 0, gap = (5 + (b.spread || 0) * 70 * (1 - gearBonus(p, 'accuracy', w)) + this.spread * 10) * adsSpreadMul(w) * attMul(w, 'spread'), len = 6 - ADS.k * 2; // v1.49.9 조준하면 좁아짐
       for (const pass of [0, 1]) {
         ctx.strokeStyle = pass ? (reload ? '#8a8a8a' : '#f2ecd8') : 'rgba(0,0,0,0.55)'; ctx.lineWidth = pass ? 1.6 : 3.4;
         ctx.beginPath();

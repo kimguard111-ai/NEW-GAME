@@ -465,3 +465,18 @@ body.touch #hud-weapon { pointer-events: auto; }
 body.touch #toast.mini { top: 6px !important; left: 37vw; max-width: 34vw; }
 body.touch #toast.mini #toast-title { font-size: 12px !important; } body.touch #toast.mini #toast-sub { font-size: 10px; }
 body.combat #combo-n { font-size: 22px; } body.touch.combat #combo-n { font-size: 17px; } /* 연속 처치 숫자도 작게 */
+/* v1.50 총기 부품 칸 */
+.attline { color: #9fd0ff; font-size: 12px; }
+.att-box { margin: 6px 0 2px; padding: 5px 6px;  border: 1px solid rgba(160,200,255,.18); background: rgba(20,30,40,.35); }
+.att-head { font-size: 11px; color: #9fd0ff; letter-spacing: 1px; }
+.att-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 4px; margin: 1px 0; font-size: 12px; min-height: 22px; }
+.att-row button.att-on { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.att-slot { width: 38px; color: #c9b27a; flex: none; }
+.att-row button.att-put { padding: 1px 3px !important; }
+.att-row button { padding: 2px 6px !important; margin: 0 !important; font-size: 12px; }
+.att-row button.att-on { border-color: #6fa8dc; }
+.att-row button.raid { opacity: .55; }
+.att-row .ico { width: 18px; height: 18px; vertical-align: middle; }
+.att-craft { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.att-craft button { padding: 3px 6px !important; margin: 0 !important; font-size: 12px; }
+.att-craft .ico { width: 18px; height: 18px; vertical-align: middle; }

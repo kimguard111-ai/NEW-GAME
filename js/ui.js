@@ -266,7 +266,7 @@ const UI = {
 
   // v1.15 가방 정렬: 소모품 → 무기 → 방어구 → 헬멧, 각각 고유·세트 → 등급 → 강화 → 레벨 높은 순
   sortBag() {
-    const p = G.player, ord = { cons: 0, weapon: 1, armor: 2, helmet: 3, belt: 4 };
+    const p = G.player, ord = { cons: 0, weapon: 1, armor: 2, helmet: 3, belt: 4, att: 5 };
     p.inventory.sort((a, b) => (ord[a.kind] - ord[b.kind]) || ((b.unique ? 2 : b.set ? 1 : 0) - (a.unique ? 2 : a.set ? 1 : 0)) || ((b.rarity || 0) - (a.rarity || 0)) || ((b.plus || 0) - (a.plus || 0)) || ((b.ilvl || 0) - (a.ilvl || 0)) || String(a.key).localeCompare(String(b.key)));
     SFX.play('ui'); UI.refreshInventory();
   },
@@ -304,8 +304,9 @@ const UI = {
     }
     const req = itemReqLevel(it);
     box.innerHTML = `<b class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</b> ${it.ilvl ? `<span class="muted">(아이템 Lv${it.ilvl})</span>` : ''}`
-      + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + `<br>${itemHtml(it)}${cmp}<div class="btns"></div>`;
+      + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + `<br>${itemHtml(it, true)}${cmp}<div class="btns"></div>`; // v1.50 부품은 아래 부품 칸에서
     const btns = box.querySelector('.btns');
+    if (it.kind === 'weapon' && !WEAPONS[it.key].melee) Attach.panel(box, it); // v1.50 부품 칸
     const add = (label, fn) => { const b = document.createElement('button'); b.innerHTML = label; b.onclick = fn; btns.appendChild(b); };
     if (it.kind !== 'cons') add(it.locked ? `${ICON('lock')} 잠금 해제` : `${ICON('lock')} 잠금`, () => { it.locked = !it.locked; SFX.play('ui'); UI.refreshInventory(); }); // v1.15 잠금: 판매·분해·버리기 막음
     if (equippedSlot === 'belt') { add('칸 등록 (B)', () => Hotbar.edit()); return; } // v1.24 벨트는 바꿔 차기만
@@ -319,6 +320,7 @@ const UI = {
     if (it.kind === 'helmet') add('장착', () => UI.equip(it, 'helmet'));
     if (it.kind === 'belt') add('차기', () => { UI.equip(it, 'belt'); UI.buildHotbar(); }); // 칸이 늘면 못 넣었던 스킬을 채움
     if (it.kind === 'cons') add('사용', () => useItem(it));
+    if (it.kind === 'att') Attach.partButtons(add, it); // v1.50
     if (it.locked) return; // 잠긴 장비는 판매·버리기 버튼 없음
     if (UI.shopOpen) add(`판매 (${fmt(sellPrice)}₵)`, () => UI.sell(it, sellPrice));
     add('버리기', () => { if (confirm(`${itemName(it)}을(를) 버릴까요?`)) { removeItem(it); UI.selected = null; UI.refreshInventory(); } });
