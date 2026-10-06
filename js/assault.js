@@ -68,7 +68,7 @@ const Assault = {
     for (let t = 1; t <= top; t++) btns.push([`위협 ${t} (적 Lv${a.level + tierLvl(t)})${t > 5 ? ' ' + tierMutators(t).map(m => MUTATORS[m].name).join('·') : ''}`, () => { UI.close('dialog'); this.start(l, t); }]);
     btns.push(['취소', () => UI.close('dialog')]);
     UI.dialog(a.name, `위협 등급이 높을수록 적 레벨 +3 · 체력 +30%씩, 보상(장비 등급·전자 부품·경험치)도 커집니다.<br><span class="muted">위협 N을 클리어하면 N+1이 열립니다. (최대 ${TIER_MAX})</span>`
-      + `<br><b style="color:#ff8a5a">위협 6~10 — 이번 주 변형 규칙</b> <span class="muted">(매주 월요일 바뀜, 단계마다 하나씩 추가)</span><br>${weekMutators().map((m, i) => `<span class="muted">${i + 6}:</span> ${MUTATORS[m].name} — ${MUTATORS[m].desc}`).join('<br>')}`, btns);
+      + `<br><b style="color:#ff8a5a">위협 6~10: 이번 주 변형 규칙</b> <span class="muted">(매주 월요일 바뀜, 단계마다 하나씩 추가)</span><br>${weekMutators().map((m, i) => `<span class="muted">${i + 6}:</span> ${MUTATORS[m].name} — ${MUTATORS[m].desc}`).join('<br>')}`, btns);
   },
 
   start(l, tier = 1) {
@@ -78,7 +78,7 @@ const Assault = {
     G.enemies = G.enemies.filter(e => e.def.boss || dist(e, l) > 1400);
     G.assault = { id: l.id, l, wave: -1, phase: 'ready', t: 0, wait: 3, boss: null, tier, muts: tierMutators(tier) };
     if (G.assault.muts.length) log(`변형 규칙: ${G.assault.muts.map(m => `${MUTATORS[m].name}(${MUTATORS[m].desc})`).join(' · ')}`, '#ff8a5a');
-    UI.toast(`어설트 — ${a.name}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `웨이브 ${a.waves.length}개 + 거점 보스 · 제한 시간 ${a.limit}초 · 봉쇄선 밖으로 나갈 수 없음`);
+    UI.toast(`어설트: ${a.name}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `웨이브 ${a.waves.length}개 + 거점 보스 · 제한 시간 ${a.limit}초 · 봉쇄선 밖으로 나갈 수 없음`);
     log(`어설트 개시: ${a.name}. 3초 후 첫 웨이브!`, '#ff9a5a');
     G.effects.push({ type: 'ring', x: l.x, y: l.y, t: 0, life: 1, color: '#ff6a4a', r: ASSAULT_R });
   },
@@ -144,7 +144,7 @@ const Assault = {
     const el = (w.elites || 0) + ((s.muts || []).includes('horde') ? 1 : 0);
     for (let i = 0; i < Math.min(el, list.length); i++) list[list.length - 1 - i].elite = true;
     s.queue = list; s.qT = 0;
-    log(`웨이브 ${s.wave + 1} / ${ASSAULTS[s.id].waves.length} — 적 ${list.length}`, '#ff9a5a');
+    log(`웨이브 ${s.wave + 1} / ${ASSAULTS[s.id].waves.length}, 적 ${list.length}`, '#ff9a5a');
     UI.toast(`웨이브 ${s.wave + 1}`, `적 ${list.length}${w.elites ? ` · 엘리트 ${w.elites}` : ''}`);
   },
   spawnOne(q) {
@@ -203,8 +203,8 @@ const Assault = {
     p.assaults[s.id] = { best: rec && 'SAB'.indexOf(rec.best) < 'SAB'.indexOf(rk) ? rec.best : rk,
       time: rec ? Math.min(rec.time, t) : t, clears: (rec ? rec.clears : 0) + 1, tier: Math.max(tier, (rec && rec.tier) || 1) };
     Bounty.on('assault', tier);
-    UI.toast(`어설트 완료 — 등급 ${rk}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `${t}초 (S ≤ ${this.par(a, tier)}초) · EXP +${fmt(exp)} · +${fmt(credits)}₵${first ? ' · 첫 클리어 보너스!' : ''}`);
-    log(`어설트 완료: ${a.name} 위협 ${tier} 등급 ${rk} (${t}초)${better && rec ? ' — 기록 갱신!' : ''}`, R.color);
+    UI.toast(`어설트 완료, 등급 ${rk}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `${t}초 (S ≤ ${this.par(a, tier)}초) · EXP +${fmt(exp)} · +${fmt(credits)}₵${first ? ' · 첫 클리어 보너스!' : ''}`);
+    log(`어설트 완료: ${a.name} 위협 ${tier} 등급 ${rk} (${t}초)${better && rec ? ' 기록 갱신!' : ''}`, R.color);
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 1.2, color: R.color, r: 160 });
     burst(p.x, p.y, R.color, 40, 220, 0.9, 4);
     G.assault = null;
@@ -229,12 +229,12 @@ const Assault = {
   },
 
   panelHtml(p) {
-    let h = '<hr style="border-color:#333"><b>어설트 (거점 탈환전)</b> <span class="muted">— 발견한 랜드마크 앞에서 [E]</span>';
+    let h = '<hr style="border-color:#333"><b>어설트 (거점 탈환전)</b> <span class="muted">발견한 랜드마크 앞에서 [E]</span>';
     for (const l of World.landmarks) {
       const a = ASSAULTS[l.id], rec = p.assaults[l.id];
       if (!a) continue;
       const state = !p.found.includes(l.id) ? `${ICON('lock')} ${l.name} 발견 필요` : rec ? `<b style="color:${RANKS[rec.best].color}">${rec.best}</b> 최고 ${rec.time}초 · ${rec.clears}회 · 위협 ${rec.tier || 1}/${TIER_MAX}` : '미도전 · 첫 클리어 시 영웅 장비';
-      h += `<div class="step-row">${a.name} <span class="muted">Lv${a.minLevel}+</span> — ${state}</div>`;
+      h += `<div class="step-row">${a.name} <span class="muted">Lv${a.minLevel}+</span> ${state}</div>`;
     }
     return h;
   },

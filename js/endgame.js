@@ -79,7 +79,7 @@ const Bounty = {
   panelHtml() {
     const bt = G.player.bounty;
     if (!bt) return '';
-    let h = '<hr style="border-color:#333"><b>오늘의 의뢰</b> <span class="muted">— 매일 갱신 · 하나마다 크레딧·재료·희귀 이상 장비, 모두 완료 시 영웅 장비</span>';
+    let h = '<hr style="border-color:#333"><b>오늘의 의뢰</b> <span class="muted">매일 바뀜. 하나마다 크레딧·재료·희귀 이상 장비, 다 하면 영웅 장비</span>';
     for (const b of bt.list) h += `<div class="step-row${b.done ? '' : ' cur'}">${b.done ? '✓' : '▶'} ${BOUNTIES[b.k].text(b.need)} <b>${b.have} / ${b.need}</b></div>`;
     if (bt.bonus) h += '<div class="step-row">★ 보너스 수령 완료</div>';
     return h;
@@ -130,7 +130,7 @@ const Weekly = {
   panelHtml() {
     const w = G.player.weekly; if (!w) return '';
     const left = Math.ceil(((weekNo() + 1) * 7 - 3) - Date.now() / 864e5);
-    let h = `<hr style="border-color:#333"><b style="color:#ffb07a">이번 주 도전</b> <span class="muted">— ${left}일 남음 · 하나마다 영웅 장비, 모두 완료 시 전설 장비</span>`;
+    let h = `<hr style="border-color:#333"><b style="color:#ffb07a">이번 주 도전</b> <span class="muted">${left}일 남음. 하나마다 영웅 장비, 다 하면 전설 장비</span>`;
     for (const b of w.list) h += `<div class="step-row${b.done ? '' : ' cur'}">${b.done ? '✓' : '▶'} ${WEEKLIES[b.k].text(b.need)} <b>${b.have} / ${b.need}</b></div>`;
     if (w.bonus) h += '<div class="step-row">★ 전설 보상 수령 완료</div>';
     return h;

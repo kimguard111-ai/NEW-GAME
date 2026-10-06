@@ -94,7 +94,7 @@ const Workshop = {
     h += `<div class="btns"><button id="ws-bulk">일반·고급 일괄 분해</button></div><hr style="border-color:#333">소모품 제작`;
     for (const k of Object.keys(CRAFTS)) {
       const need = CRAFTS[k].bench || 0;
-      if (need > Camp.lv('bench')) { h += `<div class="btns"><button disabled>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} <span class="muted">— 작업대 ${need}단계 필요 (캠프 시설)</span></button></div>`; continue; }
+      if (need > Camp.lv('bench')) { h += `<div class="btns"><button disabled>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} <span class="muted">작업대 ${need}단계 필요</span></button></div>`; continue; }
       h += `<div class="btns"><button data-craft="${k}" ${this.canPay(CRAFTS[k]) ? '' : 'disabled'}>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} 제작 (${this.costText(CRAFTS[k])})</button></div>`;
     }
     box.innerHTML = h;

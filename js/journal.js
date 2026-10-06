@@ -75,7 +75,7 @@ const Journal = {
       if (a.r.credits) p.credits += a.r.credits;
       if (a.r.chip) Workshop.gain(0, a.r.chip);
       const rw = [a.r.credits ? `+${fmt(a.r.credits)}₵` : '', a.r.chip ? `전자 부품 +${a.r.chip}` : ''].filter(Boolean).join(' · ');
-      UI.toast(`업적 달성 — ${a.name}`, `${a.desc} · ${rw}`);
+      UI.toast(`업적: ${a.name}`, `${a.desc} · ${rw}`);
       log(`${ICON('star')} 업적: ${a.name} (${a.desc}) ${rw}`, '#ffd76a');
       SFX.play('quest');
       return; // 한 번에 하나씩
@@ -117,7 +117,7 @@ const Journal = {
       let h = '<div class="muted">조건을 채우면 자동으로 보상을 받습니다.</div>';
       for (const a of ACHIEVEMENTS) {
         const ok = p.ach[a.id], rw = [a.r.credits ? `${fmt(a.r.credits)}₵` : '', a.r.chip ? `전자 부품 ${a.r.chip}` : ''].filter(Boolean).join(' · ');
-        h += `<div class="ach${ok ? ' ok' : ''}">${ok ? '★' : '☆'} <b>${a.name}</b> <span class="muted">${a.desc} — ${rw}</span></div>`;
+        h += `<div class="ach${ok ? ' ok' : ''}">${ok ? '★' : '☆'} <b>${a.name}</b> <span class="muted">${a.desc} (${rw})</span></div>`;
       }
       return h;
     }

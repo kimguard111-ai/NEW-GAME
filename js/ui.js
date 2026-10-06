@@ -84,11 +84,11 @@ const UI = {
     for (let i = 0; i < n; i++) {
       const k = p.hotbar[i], d = document.createElement('div'), key = `<span class="key">${IS_TOUCH ? '' : BELT_KEYS[i]}</span>`;
       d.dataset.slot = i; d.dataset.act = k || 'empty';
-      if (k) { const c = CONSUMABLES[k], cnt = consCount(k); d.className = 'hot' + (cnt ? '' : ' empty'); d.title = `${c.name} — ${c.desc}`; d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" data-cnt="${k}">${cnt}</span>`; }
-      else { d.className = 'hot free'; d.title = '빈 칸 — 눌러서 소모품 등록 (B)'; d.innerHTML = `${key}<div class="icon">＋</div>비어 있음`; }
+      if (k) { const c = CONSUMABLES[k], cnt = consCount(k); d.className = 'hot' + (cnt ? '' : ' empty'); d.title = `${c.name}: ${c.desc}`; d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" data-cnt="${k}">${cnt}</span>`; }
+      else { d.className = 'hot free'; d.title = '빈 칸. 눌러서 소모품 등록 (B)'; d.innerHTML = `${key}<div class="icon">＋</div>비어 있음`; }
       belt.appendChild(d);
     }
-    const ed = document.createElement('div'); ed.className = 'hot edit'; ed.dataset.act = 'edit'; ed.title = `벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 ${n}칸 — 칸 등록 (B)`;
+    const ed = document.createElement('div'); ed.className = 'hot edit'; ed.dataset.act = 'edit'; ed.title = `벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 ${n}칸. 칸 등록 (B)`;
     ed.innerHTML = `<span class="key">${IS_TOUCH ? '' : 'B'}</span><div class="icon">${ICON('belt')}</div>등록`; belt.appendChild(ed);
     const learned = SKILLS.some(s => p.skills[s.id]);
     if (!IS_TOUCH) {
@@ -97,7 +97,7 @@ const UI = {
         const a = p.skillbar[i], d = document.createElement('div'), key = `<span class="key">${i + 1}</span>`;
         d.dataset.sk = i;
         if (a) { const si = +a.slice(2), s = SKILLS[si]; d.className = 'hot'; d.title = `${s.name} - ${skillDesc(s, p)}`; d.innerHTML = `${key}<div class="icon">${ICON(s.icon)}</div>${s.name}<div class="cd" id="cd${si}"></div>`; }
-        else { d.className = 'hot free'; d.title = learned ? '빈 스킬 칸 — 눌러서 등록' : '스킬은 스킬 창(K)에서 배운다'; d.innerHTML = `${key}<div class="icon">＋</div>스킬`; }
+        else { d.className = 'hot free'; d.title = learned ? '빈 스킬 칸. 눌러서 등록' : '스킬은 스킬 창(K)에서 배운다'; d.innerHTML = `${key}<div class="icon">＋</div>스킬`; }
         sk.appendChild(d);
       }
       const r = document.createElement('div'); // 슬라이딩 (오른쪽 클릭으로도)
@@ -196,7 +196,7 @@ const UI = {
 
   trackerHtml(p) {
     const c = Story.chapter(p);
-    if (!c) return `<b>모든 장 완료</b><br>${p.labKills ? `키메라 처치 ${p.labKills}회 · 지하 연구소는 출격마다 구조가 바뀝니다` : `<span style="color:#ff8a8a">${ICON('map')} 지하 연구소 해금 — 격리실의 「키메라」를 처치하라</span>`}`;
+    if (!c) return `<b>모든 장 완료</b><br>${p.labKills ? `키메라 처치 ${p.labKills}회 · 지하 연구소는 출격마다 구조가 바뀐다` : `<span style="color:#ff8a8a">${ICON('map')} 지하 연구소 해금. 격리실의 「키메라」를 처치하라</span>`}`;
     if (!p.quest.active) return p.level >= c.minLevel ? `<b>${c.title}</b><br>한씨에게 말을 걸거나, 「${MAPS[CHAPTER_MAP[p.quest.ch]].name}」에 출격하면 시작` : `<b>다음: ${c.title}</b><br>Lv${c.minLevel} 이상`;
     const st = c.steps[p.quest.step], tg = Story.target(p), mapId = CHAPTER_MAP[p.quest.ch];
     let h = `<b>${c.title} (${p.quest.step + 1}/${c.steps.length})</b><br>${Story.objective(st)}`;
@@ -445,14 +445,14 @@ const UI = {
       + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
       + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="2.2" step="0.1" value="${ZOOM}"></div>`
       + opt('tips', '도움말 팁', '처음 겪는 상황에서 한 번씩 안내')
-      + opt('reverb', '울림', '바깥 메아리 · 실내 울림 (끄면 가벼워짐 — 모바일 기본 끔)')
+      + opt('reverb', '울림', '바깥 메아리 · 실내 울림 (끄면 가벼워짐, 모바일은 기본 끔)')
       + opt('ambient', '환경음', '바람 · 먼 총성 · 사이렌 같은 맵 분위기 소리')
       + opt('xray', '가려진 적 윤곽', '건물 뒤에 있는 적을 붉은 윤곽으로 보여 줌')
       + opt('outline', '적 테두리', '적 둘레에 붉은 테두리 · 발밑 고리 (어두운 곳에서도 잘 보이게)')
       + (IS_TOUCH ? opt('fullscreen', '전체 화면', '화면을 누르면 주소창 없이 전체 화면으로 (아이폰은 「홈 화면에 추가」로 열어야 전체 화면)') : '')
       + `<div class="set-row"><button id="btn-lowspec">저사양 모드 (한 번에 가볍게)</button> <span class="muted">조명 · 세부 묘사 · 울림 · 환경음 끔</span></div>`
-      + (IS_TOUCH ? '' : `<hr style="border-color:#333"><b>조작 키</b> <span class="muted">— 누르고 새 키 입력 · 겹치면 서로 바뀜 · 벨트 1~8 · ESC 는 고정</span><div class="key-grid">${Object.keys(KEY_DEFAULTS).map(a => `<span class="key-row">${KEY_NAMES[a]} <button class="key-btn" data-key="${a}">${keyLabel(keyOf(a))}</button></span>`).join('')}</div><button id="btn-keyreset">기본 키로</button>`)
-      + `<hr style="border-color:#333"><b>세이브 백업</b> <span class="muted">— 다른 기기·브라우저로 옮길 때</span><br>`
+      + (IS_TOUCH ? '' : `<hr style="border-color:#333"><b>조작 키</b> <span class="muted">누르고 새 키 입력. 겹치면 서로 바뀜, ESC는 고정</span><div class="key-grid">${Object.keys(KEY_DEFAULTS).map(a => `<span class="key-row">${KEY_NAMES[a]} <button class="key-btn" data-key="${a}">${keyLabel(keyOf(a))}</button></span>`).join('')}</div><button id="btn-keyreset">기본 키로</button>`)
+      + `<hr style="border-color:#333"><b>세이브 백업</b> <span class="muted">다른 기기·브라우저로 옮길 때</span><br>`
       + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
@@ -694,7 +694,7 @@ const UI = {
     const n = SKILL_TREE[s.id][k];
     if ((p.sp || 0) < SKILL_SP[k]) { log('스킬 포인트가 부족합니다.', '#f88'); SFX.play('empty'); return; }
     p.sp -= SKILL_SP[k]; p.stree[s.id + '_' + k] = true;
-    log(`스킬 트리: ${s.name} — ${n.name} (${n.desc})`, '#7fd'); UI.toast(k === 'cap' ? '궁극 기술' : '스킬 강화', `${s.name} — ${n.name}`);
+    log(`${s.name} 강화: ${n.name} (${n.desc})`, '#7fd'); UI.toast(k === 'cap' ? '궁극 기술' : '스킬 강화', `${s.name}: ${n.name}`);
     SFX.play('levelup'); UI.refreshStats(); saveGame(); this.renderSkills();
   },
   // v1.25 스킬 초기화 (캠프 · 크레딧): 배운 스킬·등급·갈래·트리를 지우고 SP를 전부 돌려줌
@@ -705,7 +705,7 @@ const UI = {
     const back = spSpent(p);
     p.credits -= cost; p.sp = (p.sp || 0) + back; p.skills = {}; p.srank = {}; p.smodOwned = {}; p.skillMods = {}; p.stree = {};
     p.skillbar = [null, null, null, null]; // v1.50 스킬 퀵바
-    log(`스킬 초기화 — 스킬 포인트 ${back} 반환`, '#7fd'); SFX.play('ui');
+    log(`스킬 초기화. 스킬 포인트 ${back} 돌려받음`, '#7fd'); SFX.play('ui');
     UI.buildHotbar(); UI.refreshStats(); saveGame(); this.renderSkills();
   },
   // v1.23 특성 고르기 (능력치 창 · 패시브 트리 공용)
@@ -713,8 +713,8 @@ const UI = {
     const p = G.player, t = PERK_TIERS[i], k = t.perks.find(q => q.id === id);
     if (!k || p.perks[i] || p.level < t.lvl) return;
     const before = PlayerStats.maxHp(p); p.perks[i] = id; p.hp += Math.max(0, PlayerStats.maxHp(p) - before);
-    log(`특성 획득: ${k.name} — ${k.desc}`, '#ffd76a'); SFX.play('levelup');
-    const b = PERK_BRANCH[id]; if (branchOn(b) && p.perks.filter(q => q && PERK_BRANCH[q] === b).length === 3) UI.toast('갈래 보너스', `${PASSIVE_BRANCHES[b].name} — ${PASSIVE_BRANCHES[b].bonus}`);
+    log(`특성 획득: ${k.name} (${k.desc})`, '#ffd76a'); SFX.play('levelup');
+    const b = PERK_BRANCH[id]; if (branchOn(b) && p.perks.filter(q => q && PERK_BRANCH[q] === b).length === 3) UI.toast('갈래 보너스', `${PASSIVE_BRANCHES[b].name}: ${PASSIVE_BRANCHES[b].bonus}`);
     UI.refreshStats(); UI.refreshInventory(); saveGame();
   },
   // v1.23 패시브 트리: 세 갈래(공격 · 전술 · 생존). 특성(Lv5마다 한 단계에서 1개, 무료) 사이에 단련 노드(크레딧, 캠프에서)
@@ -756,7 +756,7 @@ const UI = {
     }
     btns.push(['닫기', () => { this.ptSel = null; UI.close('dialog'); }]);
     const keep = $('dialog-text').scrollTop, same = $('dialog-name').textContent.startsWith('패시브 트리'); // 노드를 누를 때 스크롤 위치 유지
-    UI.dialog('패시브 트리 — 특성 · 단련', h, btns); if (same) $('dialog-text').scrollTop = keep;
+    UI.dialog('특성 · 단련', h, btns); if (same) $('dialog-text').scrollTop = keep;
     $('dialog-text').querySelectorAll('[data-pt]').forEach(el => { el.onclick = () => { this.ptSel = el.dataset.pt; SFX.play('ui'); this.passiveTree(); }; });
   },
   buyPassive(b, i) {
@@ -764,16 +764,16 @@ const UI = {
     if (p.credits < n.price) { log('크레딧이 부족합니다.', '#f88'); SFX.play('empty'); return; }
     const before = PlayerStats.maxHp(p);
     p.credits -= n.price; p.passive[n.id] = true; p.hp += Math.max(0, PlayerStats.maxHp(p) - before);
-    log(`단련: ${n.name} — ${n.desc}`, '#7fd'); UI.toast('패시브 단련', `${PASSIVE_BRANCHES[b].name} — ${n.name}`);
+    log(`단련: ${n.name} (${n.desc})`, '#7fd'); UI.toast('패시브 단련', `${PASSIVE_BRANCHES[b].name}: ${n.name}`);
     SFX.play('levelup'); UI.refreshStats(); saveGame(); this.passiveTree();
   },
   buySkill(s, k) {
     const p = G.player, cost = k ? SKILL_SP[k] : SKILL_SP.root; // v1.25 스킬 포인트
     if ((p.sp || 0) < cost) { log('스킬 포인트가 부족합니다.', '#f88'); SFX.play('empty'); return; }
     p.sp -= cost; p.srank = p.srank || {};
-    if (k) { p.smodOwned[s.id + '_' + k] = true; if (!p.skillMods[s.id]) p.skillMods[s.id] = k; log(`스킬 갈래 획득: ${s.name} — ${SKILL_MODS[s.id][k].name}`, '#7fd'); }
-    else if (p.skills[s.id]) { p.srank[s.id] = srank(s.id) + 1; log(`${s.name} ${p.srank[s.id]}등급 — 위력 +${Math.round((rankMul(s.id) - 1) * 100)}%`, '#7fd'); } // v1.26 등급
-    else { p.skills[s.id] = true; p.srank[s.id] = 1; const on = Hotbar.autoAdd('sk' + SKILLS.indexOf(s), 'skill'), k = p.skillbar.indexOf('sk' + SKILLS.indexOf(s)) + 1; log(`스킬을 배웠다: ${s.name}${on ? ` [스킬 ${k}번 칸]` : ' — 스킬 퀵바가 가득: 퀵바 「＋」로 바꿔 넣기'}`, '#7fd'); UI.toast('스킬 습득', on ? `${s.name} — ${k}번 칸` : `${s.name} — 스킬 퀵바가 가득 (퀵바 ＋로 바꾸기)`); }
+    if (k) { p.smodOwned[s.id + '_' + k] = true; if (!p.skillMods[s.id]) p.skillMods[s.id] = k; log(`${s.name} 갈래: ${SKILL_MODS[s.id][k].name}`, '#7fd'); }
+    else if (p.skills[s.id]) { p.srank[s.id] = srank(s.id) + 1; log(`${s.name} ${p.srank[s.id]}등급, 위력 +${Math.round((rankMul(s.id) - 1) * 100)}%`, '#7fd'); } // v1.26 등급
+    else { p.skills[s.id] = true; p.srank[s.id] = 1; const on = Hotbar.autoAdd('sk' + SKILLS.indexOf(s), 'skill'), k = p.skillbar.indexOf('sk' + SKILLS.indexOf(s)) + 1; log(`스킬을 배웠다: ${s.name}${on ? ` [스킬 ${k}번 칸]` : '. 스킬 퀵바가 가득 (퀵바 ＋로 바꿔 넣기)'}`, '#7fd'); UI.toast('스킬 습득', on ? `${s.name}, ${k}번 칸` : `${s.name}. 퀵바가 가득 (＋로 바꾸기)`); }
     SFX.play('levelup'); UI.buildHotbar(); UI.refreshStats(); saveGame(); if (UI.isOpen('skills')) this.renderSkills();
   },
 
@@ -782,7 +782,7 @@ const UI = {
   welcome() {
     if (UI.anyOpen()) return;
     const k = (pc, m) => IS_TOUCH ? m : pc;
-    UI.dialog('생존 수칙 — 시청역 캠프', `<div class="welcome">`
+    UI.dialog('생존 수칙', `<div class="welcome">`
       + `<b>1. 출격</b> 캠프의 <b>작전 장교 윤씨</b>에게서 맵을 골라 나간다.<br>`
       + `<b>2. 뒤지고 싸운다</b> 노란 반짝임 = 뒤질 곳 ${k('[E]', '(E 버튼)')} · 미니맵 노란 ◆ = 사건 · 붉은 예고(「!」·원·선)가 보이면 ${k('Space', '슬라이딩 버튼')}로 슬라이딩.<br>`
       + `<b>3. 탈출해야 내 것</b> 주운 장비·크레딧은 맵 끝 초록 ◎에 5초 머물러야 확정. 죽으면 그 자리에 시체 가방.<br>`
@@ -799,7 +799,7 @@ const UI = {
       const st = c.steps[p.quest.step];
       UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${st.text}"<br><span class="muted">끝나면 무전으로 연락하지. 캠프로 돌아올 필요 없네.</span>`, [fac, comp, ppl, bye]);
     } else if (p.level < c.minLevel) {
-      UI.dialog(npc.name, `"아직은 위험해. 좀 더 강해져서 오게."<br><span class="muted">${c.title} — Lv${c.minLevel} 이상</span>`, [fac, comp, ppl, bye]);
+      UI.dialog(npc.name, `"아직은 위험해. 좀 더 강해져서 오게."<br><span class="muted">${c.title}: Lv${c.minLevel} 이상</span>`, [fac, comp, ppl, bye]);
     } else {
       UI.dialog(npc.name, `<b style="color:#e0b23a">[${c.title}]</b><br>"${c.intro}"<br><br><span class="muted">${c.steps.map((st, i) => `${i + 1}. ${Story.objective(st)}`).join('<br>')}</span>`, [
         ['수락', () => { UI.close('dialog'); Story.start(p); }],
@@ -910,14 +910,14 @@ const Hotbar = {
   },
   use(i) { // 벨트 칸
     const p = G.player;
-    if (i >= beltSlots(p)) { log(`벨트 ${i + 1}번 칸이 없습니다 — 더 좋은 벨트가 필요합니다 (지금 ${beltSlots(p)}칸).`, '#aaa'); return; }
+    if (i >= beltSlots(p)) { log(`벨트 ${i + 1}번 칸이 없다. 더 좋은 벨트가 필요하다 (지금 ${beltSlots(p)}칸).`, '#aaa'); return; }
     const k = p.hotbar[i];
-    if (!k) { log('빈 벨트 칸 — 눌러서 소모품을 넣으세요.', '#aaa'); return Hotbar.edit(i); }
+    if (!k) { log('빈 벨트 칸. 눌러서 소모품을 넣자.', '#aaa'); return Hotbar.edit(i); }
     this.useItem(k);
   },
   useSkill(i) {
     const a = G.player.skillbar[i];
-    if (!a) { log('빈 스킬 칸 — 눌러서 스킬을 넣으세요.', '#aaa'); return Hotbar.edit(i, 'skill'); }
+    if (!a) { log('빈 스킬 칸. 눌러서 스킬을 넣자.', '#aaa'); return Hotbar.edit(i, 'skill'); }
     useSkill(+a.slice(2));
   },
   assign(i, act, mode = 'belt') {
@@ -942,21 +942,21 @@ const Hotbar = {
       const c = CONSUMABLES[act]; return { ic: c.icon, nm: c.name, sub: `${consCount(act)}개` };
     };
     const max = sk ? SKILLBAR : HOT_MAX, keyOfSlot = i => sk ? String(i + 1) : BELT_KEYS[i];
-    let h = sk ? `<div class="muted">스킬 퀵바 <b>4칸</b> — 칸을 고르고 아래에서 스킬을 누르세요. ${IS_TOUCH ? '화면 오른쪽 아래 둥근 버튼으로 쓴다.' : '1~4 키로 쓴다.'}</div><div class="hbx-slots sk">`
-      : `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>소모품 ${n}칸</b> — 칸을 고르고 아래에서 넣을 것을 누르세요.${IS_TOUCH ? '' : ' 5~0 키로 쓴다.'} 좋은 벨트일수록 칸이 많다.</div><div class="hbx-slots">`;
+    let h = sk ? `<div class="muted">스킬 퀵바 <b>4칸</b>. 칸을 고르고 아래에서 스킬을 누른다. ${IS_TOUCH ? '화면 오른쪽 아래 둥근 버튼으로 쓴다.' : '1~4 키로 쓴다.'}</div><div class="hbx-slots sk">`
+      : `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>소모품 ${n}칸</b>. 칸을 고르고 아래에서 넣을 것을 누른다.${IS_TOUCH ? '' : ' 5~0 키로 쓴다.'} 좋은 벨트일수록 칸이 많다.</div><div class="hbx-slots">`;
     for (let i = 0; i < max; i++) {
       if (i >= n) { h += `<div class="hbx-slot off"><span class="k">${keyOfSlot(i)}</span>${ICON('lock')}<small>${BELTS.find(b => b.slots > i).name}</small></div>`; continue; }
       const L = look(bar[i]);
       h += `<div class="hbx-slot${i === sel ? ' on' : ''}${bar[i] ? '' : ' empty'}" data-slot="${i}"><span class="k">${IS_TOUCH ? i + 1 : keyOfSlot(i)}</span>${L.ic ? ICON(L.ic) : '<b class="plus">＋</b>'}<small>${L.nm}</small></div>`;
     }
     const pal = sk ? HOT_ACTS().map(a => a[0]) : BELT_ITEMS;
-    h += `</div><div class="hbx-head">${sel + 1}번 칸에 넣을 ${sk ? '스킬' : '소모품'}</div><div class="hbx-pal">${pal.length ? '' : '<span class="muted">아직 배운 스킬이 없다 — 스킬 창에서 스킬 포인트로 배우면 여기 나온다.</span>'}`;
+    h += `</div><div class="hbx-head">${sel + 1}번 칸에 넣을 ${sk ? '스킬' : '소모품'}</div><div class="hbx-pal">${pal.length ? '' : '<span class="muted">아직 배운 스킬이 없다. 스킬 창에서 스킬 포인트로 배우면 여기 나온다.</span>'}`;
     for (const act of pal) {
       const L = look(act), at = bar.indexOf(act);
       h += `<div class="hbx-item${bar[sel] === act ? ' cur' : ''}${!sk && !consCount(act) ? ' none' : ''}" data-act="${act}">${ICON(L.ic)}<b>${L.nm}</b><small>${L.sub}${at >= 0 && at !== sel ? ` · 지금 ${at + 1}번` : ''}</small></div>`;
     }
     h += `<div class="hbx-item clear" data-act=""><span class="x">✕</span><b>칸 비우기</b><small>&nbsp;</small></div></div>`;
-    UI.dialog(sk ? '스킬 퀵바 — 칸 등록' : '벨트 — 소모품 칸', h, [[sk ? '벨트(소모품) 칸으로' : '스킬 퀵바로', () => this.edit(undefined, sk ? 'belt' : 'skill')], ['닫기', () => UI.close('dialog')]]);
+    UI.dialog(sk ? '스킬 퀵바 등록' : '벨트 소모품 칸', h, [[sk ? '벨트(소모품) 칸으로' : '스킬 퀵바로', () => this.edit(undefined, sk ? 'belt' : 'skill')], ['닫기', () => UI.close('dialog')]]);
     const box = $('dialog-text');
     box.querySelectorAll('.hbx-slot[data-slot]').forEach(el => { el.onclick = () => { SFX.play('click'); this.edit(+el.dataset.slot, mode); }; });
     box.querySelectorAll('.hbx-item').forEach(el => { el.onclick = () => {

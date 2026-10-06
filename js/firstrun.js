@@ -5,17 +5,17 @@ const MOUSE_SVG = '<svg class="kc-mouse" viewBox="0 0 20 28" width="18" height="
 const HINTS = [
   { id: 'move', when: p => World.map === 'camp', keys: ['up', 'left', 'down', 'right'], text: '움직이기', touch: '화면 왼쪽을 끌어서 움직이기',
     done: (p, h) => Math.hypot(p.x - h.x0, p.y - h.y0) > 110 },
-  { id: 'yun', when: p => World.map === 'camp' && FirstRun.rookie(), keys: ['interact'], text: '작전 장교 윤씨에게 말 걸기 — 출격', touch: '윤씨 곁에서 E 버튼 — 출격', max: 1e9,
+  { id: 'yun', when: p => World.map === 'camp' && FirstRun.rookie(), keys: ['interact'], text: '작전 장교 윤씨에게 말 걸어 출격', touch: '윤씨 곁에서 E 버튼으로 출격', max: 1e9,
     far: '노란 화살표를 따라 <b>작전 장교 윤씨</b>에게', guide: () => G.npcs.find(n => n.id === 'deploy'), done: p => World.map !== 'camp' },
-  { id: 'grave', when: p => p.raid && G.grave, keys: [], text: '내 시체 가방이 이 맵에 있다 — 붉은 화살표', touch: '', max: 7, ring: '✚',
+  { id: 'grave', when: p => p.raid && G.grave, keys: [], text: '내 시체 가방이 이 맵에 있다. 붉은 화살표를 따라가자', touch: '', max: 7, ring: '✚',
     guide: () => G.grave, done: () => !G.grave },
-  { id: 'aim', when: p => p.raid && G.enemies.some(e => e.hp > 0 && dist(e, p) < 420 && !enemyCloaked(e) && World.lineOfSight(p, e)), keys: ['mouse'], text: '조준하고 클릭 — 누르고 있으면 계속 쏜다', touch: '화면 오른쪽을 끌어서 조준 · 사격 (놓으면 멈춤)',
+  { id: 'aim', when: p => p.raid && G.enemies.some(e => e.hp > 0 && dist(e, p) < 420 && !enemyCloaked(e) && World.lineOfSight(p, e)), keys: ['mouse'], text: '조준하고 클릭. 누르고 있으면 계속 쏜다', touch: '화면 오른쪽을 끌어서 조준 · 사격 (놓으면 멈춤)',
     done: p => G.time - (p.lastShot || -9) < 0.3 },
-  { id: 'reload', when: p => { const w = curWeapon(); return p.raid && w && !WEAPONS[w.key].melee && !WEAPONS[w.key].infinite && w.loaded <= magSize(w) * 0.3 && !(p.reloadT > 0); }, keys: ['reload'], text: '재장전 — 탄창이 비기 전에', touch: '탄창 그림을 눌러 재장전',
+  { id: 'reload', when: p => { const w = curWeapon(); return p.raid && w && !WEAPONS[w.key].melee && !WEAPONS[w.key].infinite && w.loaded <= magSize(w) * 0.3 && !(p.reloadT > 0); }, keys: ['reload'], text: '탄창이 비기 전에 재장전', touch: '탄창 그림을 눌러 재장전',
     done: p => p.reloadT > 0 },
   { id: 'slide', when: p => p.raid && (G.enemies.some(e => e.hp > 0 && dist(e, p) < 400 && (e.windT > 0 || e.pounceT > 0 || e.aimT > 0)) || G.strikes.some(s => Math.hypot(s.x - p.x, s.y - p.y) < 300)),
-    keys: ['dodge'], text: '붉은 예고가 보이면 슬라이딩 — 5초에 한 번', touch: '슬라이딩 버튼 — 5초에 한 번', done: p => G.time - (p.lastRoll || -9) < 0.5, max: 7 },
-  { id: 'loot', when: p => p.raid && !G.search && Scavenge.near() && !Scavenge.near().hint, keys: ['interact'], text: '뒤지기 — 끝날 때까지 가만히', touch: 'E 버튼으로 뒤지기 — 끝날 때까지 가만히',
+    keys: ['dodge'], text: '붉은 예고가 보이면 슬라이딩 (5초에 한 번)', touch: '슬라이딩 (5초에 한 번)', done: p => G.time - (p.lastRoll || -9) < 0.5, max: 7 },
+  { id: 'loot', when: p => p.raid && !G.search && Scavenge.near() && !Scavenge.near().hint, keys: ['interact'], text: '뒤지는 동안은 가만히', touch: 'E 버튼으로 뒤지기. 끝날 때까지 가만히',
     done: p => !!G.search },
   { id: 'heal', when: p => p.raid && p.hp < PlayerStats.maxHp(p) * 0.45 && (p.inventory.find(i => i.key === 'medkit') || {}).count > 0,
     keys: ['useMed'], text: '구급상자', touch: '아래 소모품 칸의 구급상자', done: (p, h) => p.hp > h.hp0 + 5, max: 8 },
@@ -93,7 +93,7 @@ const FirstRun = {
     const p = G.player; p.hints = p.hints || [];
     if (p.hints.includes('rules')) return go();
     p.hints.push('rules');
-    UI.dialog('작전 장교 윤씨 — 나가기 전에', `"딱 세 가지만 기억해."<div class="rules3">`
+    UI.dialog('작전 장교 윤씨', `"딱 세 가지만 기억해."<div class="rules3">`
       + `<div class="r3">${ICON('box')}<b>1. 줍는다</b><span>밖에서 주운 건 가방에 <i class="tag-raid">미확정</i> 표시. 아직 네 것이 아니야.</span></div>`
       + `<div class="r3-arrow">→</div><div class="r3"><span class="r3-ring">◎</span><b>2. 탈출한다</b><span>맵 끝 <b style="color:#6ef082">초록 ◎</b>에 5초 서 있으면 확정. 미니맵에도 보인다.</span></div>`
       + `<div class="r3-arrow">→</div><div class="r3">${ICON('skull')}<b>3. 죽으면</b><span>주운 것만 그 자리 <b style="color:#ff8a8a">시체 가방</b>에. 같은 맵에 다시 나가 [E]로 되찾는다. 또 죽으면 새 가방으로 바뀐다.</span></div>`

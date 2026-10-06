@@ -28,7 +28,7 @@ const Settlement = {
     const used = new Set(p.residents.map(r => r.job)), jobs = Object.keys(RES_JOBS), job = jobs.find(j => !used.has(j)) || pick(jobs);
     p.residents.push({ name, job, since: Date.now() });
     const n = p.residents.length, tier = CAMP_GROWTH.find(g => g.n === n);
-    UI.toast(`${name} 합류`, `${RES_JOBS[job].name} — 캠프 사람 ${n}명${tier ? ' · 캠프가 커졌다' : ''}`);
+    UI.toast(`${name} 합류`, `${RES_JOBS[job].name}, 캠프 사람 ${n}명${tier ? ' · 캠프가 커졌다' : ''}`);
     log(`${name}이(가) 캠프에 자리를 잡았다. ${RES_JOBS[job].name}을(를) 맡는다.`, '#9fd0ff');
   },
   // 탈출 (Raid.extract): 구한 사람 합류 + 사람들이 물건을 모아 둠
@@ -75,7 +75,7 @@ const Settlement = {
     let h = `"사람이 늘었어. 다 자네가 데려온 사람들이지."<br><span class="muted">밖에서 구한 사람(부상당한 생존자 · 호위)을 데리고 살아 나오면 캠프에 남는다. 출격하고 돌아올 때마다 저마다 뭔가를 모아 둔다 (모닥불 옆 상자).</span><br>`;
     h += rs.length ? rs.map(r => `<div class="sum-row"><span>${r.name}</span><b>${RES_JOBS[r.job].name} · ${RES_JOBS[r.job].what}</b></div>`).join('') : '<div class="muted">아직 아무도 없다.</div>';
     h += `<div class="muted" style="margin-top:6px">${rs.length} / ${RES_CAP}명${next ? ` · ${next.n}명이 되면 캠프가 커진다` : ''}</div>`;
-    UI.dialog('생존자 대장 한씨 — 캠프 사람들', h, [['닫기', () => UI.close('dialog')]]);
+    UI.dialog('생존자 대장 한씨', h, [['닫기', () => UI.close('dialog')]]);
   },
 
   // ---------- 그리기 ----------

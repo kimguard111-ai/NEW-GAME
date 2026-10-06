@@ -6,8 +6,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>SEOUL 2049 : 폐허의 도시</title>
-<link rel="stylesheet" href="css/style.css?v=1.49.6">
-<link rel="stylesheet" href="css/theme.css?v=1.49.6"> <!-- v1.38 UI 다시 입히기 -->
+<link rel="stylesheet" href="css/style.css?v=1.49.7">
+<link rel="stylesheet" href="css/theme.css?v=1.49.7"> <!-- v1.38 UI 다시 입히기 -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/app/icon192.png">
 <meta name="theme-color" content="#0b0c0e">
@@ -77,11 +77,11 @@
 <div id="ending-screen" class="overlay hidden">
   <div class="title-box">
     <h1>SEOUL 2049</h1>
-    <h2>— 해방 —</h2>
+    <h2>해방</h2>
     <p class="lore">변이 군주 바벨이 쓰러지고, 잠실의 탑에서 20년 동안 울리던 신호가 멎었다.<br>
     블랙선은 흩어졌고, 시청역 캠프의 사람들은 처음으로 지상에서 아침을 맞이했다.</p>
     <div id="ending-stats"></div>
-    <p class="muted">기획·아트 디렉션: 개발자 · 프로그래밍: Claude Code<br>모험은 계속됩니다 — 위협 등급 어설트, 일일 의뢰, 부활하는 타이탄, 지하 연구소의 키메라가 기다립니다.</p>
+    <p class="muted">기획·아트 디렉션: 개발자 · 프로그래밍: Claude Code<br>서울은 아직 끝나지 않았다. 어설트, 일일 의뢰, 다시 깨어나는 타이탄, 지하 연구소의 키메라.</p>
     <button id="btn-ending-continue">계속 플레이</button>
   </div>
 </div>
@@ -153,7 +153,7 @@
 </div>
 
 <div id="panel-stash" class="panel hidden">
-  <div class="panel-head">창고 관리인 정씨 — 창고 <span class="close">✕</span></div>
+  <div class="panel-head">창고 관리인 정씨 <span class="close">✕</span></div>
   <div class="shop-hint">정씨: "눌러서 넣고 빼. 여기 둔 건 밖에서 죽어도 안 없어진다." <span class="muted">· 칸 위에 올리면(길게 누르면) 정보</span></div>
   <div class="stash-body">
     <div><div class="bag-head">가방 <span id="stash-bag-n"></span></div><div id="stash-bag" class="stash-grid"></div></div>
@@ -190,7 +190,7 @@
 </div>
 
 <div id="panel-enhance" class="panel hidden">
-  <div class="panel-head">정비공 최씨 — 작업대 <span class="close">✕</span></div>
+  <div class="panel-head">정비공 최씨의 작업대 <span class="close">✕</span></div>
   <div id="ws-tabs"><button data-ws="enhance">강화</button><button data-ws="salvage">분해 · 제작</button><button data-ws="reroll">옵션 재조정</button></div>
   <div class="shop-hint" id="ws-hint"></div>
   <div id="enh-list"></div>
@@ -203,42 +203,42 @@
   <div id="dialog-buttons"></div>
 </div>
 
-<script src="js/util.js?v=1.49.6"></script>
-<script src="js/icons.js?v=1.49.6"></script>
-<script src="js/settings.js?v=1.49.6"></script>
-<script src="js/sfx.js?v=1.49.6"></script>
-<script src="js/data.js?v=1.49.6"></script>
-<script src="js/world.js?v=1.49.6"></script>
-<script src="js/city.js?v=1.49.6"></script>
-<script src="js/entities.js?v=1.49.6"></script>
-<script src="js/quests.js?v=1.49.6"></script>
-<script src="js/monsters.js?v=1.49.6"></script>
-<script src="js/assault.js?v=1.49.6"></script>
-<script src="js/raid.js?v=1.49.6"></script>
-<script src="js/scavenge.js?v=1.49.6"></script>
-<script src="js/events.js?v=1.49.6"></script>
-<script src="js/contracts.js?v=1.49.6"></script>
-<script src="js/companion.js?v=1.49.6"></script>
-<script src="js/settlement.js?v=1.49.6"></script>
-<script src="js/camp.js?v=1.49.6"></script>
-<script src="js/gadgets.js?v=1.49.6"></script>
-<script src="js/journal.js?v=1.49.6"></script>
-<script src="js/pop.js?v=1.49.6"></script>
-<script src="js/music.js?v=1.49.6"></script>
-<script src="js/ambience.js?v=1.49.6"></script>
-<script src="js/bosses.js?v=1.49.6"></script>
-<script src="js/assets.js?v=1.49.6"></script>
-<script src="js/render.js?v=1.49.6"></script>
-<script src="js/ui.js?v=1.49.6"></script>
-<script src="js/workshop.js?v=1.49.6"></script>
-<script src="js/interiors.js?v=1.49.6"></script>
-<script src="js/endgame.js?v=1.49.6"></script>
-<script src="js/tips.js?v=1.49.6"></script>
-<script src="js/firstrun.js?v=1.49.6"></script>
-<script src="js/touch.js?v=1.49.6"></script>
-<script src="js/title.js?v=1.49.6"></script>
-<script src="js/turrets.js?v=1.49.6"></script>
-<script src="js/juice.js?v=1.49.6"></script>
-<script src="js/game.js?v=1.49.6"></script>
+<script src="js/util.js?v=1.49.7"></script>
+<script src="js/icons.js?v=1.49.7"></script>
+<script src="js/settings.js?v=1.49.7"></script>
+<script src="js/sfx.js?v=1.49.7"></script>
+<script src="js/data.js?v=1.49.7"></script>
+<script src="js/world.js?v=1.49.7"></script>
+<script src="js/city.js?v=1.49.7"></script>
+<script src="js/entities.js?v=1.49.7"></script>
+<script src="js/quests.js?v=1.49.7"></script>
+<script src="js/monsters.js?v=1.49.7"></script>
+<script src="js/assault.js?v=1.49.7"></script>
+<script src="js/raid.js?v=1.49.7"></script>
+<script src="js/scavenge.js?v=1.49.7"></script>
+<script src="js/events.js?v=1.49.7"></script>
+<script src="js/contracts.js?v=1.49.7"></script>
+<script src="js/companion.js?v=1.49.7"></script>
+<script src="js/settlement.js?v=1.49.7"></script>
+<script src="js/camp.js?v=1.49.7"></script>
+<script src="js/gadgets.js?v=1.49.7"></script>
+<script src="js/journal.js?v=1.49.7"></script>
+<script src="js/pop.js?v=1.49.7"></script>
+<script src="js/music.js?v=1.49.7"></script>
+<script src="js/ambience.js?v=1.49.7"></script>
+<script src="js/bosses.js?v=1.49.7"></script>
+<script src="js/assets.js?v=1.49.7"></script>
+<script src="js/render.js?v=1.49.7"></script>
+<script src="js/ui.js?v=1.49.7"></script>
+<script src="js/workshop.js?v=1.49.7"></script>
+<script src="js/interiors.js?v=1.49.7"></script>
+<script src="js/endgame.js?v=1.49.7"></script>
+<script src="js/tips.js?v=1.49.7"></script>
+<script src="js/firstrun.js?v=1.49.7"></script>
+<script src="js/touch.js?v=1.49.7"></script>
+<script src="js/title.js?v=1.49.7"></script>
+<script src="js/turrets.js?v=1.49.7"></script>
+<script src="js/juice.js?v=1.49.7"></script>
+<script src="js/game.js?v=1.49.7"></script>
 </body>
 </html>

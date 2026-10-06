@@ -181,7 +181,7 @@ const Story = {
     const cr = Math.round(r.credits * ECON.cr); p.credits += cr; // v1.25 이야기 보상 크레딧도 절반
     if (r.items) for (const [k, n] of r.items) addItem(makeConsumable(k, n));
     const give = it => { if (!addItem(it)) G.drops.push({ x: p.x, y: p.y + 20, kind: 'item', item: it, t: 0 }); return it; };
-    if (r.equip) { const it = give(makeGear(r.equip, Math.max(p.level, 1), 0)); log(`보상 장비: ${it.name} — 인벤토리(I)에서 장착하세요`, '#8cf'); }
+    if (r.equip) { const it = give(makeGear(r.equip, Math.max(p.level, 1), 0)); log(`보상 장비: ${it.name}. 인벤토리(I)에서 장착`, '#8cf'); }
     if (r.gear) { const it = give(randomGear(Math.max(p.level, level), r.gear)); log(`보상 장비: ${itemName(it)}`, RARITIES[it.rarity].color); }
     log(`보상: EXP ${fmt(r.exp)}, ${fmt(cr)}₵`, '#8cf');
     gainExp(r.exp);

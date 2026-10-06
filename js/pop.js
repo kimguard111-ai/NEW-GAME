@@ -40,13 +40,13 @@ const Pop = {
     if (c.alive <= 0 && c.n <= 0 && !c.cleared) { c.cleared = true; dropAt('credits', { amount: lvl * 8 }); floatText(e.x, e.y - 50, '구역 소탕', '#9fd', 13); }
     if (!this.half && this.killed >= this.total / 2) {
       this.half = true; dropAt('credits', { amount: lvl * 40 }); dropAt('item', { item: makeConsumable(pick(['molotov', 'flash', 'plate', 'stim']), 1) });
-      UI.toast('맵 절반 소탕', `남은 적 약 ${this.remaining()} — 크레딧 · 소모품`); SFX.play('quest');
+      UI.toast('맵 절반 소탕', `남은 적 약 ${this.remaining()}. 크레딧, 소모품`); SFX.play('quest');
     }
     if (!this.done && this.killed >= this.total) {
       this.done = true; RaidEvents.cleared = true; // 증원도 멈춤
       dropAt('item', { item: randomGear(lvl, 1.5, 3, ZONES[World.zoneIndex()].gear) }); dropAt('credits', { amount: lvl * 120 }); Workshop.gain(6, 3, '맵 소탕');
       p.rec = p.rec || {}; p.rec.clears = (p.rec.clears || 0) + 1;
-      UI.toast('★ 맵 소탕 완료 ★', '영웅 이상 장비 · 크레딧 · 재료 — 증원도 끊겼다. 천천히 뒤지고 나가자'); SFX.play('legend');
+      UI.toast('★ 맵 소탕 완료 ★', '영웅 이상 장비, 크레딧, 재료. 증원도 끊겼다. 천천히 뒤지고 나가자'); SFX.play('legend');
       G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 1.2, color: '#ffd76a', r: 220 });
     }
   },

@@ -103,7 +103,7 @@ const Scavenge = {
     }
     if (g.credits) { p.credits += g.credits; if (p.raid) p.raid.credits += g.credits; }
     delete p.graves[World.map]; G.grave = null;
-    UI.toast('시체 가방 회수', `장비 ${g.items.length}개 · ₵${fmt(g.credits)} — 탈출해야 확정`);
+    UI.toast('시체 가방 회수', `장비 ${g.items.length}개 · ₵${fmt(g.credits)}. 탈출해야 내 것`);
     log(`시체 가방을 찾았다! 장비 ${g.items.length}개, ₵${fmt(g.credits)}`, '#ffd76a');
     SFX.play('item', 3);
   },

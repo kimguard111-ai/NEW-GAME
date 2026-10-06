@@ -26,7 +26,7 @@ const Raid = {
       h += `<div class="map-row${ok ? ' go' : ' locked'}"${ok ? ` data-map="${id}"` : ''}><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}${ev}</div>`;
     }
     btns.push(['닫기', () => UI.close('dialog')]);
-    UI.dialog('작전 장교 윤씨 — 출격 지도', h, btns);
+    UI.dialog('작전 장교 윤씨', h, btns);
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격
   },
 
@@ -34,7 +34,7 @@ const Raid = {
     const p = G.player;
     // v1.7 비상 보급: 구급상자도 돈도 없으면 2개, 예비 탄약이 바닥이면 120발 (죽음의 악순환 방지 — 봇 측정에서 발견)
     const med = p.inventory.find(i => i.key === 'medkit');
-    if (!med && p.credits < 120 && addItem(makeConsumable('medkit', 2))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." — 비상 구급상자 2개', '#8cf');
+    if (!med && p.credits < 120 && addItem(makeConsumable('medkit', 2))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." (비상 구급상자 2개)', '#8cf');
     for (const t of gunAmmoTypes(p)) if ((p.ammo[t] || 0) < AMMO[t].pack / 2) { addAmmo(p, t, AMMO[t].pack); log(`작전 장교 윤씨: 비상 ${AMMO[t].name} ${AMMO[t].pack}발 지급`, '#8cf'); }
     if (Camp.medkits() && addItem(makeConsumable('medkit', Camp.medkits()))) log(`의무실: 구급상자 ${Camp.medkits()}개 지급`, '#8cf'); // v1.13
     saveGame();
@@ -58,7 +58,7 @@ const Raid = {
       if (best) [G.grave.x, G.grave.y] = best;
     }
     if (G.grave) log(`${ICON('skull')} 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
-    UI.toast(MAPS[id].name, `탈출구 ${G.exits.length}곳 — 미니맵 초록 ◎`); // v1.39
+    UI.toast(MAPS[id].name, `탈출구 ${G.exits.length}곳, 미니맵 초록 ◎`); // v1.39
     log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}.`, '#8cf'); // v1.39
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
@@ -156,7 +156,7 @@ const Raid = {
     const p = G.player;
     if (!p.raid) return '';
     const n = this.allItems().filter(it => it.raid).length, ex = G.extractT > 0 ? ` · <b style="color:#7fe08a">탈출 ${Math.ceil((G.extractNeed || EXTRACT_TIME) - G.extractT)}초</b>` : '';
-    return `<br><span class="muted">${ICON('box')} 미확정 장비 ${n} · ₵${fmt(p.raid.credits)} — 탈출 지점 ◎${ex}</span>`
+    return `<br><span class="muted">${ICON('box')} 미확정 장비 ${n} · ₵${fmt(p.raid.credits)}, 탈출 지점 ◎${ex}</span>`
       + (Pop.total ? `<br><span class="muted">${ICON('skull')} 남은 적 약 ${Pop.remaining()} / ${Pop.total}</span>` : ''); // v1.16
   },
 };

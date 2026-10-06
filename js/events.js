@@ -119,14 +119,14 @@ const RaidEvents = {
       if (e.kind === 'airdrop' && e.state !== 'landed') continue;
       const d = Math.hypot(p.x - e.x, p.y - e.y); if (d < bd) { bd = d; best = e; }
     }
-    for (const ex of G.exits || []) if (ex.special === 'pay' && ex.locked && Math.hypot(p.x - ex.x, p.y - ex.y) < EXTRACT_R) return { payExit: ex, hint: `[E] 탈출 차량 호출 — ₵${fmt(ex.cost)}`, dur: 0.6 };
+    for (const ex of G.exits || []) if (ex.special === 'pay' && ex.locked && Math.hypot(p.x - ex.x, p.y - ex.y) < EXTRACT_R) return { payExit: ex, hint: `[E] 탈출 차량 호출 (₵${fmt(ex.cost)})`, dur: 0.6 };
     return best;
   },
   // 버티기 시작 순간 (매복 등)
   onStart(e) {
     if (e.ext) return e.onStart ? e.onStart(e) !== false : true; // v1.34 계약 · 고유 사건
-    if (e.kind === 'survivor' && !e.ambushed) { e.ambushed = true; log('생존자: "놈들이 소리를 들었어요...!" — 매복이다!', '#ff8a5a'); this.squad(e.x, e.y, 4, { r0: 300, r1: 420, chase: true }); }
-    if (e.kind === 'generator' && !e.loud) { e.loud = true; for (const o of G.enemies) if (!o.def.boss && dist(o, e) < 750) { o.state = 'chase'; o.heard = true; } log('발전기가 덜컹거리며 돈다 — 근처 적들이 몰려온다!', '#ff8a5a'); }
+    if (e.kind === 'survivor' && !e.ambushed) { e.ambushed = true; log('생존자: "놈들이 소리를 들었어요...!" 매복이다!', '#ff8a5a'); this.squad(e.x, e.y, 4, { r0: 300, r1: 420, chase: true }); }
+    if (e.kind === 'generator' && !e.loud) { e.loud = true; for (const o of G.enemies) if (!o.def.boss && dist(o, e) < 750) { o.state = 'chase'; o.heard = true; } log('발전기가 덜컹거리며 돈다. 근처 적들이 몰려온다!', '#ff8a5a'); }
     if (e.kind === 'safe' && e.state === 'locked') { log('잠겨 있다. 열쇠 소지자(미니맵 노란 점)를 찾아야 한다.', '#aaa'); SFX.play('empty'); return false; }
     return true;
   },
@@ -147,7 +147,7 @@ const RaidEvents = {
       if (Math.random() < 0.5 * ECON.gear) drop('item', { item: randomGear(lvl, 0.8, 0, bias) });
       drop('item', { item: makeConsumable('medkit', 2) }); drop('ammo', { amount: randInt(60, 100) }); drop('credits', { amount: lvl * 60 });
       Workshop.gain(randInt(2, 4), 1, '보급 상자');
-      UI.toast('보급 상자 확보', '희귀 이상 장비 — 탈출해야 확정');
+      UI.toast('보급 상자 확보', '희귀 이상 장비. 탈출해야 내 것');
     } else if (e.kind === 'survivor') {
       drop('credits', { amount: lvl * 45 }); drop('item', { item: makeConsumable('medkit', 2) });
       if (Math.random() < 0.6 * ECON.gear) drop('item', { item: randomGear(lvl, 1.0, 1, bias) });
@@ -179,7 +179,7 @@ const RaidEvents = {
     const a = ALERT_AT.filter(t => p.raid.t >= t + Camp.alertDelay()).length; // v1.13 무전실 2단계: 1분 늦게
     if (a > this.alert) {
       this.alert = a;
-      const msg = ['', '소란을 듣고 주변 무리가 몰려오기 시작했다 — 2분마다 증원.', '증원이 잦아지고 엘리트가 섞인다 — 75초마다.', '추적대가 투입됐다! 50초마다 — 지금 나가는 게 좋다.'][a];
+      const msg = ['', '소란을 듣고 주변 무리가 몰려오기 시작했다. 2분마다 증원.', '증원이 잦아지고 엘리트가 섞인다. 75초마다.', '추적대가 투입됐다! 50초마다 온다. 지금 나가는 게 좋다.'][a];
       UI.toast(`경보 ${a}단계`, msg); log(`${ICON('warn')} 경보 ${a}단계: ${msg}`, '#ff8a5a'); SFX.play('roar', 0.6);
       this.huntT = 8;
     }
@@ -197,7 +197,7 @@ const RaidEvents = {
     for (const e of this.list) {
       if (e.ext) { if (e.tick) e.tick(e, dt); continue; } // v1.34
       if (e.kind === 'airdrop') {
-        if (e.state === 'wait' && (e.t -= dt) <= 0) { e.state = 'falling'; e.fall = 12; log(`${ICON('radio')} 무전: "보급기가 상자를 떨어뜨린다! 12초 뒤 낙하." (미니맵 노란 ◆)`, '#ffd76a'); UI.toast('보급 투하', '12초 뒤 낙하 — 먼저 가는 쪽이 갖는다'); }
+        if (e.state === 'wait' && (e.t -= dt) <= 0) { e.state = 'falling'; e.fall = 12; log(`${ICON('radio')} 무전: "보급기가 상자를 떨어뜨린다! 12초 뒤 낙하." (미니맵 노란 ◆)`, '#ffd76a'); UI.toast('보급 투하', '12초 뒤 떨어진다. 먼저 가는 쪽이 갖는다'); }
         else if (e.state === 'falling' && (e.fall -= dt) <= 0) {
           e.state = 'landed'; G.shake = Math.max(G.shake, 4); burst(e.x, e.y, '#c9a24a', 16, 160, 0.5, 3); SFX.play('boom', 0.5);
           this.squad(e.x, e.y, 4 + Math.min(3, World.zoneIndex()), { r0: 70, r1: 200 }); // 연기를 보고 몰려온 무리
@@ -245,10 +245,10 @@ const RaidEvents = {
     if (!st.sold) btns.push([`${itemIcon(g)} ${itemName(g)} (₵${fmt(st.price)})`, () => {
       if (p.credits < st.price) return log('크레딧이 부족합니다.', '#f88');
       if (!addItem(g)) return log('가방이 가득 찼습니다.', '#f88');
-      p.credits -= st.price; st.sold = true; SFX.play('coin'); log(`${itemName(g)} 구입 — 산 물건은 탈출하지 않아도 내 것.`, '#ffd76a'); again();
+      p.credits -= st.price; st.sold = true; SFX.play('coin'); log(`${itemName(g)} 샀다. 산 물건은 탈출 안 해도 내 것.`, '#ffd76a'); again();
     }]);
     btns.push(['닫기', () => UI.close('dialog')]);
-    const desc = st.sold ? '"좋은 물건은 다 팔렸어. 약이나 탄약은 아직 있지."' : `"캠프까지 갈 필요 없지. 오늘의 물건은 <span class="r${g.rarity}">${itemName(g)}</span> — Lv${itemReqLevel(g)}."`;
+    const desc = st.sold ? '"좋은 물건은 다 팔렸어. 약이나 탄약은 아직 있지."' : `"캠프까지 갈 필요 없지. 오늘의 물건은 <span class="r${g.rarity}">${itemName(g)}</span>. Lv${itemReqLevel(g)}부터 쓸 수 있어."`;
     UI.dialog(npc.name, `${desc}<br><span class="muted">₵${fmt(p.credits)} 보유 · 캠프보다 조금 비쌈</span>`, btns);
   },
 

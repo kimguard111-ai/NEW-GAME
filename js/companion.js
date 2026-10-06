@@ -84,8 +84,8 @@ const Companion = {
       if (cd) { // v1.44 레벨 · 쥔 총 · 개인 부탁
         info = `<br><span style="color:#9fd0ff">Lv${cd.lv}</span>${cd.lv < COMP_MAX_LV ? ` <span class="muted">(${cd.xp}/${cd.lv * 12})</span>` : ' <span class="muted">(최고)</span>'}`
           + ` · <span class="muted">총:</span> ${cd.gun ? `<b class="r${cd.gun.rarity || 0}">${itemName(cd.gun)}</b>` : '<span class="muted">기본 총</span>'}`;
-        if (cd.quest === 'done') info += `<br><span style="color:#9fbf6a">전용 능력 「${d.quest.perk}」</span> <span class="muted">— ${d.quest.perkDesc}</span>`;
-        else if (cd.quest === 'active') info += `<br><span style="color:#ffd76a">부탁: ${d.quest.what} — 「${MAPS[d.quest.map].name}」에 함께 출격해서 찾아 탈출</span>`;
+        if (cd.quest === 'done') info += `<br><span style="color:#9fbf6a">전용 능력 「${d.quest.perk}」</span> <span class="muted">${d.quest.perkDesc}</span>`;
+        else if (cd.quest === 'active') info += `<br><span style="color:#ffd76a">부탁: 「${MAPS[d.quest.map].name}」에서 ${d.quest.what} 찾아오기 (함께 출격)</span>`;
         else info += `<br><span class="muted">${cd.lv >= 3 ? '할 얘기가 있는 눈치다.' : 'Lv3이 되면 개인 부탁을 꺼낸다.'}</span>`;
       }
       h += `<div class="map-row" style="padding:4px 6px;border:1px solid #2f2b22;margin:4px 0"><b style="color:${on ? '#9fbf6a' : '#e6dfcc'}">${d.name}</b> <span class="muted">${d.role}</span>${on ? ' <span style="color:#9fbf6a">· 함께 가는 중</span>' : ''}<br><span class="muted">${d.desc}${hired ? '' : ` 고용 ₵${fmt(d.price)}`}${lock ? ` (Lv${d.lvl}부터)` : ''}</span>${info}</div>`;
@@ -104,7 +104,7 @@ const Companion = {
     if (p.comp) btns.push(['혼자 가기', () => { p.comp = null; G.comp = null; saveGame(); this.open(); }]);
     btns.push(['닫기', () => UI.close('dialog')]);
     h += `<span class="muted">총은 가방에서 골라 「동료에게 주기」 · 출격 중 [${keyLabel(keyOf('compCmd'))}] 로 명령 (따라와 / 여기서 대기 / 조용히)</span>`;
-    UI.dialog('생존자 대장 한씨 — 동료', h, btns);
+    UI.dialog('생존자 대장 한씨', h, btns);
   },
 
   // ---------- 매 프레임 ----------
@@ -193,7 +193,7 @@ const Companion = {
     UI.toast(`${d.name} 쓰러짐`, '25초 안에 다가가서 [E]로 일으키자');
     c.rev = { ext: true, kind: 'c_revive', x: c.x, y: c.y, hint: `[E] ${d.name} 일으키기 (2.5초)`, dur: 2.5, open: true,
       onFinish: e => { e.done = true; c.state = 'follow'; c.hp = Math.round(this.maxHp(G.player) * 0.4); c.rev = null; this.bark(d.bark.up); SFX.play('heal'); },
-      track: () => `${d.name} 쓰러짐 — ${Math.ceil(c.downT)}초`, mini: (g, e, b) => { if (b) { g.fillStyle = '#7ad0ff'; g.fillRect(e.x / TILE - 2, e.y / TILE - 2, 4, 4); } } };
+      track: () => `${d.name} 쓰러짐 ${Math.ceil(c.downT)}초`, mini: (g, e, b) => { if (b) { g.fillStyle = '#7ad0ff'; g.fillRect(e.x / TILE - 2, e.y / TILE - 2, 4, 4); } } };
     if (G.player.raid) RaidEvents.list.push(c.rev);
   },
   // ---------- v1.44 개인 부탁: 그 동료를 데리고 그 맵에 출격하면 물건이 하나 놓임 → 들고 탈출 ----------
@@ -203,7 +203,7 @@ const Companion = {
     const s = RaidEvents.spot(900); if (!s) return;
     const area = { ax: s.x + rand(-200, 200), ay: s.y + rand(-200, 200) }, q = d.quest;
     RaidEvents.list.push({ ext: true, kind: 'c_item', ...s, ...area, hint: `[E] ${q.what} 줍기 (2초)`, dur: 2, open: true,
-      onFinish: e => { e.done = true; p.raid.compQ = p.comp; floatText(p.x, p.y - 36, `${q.what}!`, '#9fd0ff', 15); UI.toast(`${q.what} 찾음`, `${d.name}에게 — 들고 탈출하면 끝`); this.bark('"…찾았네요. 고맙습니다."'); SFX.play('item', 3); },
+      onFinish: e => { e.done = true; p.raid.compQ = p.comp; floatText(p.x, p.y - 36, `${q.what}!`, '#9fd0ff', 15); UI.toast(`${q.what} 찾음`, `${d.name}에게 가져갈 것. 들고 탈출하면 끝`); this.bark('"…찾았네요. 고맙습니다."'); SFX.play('item', 3); },
       track: e => e.done ? `${d.name}의 부탁: ${q.what} 들고 탈출` : `${d.name}의 부탁: ${q.what} 찾기 (미니맵 하늘색 원)`,
       mini: (g, e, b) => Contracts.miniArea(g, e, b, '#7ad0ff'), draw: drawContractItem });
     RaidEvents.squad(s.x, s.y, 3, { r0: 60, r1: 150 });
@@ -217,7 +217,7 @@ const Companion = {
   },
   trackerLine() {
     const c = G.comp, d = this.def(); if (!c || !d || !G.player.raid) return '';
-    if (c.state === 'gone') return `<br><span class="muted">${d.name} — 물러남</span>`;
+    if (c.state === 'gone') return `<br><span class="muted">${d.name} 물러남</span>`;
     if (c.state === 'down') return '';
     return `<br><span class="muted">동료 ${d.name} Lv${this.data().lv} · 체력 ${Math.round(100 * c.hp / this.maxHp(G.player))}% · ${COMP_CMD_NAMES[this.cmd()]} [${keyLabel(keyOf('compCmd'))}]</span>`;
   },
@@ -230,7 +230,7 @@ const Companion = {
     const o = { s: 1, body: d.look.body, skin: '#c49a78', helmet: d.look.helmet, legs: d.look.legs, aim: c.face || 0, gun: this.gunStats(G.player, d).gun, flash: c.hitT > 0, walk: c.state === 'follow' ? c.walk * 6 : 0 };
     if (c.state === 'down') { if (Sprites.get(d.sprite)) Sprites.draw(d.sprite, 'death', 9, sx, sy, c.face || 0, false); /* v1.49.3 쓰러진 그림 = 죽는 동작 마지막 칸 */ else { ctx.save(); ctx.translate(sx, sy); ctx.rotate(1.35); ctx.translate(-sx, -sy); drawHuman(sx, sy, o); ctx.restore(); }
       const k = c.downT / 25; ctx.strokeStyle = '#7ad0ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy - 6, 16, -Math.PI / 2, -Math.PI / 2 + TAU * k); ctx.stroke(); ctx.lineWidth = 1;
-      nameTag(sx, sy - 30, `${d.name} — [E] 일으키기`, '#7ad0ff', 'bold 12px "Malgun Gothic", sans-serif'); return; }
+      nameTag(sx, sy - 30, `[E] ${d.name} 일으키기`, '#7ad0ff', 'bold 12px "Malgun Gothic", sans-serif'); return; }
     if (Sprites.get(d.sprite)) { // v1.49.3 동료 전용 그림 (없으면 코드 그림)
       const [anim, at] = animState(c.state === 'follow' && c.walk > 0 && G.time - (c.movedT || -9) < 0.15, c.hitT, c.lastAtk, d.sprite);
       ctx.save(); if ('filter' in ctx) ctx.filter = d.tint; Sprites.draw(d.sprite, anim, at, sx, sy, c.face || 0, c.hitT > 0); ctx.restore();

@@ -44,7 +44,7 @@ const Bosses = {
       const sa = Math.atan2((x + y) - (p.x + p.y), (x - y) - (p.x - p.y)); // 화면 기준 방향
       const dir = dirs[Math.round(((sa % TAU) + TAU) % TAU / (TAU / 8)) % 8];
       log(`${ICON('warn')} 필드 보스 ${def.name} 출현! (${dir}쪽 약 ${Math.round(r / TILE * 2)}m · 미니맵 붉은 표시)`, '#ff7a5a');
-      UI.toast('필드 보스 출현', `${def.name} — ${ZONES[z].name}`);
+      UI.toast('필드 보스 출현', `${ZONES[z].name}의 ${def.name}`);
       return;
     }
     G.fbT = 5; // 자리를 못 찾으면 잠시 후 재시도
@@ -81,7 +81,7 @@ const Bosses = {
       b.weight = b.def.weight * 8; b.skillT = 2.5; b.state = 'chase';
       G.enemies.push(b); G.labBoss = b;
       G.shake = 14; SFX.play('roar', 1);
-      UI.toast('격리실 봉인 해제', `${LAB_BOSS.name} — 산성 장판 · 돌진 · 실험체 호출 · 내려찍기`);
+      UI.toast('격리실 봉인 해제', `${LAB_BOSS.name}: 산성 장판, 돌진, 실험체 호출, 내려찍기`);
       log(`${ICON('warn')} 격리 탱크가 깨졌다! ${LAB_BOSS.name}이(가) 깨어났다!`, '#ff5050');
       return;
     }
@@ -91,7 +91,7 @@ const Bosses = {
       G.shake = 18; hitstop(0.15);
       G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.8, color: '#ff5050', r: 300 });
       for (let i = 0; i < 6; i++) Monsters.strike(e.x + Math.cos(i / 6 * TAU) * 140, e.y + Math.sin(i / 6 * TAU) * 140, 60, 1.0, e.dmg * 0.8, 'rgba(140,220,70,', true);
-      UI.toast('키메라 탈피', '더 빨라졌다 — 장판 사이로 빠지며 거리를 유지하라');
+      UI.toast('키메라 탈피', '더 빨라졌다. 장판 사이로 빠지며 거리를 벌려라');
       log('키메라가 껍질을 찢고 나온다! 주변에 산성액이 튄다!', '#ff5050');
     }
     if (e.molted && e.skillT > 2.5) e.skillT = 2.5; // 탈피 후 패턴 간격 단축
@@ -100,7 +100,7 @@ const Bosses = {
     const p = G.player;
     G.labBoss = null; G.labBossDone = true;
     log(`${e.bossName} 처치! 격리실의 연구 기록을 회수했다.`, '#ffa53a');
-    UI.toast('키메라 처치', '영웅 이상 장비 확정 · 전자 부품 — 탈출해야 확정');
+    UI.toast('키메라 처치', '영웅 이상 장비와 전자 부품. 탈출해야 내 것');
     dropAt('credits', { amount: e.level * 120 });
     dropAt('item', { item: randomGear(e.level, 2, Math.random() < 0.3 ? 4 : 3, ZONES[5].gear) });
     dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[5].gear) });
@@ -128,7 +128,7 @@ const Bosses = {
         const a = angleTo(e, p); for (let i = 0; i < 8; i++) World.move(p, Math.cos(a) * 18, Math.sin(a) * 18);
         damagePlayer(e.dmg * 0.8);
       }
-      UI.toast(`타이탄 ${ph}페이즈`, ph === 2 ? '방사능 낙하 — 바닥의 원을 피하라' : '폭주 — 붉은 원이 차오르면 멀리 벗어나라');
+      UI.toast(`타이탄 ${ph}페이즈`, ph === 2 ? '방사능 낙하! 바닥의 원을 피해라' : '폭주! 붉은 원이 차오르면 멀리 벗어나라');
       log(ph === 2 ? '타이탄이 포효한다! 하늘에서 방사능 덩어리가 쏟아진다!' : '타이탄이 폭주한다! 몸에서 방사능이 끓어오른다!', '#7fff6a');
     }
     if (e.invulnT > 0) { e.invulnT -= dt; return; }

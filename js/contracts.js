@@ -37,7 +37,7 @@ const Contracts = {
     root.querySelectorAll('[data-cx]').forEach(r => { r.onclick = () => {
       const p = G.player, v = r.dataset.cx;
       if (v === 'cancel') { log(`계약 포기: ${this.title(p.contract)}`, '#aaa'); p.contract = null; }
-      else { p.contract = p.cboard.splice(+v, 1)[0]; log(`계약 수락: ${this.title(p.contract)} — 「${MAPS[p.contract.map].name}」에 출격하면 시작`, '#ffd76a'); SFX.play('quest'); }
+      else { p.contract = p.cboard.splice(+v, 1)[0]; log(`계약 수락: ${this.title(p.contract)} . 「${MAPS[p.contract.map].name}」에 출격하면 시작`, '#ffd76a'); SFX.play('quest'); }
       saveGame(); again();
     }; });
   },
@@ -51,7 +51,7 @@ const Contracts = {
     const area = { ax: s.x + rand(-220, 220), ay: s.y + rand(-220, 220) }; // 미니맵엔 대략적인 범위만
     if (c.type === 'retrieve') {
       RaidEvents.list.push({ ext: true, kind: 'c_item', ...s, ...area, hint: `[E] ${c.what} 회수 (2초)`, dur: 2, open: true,
-        onFinish: e => { e.done = true; p.raid.contract.done = true; floatText(p.x, p.y - 36, `${c.what} 확보!`, '#ffd76a', 15); UI.toast('계약 물건 확보', '들고 탈출하면 보상 — 죽으면 잃음'); SFX.play('item', 3); },
+        onFinish: e => { e.done = true; p.raid.contract.done = true; floatText(p.x, p.y - 36, `${c.what} 확보!`, '#ffd76a', 15); UI.toast('계약 물건 확보', '들고 탈출하면 보상. 죽으면 잃는다'); SFX.play('item', 3); },
         track: e => `계약: ${c.what} 찾기 (미니맵 노란 원)`, mini: (g, e, b) => this.miniArea(g, e, b), draw: drawContractItem });
       RaidEvents.squad(s.x, s.y, 3, { r0: 60, r1: 150 });
     } else if (c.type === 'target') {
@@ -63,8 +63,8 @@ const Contracts = {
         track: e => `계약: 현상범 ${c.what} 처치 (미니맵 붉은 원)`, mini: (g, e, b) => this.miniArea(g, e, b, '#ff6a5a', t) });
       RaidEvents.squad(s.x, s.y, 3, { r0: 60, r1: 160 });
     } else if (c.type === 'escort') {
-      const es = { ext: true, kind: 'c_escort', ...s, ...area, r: 10, hp: 160 + p.level * 12, maxHp: 160 + p.level * 12, state: 'wait', name: c.what, hint: `[E] ${c.what}에게 말 걸기 — 호위 시작`, dur: 1, open: true, walk: 0,
-        onFinish: e => { e.state = 'follow'; e.hint = null; log(`${c.what}: "따라갈게요. 탈출 지점까지만 부탁해요."`, '#8cf'); UI.toast('호위 시작', `${c.what}이(가) 따라온다 — 함께 탈출 지점에 서면 완료`); },
+      const es = { ext: true, kind: 'c_escort', ...s, ...area, r: 10, hp: 160 + p.level * 12, maxHp: 160 + p.level * 12, state: 'wait', name: c.what, hint: `[E] ${c.what}에게 말 걸기 (호위 시작)`, dur: 1, open: true, walk: 0,
+        onFinish: e => { e.state = 'follow'; e.hint = null; log(`${c.what}: "따라갈게요. 탈출 지점까지만 부탁해요."`, '#8cf'); UI.toast('호위 시작', `${c.what}이(가) 따라온다. 함께 탈출 지점에 서면 완료`); },
         tick: (e, dt) => this.escortTick(e, dt), track: e => e.state === 'wait' ? `계약: ${c.what} 찾기 (미니맵 하늘색 원)` : `계약: ${c.what} 호위 (체력 ${Math.ceil(e.hp)})`,
         mini: (g, e, b) => e.state === 'wait' ? this.miniArea(g, e, b, '#7ad0ff') : (g.fillStyle = '#7ad0ff', g.fillRect(e.x / TILE - 2, e.y / TILE - 2, 4, 4)), draw: drawEscort };
       RaidEvents.list.push(es); p.raid.contract.escort = es;
@@ -103,14 +103,14 @@ const Contracts = {
     const p = G.player, r = p.raid, c = p.contract;
     if (!c || !r || !r.contract) return;
     let ok = r.contract.done;
-    if (c.type === 'escort') { const es = r.contract.escort; ok = es && es.state === 'follow' && !es.dead && Math.hypot(es.x - p.x, es.y - p.y) < 220; if (es && es.state === 'follow' && !ok && !es.dead) log(`${c.what}을(를) 두고 나왔다 — 계약은 그대로 남는다.`, '#aaa'); }
+    if (c.type === 'escort') { const es = r.contract.escort; ok = es && es.state === 'follow' && !es.dead && Math.hypot(es.x - p.x, es.y - p.y) < 220; if (es && es.state === 'follow' && !ok && !es.dead) log(`${c.what}을(를) 두고 나왔다. 계약은 그대로다.`, '#aaa'); }
     if (!ok) return; if (!r.contract) return;
     p.credits += c.cr; gainExp(Math.round(PlayerStats.expNext(p.level) * c.exp));
     if (c.type === 'escort') Settlement.rescue(c.what); // v1.43 호위한 사람은 캠프에 남음
     const g = randomGear(Math.max(c.lvl, p.level - 2), 1.0, c.rare, ZONES[MAPS[c.map].zone].gear);
     const where = addItem(g) ? '가방' : (p.stash.push(g), '창고');
     Workshop.gain(randInt(2, 4), c.type === 'escort' ? 2 : 1, '계약');
-    UI.toast(`계약 완료 — ${this.title(c)}`, `₵${fmt(c.cr)} · 경험치 · ${itemName(g)} (${where})`);
+    UI.toast(`계약 완료: ${this.title(c)}`, `₵${fmt(c.cr)} · 경험치 · ${itemName(g)} (${where})`);
     log(`${ICON('bounty')} 계약 완료: ₵${fmt(c.cr)} · ${itemName(g)}`, '#ffd76a'); SFX.play('quest');
     Weekly.on('events'); Journal.onEvent();
     p.contract = null; p.cboard = null;
@@ -119,7 +119,7 @@ const Contracts = {
   trackerLine() {
     const p = G.player, r = p.raid, c = p.contract;
     if (!r || !r.contract || !c) return '';
-    return r.contract.done ? `<br><span style="color:#ffd76a">${ICON('bounty')} 계약 완료 — 탈출하면 보상 (₵${fmt(c.cr)})</span>` : '';
+    return r.contract.done ? `<br><span style="color:#ffd76a">${ICON('bounty')} 계약 완료. 탈출하면 보상 (₵${fmt(c.cr)})</span>` : '';
   },
 };
 
@@ -135,7 +135,7 @@ const Heli = {
     for (const ex of G.exits) {
       if (ex.special !== 'heli' || ex.gone) continue;
       const t = p.raid.t;
-      if (ex.locked && t >= ex.t0 && t < ex.t1) { ex.locked = false; UI.toast('헬기 도착', '90초 동안만 — 미니맵 초록 ◎'); log(`${ICON('radio')} 무전: "헬기 착륙했다. 90초 기다린다!"`, '#7fe08a'); SFX.play('quest'); }
+      if (ex.locked && t >= ex.t0 && t < ex.t1) { ex.locked = false; UI.toast('헬기 도착', '90초 동안만 열린다. 미니맵 초록 ◎'); log(`${ICON('radio')} 무전: "헬기 착륙했다. 90초 기다린다!"`, '#7fe08a'); SFX.play('quest'); }
       if (!ex.locked && t >= ex.t1) { ex.locked = true; ex.gone = true; ex.label = '헬기 떠남'; log('헬기가 떠났다.', '#aaa'); }
       if (!ex.locked && t >= ex.t1 - 15 && !ex.warned) { ex.warned = true; log('무전: "15초 뒤 이륙한다!"', '#ffb060'); }
     }
@@ -165,7 +165,7 @@ const MapEvents = {
     const done = (e, title, sub) => { e.done = true; UI.toast(title, sub); SFX.play('item', 3); burst(e.x, e.y, '#ffd76a', 16, 150, 0.5); Weekly.on('events'); Journal.onEvent(); Bounty.on('crate'); };
     let e;
     if (id === 'myeongdong') e = { ...base, hint: '[E] 지하상가 셔터 뜯기 (6초 · 시끄러움)', dur: 6,
-      onStart: e => { if (!e.loud) { e.loud = true; for (const o of G.enemies) if (FACTION[o.type] === 'infected' && dist(o, e) < 900) { o.state = 'chase'; o.heard = true; } RaidEvents.squad(e.x, e.y, 5, { r0: 320, r1: 440, chase: true }); log('셔터가 끼익거린다 — 감염자 떼가 몰려온다!', '#ff8a5a'); } return true; },
+      onStart: e => { if (!e.loud) { e.loud = true; for (const o of G.enemies) if (FACTION[o.type] === 'infected' && dist(o, e) < 900) { o.state = 'chase'; o.heard = true; } RaidEvents.squad(e.x, e.y, 5, { r0: 320, r1: 440, chase: true }); log('셔터가 끼익거린다. 감염자 떼가 몰려온다!', '#ff8a5a'); } return true; },
       onFinish: e => { drop(e, 'item', { item: makeConsumable('medkit', 2) }); drop(e, 'ammo', { amount: 70 }); drop(e, 'ammo', { amount: 70 }); drop(e, 'credits', { amount: lvl * 50 }); if (Math.random() < 0.6) drop(e, 'item', { item: randomGear(lvl, 1.0, 1, bias) }); done(e, '지하상가 털기', '구급상자 · 탄약 · 크레딧'); } };
     else if (id === 'jongno') { const guards = []; for (let i = 0; i < 5; i++) { const a = i / 5 * TAU, g = makeEnemy('raider', s.x + Math.cos(a) * 90, s.y + Math.sin(a) * 90, lvl); if (World.circleBlocked(g.x, g.y, 14)) { g.x = s.x + rand(-30, 30); g.y = s.y + rand(-30, 30); } g.evGuard = true; G.enemies.push(g); guards.push(g); }
       e = { ...base, guards, hint: '[E] 검문소 보급함 열기 (2초)', dur: 2,
@@ -180,7 +180,7 @@ const MapEvents = {
         track: e => e.carrier.hp > 0 ? '잠긴 무기고: 순찰 드론 격추' : '무기고 열기' }; }
     else if (id === 'yeouido' || id === 'gangnam') { const yeo = id === 'yeouido';
       e = { ...base, hint: yeo ? '[E] 정화 장치 가동 (8초)' : '[E] 서버 내려받기 (10초)', dur: yeo ? 8 : 10,
-        onStart: e => { if (!e.waves) { e.waves = 1; RaidEvents.squad(e.x, e.y, 3, { r0: 300, r1: 420, chase: true }); e.wave2 = 4; log(yeo ? '정화 장치가 웅웅거린다 — 실험체가 몰려온다!' : '서버 경보가 울린다 — 블랙선 용병이 출동했다!', '#ff8a5a'); } return true; },
+        onStart: e => { if (!e.waves) { e.waves = 1; RaidEvents.squad(e.x, e.y, 3, { r0: 300, r1: 420, chase: true }); e.wave2 = 4; log(yeo ? '정화 장치가 웅웅거린다. 실험체가 몰려온다!' : '서버 경보가 울린다. 블랙선 용병이 출동했다!', '#ff8a5a'); } return true; },
         tick: (e, dt) => { if (e.wave2 > 0 && (e.wave2 -= dt) <= 0) RaidEvents.squad(e.x, e.y, yeo ? 3 : 4, { r0: 320, r1: 440, chase: true }); },
         onFinish: e => { if (yeo) { gainExp(Math.round(PlayerStats.expNext(p.level) * 0.1)); Workshop.gain(2, 2, '정화 장치'); drop(e, 'credits', { amount: lvl * 50 }); done(e, '정화 장치 가동', '경험치 · 부품 · 크레딧'); }
           else { Workshop.gain(1, 3, '서버'); drop(e, 'item', { item: randomGear(lvl, 1.4, 2, bias) }); drop(e, 'credits', { amount: lvl * 80 }); done(e, '서버 탈취', '전자 부품 · 희귀 이상 장비'); } } };
@@ -191,7 +191,7 @@ const MapEvents = {
       e = { ...base, eggs, state: 'idle', t: 60,
         tick: (e, dt) => { if (e.done) return; const alive = e.eggs.filter(g => g.hp > 0);
           if (!alive.length) { drop(e, 'item', { item: randomGear(lvl, 1.3, 2, bias) }); drop(e, 'credits', { amount: lvl * 60 }); Workshop.gain(2, 1, '변이 알'); done(e, '변이 알 제거', '부화 전에 모두 깼다'); return; }
-          if (e.state === 'idle' && dist(p, e) < 520) { e.state = 'count'; UI.toast('변이 알 무더기', '60초 안에 알 3개를 깨라 — 못 깨면 부화'); log('알이 꿈틀거린다… 60초 뒤 부화한다!', '#ff8a5a'); }
+          if (e.state === 'idle' && dist(p, e) < 520) { e.state = 'count'; UI.toast('변이 알 무더기', '60초 안에 알 3개를 깨라. 못 깨면 부화한다'); log('알이 꿈틀거린다… 60초 뒤 부화한다!', '#ff8a5a'); }
           if (e.state === 'count' && (e.t -= dt) <= 0) { e.done = true; e.failed = true; for (const g of alive) { for (let k = 0; k < 3; k++) { const n = makeEnemy(Math.random() < 0.5 ? 'stalker' : 'subject', g.x + rand(-20, 20), g.y + rand(-20, 20), lvl); n.state = 'chase'; n.heard = true; G.enemies.push(n); } g.hp = 0; burst(g.x, g.y, '#6a1a2a', 14, 140, 0.5); } UI.toast('부화', '알에서 변이체가 쏟아져 나왔다!'); } },
         track: e => e.state === 'count' ? `변이 알: ${Math.ceil(e.t)}초 · ${e.eggs.filter(g => g.hp > 0).length}개 남음` : '변이 알 무더기 (미니맵 주황 ◆)' }; }
     if (!e) return;

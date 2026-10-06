@@ -85,6 +85,7 @@ function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
 function curWeapon() { const p = G.player; return p.equip[p.active]; }
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
 function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); }
+const KB_RATE = 18; // v1.49.7 밀려나는 속도가 줄어드는 빠르기 (총 거리 = 처음 속도 / KB_RATE)
 
 // ---------------- 저장 ----------------
 function saveGame(silent = true) {
@@ -97,7 +98,7 @@ function saveGame(silent = true) {
     if (old && Date.now() - (G.bakT || 0) > 120000 && validSave(old)) { localStorage.setItem(key + '-bak', old); G.bakT = Date.now(); }
     localStorage.setItem(key, str);
     if (!silent) log('게임이 저장되었습니다.', '#8f8');
-  } catch (e) { if (!G.saveWarned) { G.saveWarned = true; log('저장하지 못했습니다 — 브라우저 저장 공간이 꽉 찼거나 막혀 있습니다. (설정 → 세이브 코드 만들기로 따로 보관하세요)', '#f88'); } }
+  } catch (e) { if (!G.saveWarned) { G.saveWarned = true; log('저장하지 못했다. 브라우저 저장 공간이 꽉 찼거나 막혀 있다. 설정 → 세이브 코드 만들기로 따로 보관해 두자.', '#f88'); } }
 }
 function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(str) : str; return !!(s && s.p && s.p.name !== undefined && Array.isArray(s.p.inventory) && s.p.equip && s.p.stats); } catch (e) { return false; } }
 function loadSave(n = SAVE_SLOT) {
@@ -216,7 +217,7 @@ function startGame(save, name) {
   UI.buildHotbar();
   UI.refreshAll();
   G.welcome = false; // v1.45 첫 안내 창 대신 그 순간의 키 그림 (FirstRun)
-  if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았습니다 — 암시장 상인 박씨 「스킬 교범」`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }
+  if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았다. (암시장 상인 박씨 「스킬 교범」)`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }
   if (G.autoStory) { G.autoStory = false; Story.start(G.player); }
   saveGame();
 }
@@ -428,7 +429,7 @@ function explode(x, y, dmg, r, opts = {}) {
 function useSkill(i) {
   const p = G.player, s = SKILLS[i];
   if (p.level < s.lvl) { log(`${s.name}: Lv${s.lvl}부터 배울 수 있습니다 (암시장 상인 박씨).`, '#aaa'); return; }
-  if (!p.skills[s.id]) { log(`${s.name}: 아직 배우지 않았습니다 — 스킬 창(K)에서 스킬 포인트로`, '#aaa'); SFX.play('empty'); return; } // v1.16
+  if (!p.skills[s.id]) { log(`${s.name}: 아직 안 배웠다. 스킬 창(K)에서 배울 수 있다`, '#aaa'); SFX.play('empty'); return; } // v1.16
   if ((p.skillCd[i] || 0) > 0) return;
   SFX.play(s.id === 'heal' ? 'heal' : 'skill');
   const m = smod(s.id); // v1.11 스킬 갈래
@@ -480,7 +481,7 @@ function useItem(it) {
     const [t, n] = giveAmmoUnits(p, 120); log(`${AMMO[t].name} +${n}`, '#cc8');
   } else if (CONSUMABLES[it.key].slot) { // v1.14 투척물·보조: 가방에서 누르면 그 칸에 선택
     const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
-    const on = Hotbar.autoAdd(it.key); log(`${it.name}${on ? `을(를) 벨트 ${G.player.hotbar.indexOf(it.key) + 1}번 칸에 올렸다.` : ' — 벨트 칸이 가득 (B로 바꾸기)'}`, '#cfe'); // v1.50 벨트 = 소모품
+    const on = Hotbar.autoAdd(it.key); log(`${it.name}${on ? `을(를) 벨트 ${G.player.hotbar.indexOf(it.key) + 1}번 칸에 올렸다.` : '. 벨트 칸이 가득 (B로 바꾸기)'}`, '#cfe'); // v1.50 벨트 = 소모품
   } else return;
   if (Math.random() < gearBonus(p, 'gadSave')) { floatText(p.x, p.y - 44, '절약', '#9fe0ff', 12); UI.refreshInventory(); return; } // v1.25 벨트 옵션
   it.count--;
@@ -533,12 +534,12 @@ function gainExp(n) {
     p.statPoints += 3;
     p.hp = PlayerStats.maxHp(p);
     p.sp = (p.sp || 0) + 1; // v1.25 스킬 포인트
-    log(`레벨 업! Lv${p.level} — 능력치 포인트 +3 · 스킬 포인트 +1 (C)`, '#ffd76a');
+    log(`레벨 업! Lv${p.level}. 능력치 포인트 +3, 스킬 포인트 +1 (C)`, '#ffd76a');
     SFX.play('levelup');
     const sk = SKILLS.find(s => s.lvl === p.level);
-    if (sk) log(`새 스킬을 배울 수 있다: ${sk.name} — 스킬 창 K · ${SKILL_SP.root} SP`, '#7fd');
+    if (sk) log(`새 스킬을 배울 수 있다: ${sk.name} (스킬 창 K, ${SKILL_SP.root} SP)`, '#7fd');
     const pt = PERK_TIERS.find(t => t.lvl === p.level); // v1.11 특성 선택
-    if (pt) { UI.toast(`특성 선택 — Lv${pt.lvl}`, `능력치 창(C)에서 ${pt.perks.map(k => k.name).join(' · ')} 중 하나`); log(`특성을 고를 수 있다: ${pt.perks.map(k => k.name).join(' · ')} (능력치 창 C)`, '#ffd76a'); }
+    if (pt) { UI.toast(`Lv${pt.lvl} 특성 선택`, `능력치 창(C)에서 ${pt.perks.map(k => k.name).join(' · ')} 중 하나`); log(`특성을 고를 수 있다: ${pt.perks.map(k => k.name).join(' · ')} (능력치 창 C)`, '#ffd76a'); }
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.8, color: '#ffd76a', r: 80 });
     floatText(p.x, p.y - 40, 'LEVEL UP!', '#ffd76a', 22);
     UI.buildHotbar(); UI.refreshStats();
@@ -652,14 +653,13 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   const wt = e.weight ?? e.def.weight; // 네임드는 잘 밀리지 않음
   if (wt > 0 && angle !== undefined) {
     const k = (hit.knock || 3) / wt;
-    if (e.def.flying) { const nx = e.x + Math.cos(angle) * k, ny = e.y + Math.sin(angle) * k; if (!World.solidAt(nx, ny)) { e.x = nx; e.y = ny; } }
-    else World.move(e, Math.cos(angle) * k, Math.sin(angle) * k);
+    e.kbx = (e.kbx || 0) + Math.cos(angle) * k * KB_RATE; e.kby = (e.kby || 0) + Math.sin(angle) * k * KB_RATE; // v1.49.7 밀려남: 한 번에 순간이동 → 0.15초 동안 미끄러짐 (거리는 같음)
     if (hit.stagger) e.stunT = Math.max(e.stunT, hit.stagger / wt);
   }
   if (e.hp > 0) Monsters.react(e, dmg, angle, hit); // v1.32 휘청 · 넘어짐
   const big = dmg >= e.maxHp * 0.25 || crit;
   SFX.play(crit ? 'crit' : FACTION[e.type] === 'machine' ? 'metal' : 'hit', 0.8);
-  if (Settings.dmgNum) floatText(e.x, e.y - e.r - 6, (crit ? '치명타 ' : '') + dmg, crit ? '#ffe14a' : e.def.boss ? '#ffb0ff' : '#fff', crit ? 18 : big ? 15 : 13);
+  if (Settings.dmgNum) floatText(e.x, e.y - e.r - 6, crit ? dmg + '!' : '' + dmg, crit ? '#ffe14a' : e.def.boss ? '#ffb0ff' : '#fff', crit ? 19 : big ? 15 : 13); // v1.49.7 「치명타 123」 → 「123!」
   burst(e.x, e.y, FACTION[e.type] === 'machine' ? '#ffc' : '#8a1010', crit ? 9 : 4, crit ? 150 : 110, 0.35);
   if (crit) burst(e.x, e.y, '#fff3a0', 5, 180, 0.15, 2);
   if (e.def.boss && (crit || (hit.stagger || 0) >= 0.5)) { G.shake = Math.max(G.shake, 5); hitstop(0.035); }
@@ -704,6 +704,7 @@ function killFx(e) {
 
 function killEnemy(e) {
   const p = G.player;
+  if (!e.def.boss && !(e.lastHit && e.lastHit.ally) && G.time - (G.killStopT || -9) > 0.22) { G.killStopT = G.time; hitstop(0.02); G.shake = Math.max(G.shake, 2); } // v1.49.7 보통 처치도 아주 짧게 멈춤 (몰려올 때 끊기지 않게 0.22초에 한 번)
   // 보스 소환수는 경험치 20%, 드랍 없음 (보스 옆 무한 파밍 방지)
   // 연속 처치 콤보 (v0.16): 3초 안에 이어 잡으면 경험치 +5%씩 (최대 +50%)
   if (p.raid && !e.minion) p.raid.kills++;
@@ -864,6 +865,7 @@ function updateEnemies(dt) {
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt; e.revealT = (e.revealT || 0) - dt;
     const d = dist(e, p);
     e.flinchT = (e.flinchT || 0) - dt; e.downT = (e.downT || 0) - dt; // v1.32 휘청 · 넘어짐
+    if (e.kbx || e.kby) { const mx = e.kbx * dt, my = e.kby * dt; if (e.def.flying) { if (!World.solidAt(e.x + mx, e.y + my)) { e.x += mx; e.y += my; } } else World.move(e, mx, my); const f = Math.exp(-KB_RATE * dt); e.kbx *= f; e.kby *= f; if (Math.abs(e.kbx) + Math.abs(e.kby) < 3) e.kbx = e.kby = 0; }
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); Monsters.interrupt(e); continue; } // 경직: 이동·공격 불가, 준비 중인 공격 끊김
     const same = Interiors.sameSpace(e); // 건물 안팎이 다르면 쫓지 않음 (벽 너머 길찾기 없음)
     if (!p.dead && !pSafe && same && d < e.def.aggro) e.state = 'chase';
@@ -1101,7 +1103,7 @@ function dropReveal(d, r) {
     G.effects.push({ type: 'ring', x: d.x, y: d.y, t: 0, life: 1.1, color: uc, r: 200 });
     floatText(d.x, d.y - 52, '◈ 고유 장비 ◈', uc, 22);
     hitstop(0.2); G.shake = Math.max(G.shake, 12); G.flash = { color: uc, t: 0, life: 0.9, a: 0.5 };
-    UI.toast('◈ 고유 장비 ◈', `${itemName(d.item)} — ${UNIQUES[d.item.unique].desc}`);
+    UI.toast('◈ 고유 장비 ◈', `${itemName(d.item)}: ${UNIQUES[d.item.unique].desc}`);
     log(`고유 장비가 떨어졌다: ${itemName(d.item)}`, uc);
     return;
   }
@@ -1263,7 +1265,7 @@ function update(dt) {
   if (z !== G.zone) {
     G.zone = z;
     const zn = ZONES[z];
-    log(z === 0 ? `${zn.name} — 안전 지대` : `${zn.name} 진입 (권장 Lv${zn.lvl[0]}~${zn.lvl[1]})`, z === 0 ? '#8f8' : '#fc8');
+    log(z === 0 ? `${zn.name} (안전 지대)` : `${zn.name} 진입 (권장 Lv${zn.lvl[0]}~${zn.lvl[1]})`, z === 0 ? '#8f8' : '#fc8');
     if (zn.desc) log(`  ${zn.desc} · 특산: ${zn.gearText}`, '#c9b27a');
   }
   G.darkness = lerp(G.darkness, (ZONES[z].dark + (G.inside ? 0.15 : 0) + (G.assault && (G.assault.muts || []).includes('dark') ? 0.3 : 0)) * (armorLegend('nightVision') ? 0.4 : 1), dt * 1.5); // v1.12 야간 투시 // 실내는 조금 어둡게
@@ -1330,7 +1332,7 @@ const FpsWatch = {
     this.done = true;
     try { if (localStorage.getItem('seoul2049-autolow')) return; localStorage.setItem('seoul2049-autolow', '1'); } catch (e) { /* 무시 */ }
     Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.map.clear();
-    UI.toast('화면이 버벅여서 저사양 모드를 켰다', `초당 ${Math.round(fps)}프레임 — 설정에서 조명 · 세부 묘사를 다시 켤 수 있다`);
+    UI.toast('화면이 버벅여서 저사양 모드를 켰다', `초당 ${Math.round(fps)}프레임이라 그래픽을 낮췄다. 설정에서 조명·세부 묘사를 다시 켤 수 있다`);
   },
 };
 
@@ -1343,7 +1345,7 @@ const ErrNote = {
     try { saveGame(); } catch (er) { /* 무시 */ }
     let el = document.getElementById('err-note');
     if (!el) { el = document.createElement('div'); el.id = 'err-note'; document.body.appendChild(el); }
-    el.innerHTML = `<b>문제가 생겼습니다</b> — 진행은 저장했고 게임은 계속됩니다. 계속 이상하면 새로고침하세요.<br><span class="muted">${msg.replace(/</g, '&lt;')} ${where.trim().replace(/</g, '&lt;').slice(0, 90)}</span> <button id="err-copy">내용 복사</button> <button id="err-close">닫기</button>`;
+    el.innerHTML = `<b>문제가 생겼다.</b> 진행은 저장했고 게임은 계속된다. 계속 이상하면 새로고침.  <br><span class="muted">${msg.replace(/</g, '&lt;')} ${where.trim().replace(/</g, '&lt;').slice(0, 90)}</span> <button id="err-copy">내용 복사</button> <button id="err-close">닫기</button>`;
     el.classList.remove('hidden');
     document.getElementById('err-close').onclick = () => el.classList.add('hidden');
     document.getElementById('err-copy').onclick = () => { try { navigator.clipboard.writeText(`${GAME_VERSION} ${msg} ${where}`); } catch (er) { /* 무시 */ } };
@@ -1373,7 +1375,7 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
   const slots = () => {
     save = loadSave();
     document.getElementById('slot-row').innerHTML = [1, 2, 3].map(n => { const s = loadSave(n), p = s && s.p;
-      return `<button class="slot${n === SAVE_SLOT ? ' on' : ''}" data-slot="${n}"><b>No.${n}</b>${p ? `<span class="who">${p.name}</span><span class="meta">Lv${p.level} · ${(p.quest && p.quest.ch) || 0}장 · ${Math.floor((p.playTime || 0) / 3600)}h ${String(Math.floor((p.playTime || 0) % 3600 / 60)).padStart(2, '0')}m</span>` : '<span class="empty">— 빈칸 —</span>'}</button>`; }).join(''); // v1.38 명단 한 줄
+      return `<button class="slot${n === SAVE_SLOT ? ' on' : ''}" data-slot="${n}"><b>No.${n}</b>${p ? `<span class="who">${p.name}</span><span class="meta">Lv${p.level} · ${(p.quest && p.quest.ch) || 0}장 · ${Math.floor((p.playTime || 0) / 3600)}h ${String(Math.floor((p.playTime || 0) % 3600 / 60)).padStart(2, '0')}m</span>` : '<span class="empty">빈칸</span>'}</button>`; }).join(''); // v1.38 명단 한 줄
     document.querySelectorAll('#slot-row .slot').forEach(b => { b.onclick = () => { SAVE_SLOT = +b.dataset.slot; try { localStorage.setItem('seoul2049-slot', SAVE_SLOT); } catch (e) { /* */ } SFX.play('click'); slots(); }; });
     btnC.disabled = !save; btnC.textContent = '이어서';
   };

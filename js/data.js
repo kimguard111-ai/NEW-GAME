@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.49.6';
+const GAME_VERSION = 'v1.49.7';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -169,7 +169,7 @@ const CONSUMABLES = {
   // v1.14 투척물 (6번 칸, T로 바꿈) · 보조 (7번 칸, Y로 바꿈)
   molotov: { name: '화염병', icon: 'molotov', desc: '던진 자리에 5초 불길 (넓게 · 계속 피해)', price: 90, stack: 10, slot: 'throw' },
   flash:   { name: '섬광탄', icon: 'flash', desc: '반경 170 안의 적 2.5초 기절 (보스 0.6초) · 은신 드러냄', price: 70, stack: 10, slot: 'throw' },
-  mine:    { name: '지뢰', icon: 'mine', desc: '발밑에 설치 — 적이 밟으면 큰 폭발 (최대 4개)', price: 110, stack: 10, slot: 'throw' },
+  mine:    { name: '지뢰', icon: 'mine', desc: '발밑에 설치. 적이 밟으면 크게 터진다 (최대 4개)', price: 110, stack: 10, slot: 'throw' },
   stim:    { name: '전투 자극제', icon: 'stim', desc: '12초 동안 이동 +20% · 공격 속도 +15% · 받는 피해 -10%', price: 120, stack: 10, slot: 'util' },
   plate:   { name: '방탄판', icon: 'plate', desc: '최대 체력 25%만큼 피해를 막는 보호막 (최대 50%까지 쌓임)', price: 100, stack: 10, slot: 'util' },
 };
@@ -215,7 +215,7 @@ const ZONES = [
     gear: ['rifle', 'sniper', 'lmg', 'military'], gearText: '돌격소총·저격소총·기관총·군용 강화복' },
   { name: '여의도 방사능 지대', maxDist: 999, lvl: [16, 20], dark: 0.6, tint: 'rgba(40,120,30,0.12)',
     spawns: [['brute', 30], ['drone', 30], ['raider', 20], ['zombie', 20]],
-    desc: '방사능 웅덩이 — 들어가면 체력이 깎인다', packs: { zombie: [3, 5] },
+    desc: '방사능 웅덩이. 들어가면 체력이 깎인다', packs: { zombie: [3, 5] },
     gear: ['katana', 'lmg', 'sniper', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },
   // v1.5 지하 연구소 (실내 던전): 방과 복도, 붉은 비상등만 켜진 어둠
   { name: '지하 연구소', maxDist: 999, lvl: [18, 24], dark: 0.82, tint: 'rgba(70,0,0,0.10)',
@@ -225,7 +225,7 @@ const ZONES = [
   // v1.6
   { name: '강남 업무지구', maxDist: 999, lvl: [20, 25], dark: 0.55, tint: 'rgba(30,20,70,0.10)',
     spawns: [['merc', 25], ['shield', 25], ['brute', 15], ['dog', 15], ['drone', 10], ['raider', 10]], // v1.7 원거리 비율 70% → 45% (봇 측정 사망률 100%)
-    desc: '민간 군사 회사 「블랙선」의 구역 — 방패병은 뒤나 폭발로', packs: { merc: [1, 2] },
+    desc: '민간 군사 회사 「블랙선」 구역. 방패병은 뒤를 잡거나 폭발로', packs: { merc: [1, 2] },
     gear: ['rifle', 'sniper', 'lmg', 'military', 'exo', 'tacHelmet', 'exoHelm'], gearText: '돌격소총·저격소총·기관총·강화복·외골격' },
   { name: '잠실 변이 지대', maxDist: 999, lvl: [25, 30], dark: 0.62, tint: 'rgba(60,10,60,0.10)',
     spawns: [['stalker', 25], ['zombie', 30], ['brute', 15], ['dog', 18], ['spitter', 12]], // v1.7 변이 거한 25→15 (잠실 사망 원인 2위)

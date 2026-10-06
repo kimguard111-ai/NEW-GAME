@@ -51,11 +51,11 @@ const Camp = {
       const F = FACILITIES[id], l = this.lv(id), c = FAC_COST[l];
       h += `<div class="fac-row"><b>${ICON(F.icon)} ${F.name}</b> <span class="fac-lv">${'■'.repeat(l)}${'□'.repeat(3 - l)}</span>`
         + `<br><span class="stat-eff">${l ? F.fx[l - 1] : '<span class="muted">아직 없음</span>'}</span>`
-        + (c ? `<br><span class="muted">다음 단계: ${F.fx[l]} — ${Workshop.costText(c)}${p.level < c.lvl ? ` <span style="color:#f66">Lv${c.lvl} 필요</span>` : ''}</span>` : '<br><span class="muted">최고 단계</span>') + '</div>';
+        + (c ? `<br><span class="muted">다음 단계: ${F.fx[l]} (${Workshop.costText(c)})${p.level < c.lvl ? ` <span style="color:#f66">Lv${c.lvl} 필요</span>` : ''}</span>` : '<br><span class="muted">최고 단계</span>') + '</div>';
       if (c) btns.push([`${F.name} ${l + 1}단계`, () => this.upgrade(id)]);
     }
     btns.push(['닫기', () => UI.close('dialog')]);
-    UI.dialog('생존자 대장 한씨 — 캠프 시설', '"자네가 가져온 것들로 캠프를 키워 보세. 시설이 생기면 다들 자네를 더 도울 수 있어."<br>' + h, btns);
+    UI.dialog('생존자 대장 한씨', '"자네가 가져온 것들로 캠프를 키워 보세. 시설이 생기면 다들 자네를 더 도울 수 있어."<br>' + h, btns);
   },
   upgrade(id) {
     const p = G.player, l = this.lv(id), c = FAC_COST[l], F = FACILITIES[id];
@@ -66,7 +66,7 @@ const Camp = {
     p.camp = p.camp || {}; p.camp[id] = l + 1;
     if (id === 'radio') this.plan = {}; // 사건 수가 바뀔 수 있으니 다시 굴림
     UI.toast(`${F.name} ${l + 1}단계 완공`, F.fx[l]);
-    log(`캠프 시설: ${F.name} ${l + 1}단계 — ${F.fx[l]}`, '#ffd76a');
+    log(`${F.name} ${l + 1}단계. ${F.fx[l]}`, '#ffd76a');
     SFX.play('levelup');
     const pos = CAMP_FAC_POS[id], cc = World.campCenter();
     if (pos && World.map === 'camp') { const x = cc.x + pos[0], y = cc.y + pos[1]; burst(x, y, '#ffd76a', 30, 160, 0.7, 3); G.effects.push({ type: 'ring', x, y, t: 0, life: 0.7, color: '#ffd76a', r: 120 }); }
