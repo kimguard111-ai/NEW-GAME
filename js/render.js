@@ -616,7 +616,9 @@ function animState(moving, hitT, lastAtk, key) {
 // v1.49.2 총을 든 몸 그림 고르기: 총 전용(player_shotgun · player_vest_sniper …)이 있으면 그것 → 없으면 그룹(장총·권총…) → 없으면 null
 // v1.50.2 위로 겨눌 때: 등 모습 몸 그림(player_back · player_vest_back …, 프롬프트 23)이 있으면 그 몸 + 총을 몸 뒤로 세워 붙임. 없으면 지금처럼 옆모습 (v1.50.1 맨손 몸 + 총 돌리기는 어색해서 뺌)
 // 경계에서 깜빡이지 않게 들어갈 때 -0.8 · 나올 때 -0.68
-function upAim(p) { const y = Iso.dir(p.aim).y; p.upAim = p.upAim ? y < -0.6 : y < -0.8; return p.upAim; } // v1.50.6 나올 때 -0.68 → -0.6 (여유 ↑)
+function upAim(p) { const y = Iso.dir(p.aim).y; return (p.upAim = settle(p, 'upAim', p.upAim ? y < -0.6 : y < -0.8, 0.12)); } // v1.50.6 나올 때 -0.6
+// v1.50.7 바뀐 상태가 t초 동안 이어져야 실제로 바꿈 (어떤 이유로든 매 프레임 왔다 갔다 하면 화면에서 깜빡이지 않게)
+function settle(o, k, want, t) { const cur = o[k] === undefined ? want : o[k], sk = k + 'Since'; if (want === cur) { o[sk] = 0; return cur; } if (!o[sk]) o[sk] = G.time; if (G.time - o[sk] >= t) { o[sk] = 0; return want; } return cur; }
 function heldBody(p, w, strict) {
   const arm = p.equip.armor, base = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player', grp = ART.weaponGroup[w.key];
   if (Sprites.get(base + '_' + w.key)) return base + '_' + w.key;
@@ -742,9 +744,9 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     // 몸 그림(무기·헬멧 없음) + 헬멧을 머리에, 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
     // v1.7.5 무기는 이번 프레임의 머리 위치를 따라감 (걷기 흔들림·피격 젖힘과 함께 움직임) · 쓰러지는 중엔 손에서 놓음
     // v1.50.6 좌우 보는 방향에 여유: 거의 정면 위·아래를 겨누면 커서가 몸 가운데를 살짝만 넘어도 몸·총이 좌우로 뒤집혀 깜빡이던 것 (카메라가 따라 움직이는 동안 특히)
-    const ad = Iso.dir(p.aim); if (!ui) p.faceX = ad.x > 0.12 ? 1 : ad.x < -0.12 ? -1 : (p.faceX || 1);
+    const ad = Iso.dir(p.aim); if (!ui) p.faceX = settle(p, 'faceX', ad.x > 0.12 ? 1 : ad.x < -0.12 ? -1 : (p.faceX || 1), 0.08);
     const fx = ui ? (ad.x < 0 ? -1 : 1) : p.faceX, face = { x: fx * Math.max(0.01, Math.abs(ad.x)), y: ad.y };
-    if (!ui) p.gunBack = p.gunBack ? ad.y < -0.05 : ad.y < -0.25; // v1.50.6 총을 몸 뒤/앞에 그리는 기준에도 여유 (-0.15 한 줄이라 그 근처에서 앞뒤로 깜빡)
+    if (!ui) p.gunBack = settle(p, 'gunBack', p.gunBack ? ad.y < -0.05 : ad.y < -0.25, 0.1); // v1.50.6 총을 몸 뒤/앞에 그리는 기준에도 여유 (-0.15 한 줄이라 그 근처에서 앞뒤로 깜빡)
     const back = ui ? ad.y < -0.15 : p.gunBack, fr = Sprites.frame(bodyKey, anim, at, face), hold = w && !heldKey && !p.dead && fr.anim.indexOf('death') < 0;
     if (back && hold) drawWeaponOverlay(sx, sy, w, p, fr);
     const info = Sprites.draw(bodyKey, anim, at, sxb, sy, face, p.hurtT > 0);

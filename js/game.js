@@ -89,6 +89,7 @@ function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.sp
 const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
 function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); }
+const MIN_FIRE = 0.06; // v1.50.7 총 연사 하한 (초)
 const KB_RATE = 18; // v1.49.7 밀려나는 속도가 줄어드는 빠르기 (총 거리 = 처음 속도 / KB_RATE)
 
 // ---------------- 저장 ----------------
@@ -312,7 +313,7 @@ const MELEE_TARGETS = { pipe: 2, axe: 3, katana: 3 };
 function meleeTargets(w, fin) { return (MELEE_TARGETS[w.key] || 2) + [0, 0, 1, 1, 2][w.rarity || 0] + (fin ? 1 : 0); }
 function playerDamageMul(melee) {
   const p = G.player;
-  let m = (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1);
+  let m = (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1) * (!melee && p.buffs.rapid > 0 ? 1.2 : 1); // v1.50.7 집중 사격: 연사 대신 피해 일부
   // v1.11 특성
   if (perk('rollStrike') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1.5) m *= 1.3;
   if (!melee && perk('steadyAim') && G.time - (p.lastHurt || -9) > 2) m *= 1.15;
@@ -325,7 +326,7 @@ function playerAttack() {
   const p = G.player, w = curWeapon();
   if (!w || p.atkT > 0 || p.reloadT > 0) return;
   const b = WEAPONS[w.key];
-  if (!b.melee) p.atkT = b.rate * PlayerStats.rateMul(p) * gunRateMul(p, w);
+  if (!b.melee) p.atkT = Math.max(MIN_FIRE, b.rate * PlayerStats.rateMul(p) * gunRateMul(p, w)); // v1.50.7 아무리 빨라도 초당 16발
   p.lastAtk = G.time; // 공격 애니메이션용
   SFX.play(b.melee ? 'swing_' + w.key : { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[w.key] || 'pistol');
   const critMul = PlayerStats.critMul(p, w); let cc = PlayerStats.crit(p, w);

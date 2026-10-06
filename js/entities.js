@@ -167,7 +167,7 @@ function itemReqLevel(it) {
 function itemDesc(it) {
   if (it.kind === 'weapon') {
     const b = WEAPONS[it.key];
-    let s = `피해 ${Math.round(it.dmg * plusMul(it) * 10) / 10}${b.pellets ? ' x' + b.pellets : ''} · 공격간격 ${b.rate}s`;
+    let s = `피해 ${Math.round(it.dmg * (RATE_COMP[it.key] || 1) * plusMul(it) * 10) / 10}${b.pellets ? ' x' + b.pellets : ''} · 공격간격 ${b.rate}s`;
     s += b.melee ? ` · 근접 · 한 번에 최대 ${meleeTargets(it, false)}마리 (3타 ${meleeTargets(it, true)})` : ` · 탄창 ${b.mag} · 사거리 ${b.range}`; // v1.50
     if (b.pierce) s += ' · 관통';
     return s + ` · 요구 Lv${b.lvl}`;
@@ -257,7 +257,7 @@ const PlayerStats = {
     return 88 /* v1.30 175 → 150 · v1.32 → 125 · v1.33 → 88 (-30% · 초속 약 4.4m) */ * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (pas('t4') ? 1.04 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
-  rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.67 : 0.5) : 1) / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1) / (p.buffs.stim > 0 ? 1.15 : 1),
+  rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.85 : 0.72) : 1) /* v1.50.7 집중 사격 ×2 → ×1.4 (+ 총 피해 20%) */ / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1) / (p.buffs.stim > 0 ? 1.15 : 1),
   reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)) / (perk('bulletStorm') ? 1.2 : 1) / (pas('t1') ? 1.1 : 1),
   regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + (pas('s3') ? 1 : 0) + gearBonus(p, 'regen') + (armorLegend('filter') ? 2 : 0) + (wornUnique('chimera') ? (p.hp < PlayerStats.maxHp(p) * 0.5 ? 9 : 3) : 0),
   expMul: p => 1 + gearBonus(p, 'exp') + (pas('t5') ? 0.05 : 0),
@@ -295,7 +295,7 @@ function skillDesc(s, p) {
 function skillBaseDesc(s, p) {
   const pc = v => Math.round(v * 100) + '%';
   switch (s.id) {
-    case 'rapid': return `${SkillCalc.rapidDur(p).toFixed(1)}초간 공격 속도 2배`;
+    case 'rapid': return `${SkillCalc.rapidDur(p).toFixed(1)}초간 연사 +40% · 총 피해 +20%`;
     case 'grenade': return `반경 ${SkillCalc.grenadeR(p)} 폭발, 피해 ${Math.round(SkillCalc.grenadeDmg(p))}`;
     case 'heal': return `즉시 최대 체력 ${pc(SkillCalc.healPct(p))} 회복`;
     case 'turret': return `${SkillCalc.turretDur(p)}초 동안 자동 포탑 (한 발 ${Math.round(SkillCalc.turretDmg(p))} · 사거리 ${TURRET.range}) · 커서 근처에 설치`;
@@ -312,7 +312,9 @@ function pelletCount(w) { return (WEAPONS[w.key].pellets || 1) + gearBonus(G.pla
 function meleeReach(w) { const b = WEAPONS[w.key], r = gearBonus(G.player, 'reach', w) + (w.unique === 'babel' ? 0.3 : 0); return { range: b.range * (1 + r), arc: b.arc * (1 + r) }; }
 
 function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w)) * (perk('bulletStorm') ? 1.3 : 1) * attMul(w, 'mag')); } // v1.50 탄창 부품
-function weaponDmg(w) { return w.dmg * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }
+// v1.50.7 연사가 너무 빨라 감당이 안 되던 것: 연사 간격을 늘린 만큼 한 발 피해를 올림 (초당 피해 유지 · 저장된 총에도 적용)
+const RATE_COMP = { smg: 1.2, rifle: 1.2, lmg: 1.28 }; // 재장전 비중이 줄어든 만큼 덜 올림 → 초당 피해가 전과 같게
+function weaponDmg(w) { return w.dmg * (RATE_COMP[w.key] || 1) * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }
 
 // 현재 능력치 기준 무기의 실제 초당 피해 (재장전 시간 포함). 장비 비교와 HUD에 사용
 function weaponDps(p, w) {
@@ -320,8 +322,8 @@ function weaponDps(p, w) {
   const b = WEAPONS[w.key];
   const mul = (b.melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * plusMul(w) * (1 + gearBonus(p, 'dmg', w));
   const cc = Math.min(1, PlayerStats.crit(p, w));
-  const interval = b.rate * (p.buffs.rapid > 0 ? 2 : 1) * PlayerStats.rateMul(p, w);
-  let dps = w.dmg * ((b.pellets || 1) + gearBonus(p, 'pellets', w)) * mul * (1 + cc * (PlayerStats.critMul(p, w) - 1)) / interval;
+  const interval = Math.max(b.melee ? 0 : MIN_FIRE, b.rate * PlayerStats.rateMul(p, w)); // v1.50.7 (예전 rapid ×2 는 rateMul 과 겹쳐 있던 것)
+  let dps = w.dmg * (RATE_COMP[w.key] || 1) * ((b.pellets || 1) + gearBonus(p, 'pellets', w)) * mul * (1 + cc * (PlayerStats.critMul(p, w) - 1)) / interval;
   if (!b.melee) {
     const mag = Math.round(b.mag * (1 + gearBonus(p, 'mag', w)));
     const rl = b.reload / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w));
