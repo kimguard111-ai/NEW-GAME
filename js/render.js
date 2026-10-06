@@ -294,9 +294,11 @@ function drawSolidTile(o) {
       if (bd.south) poly([S(x0, y1), Y(x0, y1, 0), S(x1, y1), Y(x1, y1, 0), S(x1, y1), Y(x1, y1, LIN), S(x0, y1), Y(x0, y1, LIN)], 'rgba(10,8,6,0.85)');
       else poly([S(x1, y0), Y(x1, y0, 0), S(x1, y1), Y(x1, y1, 0), S(x1, y1), Y(x1, y1, LIN), S(x1, y0), Y(x1, y0, LIN)], 'rgba(10,8,6,0.85)');
       drawBox(x0, y0, x1, y1, ht, top, south, east, bd.south ? LIN : -1, bd.south ? -1 : LIN, 0);
-      // 간판 (문 위 노란 띠)
-      const z0 = LIN + 6, z1 = LIN + 22;
-      if (bd.south) poly([S(x0, y1), Y(x0, y1, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x0, y1), Y(x0, y1, z1)], '#c9a24a');
+      // 간판 (문 위 노란 띠) · v1.47 그림 판이 있으면 문 두 칸에 반씩 나눠 그림 (깊이 순서 유지)
+      const z0 = LIN + 6, z1 = LIN + 22, da = City.signArt('door');
+      if (da) { const idx = bd.door.findIndex(([x, y]) => x === tx && y === ty), v = doorSignVar(bd.name), r = da.rects[v], half = bd.south ? idx : 1 - idx, bh = da.bh[v], dh = 16 / bh;
+        ctx.save(); City.faceTransform(tx, ty, bd.south ? 's' : 'e', z1); ctx.drawImage(da.img, r[0] + half * r[2] / 2, r[1], r[2] / 2, r[3], 0, 0, TILE, dh); ctx.restore(); }
+      else if (bd.south) poly([S(x0, y1), Y(x0, y1, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x0, y1), Y(x0, y1, z1)], '#c9a24a');
       else poly([S(x1, y0), Y(x1, y0, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x1, y0), Y(x1, y0, z1)], '#c9a24a');
     }
   } else if (t === T.LWALL) { // v1.5 연구소 벽 (콘크리트 + 아래쪽 경고 띠 + 가끔 패널 불빛)
@@ -482,7 +484,7 @@ const Sprites = {
   },
   loadAll() { // 무기·헬멧 그림까지 포함
     const cache = {}; // 한 파일에 여러 무기·헬멧(rect)이 들어 있으면 한 번만 읽음
-    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {}), ...Object.values(ART.icons || {})]) { // v1.18 소품 · v1.19 건물 질감 · v1.35.1 아이콘 포함
+    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {}), ...Object.values(ART.icons || {}), ...Object.values(ART.signs || {})]) { // v1.18 소품 · v1.19 건물 질감 · v1.35.1 아이콘 포함
       let im = cache[s.file];
       if (!im) {
         im = cache[s.file] = new Image(); im.users = [];
@@ -1657,6 +1659,9 @@ function drawCrate(c) {
   }
 }
 
+// v1.47 가게 종류 → 문 위 판 (0 노란 철판 · 1 관공서 파랑·흰색 · 2 초록+차양 · 3 나무)
+const DOOR_SIGN = { 파출소: 1, 병원: 1, 은행: 1, 약국: 1, 카페: 3, 서점: 3, 분식집: 2, 세탁소: 2, 마트: 2, PC방: 0, 전자상가: 0, 편의점: 0 };
+function doorSignVar(name) { return DOOR_SIGN[name] ?? 0; }
 // 상가 이름 (바깥에서 가까이 가면 출입문 위에 표시)
 function drawShopSigns() {
   const p = G.player;
@@ -1665,7 +1670,8 @@ function drawShopSigns() {
     const ready = b.crates.some(c => G.time - c.openT > CRATE_RESTOCK);
     const [dx, dy] = b.door[0]; // 문 위 노란 간판에 상호
     ctx.save(); City.faceTransform(dx, dy, b.south ? 's' : 'e', 54 + 22); if (!b.south) ctx.translate(-TILE, 0);
-    ctx.fillStyle = '#2a1c08'; ctx.font = 'bold 11px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.name, TILE, 8); ctx.restore();
+    const da = City.signArt('door'); ctx.fillStyle = da ? da.ink[doorSignVar(b.name)] : '#2a1c08'; // v1.47 판 색에 맞는 글자색
+    ctx.font = 'bold 11px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.name, TILE, 8); ctx.restore();
     nameTag(Iso.sx(b.doorX, b.doorY), Iso.sy(b.doorX, b.doorY, 92), `${b.name}${ready ? ' ·상자' : ''}`, '#e0c070', 'bold 12px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif', 'door');
   }
 }

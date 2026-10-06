@@ -108,10 +108,20 @@ const City = {
     if (face === 's') { const x = tx * TILE, y = (ty + 1) * TILE; ctx.translate(Iso.sx(x, y), Iso.sy(x, y, ztop)); ctx.transform(K, K / 2, 0, K, 0, 0); }
     else { const x = (tx + 1) * TILE, y = (ty + 1) * TILE; ctx.translate(Iso.sx(x, y), Iso.sy(x, y, ztop)); ctx.transform(K, -K / 2, 0, K, 0, 0); }
   },
+  // v1.47 간판 판 그림: 양 끝(네온 모서리)은 비율 그대로, 가운데만 늘림 — 5:1 판을 2:1 자리에 붙여도 안 찌그러짐
+  signArt(kind) { const a = ART.signs && ART.signs[kind]; return a && a.ready ? a : null; },
+  draw3(img, [rx, ry, rw, rh], x, y, w, h, vert) {
+    if (!vert) { let cs = rh * 0.55, cd = cs * h / rh; if (cd * 2 > w * 0.8) { cd = w * 0.4; }
+      ctx.drawImage(img, rx, ry, cs, rh, x, y, cd, h); ctx.drawImage(img, rx + cs, ry, rw - cs * 2, rh, x + cd, y, w - cd * 2, h); ctx.drawImage(img, rx + rw - cs, ry, cs, rh, x + w - cd, y, cd, h); }
+    else { let cs = rw * 0.55, cd = cs * w / rw; if (cd * 2 > h * 0.8) { cd = h * 0.4; }
+      ctx.drawImage(img, rx, ry, rw, cs, x, y, w, cd); ctx.drawImage(img, rx, ry + cs, rw, rh - cs * 2, x, y + cd, w, h - cd * 2); ctx.drawImage(img, rx, ry + rh - cs, rw, cs, x, y + h - cd, w, cd); }
+  },
   drawSign(tx, ty) {
     const s = this.signs.get(ty * World.W + tx);
     if (!s) return;
     const on = !s.flick || Math.sin(G.time * 13 + tx) > -0.6 || Math.sin(G.time * 2.3 + ty) > 0.2; // 고장 난 간판 깜빡임
+    const art = this.signArt(s.flick && !s.vert ? 'broken' : s.vert ? 'tall' : 'wide');
+    if (art) return this.drawSignArt(s, tx, ty, art, on);
     ctx.save();
     if (s.vert) { // 세로 간판
       const w = 11, h = s.text.length * 12 + 6;
@@ -129,6 +139,32 @@ const City = {
     }
     ctx.restore();
     if (on && Settings.light && Light.list.length < LIGHT_CAP) { const x = (tx + (s.face === 's' ? 0.5 : 1)) * TILE, y = (ty + (s.face === 's' ? 1 : 0.5)) * TILE; addLight(Iso.sx(x, y), Iso.sy(x, y, s.z + 8), 46, 0.45, hexA(s.color)); }
+  },
+
+  drawSignArt(s, tx, ty, art, on) {
+    const n = art.rects.length, v = s.v ?? (s.v = Math.floor(hash2(tx * 7 + 3, ty * 11 + 5) * 997) % n), r = art.rects[v];
+    const ink = on ? art.ink[v] : '#3a3632', glow = art.glow && art.glow[v];
+    ctx.save();
+    if (s.vert) {
+      const w = 12, h = s.text.length * 12 + 12;
+      this.faceTransform(tx, ty, s.face, s.z + h + 8); ctx.translate(TILE - w - 2, 0);
+      if (!on) ctx.globalAlpha = 0.75;
+      this.draw3(art.img, r, 0, 0, w, h, true); ctx.globalAlpha = 1;
+      ctx.fillStyle = ink; ctx.font = 'bold 9px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      if (on && glow) { ctx.shadowColor = glow; ctx.shadowBlur = 4; }
+      [...s.text].forEach((ch, i) => ctx.fillText(ch, w / 2, 6 + i * 12));
+    } else {
+      const w = TILE - 2, h = 17;
+      this.faceTransform(tx, ty, s.face, s.z + h); ctx.translate(1, 0);
+      if (!on) ctx.globalAlpha = 0.75;
+      if (s.flick) ctx.drawImage(art.img, r[0], r[1], r[2], r[3], 0, -1, w, h + 2); else this.draw3(art.img, r, 0, 0, w, h, false);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = ink; ctx.font = `bold ${s.text.length >= 4 ? 7 : s.text.length === 3 ? 8.5 : 10}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      if (on && glow) { ctx.shadowColor = glow; ctx.shadowBlur = 4; }
+      ctx.fillText(s.text, w / 2, h / 2 + 0.5);
+    }
+    ctx.restore();
+    if (on && glow && Settings.light && Light.list.length < LIGHT_CAP) { const x = (tx + (s.face === 's' ? 0.5 : 1)) * TILE, y = (ty + (s.face === 's' ? 1 : 0.5)) * TILE; addLight(Iso.sx(x, y), Iso.sy(x, y, s.z + 8), 46, 0.45, hexA(glow)); }
   },
 
   // 화면 근처 소품을 깊이 정렬 목록에 넣음
