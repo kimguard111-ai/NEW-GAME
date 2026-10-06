@@ -69,7 +69,8 @@ const World = {
           // 붕괴된 건물
           for (let y = L0; y <= L1; y++) for (let x = L0; x <= L1; x++) {
             if (ox + x >= W || oy + y >= H) continue;
-            set(ox + x, oy + y, rng() < 0.22 ? T.BUILDING : T.RUBBLE);
+            const edge = x === L0 || x === L1 || y === L0 || y === L1; // v1.49.4 막힌 잔해 더미는 가장자리 위주 · 안쪽은 드문드문 (22% 무작위 → 싸움터가 미로 같던 것)
+            set(ox + x, oy + y, rng() < (edge ? 0.2 : 0.04) ? T.BUILDING : T.RUBBLE);
             this.shade[(oy + y) * W + ox + x] = shade;
             this.height[(oy + y) * W + ox + x] = 10 + rng() * 34; // 무너진 잔해 벽
           }

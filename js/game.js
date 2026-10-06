@@ -1176,7 +1176,7 @@ function update(dt) {
   if ((G.combatT = (G.combatT || 0) - dt) <= 0) { // v1.47.1 싸우는 중: 팁 미룸 · 로그 2줄만
     G.combatT = 0.25; const p = G.player;
     G.combat = !!p.raid && G.enemies.some(e => e.hp > 0 && e.state === 'chase' && Math.abs(e.x - p.x) + Math.abs(e.y - p.y) < 700);
-    document.body.classList.toggle('combat', G.combat);
+    document.body.classList.toggle('combat', G.combat); UI.flushToast();
   }
   Tips.update(dt);
   FirstRun.update(dt); // v1.45

@@ -206,11 +206,15 @@ const UI = {
     return h;
   },
 
+  // v1.49.4 출격 중엔 작은 띠로 위쪽 빈 곳에 · 싸우는 중엔 미뤘다가 싸움이 끝나면 차례로 (업적·장 완료가 전투를 가리던 것)
   toast(title, sub) {
+    const raid = !!(G.player && G.player.raid);
+    if (raid && G.combat) { UI.toastQ = (UI.toastQ || []).filter(q => q[0] !== title).concat([[title, sub]]).slice(-4); return; }
     $('toast-title').textContent = title; $('toast-sub').textContent = sub || '';
-    const el = $('toast'); el.classList.remove('hidden'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
-    clearTimeout(UI.toastT); UI.toastT = setTimeout(() => el.classList.add('hidden'), 3500);
+    const el = $('toast'); el.classList.toggle('mini', raid); el.classList.remove('hidden'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    clearTimeout(UI.toastT); UI.toastT = setTimeout(() => el.classList.add('hidden'), raid ? 2600 : 3500); UI.toastEnd = performance.now() + (raid ? 2700 : 3600);
   },
+  flushToast() { if (!G.combat && UI.toastQ && UI.toastQ.length && performance.now() > (UI.toastEnd || 0)) UI.toast(...UI.toastQ.shift()); },
 
   drawMinimap() { drawMinimapIso($('minimap')); },
 

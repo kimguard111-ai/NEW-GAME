@@ -457,3 +457,11 @@ body.touch #touch-skills .tsk.mini:last-child { right: 130px; bottom: 72px; } /*
 body.touch #interact-hint { pointer-events: auto; }
 body.touch #hud-weapon { pointer-events: auto; }
 .hbx-item.none { opacity: .45; }
+
+/* v1.49.4 출격 중 알림은 작은 띠 (위쪽 빈 곳 · 짧게) */
+#toast.mini { top: 44px !important; padding: 3px 14px 4px !important; border-width: 2px; box-shadow: 2px 2px 0 rgba(0,0,0,.5); opacity: .92; max-width: 46vw; }
+#toast.mini #toast-title { font-size: 14px !important; letter-spacing: 1px; }
+#toast.mini #toast-sub { font-size: 11px; margin-top: 0; }
+body.touch #toast.mini { top: 6px !important; left: 37vw; max-width: 34vw; }
+body.touch #toast.mini #toast-title { font-size: 12px !important; } body.touch #toast.mini #toast-sub { font-size: 10px; }
+body.combat #combo-n { font-size: 22px; } body.touch.combat #combo-n { font-size: 17px; } /* 연속 처치 숫자도 작게 */
