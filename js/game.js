@@ -238,7 +238,7 @@ function gunMuzzle(p, w) {
   const grp = ART.weaponGroup[w.key], m = ART.muzzle && ART.muzzle[grp];
   if (!m || typeof Sprites === 'undefined') return def;
   const base = p.equip.armor && Sprites.get('player_' + p.equip.armor.key) ? 'player_' + p.equip.armor.key : 'player';
-  if (!Sprites.get(base + '_' + grp) || p.vAim) return def; // 총을 든 몸 그림이 없거나 위·아래로 겨누면 (총을 따로 붙인 모습) 예전 방식
+  if (!Sprites.get(base + '_' + grp) || p.backBody) return def; // 총을 든 몸 그림이 없거나 등 모습으로 위를 겨누면 예전 방식
   const H = (ART.height.player || 44) * (ART.charScale || 1), f = Iso.dir(p.aim).x < 0 ? -1 : 1; // v1.21 실제 스케일
   const dsx = f * H * m[0], dsy = -H * m[1] + 22 * ISO_K, ix = dsx / ISO_K, iy = dsy / ISO_K;
   const x = p.x + (ix + 2 * iy) / 2, y = p.y + (2 * iy - ix) / 2;

@@ -855,6 +855,29 @@ Match the art style of the attached images. Create ONE image with a 3 by 1 grid 
 
 ---
 
+## 23. 등 모습 몸 (위로 겨눌 때) (v1.50.2) · 🔢 5장 모두 `idle 4, walk 6`
+지금은 위로 겨눠도 몸이 옆을 보고 총알만 위로 나가 어색합니다. **등 모습 몸 그림이 있으면, 위로 겨눌 때 그 몸 + 총을 몸 뒤로 세워 붙입니다** (올리는 즉시 적용, 없는 방어구는 지금처럼 옆모습).
+- 총은 **그리지 않습니다** — 게임이 총 그림을 조준 방향으로 붙이므로 **맨손** · 두 손을 앞(화면 위쪽)으로 들어 가슴 높이에서 무언가 쥔 자세
+- 카메라를 등지고 **오른쪽 위로 비스듬히** 서 있는 모습 (왼쪽 위는 게임이 뒤집어 씀) · 뒤통수와 등 · 배낭이 보임
+- 📎 해당 방어구의 옆모습 몸 그림 + 콘셉트 아트 (같은 사람 · 같은 크기로)
+- 올리는 곳: `art_raw/new/` (파일 이름은 표대로)
+
+| 장 | 파일 이름 | 방어구 | 📎 첨부할 몸 |
+|---|---|---|---|
+| 23-1 ★ | `player_back.png` | 없음 (후드) | `Player.png` |
+| 23-2 ★ | `player_vest_back.png` | 방탄 조끼 | `player_best1.png` |
+| 23-3 ★ | `player_tactical_back.png` | 전술 조끼 | `player_best2.png` |
+| 23-4 | `player_military_back.png` | 군용 강화복 | `player_best3.png` |
+| 23-5 | `player_exo_back.png` | 외골격 슈트 | `player_best4.png` |
+
+### 23-1 ★ · 등 모습 · `player_back.png` (방어구 버전은 첨부 그림만 바꿔 같은 프롬프트)
+📎 해당 방어구의 옆모습 몸 그림 + 콘셉트 아트
+```
+Using the attached character as the exact reference (same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him seen FROM BEHIND, his back turned to the camera, facing away and slightly to the upper RIGHT, so we see the back of his head, his back and the backpack. Both empty hands are raised forward in front of his chest as if holding a rifle pointed away from the camera, but there is NO weapon in his hands. Rows: row 1: 4 frames of idle breathing seen from behind; row 2: 6 frames of a walk cycle walking away from the camera toward the upper right. Same size in every frame, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above, behind him). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No weapon, no helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
