@@ -227,11 +227,31 @@ function drawWindows(ax, ay, bx, by, z0, h, seed, side) {
 
 // 들어간 건물의 벽은 낮게 잘라 내부가 보이게 (v0.13)
 const CUT_H = 34;
+// v1.49.11 들어간 건물 벽 높이: 앞(남·동 바깥벽)은 발목까지 · 뒤(북·서 바깥벽)는 높게 · 칸막이는 중간 — 앞벽이 방을 가리고 모든 벽이 같은 회색 상자라 어색하던 것
+function cutWallH(tx, ty) {
+  const bd = World.buildings[World.bid[ty * World.W + tx]]; if (!bd) return CUT_H;
+  if (ty === bd.y1 || tx === bd.x1) return 9;
+  if (ty === bd.y0 || tx === bd.x0) return 38;
+  return 22;
+}
+const PLASTER = [[125, 116, 102], [108, 120, 114], [122, 108, 96], [116, 110, 104], [98, 106, 118]];
+// 실내 벽면 한 면: 회벽 + 아래 징두리(어두운 판) + 걸레받이 + 가끔 얼룩·벽보
+function drawInnerFace(ax, ay, bx, by, h, bd, hs) {
+  const S = Iso.sx, Y = Iso.sy, c = PLASTER[bd.id % PLASTER.length], f = (k, d) => `rgb(${c[0] * k + d | 0},${c[1] * k + d | 0},${c[2] * k + d | 0})`;
+  const quad = (z0, z1, col) => poly([S(ax, ay), Y(ax, ay, z0), S(bx, by), Y(bx, by, z0), S(bx, by), Y(bx, by, z1), S(ax, ay), Y(ax, ay, z1)], col);
+  quad(0, h, f(0.78, 0));
+  const wz = Math.min(h, 15); quad(0, wz, f(0.55, 4)); // 징두리
+  quad(0, 2.5, 'rgba(20,16,12,0.75)'); // 걸레받이
+  if (h > wz) { ctx.strokeStyle = 'rgba(255,240,210,0.12)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(S(ax, ay), Y(ax, ay, wz)); ctx.lineTo(S(bx, by), Y(bx, by, wz)); ctx.stroke(); }
+  if (h > 26 && hs < 0.22) { const k = 0.25 + hs * 2, px = ax + (bx - ax) * k, py = ay + (by - ay) * k, qx = ax + (bx - ax) * (k + 0.32), qy = ay + (by - ay) * (k + 0.32); // 벽보 · 액자
+    poly([S(px, py), Y(px, py, 20), S(qx, qy), Y(qx, qy, 20), S(qx, qy), Y(qx, qy, 32), S(px, py), Y(px, py, 32)], hs < 0.1 ? 'rgba(170,150,110,0.85)' : 'rgba(60,70,80,0.9)'); }
+  else if (h > 20 && hs > 0.8) { ctx.fillStyle = 'rgba(40,30,20,0.25)'; ctx.beginPath(); ctx.ellipse((S(ax, ay) + S(bx, by)) / 2, (Y(ax, ay, h * 0.6) + Y(bx, by, h * 0.6)) / 2, 7, 4, 0, 0, TAU); ctx.fill(); } // 물 얼룩
+}
 function insideBid(tx, ty) { return G.inside && World.bid[ty * World.W + tx] === G.inside.id; }
 function tileHeight(tx, ty) {
   const t = World.tileAt(tx, ty);
   if (t === T.BUILDING) return World.height[ty * World.W + tx] || 60;
-  if (t === T.WALL) return insideBid(tx, ty) ? CUT_H : World.height[ty * World.W + tx];
+  if (t === T.WALL) return insideBid(tx, ty) ? cutWallH(tx, ty) : World.height[ty * World.W + tx];
   if (t === T.FLOOR || t === T.DOOR) return insideBid(tx, ty) ? 0 : World.height[ty * World.W + tx];
   if (t === T.PROP) return insideBid(tx, ty) ? World.height[ty * World.W + tx] : World.buildings[World.bid[ty * World.W + tx]].h; // 소품 / 바깥에서는 지붕
   if (t === T.LWALL || t === T.LPROP) return World.height[ty * World.W + tx];
@@ -283,11 +303,20 @@ function drawSolidTile(o) {
     const top = `rgb(${b + 6},${b - 10},${b - 26})`, south = `rgb(${b - 40},${b - 52},${b - 62})`, east = `rgb(${b - 24},${b - 36},${b - 46})`;
     const sf = t === T.WALL && !cut && shopFront(i); // v1.31.1 들어갈 수 있는 상가 외벽 그림 (가게 앞모습 + 위층 외벽)
     if (sf) drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), sf.upper, s, sf.front);
-    else if (t === T.WALL) {
-      drawBox(x0, y0, x1, y1, ht, cut ? '#6a5a4c' : top, south, east, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), cut ? 0 : tx * 977 + ty);
+    else if (t === T.WALL && cut) { // v1.49.11 잘린 벽: 안쪽을 보는 면은 실내 마감 · 바깥을 보는 면은 바깥벽 색 · 윗면은 잘린 단면
+      const bd = World.buildings[World.bid[i]], sz = tileHeight(tx, ty + 1), ez = tileHeight(tx + 1, ty), S = Iso.sx, Y = Iso.sy;
+      const sIn = ty !== bd.y1, eIn = tx !== bd.x1; // 남쪽 면이 실내를 보는가 (맨 아래 바깥벽이 아니면) · 동쪽 면도 같은 방식
+      if (sz >= 0 && sz < ht) { if (sIn) drawInnerFace(x0, y1, x1, y1, ht, bd, h); else poly([S(x0, y1), Y(x0, y1, sz), S(x1, y1), Y(x1, y1, sz), S(x1, y1), Y(x1, y1, ht), S(x0, y1), Y(x0, y1, ht)], south); }
+      if (ez >= 0 && ez < ht) { if (eIn) drawInnerFace(x1, y0, x1, y1, ht, bd, hash2(tx + 3, ty)); else poly([S(x1, y0), Y(x1, y0, ez), S(x1, y1), Y(x1, y1, ez), S(x1, y1), Y(x1, y1, ht), S(x1, y0), Y(x1, y0, ht)], east); }
+      poly([S(x0, y0), Y(x0, y0, ht), S(x1, y0), Y(x1, y0, ht), S(x1, y1), Y(x1, y1, ht), S(x0, y1), Y(x0, y1, ht)], '#34302b'); // 잘린 단면
+      ctx.strokeStyle = 'rgba(210,190,160,0.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(S(x0, y1), Y(x0, y1, ht)); ctx.lineTo(S(x1, y1), Y(x1, y1, ht)); ctx.lineTo(S(x1, y0), Y(x1, y0, ht)); ctx.stroke();
+    } else if (t === T.WALL) {
+      drawBox(x0, y0, x1, y1, ht, top, south, east, tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), tx * 977 + ty);
     } else if (t === T.FLOOR || t === T.PROP) { // 지붕 (바깥에서만)
       drawBox(x0, y0, x1, y1, ht, `rgb(${b - 20},${b - 26},${b - 32})`, south, east, -1, -1, 0);
       if (h < 0.05) drawBox(x0 + 8, y0 + 8, x1 - 8, y1 - 8, ht + 10, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 실외기
+    } else if (cut) { // v1.49.11 안에 있을 때 출입문: 문턱만 (낮아진 앞벽 위에 문틀·간판이 떠 있지 않게)
+      const S = Iso.sx, Y = Iso.sy; poly([S(x0, y0), Y(x0, y0, 0), S(x1, y0), Y(x1, y0, 0), S(x1, y1), Y(x1, y1, 0), S(x0, y1), Y(x0, y1, 0)], 'rgba(30,26,22,0.55)');
     } else { // 출입문: 위쪽 문틀만, 아래는 어두운 입구
       const bd = World.buildings[World.bid[i]], LIN = 54;
       const S = Iso.sx, Y = Iso.sy;
