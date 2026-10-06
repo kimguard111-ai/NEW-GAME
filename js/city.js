@@ -173,7 +173,8 @@ const City = {
   collect(objs, inView) {
     for (const p of this.props) {
       if (!inView(p.x, p.y)) continue;
-      objs.push({ d: (p.type === 'bus' || p.type === 'car' ? p.front + 1 : (p.x + p.y) / TILE) + 0.1, draw: drawCityProp, ent: p });
+      if (p.type === 'bus') { for (let k = 0; k < 5; k++) objs.push({ d: p.front - (4 - k) + 1.1, draw: o => drawBusSlice(o, k), ent: p }); continue; } // v1.48.1 5조각 (긴 버스가 옆 건물 옥상 위로 그려지던 것)
+      objs.push({ d: (p.type === 'car' ? p.front + 1 : (p.x + p.y) / TILE) + 0.1, draw: drawCityProp, ent: p });
     }
   },
 };
@@ -234,6 +235,15 @@ function cityArtExtras(o, sx, sy) {
   else if (o.type === 'maptable') { if (L) addLight(sx, sy - 16, 60, 0.6, 'rgba(255,220,150,A)'); }
 }
 
+// v1.48.1 버스는 길이 방향으로 5칸 — 화면 가로 띠로 잘라 칸마다 제 깊이로 그림
+function drawBusSlice(o, k) {
+  const sx = Iso.sx(o.x, o.y), step = ISO_K * TILE * (o.vertical ? -1 : 1), c = sx + (k - 2) * step;
+  let a = c - Math.abs(step) / 2, b = c + Math.abs(step) / 2;
+  const lo = o.vertical ? 4 : 0, hi = o.vertical ? 0 : 4; // 화면 왼쪽 끝 · 오른쪽 끝 조각
+  if (k === lo) a = -1e4; if (k === hi) b = 1e4;
+  ctx.save(); ctx.beginPath(); ctx.rect(a, -1e4, b - a, 2e4); ctx.clip();
+  o._noFx = k !== 4; try { drawCityProp(o); } finally { o._noFx = false; ctx.restore(); }
+}
 function drawCityProp(o) {
   const sx = Iso.sx(o.x, o.y), sy = Iso.sy(o.x, o.y), K = ISO_K;
   const ak = cityArt(o);
@@ -247,6 +257,7 @@ function drawCityProp(o) {
     drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
     ctx.globalAlpha = 1;
     if (o.type === 'car' && o.burnt) burnFx(o.tx, o.ty);
+    if (o._noFx) return;
     if (o.type === 'bus' && o.burnt) burnFx(Math.floor(o.x / TILE), Math.floor(o.y / TILE));
     cityArtExtras(o, sx, sy);
     return;

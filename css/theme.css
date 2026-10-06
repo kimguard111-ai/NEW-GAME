@@ -387,3 +387,29 @@ body.touch #panel-stash .shop-hint { font-size: 10px; padding: 2px 8px; }
 body.touch #log { width: 22vw !important; }
 body.touch .hot { width: 40px !important; height: 40px !important; }
 body.touch #interact-hint { bottom: 64px !important; }
+
+/* ---------- v1.48.1 안내가 시야를 가리던 것: 작게 · 누르면 닫힘 ---------- */
+#keyhint, #tip { pointer-events: auto !important; cursor: pointer; }
+.kh-x { margin-left: 8px; padding: 0 4px; font-size: 12px; color: #8f8670; font-family: sans-serif; }
+#tip .kh-x { margin-left: 6px; }
+body.touch #keyhint, body.touch #tip { top: 46px !important; max-width: 40vw !important; padding: 3px 8px !important; gap: 6px; opacity: .93; }
+body.touch #keyhint .kh-text { font-family: "Malgun Gothic", sans-serif !important; font-weight: bold; font-size: 11px !important; letter-spacing: 0; line-height: 1.35; }
+body.touch #tip { font-size: 10.5px !important; line-height: 1.35; }
+body.touch kbd.kc { min-width: 20px; height: 20px; line-height: 17px; font-size: 11px; border-bottom-width: 3px; }
+body.touch #keyhint .kh-ring { font-size: 16px; }
+/* v1.48.1 모바일 왼쪽 위 프로필 · 목표 창 더 작게 (시야 확보) */
+body.touch #hud-top-left { width: 138px !important; padding: 2px 3px !important; gap: 3px !important; opacity: .92; }
+body.touch #portrait-box { display: none !important; }
+body.touch .hud-bars { width: 132px !important; }
+body.touch #hud-name { display: none !important; }
+body.touch .bar { height: 9px !important; margin: 1px 0 !important; } body.touch .bar span { font-size: 7.5px !important; line-height: 9px !important; }
+body.touch .bar.small { height: 6px !important; } body.touch .bar.small span { display: none; }
+body.touch #hud-credits { font-size: 8.5px !important; line-height: 1.2; white-space: nowrap; overflow: hidden; }
+body.touch #hud-buffs { font-size: 8.5px !important; line-height: 1.2; max-height: 22px; overflow: hidden; }
+body.touch #quest-tracker { width: 138px !important; font-size: 8.5px !important; padding: 12px 4px 2px !important; line-height: 1.3; opacity: .9; }
+body.touch #quest-tracker::before { font-size: 8px !important; padding: 0 5px !important; }
+body.touch #quest-tracker::after { font-size: 8px !important; }
+body.touch #quest-tracker.min { max-height: calc(1.3em * 2 + 14px) !important; }
+body.touch #quest-tracker.min::after { content: '＋'; }
+body.touch #hud-buffs { min-height: 0 !important; } body.touch #hud-buffs:empty { display: none; }
+body.touch #keyhint, body.touch #tip { top: 58px !important; }

@@ -7,7 +7,7 @@ const HINTS = [
     done: (p, h) => Math.hypot(p.x - h.x0, p.y - h.y0) > 110 },
   { id: 'yun', when: p => World.map === 'camp' && FirstRun.rookie(), keys: ['interact'], text: '작전 장교 윤씨에게 말 걸기 — 출격', touch: '윤씨 곁에서 E 버튼 — 출격', max: 1e9,
     far: '노란 화살표를 따라 <b>작전 장교 윤씨</b>에게', guide: () => G.npcs.find(n => n.id === 'deploy'), done: p => World.map !== 'camp' },
-  { id: 'grave', when: p => p.raid && G.grave, keys: [], text: '내 시체 가방이 이 맵에 있다 — 붉은 화살표', touch: '', max: 45, ring: '✚',
+  { id: 'grave', when: p => p.raid && G.grave, keys: [], text: '내 시체 가방이 이 맵에 있다 — 붉은 화살표', touch: '', max: 7, ring: '✚',
     guide: () => G.grave, done: () => !G.grave },
   { id: 'aim', when: p => p.raid && G.enemies.some(e => e.hp > 0 && dist(e, p) < 420 && !enemyCloaked(e) && World.lineOfSight(p, e)), keys: ['mouse'], text: '조준하고 클릭 — 누르고 있으면 계속 쏜다', touch: '화면 오른쪽을 끌어서 조준 · 사격 (놓으면 멈춤)',
     done: p => G.time - (p.lastShot || -9) < 0.3 },
@@ -20,7 +20,7 @@ const HINTS = [
   { id: 'heal', when: p => p.raid && p.hp < PlayerStats.maxHp(p) * 0.45 && (p.inventory.find(i => i.key === 'medkit') || {}).count > 0,
     keys: ['useMed'], text: '구급상자', touch: '아래 소모품 칸의 구급상자', done: (p, h) => p.hp > h.hp0 + 5, max: 8 },
   { id: 'extract', when: p => p.raid && FirstRun.rookie() && (p.raid.t > 240 || Raid.allItems().filter(it => it.raid).length >= 3 || p.raid.kills >= 12), keys: [], text: '이만하면 됐다. 초록 ◎ 탈출 지점에 5초 서 있으면 주운 게 내 것이 된다', touch: '',
-    max: 60, guide: () => FirstRun.nearestExit(), done: () => G.extractT > 0 },
+    max: 7, guide: () => FirstRun.nearestExit(), done: () => G.extractT > 0 },
 ];
 
 const FirstRun = {
@@ -47,7 +47,7 @@ const FirstRun = {
     el.classList.remove('hidden', 'out'); this.paint(); SFX.play('ui', 0.6);
     $('tip').classList.add('hidden'); // v1.47.1 한 번에 한 가지 말만
   },
-  paint() { const c = this.cur, s = this.html(c.h); if (s !== c.last) { $('keyhint').innerHTML = s; c.last = s; } },
+  paint() { const c = this.cur, s = this.html(c.h); if (s !== c.last) { $('keyhint').innerHTML = s + '<span class="kh-x" title="닫기">✕</span>'; c.last = s; } }, // v1.48.1 눌러서 바로 닫기
   finish(ok) {
     const p = G.player, c = this.cur; if (!c) return;
     if (!p.hints.includes(c.h.id)) p.hints.push(c.h.id);
@@ -102,3 +102,12 @@ const FirstRun = {
     SFX.play('ui');
   },
 };
+
+// v1.48.1 안내·도움말은 눌러서 바로 닫힘 (시야를 가리던 것)
+document.addEventListener('DOMContentLoaded', () => {
+  const kh = $('keyhint'), tip = $('tip');
+  const closeKh = e => { e.preventDefault(); e.stopPropagation(); if (FirstRun.cur) FirstRun.finish(false); };
+  kh.addEventListener('click', closeKh); kh.addEventListener('touchstart', closeKh, { passive: false });
+  const closeTip = e => { e.preventDefault(); e.stopPropagation(); tip.classList.add('hidden'); };
+  tip.addEventListener('click', closeTip); tip.addEventListener('touchstart', closeTip, { passive: false });
+});

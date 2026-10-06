@@ -39,9 +39,9 @@ const Tips = {
     if (G.combat && !this.COMBAT.has(id)) return; // 싸우는 중엔 나중에
     p.tips.push(id);
     const el = $('tip');
-    el.innerHTML = `${ICON('tip')} ${TIPS[id]()}`;
+    el.innerHTML = `${ICON('tip')} ${TIPS[id]()}<span class="kh-x">✕</span>`; // v1.48.1 눌러서 닫기
     el.classList.remove('hidden'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
-    clearTimeout(this.hideT); this.hideT = setTimeout(() => el.classList.add('hidden'), 8000);
+    clearTimeout(this.hideT); this.hideT = setTimeout(() => el.classList.add('hidden'), 6000); // v1.48.1 8초 → 6초
     SFX.play('ui');
   },
   // 0.5초마다 상황 확인 (한 번에 하나만)
