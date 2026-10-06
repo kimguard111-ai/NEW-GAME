@@ -522,7 +522,7 @@ const Sprites = {
   },
   get(key) { const s = ART.sprites[key]; return s && s.ready ? s : null; },
   // 애니메이션 길이(초)
-  dur(s, anim) { return s.anims[anim] ? s.anims[anim][1] / (ART.fps[anim] || 8) : 0; },
+  dur(s, anim) { const a = s.anims[anim]; return a ? (a[2] ? a[2].length : a[1]) / (ART.fps[anim] || 8) : 0; },
   // 그리기. anim 이 없으면 idle 로 대체. t = 애니메이션 시작 후 경과(초). 성공 시 true
   // 이번에 그릴 프레임 (그리지 않고 계산만 — 무기를 몸보다 먼저 그릴 때 머리 위치가 필요)
   frame(key, anim, t, faceA) {
@@ -531,9 +531,9 @@ const Sprites = {
     const d = Iso.dir(faceA || 0);
     if (!s.anims[anim]) anim = s.anims.idle ? 'idle' : Object.keys(s.anims)[0];
     if (d.y < -0.35 && s.anims['back_' + anim]) anim = 'back_' + anim; // 등 돌린 그림이 있으면 사용
-    const [row, n] = s.anims[anim], fps = ART.fps[anim.replace('back_', '')] || 8;
+    const [row, n0, seq] = s.anims[anim], n = seq ? seq.length : n0, fps = ART.fps[anim.replace('back_', '')] || 8; // v1.49.5 seq = 칸 순서 (어색한 칸 빼기 · 거꾸로 그려진 줄 바로잡기)
     const once = /attack|hit|death/.test(anim);
-    const f = once ? Math.min(n - 1, Math.floor(t * fps)) : Math.floor(t * fps) % n;
+    const fi = once ? Math.min(n - 1, Math.floor(t * fps)) : Math.floor(t * fps) % n, f = seq ? seq[fi] : fi;
     const sc = (ART.height[key] || ART.height[key.split('_')[0]] || 44) / (s.cell * ART.charFill) * (ART.charScale || 1); // v1.21 실제 스케일
     let hd = s.heads && s.heads[anim] && s.heads[anim][f];
     // v1.15 무기를 머리 위로 휘두르는 프레임은 가공 도구가 무기 끝을 머리로 잡기도 함 → 기본 자세 머리에서 8px 넘게 벗어나면 기본 자세 x
