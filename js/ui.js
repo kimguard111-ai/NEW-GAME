@@ -303,6 +303,7 @@ const UI = {
       return;
     }
     if (it.kind === 'weapon') { add('주무기로 장착', () => UI.equip(it, 'w1')); add('보조무기로 장착', () => UI.equip(it, 'w2')); }
+    if (Companion.canGive(it) && !it.locked) add(`${COMPANIONS[G.player.comp].name}에게 주기`, () => Companion.give(it)); // v1.44
     if (it.kind === 'armor') add('장착', () => UI.equip(it, 'armor'));
     if (it.kind === 'helmet') add('장착', () => UI.equip(it, 'helmet'));
     if (it.kind === 'belt') add('차기', () => { UI.equip(it, 'belt'); SKILLS.forEach((sk, i) => { if (G.player.skills[sk.id]) Hotbar.autoAdd('sk' + i); }); UI.buildHotbar(); }); // 칸이 늘면 못 넣었던 스킬을 채움

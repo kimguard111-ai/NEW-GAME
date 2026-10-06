@@ -57,6 +57,7 @@ window.addEventListener('keydown', e => {
   else if (act === 'belt') Hotbar.edit();
   else if (act === 'throwNext') Gadgets.cycle('throw');
   else if (act === 'utilNext') Gadgets.cycle('util');
+  else if (act === 'compCmd') Companion.command(); // v1.44 동료 명령
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
@@ -642,7 +643,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
     }
   }
   if (e.hp <= 0) {
-    e.lastHit = { crit, melee: hit.melee, fin: hit.fin, blast: hit.blast || hit.blastKill, fire: hit.fire, heavy: (hit.knock || 0) >= 9 || (hit.stagger || 0) >= 0.3, a: angle };
+    e.lastHit = { crit, melee: hit.melee, fin: hit.fin, blast: hit.blast || hit.blastKill, fire: hit.fire, heavy: (hit.knock || 0) >= 9 || (hit.stagger || 0) >= 0.3, a: angle, ally: hit.ally };
     killEnemy(e);
     if (w && w.legend === 'quickload' && w === curWeapon() && !hit.noProc) {
       w.loaded = magSize(w); p.reloadT = 0;
@@ -671,6 +672,7 @@ function killEnemy(e) {
   // 보스 소환수는 경험치 20%, 드랍 없음 (보스 옆 무한 파밍 방지)
   // 연속 처치 콤보 (v0.16): 3초 안에 이어 잡으면 경험치 +5%씩 (최대 +50%)
   if (p.raid && !e.minion) p.raid.kills++;
+  Companion.onKill(e); // v1.44 동료 레벨
   if (!e.minion) {
     G.combo = G.time - (G.comboT || -9) < 3 ? (G.combo || 0) + 1 : 1; G.comboT = G.time;
     if (G.combo >= 3) SFX.play('combo', G.combo);
@@ -997,7 +999,8 @@ function updateBullets(dt) {
             // v1.9 산탄총 코앞 사격: 크게 밀치고 경직
             const pb = wb && wb.pellets && b.maxLife - b.life < 0.1;
             Juice.impact(e, b, Math.atan2(b.vy, b.vx), b.crit); // v1.40 타격감
-            damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb });
+            damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb, ally: b.ally });
+            if (b.mark) e.markT = G.time + 5; // v1.44 윤 저격수 전용: 표적 지정
             if (wb && wb.key === 'sniper') hitstop(0.045);
             if (b.frag) explode(e.x, e.y, b.dmg * 0.6, 50, { small: true, knock: 8, stagger: 0.1 }); // v1.12 레이븐 파편
             if (b.pierce-- <= 0) { b.life = 0; break; }

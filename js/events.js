@@ -23,7 +23,7 @@ const RaidEvents = {
     const lab = !!(World.def && World.def.lab);
     for (const k of Camp.takePlan(World.map)) this['make_' + k](); // v1.13 미리 정해 둔 사건 (무전실에서 미리 보기)
     this.makeExit();
-    Contracts.setup(); MapEvents.make(); // v1.34 출격 계약 · 맵 고유 사건
+    Contracts.setup(); MapEvents.make(); Companion.setupRaid(); // v1.34 출격 계약 · 맵 고유 사건
     const names = this.list.filter(e => !e.exitPart && !e.ext).map(e => EVENT_DEFS[e.kind].name);
     if (names.length) log(`${ICON('radio')} 무전: "${names.join(', ')} 신호가 잡힌다." (미니맵 노란 ◆)`, '#ffd76a');
   },
