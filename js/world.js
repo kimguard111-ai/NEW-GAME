@@ -62,10 +62,14 @@ const World = {
             if (ox + x < W && oy + y < H) { this.shade[(oy + y) * W + ox + x] = s; this.height[(oy + y) * W + ox + x] = h; }
           }
         };
-        if (kind < 0.1) {
+        // v1.49.10 건물 블록 ↓ · 트인 블록 ↑ (공원 10→14% · 광장 주차장 새로 13% · 무너진 터 14→12% · 큰 건물 한 덩어리·상가 44→34%) — 빽빽해서 시야가 막히던 것
+        if (kind < 0.14) {
           // 공원
           for (let y = L0; y <= L1; y++) for (let x = L0; x <= L1; x++) set(ox + x, oy + y, T.GRASS);
-        } else if (kind < 0.24) {
+        } else if (kind < 0.27) {
+          // 광장 · 주차장: 보도 바닥 + 버려진 차 몇 대 (엄폐물)
+          for (let y = L0; y <= L1; y++) for (let x = L0; x <= L1; x++) set(ox + x, oy + y, (x - L0) % 4 === 1 && (y - L0) % 3 === 1 && rng() < 0.35 ? T.CAR : T.WALK);
+        } else if (kind < 0.39) {
           // 붕괴된 건물
           for (let y = L0; y <= L1; y++) for (let x = L0; x <= L1; x++) {
             if (ox + x >= W || oy + y >= H) continue;
@@ -74,11 +78,11 @@ const World = {
             this.shade[(oy + y) * W + ox + x] = shade;
             this.height[(oy + y) * W + ox + x] = 10 + rng() * 34; // 무너진 잔해 벽
           }
-        } else if (kind < 0.44) {
+        } else if (kind < 0.55) {
           // 두 동 + 골목
           if (rng() < 0.5) { fillB(L0, L0, L0 + 4, L1, shade); fillB(L0 + 7, L0, L1, L1, rng()); }
           else { fillB(L0, L0, L1, L0 + 4, shade); fillB(L0, L0 + 7, L1, L1, rng()); }
-        } else if (kind < 0.56) {
+        } else if (kind < 0.66) {
           // 작은 건물 4동 + 십자 골목
           fillB(L0, L0, L0 + 4, L0 + 4, shade); fillB(L0 + 7, L0, L1, L0 + 4, rng());
           fillB(L0, L0 + 7, L0 + 4, L1, rng()); fillB(L0 + 7, L0 + 7, L1, L1, shade);

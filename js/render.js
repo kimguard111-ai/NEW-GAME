@@ -1391,12 +1391,12 @@ function render() {
   const objs = solids;
   const pd = (p.x + p.y) / TILE, psx = Iso.sx(p.x, p.y), psy = Iso.sy(p.x, p.y, 18);
   // 플레이어와 추격 중인 적을 가리는 앞쪽 건물은 반투명 (v0.11 고층 건물 대응)
-  const watch = [{ d: pd, sx: psx, sy: psy, w: 60 }];
+  const watch = [{ d: pd, sx: psx, sy: psy, w: 110 }, { d: pd, sx: psx, sy: psy - 50, w: 90 }, { d: pd, sx: psx, sy: psy + 40, w: 90 }]; // v1.49.10 플레이어 둘레를 넓게 (위·아래 점까지): 가까운 건물이 시야를 막던 것
   for (const n of G.npcs) watch.push({ d: (n.x + n.y) / TILE, sx: Iso.sx(n.x, n.y), sy: Iso.sy(n.x, n.y, 18), w: 34 }); // v1.24 NPC도 가리면 반투명
   for (const e of G.enemies) { // v1.32 쫓지 않는 적도 (건물 뒤 배회하는 적이 안 보이던 것) · 가려진 적은 아래에서 투시 윤곽
     e.occl = false; if (e.hp <= 0 || e.nest) continue;
     const esx = Iso.sx(e.x, e.y), esy = Iso.sy(e.x, e.y, 18); if (esx < -80 || esx > VW + 80 || esy < -80 || esy > VH + 120) continue;
-    watch.push({ d: (e.x + e.y) / TILE, sx: esx, sy: esy, w: 30 + e.r, ent: e });
+    watch.push({ d: (e.x + e.y) / TILE, sx: esx, sy: esy, w: 40 + e.r, ent: e });
   }
   for (const o of solids) {
     if (o.t !== T.BUILDING && o.t !== T.LWALL && !SHOP_TILES.has(o.t)) continue;

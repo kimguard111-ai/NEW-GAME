@@ -813,6 +813,48 @@ Using the attached character as the exact reference (same face, same hair, same 
 
 ---
 
+## 22. 총기 부품 아이콘 (v1.50) · 한 장에 여러 개 (격자)
+총에 끼우는 부품 12종. 부품은 **가방 · 작업대 · 총 상세 창의 아이콘으로만** 보입니다 (손에 든 총 그림은 그대로 — 부품 조합마다 몸 그림을 그릴 수 없어서).
+- 아이콘은 **작게(30~50px) 보이므로** 굵은 실루엣 · 한 물체만 · 배경 없이 · 칸 가운데 (17절 아이콘과 같은 규칙)
+- 방향: 약간 위에서 본 3/4 · **물체의 앞(총구 쪽)이 오른쪽**
+- 📎 콘셉트 아트 + `icons_items.png` (기존 아이콘과 화풍을 맞추려고)
+- 올리는 곳: `art_raw/new/` (파일 이름은 표대로)
+
+| 장 | 격자 | 파일 이름 | 내용 |
+|---|---|---|---|
+| 22-1 ★ | 3×3 | `icons_attach1.png` | 조준경 3 · 총구 3 · 손잡이 3 |
+| 22-2 ★ | 3×1 | `icons_attach2.png` | 탄창 3 |
+
+부품 설계 (아이콘 순서와 같음 · 수치는 만들면서 조정)
+| 칸 | 부품 | 효과 (안) | 끼울 수 있는 총 |
+|---|---|---|---|
+| 조준경 | 도트 조준경 | 조준 속도 ↑ · 조준 퍼짐 조금 ↓ | 기관단총 · 산탄총 · 소총 · 기관총 |
+| 조준경 | 2배 조준경 | 조준 퍼짐 ↓ · 조준 시야 ↑ | 소총 · 기관총 · 저격총 |
+| 조준경 | 4배 저격 조준경 | 조준 퍼짐 크게 ↓ · 조준 시야 크게 ↑ · 조준 이동 더 느림 | 소총 · 저격총 |
+| 총구 | 소음기 | 총소리로 적이 몰려오는 거리 ↓ · 피해 조금 ↓ | 권총 · 기관단총 · 소총 · 저격총 |
+| 총구 | 보정기 | 연사 반동(퍼짐 증가) ↓ | 기관단총 · 소총 · 기관총 |
+| 총구 | 산탄 조임쇠 | 산탄 퍼짐 ↓ (멀리서도 맞음) | 산탄총 |
+| 손잡이 | 수직 손잡이 | 연사 반동 ↓ | 기관단총 · 소총 · 기관총 · 산탄총 |
+| 손잡이 | 앵글 손잡이 | 조준 중 이동 속도 ↑ · 조준 속도 ↑ | 기관단총 · 소총 · 산탄총 |
+| 손잡이 | 레이저 | 그냥 쏘기(조준 안 하고) 퍼짐 ↓ | 모든 총 |
+| 탄창 | 확장 탄창 | 장탄 +50% · 재장전 조금 느림 | 권총 · 기관단총 · 소총 · 저격총 |
+| 탄창 | 쌍탄창 | 재장전 빠름 (한 번 걸러 아주 빠름) | 기관단총 · 소총 |
+| 탄창 | 드럼 탄창 | 장탄 +100% · 이동 조금 느림 · 재장전 느림 | 기관단총 · 소총 · 기관총 · 산탄총 |
+
+### 22-1 ★ · 조준경 · 총구 · 손잡이 9종 · `icons_attach1.png`
+📎 콘셉트 아트 + `icons_items.png`
+```
+Match the art style of the attached images. Create ONE image with a 3 by 3 grid of 9 separate inventory item icons of firearm attachments for a post-apocalyptic survival game, each a single object centered in its own equal cell with wide empty space around it, seen from a slight top-down three-quarter angle with the front of each part pointing to the RIGHT, with a bold clear silhouette that stays readable at very small size. In order, left to right, top to bottom: 1) a small compact red dot sight with a short tube and a tiny red dot glowing on the lens; 2) a medium prism rifle scope with a short thick body and a dull green lens; 3) a long black sniper scope with large lenses at both ends and two turret knobs on top; 4) a long matte black cylindrical gun suppressor with fine grooves; 5) a short black muzzle compensator with three cut slots on top; 6) a short stubby shotgun choke tube with a knurled ring; 7) a vertical tactical foregrip, a black rubber handle standing straight down from a short rail clamp; 8) an angled foregrip, a low black wedge-shaped grip on a short rail clamp; 9) a small boxy black laser sight module with a red lens on the front and a thin red beam just starting. Worn, scratched, some tape and rust like scavenged gear. No guns, no people, no hands. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border, no grid lines. Do not use pink or magenta on the objects.
+```
+
+### 22-2 ★ · 탄창 3종 · `icons_attach2.png`
+📎 콘셉트 아트 + `icons_items.png`
+```
+Match the art style of the attached images. Create ONE image with a 3 by 1 grid (one row) of 3 separate inventory item icons of rifle magazines for a post-apocalyptic survival game, each a single object centered in its own equal cell with wide empty space around it, seen from a slight top-down three-quarter angle, with a bold clear silhouette that stays readable at very small size. In order, left to right: 1) a long curved black extended rifle magazine, clearly longer than a normal one; 2) two curved rifle magazines taped together side by side upside down with worn gray duct tape (jungle style); 3) a round black drum magazine with a short feed neck on top. Worn, scratched, scavenged look. No guns, no people, no hands. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border, no grid lines. Do not use pink or magenta on the objects.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
