@@ -12,7 +12,7 @@ const RES_CAP = 12;
 // 사람 수에 따라 생기는 것 (캠프 중심 기준 px)
 const CAMP_GROWTH = [
   { n: 2, add: [['laundry', -300, -10], ['garden', 70, 215]] },
-  { n: 5, add: [['tent', -305, 70, { color: 1 }], ['tent', 300, -55, { color: 2 }], ['lights', 0, 0]] },
+  { n: 5, add: [['tent', -305, 70, { color: 1 }], ['tent', 300, -55, { color: 2 }], ['lights', -40, -40]] },
   { n: 8, add: [['pocha', 120, 245], ['sandbags', 300, 160], ['container', -290, 200]] },
   { n: 11, add: [['flag', -40, -300], ['tent', 110, -290, {}]] },
 ];
@@ -89,6 +89,13 @@ const Settlement = {
   drawDecor(type, x, y, ex) {
     const sx = Iso.sx(x, y), sy = Iso.sy(x, y), c = World.campCenter();
     if (['tent', 'pocha', 'sandbags', 'container'].includes(type)) { if (!drawPropArt(type, sx, sy)) drawBox(x - 16, y - 12, x + 16, y + 12, 20, '#5a5a42', '#3a3a2a', '#4a4a36', 0, 0, 0); return; }
+    if (['laundry', 'garden', 'flag'].includes(type) && drawPropArt('camp_' + type, sx, sy)) return; // v1.49.3 그림이 있으면 그림
+    if (type === 'lights' && propArt('camp_lights')) { // 모닥불 뒤 전구 줄 기둥 2개 · 전구 자리에 불빛
+      const a = sx, b = sy, r = ART.props.camp_lights.rect, f = ART.propFit.camp_lights, h = r[3] * f.w / r[2];
+      drawPropArt('camp_lights', a, b);
+      for (const [nx, ny] of [[0.22, 0.4], [0.31, 0.42], [0.42, 0.39], [0.58, 0.35], [0.72, 0.27], [0.79, 0.21]]) { const px = a - f.w / 2 + nx * f.w, py = b + f.y - h + ny * h + 2; ctx.fillStyle = '#ffd27a'; ctx.beginPath(); ctx.arc(px, py, 1.6, 0, TAU); ctx.fill(); if (Settings.light && Light.list.length < LIGHT_CAP) addLight(px, py, 22, 0.4, 'rgba(255,210,140,A)'); }
+      return;
+    }
     if (type === 'laundry') { // 빨랫줄
       const x2 = x + 70, y2 = y - 50; ctx.strokeStyle = '#3a3428'; ctx.lineWidth = 2;
       for (const [px, py] of [[x, y], [x2, y2]]) { ctx.beginPath(); ctx.moveTo(Iso.sx(px, py), Iso.sy(px, py)); ctx.lineTo(Iso.sx(px, py), Iso.sy(px, py, 34)); ctx.stroke(); }
@@ -116,7 +123,7 @@ const Settlement = {
   drawRes(m) {
     const sx = Iso.sx(m.x, m.y), sy = Iso.sy(m.x, m.y); if (sx < -60 || sx > VW + 60 || sy < -80 || sy > VH + 60) return;
     drawShadow(sx, sy, 10);
-    const key = ['player', 'player_vest', 'player_tactical', 'player'][m.look], tint = ['sepia(0.5) brightness(0.95)', 'hue-rotate(40deg) saturate(0.6)', 'saturate(0.3) brightness(1.1)', 'hue-rotate(-30deg) sepia(0.3)'][m.look];
+    const key = ['resident_a', 'resident_b', 'resident_c', 'resident_a'][m.look], tint = ['none', 'none', 'none', 'sepia(0.45) brightness(0.95)'][m.look]; // v1.49.3 주민 그림 3종 (넷째는 아저씨 그림 색만 바꿈)
     if (Sprites.get(key)) { ctx.save(); if ('filter' in ctx) ctx.filter = tint; Sprites.draw(key, m.moving ? 'walk' : 'idle', m.moving ? G.time : G.time + m.hx, sx, sy, m.face, false); ctx.restore(); }
     else drawHuman(sx, sy, { s: 0.95, body: '#6a5a4a', skin: '#c49a78', legs: '#3a3428', aim: m.face, walk: m.moving ? m.walk * 6 : 0 });
     if (Math.hypot(G.player.x - m.x, G.player.y - m.y) < 140) nameTag(sx, sy - 52, `${m.r.name} · ${RES_JOBS[m.r.job].name}`, '#cfc6b0', 'bold 11px "Malgun Gothic", sans-serif');

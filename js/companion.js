@@ -3,15 +3,15 @@
 // v1.44 동료 2차: 총 쥐여 주기 (탄 무한) · 동료 레벨 (함께 잡으면 오름) · 명령 (따라와/대기/조용히) · 개인 부탁 → 전용 능력
 const COMP_MAX_LV = 10, COMP_CMDS = ['follow', 'hold', 'quiet'], COMP_CMD_NAMES = { follow: '따라와', hold: '여기서 대기', quiet: '조용히' };
 const COMPANIONS = {
-  assault: { sprite: 'player_military_long', tint: 'hue-rotate(-25deg) saturate(0.8) brightness(0.92)', name: '박 상병', role: '돌격', lvl: 5, price: 1500, hpMul: 1.4, dmg: 9, rate: 0.17, range: 420, spread: 0.06, speed: 950, gun: 20, snd: 'rifle',
+  assault: { sprite: 'comp_assault', tint: 'none', name: '박 상병', role: '돌격', lvl: 5, price: 1500, hpMul: 1.4, dmg: 9, rate: 0.17, range: 420, spread: 0.06, speed: 950, gun: 20, snd: 'rifle',
     look: { body: '#4a5a3a', helmet: '#3a4a2a', legs: '#2a2e22' }, desc: '소총으로 꾸준히 쏜다. 맷집이 좋다.',
     bark: { hire: '"박 상병, 따라가겠습니다."', kill: ['하나 처리!', '정리됐습니다.', '다음!'], hurt: ['윽, 맞았습니다!', '엄호 바랍니다!'], down: '"…먼저 가십시오…"', up: '"고맙습니다. 아직 싸울 수 있습니다."', lv: '"감이 돌아옵니다."' },
     quest: { what: '부대 인식표', map: 'jongno', ask: '"종로에서 우리 분대가 끊겼습니다. 분대장 인식표만이라도 찾아 주십시오."', perk: '엄호 사격', perkDesc: '내 체력이 30% 아래로 떨어지면 5초 동안 두 배 빠르게 쏜다 (30초마다)', thanks: '"…이제 분대장님 몫까지 싸우겠습니다."' } },
-  sniper: { sprite: 'player_tactical_long', tint: 'sepia(0.35) brightness(0.9)', name: '윤 저격수', role: '저격', lvl: 10, price: 3000, hpMul: 0.8, dmg: 58, rate: 1.5, range: 720, spread: 0.008, speed: 1500, pierce: 1, gun: 28, snd: 'sniper',
+  sniper: { sprite: 'comp_sniper', tint: 'none', name: '윤 저격수', role: '저격', lvl: 10, price: 3000, hpMul: 0.8, dmg: 58, rate: 1.5, range: 720, spread: 0.008, speed: 1500, pierce: 1, gun: 28, snd: 'sniper',
     look: { body: '#5a5040', helmet: '#3a3226', legs: '#2a261e' }, desc: '멀리서 한 방씩. 관통한다. 몸은 약하다.',
     bark: { hire: '"멀리 있는 건 내가 맡지."', kill: ['명중.', '하나.', '쓰러졌다.'], hurt: ['가까이 붙었어!', '거리 좀 벌려 줘!'], down: '"…총 좀… 챙겨 줘…"', up: '"빚졌네."', lv: '"손이 좀 풀렸어."' },
     quest: { what: '부서진 조준경', map: 'jongno', ask: '"종로 옥상에 두고 온 조준경이 있어. 부서졌어도 그게 있어야 눈이 맞아."', perk: '표적 지정', perkDesc: '맞힌 적은 5초 동안 내가 주는 피해 +25%', thanks: '"좋아. 이제 내가 찍으면 네가 끝내."' } },
-  medic: { sprite: 'player_vest_pistol', tint: 'saturate(0.4) brightness(1.12)', name: '서 간호사', role: '의무', lvl: 8, price: 2500, hpMul: 1.0, dmg: 8, rate: 0.5, range: 380, spread: 0.05, speed: 950, gun: 12, snd: 'pistol', heal: true,
+  medic: { sprite: 'comp_medic', tint: 'none', name: '서 간호사', role: '의무', lvl: 8, price: 2500, hpMul: 1.0, dmg: 8, rate: 0.5, range: 380, spread: 0.05, speed: 950, gun: 12, snd: 'pistol', heal: true,
     look: { body: '#d8d0c0', helmet: null, legs: '#4a4a52' }, desc: '권총은 약하지만 내 체력이 70% 아래면 12초마다 15% 치료해 준다.',
     bark: { hire: '"다치면 바로 말해요."', kill: ['휴…', '맞았다!'], hurt: ['아파요!', '저 좀 지켜 줘요!'], down: '"…괜찮아요… 가요…"', up: '"고마워요. 이번엔 제가 지킬게요."', heal: ['가만있어 봐요, 붕대 감을게요.', '피 좀 멈추고 가요.', '움직이지 마요!'], lv: '"이제 손이 덜 떨려요."' },
     quest: { what: '의약품 상자', map: 'myeongdong', ask: '"명동 약국 창고에 상자 하나가 남아 있대요. 그게 있으면 훨씬 많이 고칠 수 있어요."', perk: '야전 치료', perkDesc: '치료가 15% → 25%, 12초 → 9초마다', thanks: '"이걸로 사람 여럿 살려요. 고마워요."' } },
@@ -228,10 +228,10 @@ const Companion = {
     const d = this.def(), sx = Iso.sx(c.x, c.y), sy = Iso.sy(c.x, c.y); if (sx < -60 || sx > VW + 60 || sy < -80 || sy > VH + 60) return;
     drawShadow(sx, sy, 11);
     const o = { s: 1, body: d.look.body, skin: '#c49a78', helmet: d.look.helmet, legs: d.look.legs, aim: c.face || 0, gun: this.gunStats(G.player, d).gun, flash: c.hitT > 0, walk: c.state === 'follow' ? c.walk * 6 : 0 };
-    if (c.state === 'down') { ctx.save(); ctx.translate(sx, sy); ctx.rotate(1.35); ctx.translate(-sx, -sy); if (Sprites.get(d.sprite)) { if ('filter' in ctx) ctx.filter = d.tint; Sprites.draw(d.sprite, 'idle', 0, sx, sy, 0, false); } else drawHuman(sx, sy, o); ctx.restore();
+    if (c.state === 'down') { if (Sprites.get(d.sprite)) Sprites.draw(d.sprite, 'death', 9, sx, sy, c.face || 0, false); /* v1.49.3 쓰러진 그림 = 죽는 동작 마지막 칸 */ else { ctx.save(); ctx.translate(sx, sy); ctx.rotate(1.35); ctx.translate(-sx, -sy); drawHuman(sx, sy, o); ctx.restore(); }
       const k = c.downT / 25; ctx.strokeStyle = '#7ad0ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy - 6, 16, -Math.PI / 2, -Math.PI / 2 + TAU * k); ctx.stroke(); ctx.lineWidth = 1;
       nameTag(sx, sy - 30, `${d.name} — [E] 일으키기`, '#7ad0ff', 'bold 12px "Malgun Gothic", sans-serif'); return; }
-    if (Sprites.get(d.sprite)) { // v1.41 플레이어 그림을 색만 바꿔 씀 (없으면 코드 그림)
+    if (Sprites.get(d.sprite)) { // v1.49.3 동료 전용 그림 (없으면 코드 그림)
       const [anim, at] = animState(c.state === 'follow' && c.walk > 0 && G.time - (c.movedT || -9) < 0.15, c.hitT, c.lastAtk, d.sprite);
       ctx.save(); if ('filter' in ctx) ctx.filter = d.tint; Sprites.draw(d.sprite, anim, at, sx, sy, c.face || 0, c.hitT > 0); ctx.restore();
     } else drawHuman(sx, sy, o);

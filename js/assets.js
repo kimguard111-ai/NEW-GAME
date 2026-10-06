@@ -14,7 +14,8 @@ const ART = {
   height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44, deploy: 44, stash: 44,
     // v0.15 보스 전용 그림 (등록하면 기본 적 그림을 키워 쓰는 대신 이 그림 사용)
     glutton: 66, panther: 56, argos: 46, redfang: 50, viper: 58, goliath: 118, warden: 100, butcher: 58, cerberus: 50, colony: 118, chimera: 120, merc: 44, shield: 48, stalker: 46,
-    raven: 54, babel: 120, hawk: 54, shade: 66, anvil: 62, queen: 118 },
+    raven: 54, babel: 120, hawk: 54, shade: 66, anvil: 62, queen: 118,
+    comp: 44, resident_b: 42, resident_c: 42 }, // v1.49.3 동료·캠프 주민 (resident_c 노인은 허리가 굽음)
   // 플레이어 무기 그림 (옆모습 1장, 총구/날이 오른쪽). 플레이어 몸 그림은 무기 없이 만들고 이 그림을 손에 붙임
   // 없으면 코드로 그린 총·칼을 사용
   weapons: {
@@ -103,6 +104,9 @@ const ART = {
     tent: { file: 'props_camp.png', rect: [4, 4, 238, 165] },
     tent_medic: { file: 'props_camp.png', rect: [246, 4, 237, 166] },
     workbench: { file: 'props_camp.png', rect: [682, 4, 172, 174] },
+    // v1.49.3 캠프가 커질 때 생기는 것 (props_growth.png)
+    camp_laundry: { file: 'props_growth.png', rect: [4, 4, 453, 430] }, camp_garden: { file: 'props_growth.png', rect: [461, 4, 459, 331] },
+    camp_lights: { file: 'props_growth.png', rect: [4, 438, 396, 440] }, camp_flag: { file: 'props_growth.png', rect: [404, 438, 250, 463], ax: 0.13 },
     // props_deco.png
     acunit: { file: 'props_deco.png', rect: [4, 180, 134, 146] },
     antenna: { file: 'props_deco.png', rect: [142, 180, 111, 158] },
@@ -157,6 +161,7 @@ const ART = {
     car_a: { w: 92, y: 18 }, car_b: { w: 96, y: 18 }, car_c: { w: 92, y: 18 }, police: { w: 92, y: 18 }, bus: { w: 210, y: 40 }, car_burnt: { w: 92, y: 18 }, /* v1.21 2칸 승용차 · 5칸 버스 */
     dumpster: { w: 38, y: 8 }, locker: { w: 24, y: 6 }, labcase: { w: 26, y: 6 }, bag: { w: 20, y: 3 }, safe: { w: 34, y: 8 }, airdrop: { w: 38, y: 8 }, generator: { w: 40, y: 8 }, nest: { w: 96, y: 12 }, mine: { w: 18, y: 3 },
     tent: { w: 86, y: 18 }, tent_medic: { w: 86, y: 18 }, crates: { w: 48, y: 10 }, workbench: { w: 56, y: 10 }, maptable: { w: 50, y: 10 }, radio: { w: 40, y: 8 }, campfire: { w: 36, y: 6 }, container: { w: 70, y: 16 }, sandbags: { w: 54, y: 8 },
+    camp_laundry: { w: 92, y: 10 }, camp_garden: { w: 84, y: 14 }, camp_lights: { w: 84, y: 6 }, camp_flag: { w: 46, y: 3 }, // v1.49.3
     rubble_a: { w: 60, y: 10 }, rubble_b: { w: 56, y: 10 }, slab: { w: 64, y: 12 }, watertank: { w: 26, y: 6 }, acunit: { w: 24, y: 6 }, antenna: { w: 22, y: 2 }, tires: { w: 30, y: 5 }, cart: { w: 30, y: 5 }, debris: { w: 46, y: 8 },
     // v1.25 건물 내부 (상가마다 진열대·탁자 등 한 칸짜리 · 장식은 그림이 있을 때만 바닥에 흩어 놓음)
     in_snack: { w: 34, y: 6 }, in_pharma: { w: 34, y: 6 }, in_books: { w: 34, y: 6 }, in_elec: { w: 34, y: 6 }, in_mart: { w: 34, y: 6 }, in_cafe: { w: 30, y: 6 },
@@ -273,6 +278,13 @@ const ART = {
     deploy: { file: 'deploy.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
     medic: { file: 'medic.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
     merchant: { file: 'merchant.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
+    // v1.49.3 동료 3명 (돌격은 공격 줄 없음 → 대기 자세가 사격 자세) · 캠프 주민 3명 (작업복 아저씨 · 앞치마 아주머니 · 지팡이 할아버지)
+    comp_assault: { file: 'comp_assault.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], hit: [2, 2], death: [3, 5] } },
+    comp_sniper: { file: 'comp_sniper.png', cell: 128, w: 192, anims: { idle: [0, 3], walk: [1, 5], attack: [2, 3], hit: [3, 2], death: [4, 6] } },
+    comp_medic: { file: 'comp_medic.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 5], attack: [2, 5], hit: [3, 2], death: [4, 6] } },
+    resident_a: { file: 'resident_a.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8] } },
+    resident_b: { file: 'resident_b.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 4] } },
+    resident_c: { file: 'resident_c.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 4] } },
     // v1.7.4 Gemini 아트: NPC 3명 · 보스 먹보·흑표
     captain: { file: 'captain.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
     mechanic: { file: 'mechanic.png', cell: 128, w: 192, anims: { idle: [0, 4] } },

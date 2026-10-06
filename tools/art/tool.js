@@ -7,6 +7,7 @@ const [key, order, outDir, ...files] = process.argv.slice(2);
   await pg.goto('file://' + require('path').resolve(__dirname, '../sprite-tool.html'));
   await pg.selectOption('#key', key);
   if (order !== '-') await pg.fill('#order', order);
+  if (process.env.NOWM) await pg.uncheck('#wm');
   if (process.env.WIDE) await pg.fill('#wide', process.env.WIDE);
   await pg.setInputFiles('#file', files);
   await pg.waitForTimeout(2500);
