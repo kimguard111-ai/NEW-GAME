@@ -32,9 +32,11 @@ const TIPS = {
 
 const Tips = {
   t: 0,
+  COMBAT: new Set(['telegraph', 'lowhp', 'noammo', 'elite', 'shield', 'cloak', 'melee', 'water']), // v1.47.1 전투 중에 보여도 되는 팁
   show(id) {
     const p = G.player;
     if (!Settings.tips || !p || p.tips.includes(id)) return;
+    if (G.combat && !this.COMBAT.has(id)) return; // 싸우는 중엔 나중에
     p.tips.push(id);
     const el = $('tip');
     el.innerHTML = `${ICON('tip')} ${TIPS[id]()}`;

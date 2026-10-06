@@ -297,3 +297,8 @@ body.touch #panel-enhance.panel:not(.hidden) { display: block !important; overfl
 body.touch #ws-tabs button { padding: 4px 6px !important; font-size: 12px !important; height: auto !important; line-height: 1.4; }
 body.touch #panel-shop .shop-item { font-size: 11px !important; padding: 4px 6px !important; line-height: 1.4; }
 body.touch #panel-shop .shop-hint { font-size: 11px; }
+
+/* ---------- v1.47.1 전투 중 글씨 정리 ---------- */
+body.combat #log > div:not(:nth-last-child(-n+2)) { display: none; } /* 싸우는 중엔 최근 두 줄만 */
+body.combat #log { opacity: .7; }
+body:not(.touch) #tip { top: 62px; bottom: auto; } /* 도움말은 위쪽 가운데로 — 캐릭터 주변(아래 가운데)은 키 그림 · 상호작용만 */

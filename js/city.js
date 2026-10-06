@@ -50,11 +50,13 @@ const City = {
     for (let n = 0, tries = 0; n < 12 && tries < 600; tries++) {
       const vert = rng() < 0.5, bx = Math.floor(rng() * (W / B)) * B, by = Math.floor(rng() * (H / B)) * B;
       const lane = 1 + Math.floor(rng() * 2), off = RW + 2 + Math.floor(rng() * (B - RW - 8));
-      const cells = [0, 1, 2, 3, 4].map(k => vert ? [bx + lane, by + off + k] : [bx + off + k, by + lane]);
+      // v1.47.1 버스 폭도 2칸 (그림이 2칸 폭이라 1칸만 막으면 옆구리로 파고들던 것)
+      const cells = [];
+      for (const w of [0, 1]) for (let k = 0; k < 5; k++) cells.push(vert ? [bx + lane + w, by + off + k] : [bx + off + k, by + lane + w]);
       if (!cells.every(([x, y]) => at(x, y) === T.ROAD && !near(x, y))) continue;
       for (const [x, y] of cells) { T_[y * W + x] = T.CAR; this.carSkip.add(y * W + x); this.busCells.add(y * W + x); }
-      const [fx, fy] = cells[4];
-      add('bus', (cells[0][0] + fx + 1) / 2 * TILE, (cells[0][1] + fy + 1) / 2 * TILE, { vertical: vert, front: fx + fy, color: rng() < 0.6 ? 0 : 1, burnt: rng() < 0.3 });
+      const xs = cells.map(c => c[0]), ys = cells.map(c => c[1]), fx = Math.max(...xs), fy = Math.max(...ys);
+      add('bus', (Math.min(...xs) + fx + 1) / 2 * TILE, (Math.min(...ys) + fy + 1) / 2 * TILE, { vertical: vert, front: fx + fy, color: rng() < 0.6 ? 0 : 1, burnt: rng() < 0.3 });
       n++;
     }
     // v1.21 승용차·경찰차: 폐차 칸을 차선 방향으로 2칸(≈3.4m)으로 늘려 소품으로 그림
@@ -239,7 +241,8 @@ function drawCityProp(o) {
     let px = sx, py = sy;
     if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
     drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
-    const fade = o.type === 'tree' ? Behind.alpha(o, px, py, (ART.propFit[ak] || { w: 40 }).w * (o.s || 1), (ART.propFit[ak] || { w: 40 }).w * (o.s || 1) * 1.6) : 1; // v1.46
+    const fade = o.type === 'tree' ? Behind.alpha(o, px, py, (ART.propFit[ak] || { w: 40 }).w * (o.s || 1), (ART.propFit[ak] || { w: 40 }).w * (o.s || 1) * 1.6) // v1.46
+      : o.type === 'bus' || o.type === 'car' || o.type === 'police' ? Behind.vehicle(o, ak, px, py) : 1; // v1.47.1 버스·차 뒤에 사람·적이 있으면 반투명
     ctx.globalAlpha = fade;
     drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
     ctx.globalAlpha = 1;

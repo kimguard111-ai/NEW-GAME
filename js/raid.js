@@ -23,12 +23,10 @@ const Raid = {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id);
       const gr = p.graves[id];
       const ev = ok && Camp.lv('radio') >= 1 ? ` <span style="color:#ffd76a">${ICON('radio')} ${Camp.planFor(id).map(k => EVENT_DEFS[k].name).join(' · ')}</span>` : ''; // v1.13 무전실 미리 보기
-      h += `<div class="map-row${ok ? ' go' : ' locked'}"${ok ? ` data-map="${id}"` : ''}><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}${p.contract && p.contract.map === id ? ` <span style="color:#ffd76a">${ICON('bounty')} 계약</span>` : ''}${ev}</div>`;
+      h += `<div class="map-row${ok ? ' go' : ' locked'}"${ok ? ` data-map="${id}"` : ''}><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}${ev}</div>`;
     }
-    h += Contracts.html(); // v1.34 출격 계약
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨 — 출격 지도', h, btns);
-    Contracts.bind($('dialog-text'), () => this.openMap());
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격
   },
 
@@ -95,7 +93,6 @@ const Raid = {
   // 주운 것 확정 후 캠프로
   extract() {
     const p = G.player, r = p.raid;
-    Contracts.onExtract(); // v1.34 계약 보상 (탈출 직전 판정: 호위 생존자가 곁에 있어야)
     Companion.onExtract(r); // v1.44 동료 개인 부탁
     Settlement.onExtract(r); // v1.43 구한 사람 합류 · 캠프 사람들이 물건을 모아 둠
     const items = this.allItems().filter(it => it.raid);
@@ -114,7 +111,6 @@ const Raid = {
   onDeath() {
     const p = G.player, r = p.raid;
     if (!r) return '';
-    Contracts.onDeath(); // v1.34
     const lostItems = [];
     for (const k of Object.keys(p.equip)) if (p.equip[k] && p.equip[k].raid) { lostItems.push(p.equip[k]); p.equip[k] = null; }
     lostItems.push(...p.inventory.filter(it => it.raid));
@@ -136,7 +132,6 @@ const Raid = {
     this.resetWorld();
     Object.assign(p, World.campCenter());
     G.fade = { t: 0, life: 1.1, text: '시청역 생존자 캠프', sub: '' }; // v1.17
-    p.cboard = null; // v1.34 돌아올 때마다 새 계약
     p.dead = false; p.hp = PlayerStats.maxHp(p); p.stam = 100;
     UI.refreshAll();
   },

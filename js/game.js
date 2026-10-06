@@ -70,7 +70,11 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 // ---------------- 공용 ----------------
 function log(msg, color = '#ddd') { UI.log(msg, color); if (color === '#f88' && typeof SFX !== 'undefined') SFX.play('error'); } // v1.35 안 되는 일: 낮은 삐-삐
 function floatText(x, y, text, color = '#fff', size = 14) {
-  G.texts.push({ x: x + rand(-6, 6), y, z: 34, text, color, size, t: 0, life: 0.9 });
+  // v1.47.1 글씨가 겹쳐 난잡하던 것: 0.35초 안에 근처(28px)에 뜬 같은 색 피해 숫자는 하나로 합침 · 한 화면 최대 18개
+  const n = typeof text === 'number' ? text : /^-?\d+$/.test(text) ? +text : null;
+  if (n !== null) for (const t of G.texts) if (t.num !== undefined && t.color === color && t.t < 0.35 && Math.abs(t.x - x) < 28 && Math.abs(t.y - y) < 28) { t.num += n; t.text = String(t.num); t.t = 0; t.size = Math.min(22, Math.max(t.size, size) + 1); return; }
+  if (G.texts.length >= 18) G.texts.shift();
+  G.texts.push({ x: x + rand(-6, 6), y, z: 34, text, color, size, t: 0, life: 0.9, num: n === null ? undefined : n });
 }
 function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
   for (let i = 0; i < n; i++) {
@@ -156,6 +160,7 @@ function startGame(save, name) {
       const graves = Object.values(P.graves || {}).flatMap(g => g.items || []);
       for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves]) if (it && it.kind === 'weapon' && !it.v127) { if (R[it.key]) it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v127 = true; } }
     P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
+    P.contract = null; P.cboard = null; // v1.47.1 출격 계약 게시판 삭제 (받아 둔 계약도 정리)
     if (!P.hints) P.hints = P.level > 2 || (P.rec && P.rec.extracts) || P.deaths ? HINTS.map(h => h.id).concat('rules') : []; // v1.45 키 그림 안내 (이미 해 본 사람은 건너뜀)
   Bounty.refresh(); // v0.14 일일 의뢰
   Weekly.refresh(); // v1.15 주간 도전
@@ -695,7 +700,6 @@ function killEnemy(e) {
   SFX.play(e.def.boss || e.fieldBoss || e.elite ? 'roar' : 'kill', e.def.boss ? 1 : 0.8);
   const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul * (p.raid ? 1.4 : 1) * (World.def && World.def.lab ? 1.5 : 1)); // v1.31 연구소: 적이 적어(분당 처치 3.2) 경험치 ×1.5 // 엘리트 4배 · v1.16 출격 맵 처치 경험치 ×1.4 (적이 무한히 나오지 않는 만큼)
   gainExp(exp);
-  floatText(e.x, e.y - 10, `+${fmt(exp)} EXP`, '#e0c040', 12);
   p.totalKills++;
   const ck = e.art && Sprites.get(e.art) ? e.art : e.type; // 보스 전용 그림이면 그 그림으로 쓰러짐
   if (Sprites.get(ck) && ART.sprites[ck].anims.death) {
@@ -1141,6 +1145,11 @@ function update(dt) {
   G.time += dt;
   const p = G.player;
   p.playTime += dt;
+  if ((G.combatT = (G.combatT || 0) - dt) <= 0) { // v1.47.1 싸우는 중: 팁 미룸 · 로그 2줄만
+    G.combatT = 0.25; const p = G.player;
+    G.combat = !!p.raid && G.enemies.some(e => e.hp > 0 && e.state === 'chase' && Math.abs(e.x - p.x) + Math.abs(e.y - p.y) < 700);
+    document.body.classList.toggle('combat', G.combat);
+  }
   Tips.update(dt);
   FirstRun.update(dt); // v1.45
   if (!p.dead) {

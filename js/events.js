@@ -23,7 +23,7 @@ const RaidEvents = {
     const lab = !!(World.def && World.def.lab);
     for (const k of Camp.takePlan(World.map)) this['make_' + k](); // v1.13 미리 정해 둔 사건 (무전실에서 미리 보기)
     if (Math.random() < 0.5) this.makeExit(); // v1.46 특수 탈출은 출격 절반만
-    Contracts.setup(); if (!FirstRun.rookie() && Math.random() < 0.35) MapEvents.make(); Companion.setupRaid(); // v1.34 출격 계약 · 맵 고유 사건 · v1.45 첫 출격은 단순하게 (맵 고유 사건 없음)
+    if (!FirstRun.rookie() && Math.random() < 0.35) MapEvents.make(); Companion.setupRaid(); // 맵 고유 사건 · v1.47.1 출격 계약 게시판 삭제 · v1.45 첫 출격은 단순하게 (맵 고유 사건 없음)
     const names = this.list.filter(e => !e.exitPart && !e.ext).map(e => EVENT_DEFS[e.kind].name);
     if (names.length) log(`${ICON('radio')} 무전: "${names.join(', ')} 신호가 잡힌다." (미니맵 노란 ◆)`, '#ffd76a');
   },
@@ -267,7 +267,7 @@ const RaidEvents = {
     }
     const s = out.filter(Boolean);
     const al = this.alert ? ` · <b style="color:#ff8a5a">경보 ${this.alert}단계</b>` : ` · 경보까지 ${Math.max(0, Math.ceil((ALERT_AT[0] + Camp.alertDelay() - p.raid.t) / 60))}분`;
-    return Contracts.trackerLine() + Companion.trackerLine() + `<br><span class="muted">${ICON('radio')} ${s.length ? s.join(' · ') : '사건 없음'}${al}${Heli.line()}</span>`;
+    return Companion.trackerLine() + `<br><span class="muted">${ICON('radio')} ${s.length ? s.join(' · ') : '사건 없음'}${al}${Heli.line()}</span>`;
   },
 
   // 미니맵 표시

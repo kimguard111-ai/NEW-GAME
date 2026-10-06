@@ -1209,6 +1209,13 @@ const Behind = {
     for (const e of G.enemies) if (e.hp > 0 && !enemyCloaked(e)) add(e, e.state === 'chase' ? 1 : 0.6);
     return L;
   },
+  // v1.47.1 탈것: 그림이 차지하는 화면 사각형 안에, 그림보다 먼저(뒤에) 그려지는 사람·적이 있으면 반투명
+  vehicle(o, ak, px, py) {
+    const a = propArt(ak); if (!a) return 1;
+    const fit = ART.propFit[ak] || { w: 40, y: 4 }, [, , rw, rh] = a.rect || [0, 0, a.img.width, a.img.height], w = fit.w, h = rh * w / rw, base = py + fit.y, d = o.front + 1.1;
+    for (const t of this.actors()) if (t.d < d && Math.abs(t.sx - px) < w * 0.5 && t.sy - 14 < base && t.sy - 14 > base - h) return 0.35;
+    return 1;
+  },
   // 나무 바닥점(o) · 화면 위치 · 잎 폭/높이 → 0.3~1 투명도
   alpha(o, sx, sy, w, h) {
     const d = (o.x + o.y) / TILE;

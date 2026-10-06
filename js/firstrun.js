@@ -45,6 +45,7 @@ const FirstRun = {
     this.cur = { h, t: 0, x0: p.x, y0: p.y, hp0: p.hp, last: '' };
     if (h.id === 'slide') p.tips.includes('telegraph') || p.tips.push('telegraph'); // 같은 말 두 번 안 하게
     el.classList.remove('hidden', 'out'); this.paint(); SFX.play('ui', 0.6);
+    $('tip').classList.add('hidden'); // v1.47.1 한 번에 한 가지 말만
   },
   paint() { const c = this.cur, s = this.html(c.h); if (s !== c.last) { $('keyhint').innerHTML = s; c.last = s; } },
   finish(ok) {
