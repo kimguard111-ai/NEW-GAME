@@ -787,6 +787,32 @@ Match the art style of the attached concept image. Create ONE square image divid
 
 ---
 
+## 21. 총마다 다른 몸 그림 (v1.49.2) — 산탄총부터
+지금은 기관단총·산탄총·소총·저격총·기관총을 들면 캐릭터가 **모두 같은 검은 돌격소총**을 들고 있습니다 (11절의 `long` 몸). 가방·무기 창 그림은 총마다 따로 있지만 손에 든 모습은 같음.
+- 이제 **총 이름으로 된 몸 그림이 있으면 그걸 씁니다** — 올리는 즉시 적용, 없는 조합은 지금처럼 돌격소총 몸.
+- 데모 범위(Lv1~10)에서 쓰는 건 **산탄총(Lv5 · 2장 보상)** 뿐이라 산탄총부터. 저격총(Lv12) · 기관총(Lv16)은 데모 뒤에 같은 방식으로.
+- 데모에서 입는 방어구: 없음(후드) · 방탄 조끼 · 전술 조끼 (군용 강화복은 Lv10) → **산탄총 4장이면 데모는 끝**
+
+| 장 | 파일 이름 | 방어구 | 📎 첨부할 몸 |
+|---|---|---|---|
+| 21-1 ★ | `player_shotgun.png` | 없음 (후드) | `Player.png` (또는 `player_long` 결과) |
+| 21-2 ★ | `player_vest_shotgun.png` | 방탄 조끼 | `player_best1.png` |
+| 21-3 | `player_tactical_shotgun.png` | 전술 조끼 | `player_best2.png` |
+| 21-4 | `player_military_shotgun.png` | 군용 강화복 | `player_best3.png` |
+| (데모 뒤) | `player_…_sniper.png` · `player_…_lmg.png` | 같은 순서 | 같음 |
+
+### 21-1 ★ · 산탄총 든 몸 · `player_shotgun.png` (방어구 버전은 첨부 그림만 바꿔 같은 프롬프트)
+📎 해당 방어구의 빈손 몸 그림 + 콘셉트 아트
+```
+Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a black pump-action shotgun with a wooden pump grip, held with both hands at hip-to-chest height: the stock against the right side of the body, the left hand on the pump, the short thick barrel pointing straight to the RIGHT and level with the ground. The shotgun stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while holding the shotgun forward; row 2: 6 frames of a walk cycle while keeping the shotgun forward; row 3: 3 frames of firing: a strong recoil kick that pushes the shoulders back, then racking the pump grip back and forward, no muzzle flash, no bullets, no shells in the air; row 4: 2 frames of getting hit and flinching backward while still holding the shotgun; row 5: 5 frames of a death animation, dropping the shotgun, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### (데모 뒤) 저격총 · 기관총 — 위 프롬프트에서 총 부분만 바꿔 씀
+- 저격총 `player_…_sniper.png`: `holding a long black bolt-action sniper rifle with a large scope, the stock tucked into the right shoulder, the long barrel pointing straight to the RIGHT` · 3번째 줄: `3 frames of firing one heavy shot with a strong recoil, then working the bolt`
+- 기관총 `player_…_lmg.png`: `holding a heavy black light machine gun with a box magazine underneath and a folded bipod, carried at the hip with both hands, the barrel pointing straight to the RIGHT` · 2번째 줄: `6 frames of a slow heavy walk cycle` · 3번째 줄: `3 frames of continuous firing with a shaking recoil`
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
