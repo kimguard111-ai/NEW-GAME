@@ -14,8 +14,9 @@ const Settings = {
   ambient: true, // v1.37 환경음
   xray: true,    // v1.37 건물에 가려진 적 투시 윤곽
   keys: null,    // v1.37 조작 키 (null = 기본)
+  fullscreen: true, // v1.45.2 모바일: 화면을 처음 누르면 전체 화면 (나갔다가도 다시 누르면 돌아감)
   load() { try { Object.assign(this, JSON.parse(localStorage.getItem('seoul2049-settings') || '{}')); } catch (e) { /* 저장 불가 */ } },
-  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, keys: this.keys })); } catch (e) { /* 저장 불가 */ } },
+  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, keys: this.keys, fullscreen: this.fullscreen })); } catch (e) { /* 저장 불가 */ } },
 };
 // v1.37 키 바꾸기: 행동 → 키 (소문자 e.key). 벨트 1~8 · ESC 는 고정
 const KEY_DEFAULTS = { up: 'w', left: 'a', down: 's', right: 'd', dodge: ' ', reload: 'r', swap: 'q', interact: 'e', inventory: 'i', stats: 'c', skills: 'k', quest: 'j', settings: 'o', belt: 'b', throwNext: 't', utilNext: 'y', compCmd: 'f' };

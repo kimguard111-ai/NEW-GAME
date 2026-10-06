@@ -223,3 +223,47 @@ body.touch .doll > [style*="grid-area:fig"] { display: none !important; }
 body.touch #panel-inventory.panel { top: 4px !important; max-height: calc(100vh - 8px) !important; display: flex; flex-direction: column; }
 body.touch #panel-inventory .inv-body { flex: 1; min-height: 0; overflow-y: auto; }
 body.touch #item-detail { max-height: none; font-size: 12px; }
+
+/* v1.45.1 벨트 칸 등록: 칸을 누르고 → 넣을 것을 누름 */
+.hbx-slots { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 10px 0 8px; }
+.hbx-slot { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 64px; padding: 4px 2px;
+  background: var(--steel); border: 2px solid var(--edge); box-shadow: 2px 2px 0 #000; cursor: pointer; text-align: center; }
+.hbx-slot .ico { width: 26px; height: 26px; }
+.hbx-slot small { font-size: 10px; line-height: 1.15; color: #cfc6b0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbx-slot .k { position: absolute; left: 3px; top: 1px; font-family: 'Typer', monospace; font-size: 11px; color: var(--acc); }
+.hbx-slot .plus { font-size: 20px; color: #6a6250; font-weight: normal; }
+.hbx-slot.empty small { color: #6a6250; }
+.hbx-slot.on { border-color: #ffd76a; background: #2e2a1c; box-shadow: 0 0 0 1px #ffd76a, 2px 2px 0 #000; }
+.hbx-slot.off { opacity: .4; cursor: default; } .hbx-slot.off .ico { width: 16px; height: 16px; } .hbx-slot.off small { font-size: 9px; white-space: normal; }
+.hbx-head { font-family: 'BlackHan', "Malgun Gothic", sans-serif; font-size: 14px; color: #ffd76a; margin: 2px 0 6px; }
+.hbx-pal { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.hbx-item { display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: center; padding: 6px 8px; cursor: pointer;
+  background: rgba(0,0,0,.25); border: 1px solid var(--edge); }
+.hbx-item .ico, .hbx-item .x { grid-row: 1 / 3; width: 28px; height: 28px; font-size: 18px; text-align: center; line-height: 28px; color: #c96a5a; }
+.hbx-item b { font-weight: bold; font-size: 13px; color: #e6dfcc; }
+.hbx-item small { font-size: 10px; color: #8f8670; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hbx-item:hover, .hbx-item:active { border-color: #ffd76a; }
+.hbx-item.cur { border-color: #9fbf6a; background: rgba(120,160,80,.12); }
+body.touch .hbx-slots { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; margin: 6px 0; } body.touch .hbx-slot { height: 52px; }
+body.touch .hbx-pal { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 4px; } body.touch .hbx-item { padding: 4px 6px; }
+
+/* v1.45.2 모바일 2차: 창을 화면 높이 거의 다 쓰게 · 아래 버튼 작게 · 캐릭터/목표 창 줄임 · 2×2 버튼 작게 */
+body.touch #panel-dialog.panel { top: 6px !important; max-height: calc(100vh - 12px) !important; }
+body.touch #dialog-text { max-height: none !important; flex: 1 1 auto; padding: 8px 10px !important; font-size: 12.5px; line-height: 1.55; }
+body.touch #dialog-buttons { flex: 0 0 auto; padding: 4px 10px 8px !important; gap: 5px !important; }
+body.touch #dialog-buttons button { padding: 5px 9px !important; font-size: 12px !important; }
+body.touch #hud-top-left { width: 168px !important; padding: 3px 4px !important; gap: 4px !important; }
+body.touch #portrait-box, body.touch #portrait { width: 34px !important; height: 34px !important; }
+body.touch .hud-bars { width: 122px !important; }
+body.touch .bar { height: 11px !important; } body.touch .bar span { font-size: 8.5px !important; line-height: 11px !important; }
+body.touch #hud-name { font-size: 11px !important; }
+body.touch #hud-credits, body.touch #hud-status, body.touch #hud-safe { font-size: 9px !important; }
+body.touch #quest-tracker { width: 168px !important; font-size: 9.5px !important; padding: 15px 5px 3px !important; }
+body.touch #quest-tracker::before { font-size: 9px !important; }
+body.touch #quest-tracker.min { max-height: calc(2 * 1.35em + 18px); }
+body.touch #touch-buttons { grid-template-columns: 44px 44px !important; gap: 5px !important; }
+body.touch #touch-buttons button, body.touch #touch-buttons button:not(.small) { width: 42px !important; height: 42px !important; font-size: 15px !important; }
+body.touch #touch-buttons button.big { width: 44px !important; height: 44px !important; font-size: 17px !important; }
+body.touch #touch-buttons button .ico { width: 20px; height: 20px; }
+body.touch #hud-buffs { font-size: 9.5px !important; } body.touch #hud-lv { font-size: 9px !important; }
+body.touch .bar.small { height: 9px !important; } body.touch .bar.small span { font-size: 8px !important; line-height: 9px !important; }

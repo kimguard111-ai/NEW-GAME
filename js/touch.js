@@ -53,6 +53,8 @@ const Touch = {
     }, opts);
     // 시작 시 전체 화면 + 가로 고정 시도 (지원하는 브라우저만)
     for (const id of ['btn-new', 'btn-continue', 'btn-respawn']) document.getElementById(id).addEventListener('click', () => this.fullscreen());
+    // v1.45.2 처음 누르는 순간(제목 화면 포함) 전체 화면 · 알림창 등으로 빠져나가도 다음 터치에 다시 (브라우저는 터치 없이 전체 화면을 못 켬)
+    document.addEventListener('touchend', () => { if (Settings.fullscreen !== false && !document.fullscreenElement) this.fullscreen(); }, { passive: true });
   },
 
   fullscreen() {

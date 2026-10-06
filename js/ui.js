@@ -448,6 +448,7 @@ const UI = {
       + opt('reverb', '울림', '바깥 메아리 · 실내 울림 (끄면 가벼워짐 — 모바일 기본 끔)')
       + opt('ambient', '환경음', '바람 · 먼 총성 · 사이렌 같은 맵 분위기 소리')
       + opt('xray', '가려진 적 윤곽', '건물 뒤에 있는 적을 붉은 윤곽으로 보여 줌')
+      + (IS_TOUCH ? opt('fullscreen', '전체 화면', '화면을 누르면 주소창 없이 전체 화면으로 (아이폰은 「홈 화면에 추가」로 열어야 전체 화면)') : '')
       + `<div class="set-row"><button id="btn-lowspec">저사양 모드 (한 번에 가볍게)</button> <span class="muted">조명 · 세부 묘사 · 울림 · 환경음 끔</span></div>`
       + (IS_TOUCH ? '' : `<hr style="border-color:#333"><b>조작 키</b> <span class="muted">— 누르고 새 키 입력 · 겹치면 서로 바뀜 · 벨트 1~8 · ESC 는 고정</span><div class="key-grid">${Object.keys(KEY_DEFAULTS).map(a => `<span class="key-row">${KEY_NAMES[a]} <button class="key-btn" data-key="${a}">${keyLabel(keyOf(a))}</button></span>`).join('')}</div><button id="btn-keyreset">기본 키로</button>`)
       + `<hr style="border-color:#333"><b>세이브 백업</b> <span class="muted">— 다른 기기·브라우저로 옮길 때</span><br>`
@@ -896,16 +897,36 @@ const Hotbar = {
     for (let i = 0; i < beltSlots(p); i++) if (!p.hotbar[i]) { p.hotbar[i] = act; UI.buildHotbar(); return true; }
     return false;
   },
-  edit() {
-    const p = G.player, n = beltSlots(p), acts = HOT_ACTS();
-    let h = `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>${n}칸</b> (벨트 등급마다 2 · 4 · 6 · 8칸) · 칸에 넣을 것을 고르세요. 슬라이딩은 항상 따로 있습니다.</div><div class="hb-edit">`;
+  edit(sel) { // v1.45.1 칸을 누르고 → 넣을 것을 누름 (드롭다운 대신 그림 칸)
+    const p = G.player, n = beltSlots(p);
+    if (sel === undefined) { sel = p.hotbar.slice(0, n).indexOf(null); if (sel < 0) sel = 0; }
+    this.sel = sel = Math.min(sel, n - 1);
+    const look = act => {
+      if (!act) return { ic: null, nm: '비어 있음', sub: '' };
+      if (act.startsWith('sk')) { const s = SKILLS[+act.slice(2)]; return { ic: s.icon, nm: s.name, sub: '스킬' }; }
+      if (act === 'med') return { ic: 'medkit', nm: '구급상자', sub: `${(p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count}개` };
+      const k = Gadgets.sel(act), c = CONSUMABLES[k];
+      return { ic: c.icon, nm: act === 'throw' ? '투척물' : '보조 장비', sub: GADGET_SLOTS[act].map(x => CONSUMABLES[x].name).join('·') };
+    };
+    let h = `<div class="muted">벨트 「${p.equip.belt ? p.equip.belt.name : '맨몸'}」 · <b>${n}칸</b> — 칸을 고르고, 아래에서 넣을 것을 누르세요.</div><div class="hbx-slots">`;
     for (let i = 0; i < HOT_MAX; i++) {
-      if (i >= n) { h += `<div class="hb-row off"><span class="tag">${i + 1}</span> <span class="muted">${ICON('lock')} ${BELTS.find(b => b.slots > i).name} 이상</span></div>`; continue; }
-      h += `<div class="hb-row"><span class="tag">${i + 1}</span> <select data-hb="${i}"><option value="">— 비움 —</option>${acts.map(([a, nm]) => `<option value="${a}"${p.hotbar[i] === a ? ' selected' : ''}>${nm}</option>`).join('')}</select></div>`;
+      if (i >= n) { h += `<div class="hbx-slot off"><span class="k">${i + 1}</span>${ICON('lock')}<small>${BELTS.find(b => b.slots > i).name}</small></div>`; continue; }
+      const L = look(p.hotbar[i]);
+      h += `<div class="hbx-slot${i === sel ? ' on' : ''}${p.hotbar[i] ? '' : ' empty'}" data-slot="${i}"><span class="k">${i + 1}</span>${L.ic ? ICON(L.ic) : '<b class="plus">＋</b>'}<small>${L.nm}</small></div>`;
     }
-    h += '</div>';
-    if (SKILLS.some(s => !p.skills[s.id])) h += '<div class="muted">스킬은 스킬 창(K)에서 스킬 포인트로 배우면 여기 목록에 나옵니다.</div>';
+    h += `</div><div class="hbx-head">${sel + 1}번 칸에 넣을 것</div><div class="hbx-pal">`;
+    for (const [act] of HOT_ACTS()) {
+      const L = look(act), at = p.hotbar.indexOf(act);
+      h += `<div class="hbx-item${p.hotbar[sel] === act ? ' cur' : ''}" data-act="${act}">${ICON(L.ic)}<b>${L.nm}</b><small>${L.sub}${at >= 0 && at !== sel ? ` · 지금 ${at + 1}번` : ''}</small></div>`;
+    }
+    h += `<div class="hbx-item clear" data-act=""><span class="x">✕</span><b>칸 비우기</b><small>&nbsp;</small></div></div>`;
+    if (SKILLS.some(s => !p.skills[s.id])) h += `<div class="muted" style="margin-top:6px">스킬은 스킬 창${IS_TOUCH ? '' : '(K)'}에서 배우면 여기 나옵니다. 슬라이딩은 항상 따로 있습니다.</div>`;
     UI.dialog('벨트 — 칸 등록', h, [['닫기', () => UI.close('dialog')]]);
-    $('dialog-text').querySelectorAll('select[data-hb]').forEach(el => { el.onchange = () => { Hotbar.assign(+el.dataset.hb, el.value); SFX.play('ui'); Hotbar.edit(); }; });
+    const box = $('dialog-text');
+    box.querySelectorAll('.hbx-slot[data-slot]').forEach(el => { el.onclick = () => { SFX.play('click'); this.edit(+el.dataset.slot); }; });
+    box.querySelectorAll('.hbx-item').forEach(el => { el.onclick = () => {
+      Hotbar.assign(sel, el.dataset.act); SFX.play('equip');
+      const next = p.hotbar.slice(0, n).indexOf(null); this.edit(el.dataset.act && next >= 0 ? next : sel); // 채우면 다음 빈 칸으로
+    }; });
   },
 };

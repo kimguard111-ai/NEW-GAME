@@ -6,8 +6,8 @@ const ISO_K = 0.9;
 const ZOOM_MIN = IS_TOUCH ? 0.6 : 1;
 // 고해상도 화면(폰) 선명하게: 캔버스를 기기 픽셀 비율로 그림 (모바일 성능을 위해 최대 1.5배, PC는 기존과 같은 1배)
 const RES = IS_TOUCH ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
-let ZOOM = IS_TOUCH ? clamp(Math.round(Math.min(window.innerWidth, window.innerHeight) / 560 * 10) / 10 * 1.15, 0.6, 1.6) : 1.6; // v1.21 캐릭터가 작아진 만큼 기본 확대 ↑
-try { const z = +localStorage.getItem('seoul2049-zoom'); if (z) ZOOM = clamp(localStorage.getItem('seoul2049-zoom121') ? z : z * 1.15, ZOOM_MIN, 2.2); localStorage.setItem('seoul2049-zoom121', '1'); } catch (e) { /* 저장 불가 */ } // v1.21 저장된 확대도 한 번 ×1.15
+let ZOOM = IS_TOUCH ? clamp(Math.round(Math.min(window.innerWidth, window.innerHeight) / 560 * 1.5 * 10) / 10, 0.8, 1.8) : 1.6; // v1.45.2 모바일 기본 확대 ×1.15 → ×1.5 (캐릭터가 너무 작게 보이던 것) // v1.21 캐릭터가 작아진 만큼 기본 확대 ↑
+try { const z = +localStorage.getItem('seoul2049-zoom'); if (z) ZOOM = clamp(localStorage.getItem('seoul2049-zoom121') ? z : z * 1.15, ZOOM_MIN, 2.2); localStorage.setItem('seoul2049-zoom121', '1'); if (IS_TOUCH && z && !localStorage.getItem('seoul2049-zoom1452')) ZOOM = clamp(ZOOM * 1.3, ZOOM_MIN, 2.2); localStorage.setItem('seoul2049-zoom1452', '1'); } catch (e) { /* 저장 불가 */ } // v1.21 저장된 확대도 한 번 ×1.15
 
 const Iso = {
   sx: (x, y) => (x - y) * ISO_K - G.cam.x,

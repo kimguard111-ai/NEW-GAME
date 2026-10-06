@@ -2,8 +2,13 @@
   "name": "SEOUL 2049 : 폐허의 도시",
   "short_name": "SEOUL 2049",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#0b0c0e",
-  "theme_color": "#0b0c0e"
+  "theme_color": "#0b0c0e",
+  "icons": [
+    { "src": "assets/app/icon192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app/icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
 }

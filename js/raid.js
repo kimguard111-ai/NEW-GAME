@@ -18,13 +18,14 @@ const Raid = {
       + `<div class="prep">출격 준비: ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${p.inventory.length}/${Camp.bagSize()}</b> · ₵${fmt(p.credits)}</div>`;
     btns.push([`${ICON('medkit')} +3 (120₵)`, () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
     for (const [k, a] of Object.entries(AMMO)) btns.push([`${ICON('ammo_' + k)} ${a.name} +${a.pack} (${a.price}₵)`, () => { if (p.credits < a.price) return log('크레딧이 부족합니다.', '#f88'); addAmmo(p, k, a.pack); p.credits -= a.price; SFX.play('ammo'); this.openMap(); }]); // v1.33 탄약 4종
-    h += Contracts.html() + `<div class="sum-head">${ICON('map')} 출격할 곳</div>`; // v1.34 출격 계약 (맨 위)
+    h += `<div class="sum-head">${ICON('map')} 출격할 곳</div>`; // v1.45.2 맵 목록을 먼저 · 계약은 그 아래
     for (const id of MAP_ORDER) {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id);
       const gr = p.graves[id];
       const ev = ok && Camp.lv('radio') >= 1 ? ` <span style="color:#ffd76a">${ICON('radio')} ${Camp.planFor(id).map(k => EVENT_DEFS[k].name).join(' · ')}</span>` : ''; // v1.13 무전실 미리 보기
       h += `<div class="map-row${ok ? ' go' : ' locked'}"${ok ? ` data-map="${id}"` : ''}><b>${ok ? ICON('map') : ICON('lock')} ${d.name}</b> <span class="muted">Lv${z.lvl[0]}~${z.lvl[1]} · ${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</span>${gr ? ` <span style="color:#ff8a8a">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</span>` : ''}${p.contract && p.contract.map === id ? ` <span style="color:#ffd76a">${ICON('bounty')} 계약</span>` : ''}${ev}</div>`;
     }
+    h += Contracts.html(); // v1.34 출격 계약
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨 — 출격 지도', h, btns);
     Contracts.bind($('dialog-text'), () => this.openMap());
