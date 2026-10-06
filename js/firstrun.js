@@ -3,13 +3,13 @@
 const MOUSE_SVG = '<svg class="kc-mouse" viewBox="0 0 20 28" width="18" height="26"><rect x="1.5" y="1.5" width="17" height="25" rx="8.5" fill="#e8dcc0" stroke="#0c0b08" stroke-width="2"/><path d="M10 1.5 V11 M1.5 11 H18.5" stroke="#0c0b08" stroke-width="1.6"/><path d="M3 10 V8 A7 7 0 0 1 10 3 V10 Z" fill="#d9a441"/></svg>';
 
 const HINTS = [
-  { id: 'move', when: p => World.map === 'camp', keys: ['up', 'left', 'down', 'right'], text: '움직이기', touch: '왼쪽 아래를 끌어서 움직이기',
+  { id: 'move', when: p => World.map === 'camp', keys: ['up', 'left', 'down', 'right'], text: '움직이기', touch: '화면 왼쪽을 끌어서 움직이기',
     done: (p, h) => Math.hypot(p.x - h.x0, p.y - h.y0) > 110 },
   { id: 'yun', when: p => World.map === 'camp' && FirstRun.rookie(), keys: ['interact'], text: '작전 장교 윤씨에게 말 걸기 — 출격', touch: '윤씨 곁에서 E 버튼 — 출격', max: 1e9,
     far: '노란 화살표를 따라 <b>작전 장교 윤씨</b>에게', guide: () => G.npcs.find(n => n.id === 'deploy'), done: p => World.map !== 'camp' },
   { id: 'grave', when: p => p.raid && G.grave, keys: [], text: '내 시체 가방이 이 맵에 있다 — 붉은 화살표', touch: '', max: 45, ring: '✚',
     guide: () => G.grave, done: () => !G.grave },
-  { id: 'aim', when: p => p.raid && G.enemies.some(e => e.hp > 0 && dist(e, p) < 420 && !enemyCloaked(e) && World.lineOfSight(p, e)), keys: ['mouse'], text: '조준하고 클릭 — 누르고 있으면 계속 쏜다', touch: '오른쪽 아래를 끌어서 조준 · 사격',
+  { id: 'aim', when: p => p.raid && G.enemies.some(e => e.hp > 0 && dist(e, p) < 420 && !enemyCloaked(e) && World.lineOfSight(p, e)), keys: ['mouse'], text: '조준하고 클릭 — 누르고 있으면 계속 쏜다', touch: '화면 오른쪽을 끌어서 조준 · 사격 (놓으면 멈춤)',
     done: p => G.time - (p.lastShot || -9) < 0.3 },
   { id: 'reload', when: p => { const w = curWeapon(); return p.raid && w && !WEAPONS[w.key].melee && !WEAPONS[w.key].infinite && w.loaded <= magSize(w) * 0.3 && !(p.reloadT > 0); }, keys: ['reload'], text: '재장전 — 탄창이 비기 전에', touch: '탄창 그림을 눌러 재장전',
     done: p => p.reloadT > 0 },

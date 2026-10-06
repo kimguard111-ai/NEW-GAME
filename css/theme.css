@@ -166,3 +166,60 @@ body.touch #keyhint .kh-text { font-size: 13px; }
 .rules3 .r3 > span { color: #cfc6b0 !important; }
 .rules3 .r3 > span b { font-family: inherit; font-size: inherit; white-space: nowrap; }
 @media (max-height: 520px) { .rules3 { margin: 6px 0; } .rules3 .r3 { padding: 4px; font-size: 11px; line-height: 1.35; } .rules3 .r3 > .ico, .rules3 .r3-ring { display: none; } .rules3 .r3 b { font-size: 13px; } }
+
+/* ---------- v1.45.1 모바일 HUD 재배치: 겹침 없애기 (가로 폰 740~1000 × 360~460) ----------
+   왼쪽 위: 캐릭터 → 그 아래 목표(접힘·눌러서 펴기) · 가운데 위: 메뉴 → 그 아래 키 그림·도움말
+   오른쪽: 미니맵(안에 ± ) → 무기 → 아래 모서리 2×2 버튼(엄지) · 가운데 아래: 벨트 · 왼쪽 아래: 로그 2줄 */
+body.touch #hud-zone { display: none; }
+body.touch #hud-top-left { width: 200px; }
+body.touch #quest-tracker { left: 6px !important; right: auto !important; width: 200px !important; max-height: 34vh; overflow-y: auto; font-size: 10.5px !important;
+  padding: 18px 6px 4px !important; line-height: 1.35; pointer-events: auto; }
+body.touch #quest-tracker::before { font-size: 10px !important; padding: 0 8px !important; top: 0 !important; left: 0 !important; }
+body.touch #quest-tracker::after { content: '－'; position: absolute; right: 3px; top: 0; font-size: 12px; color: var(--paper); }
+body.touch #quest-tracker.min { max-height: calc(2 * 1.35em + 22px); overflow: hidden; }
+body.touch #quest-tracker.min::after { content: '＋ 펼치기'; font-size: 9px; top: 2px; }
+body.touch #menu-buttons { right: 118px !important; top: 6px !important; gap: 3px !important; }
+body.touch #menu-buttons button { width: 34px !important; height: 34px !important; }
+body.touch #mm-wrap { width: 104px !important; height: 104px !important; right: 6px !important; top: 6px !important; }
+#mm-zoom { display: none; }
+body.touch #mm-zoom { display: flex; position: absolute; right: 0; bottom: 0; gap: 2px; pointer-events: auto; }
+body.touch #mm-zoom button { width: 26px; height: 22px; padding: 0; font-size: 13px; line-height: 1; border-radius: 0; background: rgba(20,19,15,.85); box-shadow: none; }
+body.touch #hud-weapon { right: 6px !important; left: auto !important; top: 114px !important; bottom: auto !important; width: 104px !important; min-width: 0 !important; padding: 2px 6px !important; box-sizing: border-box; text-align: right; }
+body.touch #weapon-icon { width: 72px !important; height: 22px !important; }
+body.touch #weapon-name { font-size: 10px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.touch #weapon-ammo { font-size: 14px !important; } body.touch #weapon-ammo small { font-size: 9px !important; }
+body.touch #touch-buttons { right: 6px !important; bottom: 6px !important; top: auto !important; grid-template-columns: 54px 54px !important; gap: 6px !important; align-items: center; }
+body.touch #touch-buttons button, body.touch #touch-buttons button:not(.small) { grid-column: auto !important; width: 50px; height: 50px; font-size: 17px; }
+body.touch #touch-buttons button.big { width: 54px; height: 54px; }
+body.touch #hotbar { bottom: 4px !important; left: 50% !important; transform: translateX(-50%); }
+body.touch .hot { width: 44px !important; height: 44px !important; font-size: 8.5px !important; padding-top: 0 !important; }
+body.touch .hot .cnt { right: 2px; top: 1px; bottom: auto; font-size: 10px; font-weight: bold; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+body.touch .hot .key { font-size: 9px; }
+body.touch #log { left: 6px !important; bottom: 6px !important; width: 30vw !important; max-height: none !important; font-size: 9.5px !important; overflow: hidden; opacity: .85; }
+body.touch #log > div:not(:nth-last-child(-n+2)) { display: none; } /* 최근 두 줄만 */
+body.touch #interact-hint { bottom: 56px !important; font-size: 12px !important; padding: 4px 12px !important; }
+body.touch #keyhint, body.touch #tip { top: 52px !important; bottom: auto !important; max-width: 46vw; white-space: normal; }
+body.touch #tip { font-size: 11px !important; }
+body.touch #keyhint { padding: 4px 10px; }
+body.touch #toast { top: 26vh !important; }
+body.touch #loot-feed { right: 124px !important; bottom: 60px !important; top: auto !important; }
+body.touch #combo { right: 124px !important; }
+/* 짧은 화면: 제목 · 생존자 명단 */
+@media (max-height: 430px) {
+  body.touch .title-main { padding-top: 4px !important; }
+  body.touch .logo { font-size: 30px !important; margin: 0 !important; } body.touch .logo small { font-size: 9px; letter-spacing: 3px; }
+  body.touch .title-main h2 { display: none; }
+  body.touch .roster { padding: 24px 10px 2px !important; margin-top: 4px !important; background-size: auto !important; }
+  body.touch .roster::before { font-size: 12px; top: 4px; }
+  body.touch #slot-row .slot { padding: 1px 4px !important; }
+  body.touch #slot-row .slot .who { font-size: 16px !important; } body.touch #slot-row .slot .empty { font-size: 15px !important; }
+  body.touch #name-input { font-size: 16px !important; padding: 2px 4px !important; margin: 0 !important; }
+  body.touch .title-buttons { margin-top: 6px !important; } body.touch .title-buttons button { padding: 6px 10px !important; font-size: 16px !important; }
+}
+}
+/* 모바일 가방: 큰 인물 그림 빼고 칸·설명에 자리 */
+body.touch .doll { grid-template-columns: 92px 104px !important; grid-template-areas: "hel st" "arm st" "w1 w2" "blt blt" !important; }
+body.touch .doll > [style*="grid-area:fig"] { display: none !important; }
+body.touch #panel-inventory.panel { top: 4px !important; max-height: calc(100vh - 8px) !important; display: flex; flex-direction: column; }
+body.touch #panel-inventory .inv-body { flex: 1; min-height: 0; overflow-y: auto; }
+body.touch #item-detail { max-height: none; font-size: 12px; }

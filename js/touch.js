@@ -21,19 +21,26 @@ const Touch = {
     // 버튼
     const bar = document.createElement('div');
     bar.id = 'touch-buttons';
-    const btn = (label, fn, cls = '') => {
+    const btn = (label, fn, cls = '', parent = bar) => {
       const b = document.createElement('button'); b.innerHTML = label; b.className = cls;
       b.addEventListener('touchstart', e => { e.preventDefault(); this.tapT = performance.now(); if (G.running && !G.player.dead) fn(); }, opts);
       b.addEventListener('click', () => { if (performance.now() - (this.tapT || 0) > 600 && G.running && !G.player.dead) fn(); }); // 스타일러스·마우스 (터치 직후 합성 클릭은 무시)
-      bar.appendChild(b);
+      parent.appendChild(b);
     };
-    btn('－', () => setZoom(ZOOM - 0.1), 'small');
-    btn('＋', () => setZoom(ZOOM + 0.1), 'small');
+    const zoom = document.createElement('div'); zoom.id = 'mm-zoom'; document.getElementById('mm-wrap').appendChild(zoom); // v1.45.1 확대·축소는 미니맵 아래 모서리로
+    btn('－', () => setZoom(ZOOM - 0.1), 'small', zoom);
+    btn('＋', () => setZoom(ZOOM + 0.1), 'small', zoom);
     btn('Q', () => swapWeapon());
     btn('R', () => startReload());
     btn('E', () => interact(), 'big');
     btn(ICON('roll'), () => dodge(), 'big roll'); // v0.16 슬라이딩
     document.getElementById('hud').appendChild(bar);
+    // v1.45.1 목표 창: 누르면 접기/펴기 · 항상 캐릭터 창 바로 아래에
+    const qt = document.getElementById('quest-tracker');
+    qt.addEventListener('touchstart', e => { e.preventDefault(); qt.classList.toggle('min'); try { localStorage.setItem('seoul2049-qtmin', qt.classList.contains('min') ? '1' : ''); } catch (er) {} }, opts);
+    try { if (localStorage.getItem('seoul2049-qtmin') !== '') qt.classList.add('min'); } catch (er) { qt.classList.add('min'); }
+    const place = () => { const r = document.getElementById('hud-top-left').getBoundingClientRect(); qt.style.top = Math.round(r.bottom + 4) + 'px'; };
+    window.addEventListener('resize', place); setInterval(place, 1000); place();
     // 스킬 칸 터치
     document.getElementById('hotbar').addEventListener('touchstart', e => {
       const hot = e.target.closest('.hot');
