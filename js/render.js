@@ -959,7 +959,8 @@ function drawWeaponOverlay(sx, sy, w, p, fr) {
   const swing = b.melee ? meleeSwing(p, w) : 0;
   const d = Iso.dir(p.aim + swing);
   let ang = Math.atan2(d.y, d.x);
-  if (!b.melee) { // v1.7.5 총은 수평에 가깝게: 몸 그림은 좌우만 보므로 거의 수직으로 세우면 몸과 따로 놀아 보임 (총알 방향은 그대로)
+  const bk = !b.melee && p.backBody; // v1.50.3 등 모습: 총을 조준 방향 그대로 (세워도 어색하지 않음)
+  if (!b.melee && !bk) { // v1.7.5 총은 수평에 가깝게: 몸 그림은 좌우만 보므로 거의 수직으로 세우면 몸과 따로 놀아 보임 (총알 방향은 그대로)
     const right = Math.cos(ang) >= 0, rel = right ? ang : Math.atan2(d.y, -d.x), r2 = clamp(rel * 0.75, -0.96, 0.96);
     ang = right ? r2 : Math.PI - r2; d.x = Math.cos(ang); d.y = Math.sin(ang);
   }
@@ -971,10 +972,12 @@ function drawWeaponOverlay(sx, sy, w, p, fr) {
     const hf = ART.handFromHead;
     cx = sx + fr.head.x * fr.sc * (fr.flip ? -1 : 1) + (fr.flip ? -1 : 1) * H * hf.x;
     cy = sy + fr.head.y * fr.sc + H * hf.y;
+    if (bk) { cx = sx + fr.head.x * fr.sc * (fr.flip ? -1 : 1) + (fr.flip ? -1 : 1) * H * 0.1; cy = sy + fr.head.y * fr.sc + H * 0.26; } // 등 모습: 오른쪽 어깨 (개머리판을 어깨에 대고 총구는 화면 위 = 멀어지는 쪽)
   }
   const hx = cx + d.x * (fw - rc), hy = cy + d.y * (fw * 0.5 - rc);
   const art = ART.weapons[w.key];
   ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
+  if (bk) ctx.scale(0.7, 1); // 등 모습: 카메라에서 멀어지는 쪽이라 짧아 보이게
   if (Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게
   if (art && art.ready) {
     const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height]; // rect: 한 장 안의 위치
