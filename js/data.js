@@ -179,7 +179,7 @@ const ENEMIES = {
   zombie: { name: '감염자',   hp: 40,  dmg: 8,  speed: 68,  r: 12, exp: 10, weight: 1, color: '#6b8f4e', atkCd: 1.0, aggro: 360 },
   dog:    { name: '변이견',   hp: 26,  dmg: 6,  speed: 132, /* v1.45 155 → 132 (실속도 93 → 79: 플레이어 88보다 늘 느리게 · 위협은 도약으로) */ r: 10, exp: 12, weight: 0.7, color: '#8a5a3c', atkCd: 0.7, aggro: 420 },
   raider: { name: '약탈자',   hp: 50,  dmg: 7,  speed: 92,  r: 12, exp: 18, weight: 1, color: '#b5523b', atkCd: 1.0, aggro: 460,
-            ranged: true, range: 320, fireCd: 1.2, bulletSpeed: 430, nade: 'weak' }, // v1.32 약탈자도 가끔 수류탄 (용병보다 드물고 약함)
+            ranged: true, range: 320, fireCd: 1.4, bulletSpeed: 380, nade: 'weak' }, /* v1.46 1.2·430 → 1.4·380 (종로 봇 사망 73%: 총알이 대부분 — 옆으로 피할 수 있게) */ // v1.32 약탈자도 가끔 수류탄 (용병보다 드물고 약함)
   brute:  { name: '변이 거한', hp: 190, dmg: 22, speed: 56,  r: 20, exp: 45, weight: 2.5, color: '#7a4f8a', atkCd: 1.5, aggro: 360 },
   drone:  { name: '경비 드론', hp: 60,  dmg: 9,  speed: 115, r: 11, exp: 26, weight: 0.8, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
             ranged: true, range: 290, fireCd: 0.9, bulletSpeed: 480, flying: true },
