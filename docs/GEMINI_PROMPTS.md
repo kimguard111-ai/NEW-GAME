@@ -697,6 +697,46 @@ Match the art style of the attached concept image. Create ONE wide 16:9 image co
 
 ---
 
+## 19. 간판 (v1.46) · 글자 없는 간판 판 → 글자는 게임이 씀
+지금 간판은 전부 코드 그림입니다 — **거리 네온 간판**(벽에 붙은 가로·세로 간판: 약국 · 호프 · 노래방 · PC방…)과 **가게 문 위 상호판**(노란 띠 「파출소」 「편의점」).
+이미지 AI는 한글을 거의 항상 틀리게 그려서(받침 깨짐 · 없는 글자), **글자 없는 빈 간판 판만** 받고 한글은 게임이 그 위에 씁니다. 그러면 맞춤법이 틀릴 일이 없고, 맵마다 간판 내용도 지금처럼 바뀝니다.
+- 순서: **19-1 · 19-2**(가로·세로 — 거리 대부분) → 19-3(문 위 상호판) → 19-4(고장 난 간판, 선택)
+- 올리는 곳: `art_raw/new/` (파일 이름은 아래 표대로 — 달라도 괜찮음, 무엇인지만 알려 주세요)
+
+| 장 | 파일 이름 | 내용 | 쓰는 곳 |
+|---|---|---|---|
+| 19-1 ★ | `sign_wide.png` | 가로 간판 판 5개 (위에서 아래로 쌓음) | 벽 가로 네온 간판 |
+| 19-2 ★ | `sign_tall.png` | 세로 돌출 간판 판 5개 (나란히) | 벽 세로 간판 (3글자 이상) |
+| 19-3 | `sign_door.png` | 가게 문 위 상호판 4개 (위에서 아래로) | 들어갈 수 있는 가게 문 위 |
+| 19-4 | `sign_broken.png` | 고장 난 간판 3개 (반쯤 꺼짐 · 깨짐 · 기울어짐) | 일부 간판 무작위 |
+
+**공통 규칙** (모든 장에 이미 들어 있음): 정면 평면 (원근·쿼터뷰 없음) · 그림 칸 사이는 **#FF00FF 자홍 띠** · **글자·숫자·로고 없음** · 칸 안에 자홍색 쓰지 않기 · 콘셉트 이미지 첨부
+
+### 19-1 ★ · `sign_wide.png` — 가로 간판 판 5개
+```
+Match the art style of the attached concept image. Create ONE square 1:1 image containing exactly 5 separate BLANK horizontal shop signboards stacked vertically, each signboard a wide flat rectangle with width to height ratio about 5:1 that spans almost the full image width, separated by thin horizontal solid #FF00FF magenta stripes. Each signboard is a FLAT FRONT ORTHOGRAPHIC view (no perspective, no isometric angle). The CENTER of every signboard must be an EMPTY flat dark area where text will be added later. From top to bottom: 1) a black panel framed by a glowing warm red neon tube border, slightly dusty; 2) a white backlit acrylic lightbox in a dented gray metal case, the light dim and uneven; 3) a deep blue panel framed by a glowing cyan neon tube border with one tube segment dark; 4) a faded red acrylic lightbox with grime streaks and a rusty bottom edge; 5) a dark green panel framed by a warm yellow neon tube border, with small mounting bolts. Post-apocalyptic Seoul at night, abandoned for 20 years: dust, rust, small cracks, but every signboard is still clearly recognizable. Detailed dark pixel art, desaturated colors with the neon as the only bright accent. Absolutely no text, no letters, no Korean characters, no numbers, no logos, no symbols. Do not use pink or magenta anywhere inside the signboards.
+```
+
+### 19-2 ★ · `sign_tall.png` — 세로 돌출 간판 판 5개
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 image containing exactly 5 separate BLANK vertical projecting shop signs side by side, each sign a tall narrow rectangle with width to height ratio about 1:4 that fills almost the full image height, separated by thin vertical solid #FF00FF magenta stripes. Each sign is a FLAT FRONT ORTHOGRAPHIC view (no perspective). The middle of every sign must be an EMPTY tall dark strip where vertical text will be added later. From left to right: 1) a black vertical box with a glowing red neon tube border; 2) a white backlit vertical lightbox in a rusty metal frame, dim; 3) a dark blue vertical box with a glowing cyan neon border, one corner cracked; 4) a vertical box with a glowing green neon border and a small rusty mounting bracket at the top; 5) a faded orange vertical lightbox with grime and a broken lower corner. Post-apocalyptic Seoul at night, dusty and rusty but still recognizable. Detailed dark pixel art, desaturated colors with neon as the only bright accent. Absolutely no text, no letters, no Korean characters, no numbers, no logos. Do not use magenta inside the signs.
+```
+
+### 19-3 · `sign_door.png` — 가게 문 위 상호판 4개
+```
+Match the art style of the attached concept image. Create ONE square 1:1 image containing exactly 4 separate BLANK storefront fascia boards stacked vertically, each board a wide flat rectangle with width to height ratio about 4:1 that spans almost the full image width, separated by thin horizontal solid #FF00FF magenta stripes. Each board is a FLAT FRONT ORTHOGRAPHIC view (no perspective). The CENTER of every board must be an EMPTY flat area where a shop name will be added later. From top to bottom: 1) a faded mustard-yellow painted metal fascia board with rust spots and two small lamps above it (a typical old Korean shop sign); 2) a pale blue-and-white official building fascia with a thin metal trim (like a police box or clinic); 3) a green fascia board with a cracked plastic surface and a striped torn awning edge below; 4) a dark brown wooden fascia board with weathered planks. Post-apocalyptic, dusty, abandoned 20 years, but clean enough that text placed on it stays readable. Detailed dark pixel art, desaturated colors, warm orange light accents. Absolutely no text, no letters, no Korean characters, no numbers, no logos. Do not use pink or magenta inside the boards.
+```
+
+### 19-4 (선택) · `sign_broken.png` — 고장 난 간판 3개
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 image containing exactly 3 separate BLANK broken shop signboards side by side, each a wide rectangle with width to height ratio about 3:1, separated by thin vertical solid #FF00FF magenta stripes. FLAT FRONT ORTHOGRAPHIC view. From left to right: 1) a signboard with its neon tube border half dark and half flickering dim orange, the empty center area dusty; 2) a lightbox with a shattered acrylic face showing bare fluorescent tubes inside, one tube still faintly lit; 3) a signboard hanging crooked from one broken bracket, tilted about 10 degrees, rust streaks running down. Post-apocalyptic Seoul at night. Detailed dark pixel art, desaturated colors. Absolutely no text, no letters, no Korean characters, no numbers, no logos. Do not use magenta inside the signboards.
+```
+
+> **결과가 이상할 때** — 판 안에 글자 같은 무늬가 생기면: 프롬프트 끝에 `The sign faces must be completely plain and empty.` 를 한 번 더 붙여 다시 생성. 판 개수가 틀리면(4개 · 6개) 그 장만 다시. 네온 테두리가 판 밖으로 번지는 건 괜찮습니다 (가공 때 정리).
+> **한글이 들어간 간판을 꼭 원하면** — 「약국」 「PC방」처럼 **2~3글자 한 단어만** 따로 부탁해 보고, 맞게 나온 것만 골라 쓰는 방법도 있습니다. 다만 대부분 틀리게 나와서 기본은 위의 빈 판 방식을 권합니다.
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
