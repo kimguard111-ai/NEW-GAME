@@ -614,6 +614,8 @@ function animState(moving, hitT, lastAtk, key) {
 
 // ---------------- 캐릭터 ----------------
 // v1.49.2 총을 든 몸 그림 고르기: 총 전용(player_shotgun · player_vest_sniper …)이 있으면 그것 → 없으면 그룹(장총·권총…) → 없으면 null
+// v1.50.1 거의 위·아래로 겨누면 옆모습 총 든 몸 대신 맨손 몸 + 총 그림을 조준 방향으로 돌려 붙임 (옆을 보며 총알만 위로 나가던 것) · 경계에서 깜빡이지 않게 들어갈 때 0.8 · 나올 때 0.68
+function vertAim(p) { const d = Math.abs(Iso.dir(p.aim).y); p.vAim = p.vAim ? d > 0.68 : d > 0.8; return p.vAim; }
 function heldBody(p, w, strict) {
   const arm = p.equip.armor, base = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player', grp = ART.weaponGroup[w.key];
   if (Sprites.get(base + '_' + w.key)) return base + '_' + w.key;
@@ -730,7 +732,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   let [anim, at] = animState(moving, p.hurtT, p.lastAtk, w && ART.weaponGroup[w.key] ? heldBody(p, w) : 'player');
   const baseKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
   // v1.7.7 무기를 든 몸 그림 (예: player_long, player_vest_pistol) 이 있으면 그걸 쓰고 무기를 따로 붙이지 않음
-  const grp = w ? ART.weaponGroup[w.key] : null, heldKey = grp ? heldBody(p, w, true) : null; // v1.49.2 총마다 몸 그림 (없으면 장총 그룹)
+  const grp = w ? ART.weaponGroup[w.key] : null, heldKey = grp && !(grp !== 'blade' && grp !== 'heavy' && vertAim(p)) ? heldBody(p, w, true) : null; // v1.49.2 총마다 몸 그림 (없으면 장총 그룹) · v1.50.1 위·아래 조준은 총을 따로 돌려 붙임
   const bodyKey = heldKey || baseKey;
   let sxb = sx; // 몸을 그릴 x (총 반동으로 살짝 밀림)
   if (heldKey && (grp === 'long' || grp === 'pistol')) {
