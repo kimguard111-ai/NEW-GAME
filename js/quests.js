@@ -28,7 +28,7 @@ const CHAPTERS = [
     outro: '흑표가 쓰러졌으니 종로 보급로가 다시 열렸어. 용산 쪽에서 이상한 기계음이 들린다더군.',
     steps: [
       { type: 'kill', target: 'dog', count: 8, text: '보급로를 막고 있는 변이견 무리를 처치하라.',
-        reward: { exp: 300, credits: 300, items: [['ammo', 3]] } },
+        reward: { exp: 300, credits: 300, items: [['ammo', 3]], equip: 'shotgun' } }, // v1.46 개떼엔 산탄총 — Lv1~10 무기 흐름: 권총 → 기관단총(1장) → 산탄총(2장) → 소총(Lv8 상점·드랍)
       { type: 'collect', from: 'raider', item: '약탈당한 보급품', count: 6, chance: 0.4, text: '종로의 약탈자에게서 빼앗긴 보급품을 되찾아라.',
         reward: { exp: 700, credits: 600 } },
       { type: 'reach', landmark: 'bosingak', text: '약탈자들의 거점, 보신각으로 가라.',

@@ -22,8 +22,8 @@ const RaidEvents = {
     if (World.map === 'camp') return;
     const lab = !!(World.def && World.def.lab);
     for (const k of Camp.takePlan(World.map)) this['make_' + k](); // v1.13 미리 정해 둔 사건 (무전실에서 미리 보기)
-    this.makeExit();
-    Contracts.setup(); if (!FirstRun.rookie()) MapEvents.make(); Companion.setupRaid(); // v1.34 출격 계약 · 맵 고유 사건 · v1.45 첫 출격은 단순하게 (맵 고유 사건 없음)
+    if (Math.random() < 0.5) this.makeExit(); // v1.46 특수 탈출은 출격 절반만
+    Contracts.setup(); if (!FirstRun.rookie() && Math.random() < 0.35) MapEvents.make(); Companion.setupRaid(); // v1.34 출격 계약 · 맵 고유 사건 · v1.45 첫 출격은 단순하게 (맵 고유 사건 없음)
     const names = this.list.filter(e => !e.exitPart && !e.ext).map(e => EVENT_DEFS[e.kind].name);
     if (names.length) log(`${ICON('radio')} 무전: "${names.join(', ')} 신호가 잡힌다." (미니맵 노란 ◆)`, '#ffd76a');
   },

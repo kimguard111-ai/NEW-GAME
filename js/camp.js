@@ -34,7 +34,7 @@ const Camp = {
     if (!this.plan[id]) {
       const lab = !!MAPS[id].lab;
       const pool = Object.keys(EVENT_DEFS).filter(k => lab ? EVENT_DEFS[k].lab : true), out = [];
-      const n = this.lv('radio') >= 3 || Math.random() < 0.5 ? 2 : 1;
+      const n = this.lv('radio') >= 3 ? 2 : 1; // v1.46 사건이 너무 많아 복잡하던 것: 한 출격 1개 (무전실 3단계만 2개)
       for (let i = 0; i < n && pool.length; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
       this.plan[id] = out;
     }

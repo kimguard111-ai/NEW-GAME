@@ -517,7 +517,21 @@ const Sprites = {
     }
     return { s, d, anim, row, f, sc, flip: d.x < 0, head: hd ? { x: hd[0], y: hd[1], w: s.headW || 20 } : null };
   },
-  draw(key, anim, t, sx, sy, faceA, flash) {
+  // v1.46 적 윤곽선: 그림 한 장마다 한 번만 만들어 둠 (붉은 테두리 · 원래 그림 자리는 비움)
+  outline(s) {
+    if (s.ol !== undefined) return s.ol;
+    s.ol = null;
+    try {
+      const W = s.img.width, H = s.img.height, c = document.createElement('canvas'); c.width = W; c.height = H;
+      const g = c.getContext('2d'), t = 5;
+      for (const [dx, dy] of [[t, 0], [-t, 0], [0, t], [0, -t], [t * 0.7, t * 0.7], [-t * 0.7, t * 0.7], [t * 0.7, -t * 0.7], [-t * 0.7, -t * 0.7]]) g.drawImage(s.img, dx, dy);
+      g.globalCompositeOperation = 'source-in'; g.fillStyle = '#c8281c'; g.fillRect(0, 0, W, H);
+      g.globalCompositeOperation = 'destination-out'; g.drawImage(s.img, 0, 0);
+      s.ol = c;
+    } catch (e) { /* 그림을 못 읽으면 윤곽 없이 */ }
+    return s.ol;
+  },
+  draw(key, anim, t, sx, sy, faceA, flash, ol) {
     const fr = this.frame(key, anim, t, faceA);
     if (!fr) return false;
     const { s, d, row, f, sc } = fr;
@@ -526,6 +540,7 @@ const Sprites = {
     ctx.save();
     ctx.translate(sx, sy + ART.feetPad * sc);
     if (d.x < 0) ctx.scale(-1, 1); // 그림은 오른쪽을 보는 기준, 왼쪽은 좌우 반전
+    if (ol && !flash) { const o = this.outline(s); if (o) { ctx.globalAlpha = ol; ctx.drawImage(o, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size); ctx.globalAlpha = 1; } } // v1.46 적 윤곽
     if (flash && 'filter' in ctx) ctx.filter = flash === 2 ? 'brightness(4) saturate(0.15)' : 'brightness(2.6)'; // v1.40 맞은 순간은 하얗게
     ctx.drawImage(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
     ctx.restore();
@@ -916,6 +931,14 @@ function enemyCloaked(e) {
     && dist(e, G.player) > 150;
 }
 // v1.32 맞은 반응: 휘청(맞은 쪽 반대로 기울었다 돌아옴) · 넘어짐(쓰러졌다가 일어남)
+// v1.46 적 표시: 발밑 붉은 고리(쫓아올 때 진하게) + 작은 빛 (어두운 곳·어지러운 바닥에서도 보이게)
+function enemyMark(e, sx, sy, k, hz) {
+  if (Settings.outline === false) return;
+  const ch = e.state === 'chase', rx = e.r * 1.25 / k, ry = e.r * 0.62 / k;
+  ctx.strokeStyle = ch ? 'rgba(235,60,40,0.75)' : 'rgba(220,70,50,0.38)'; ctx.lineWidth = ch ? 2 : 1.4;
+  ctx.beginPath(); ctx.ellipse(sx, sy, rx, ry, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+  if (Light.list.length < 90) addLight(sx, sy - 14 - (hz || 0), 52, ch ? 0.5 : 0.35);
+}
 function drawEnemy(e) {
   const down = e.downT > 0 ? e.downT : 0, fl = e.flinchT > 0 ? e.flinchT / 0.16 : 0;
   if (e.joltT > 0) { e.joltT -= 1 / 60; } // v1.40 맞으면 그림이 맞은 쪽으로 툭 밀렸다 돌아옴
@@ -959,9 +982,10 @@ function drawEnemyBody(e) {
   if (Sprites.get(ak)) {
     const hz = e.def.flying ? (34 + Math.sin(G.time * 5 + e.x) * 4) * ISO_K : 0;
     drawShadow(sx, sy, e.r * (e.def.flying ? 0.8 : 1) / k);
+    enemyMark(e, sx, sy, k, hz);
     if (e.def.boss) { ctx.fillStyle = 'rgba(80,255,90,0.16)'; ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.7, e.r * 0.85, 0, 0, TAU); ctx.fill(); }
     const [anim, at] = animState(walk !== 0 && e.stunT <= 0, e.stunT > 0 ? Math.min(0.1, e.stunT) : e.hitT, e.lastAtk, ak);
-    Sprites.draw(ak, anim, at, sx, sy - hz, f, e.flashT > 0 ? 2 : flash); if (e.flashT > 0) e.flashT -= 1 / 60;
+    Sprites.draw(ak, anim, at, sx, sy - hz, f, e.flashT > 0 ? 2 : flash, Settings.outline !== false && !e.minion ? (e.state === 'chase' ? 0.95 : 0.7) : 0); if (e.flashT > 0) e.flashT -= 1 / 60;
     topY = sy - hz - (ART.height[ak] || 44) * (ART.charScale || 1) - 6;
   } else switch (e.type) {
     case 'zombie':
@@ -1171,8 +1195,29 @@ function burnFx(tx, ty) {
 }
 
 // ---------------- 메인 렌더 ----------------
+// v1.46 나무 뒤에 사람·적이 있으면 나무를 반투명하게 (잎에 가려 적이 안 보이던 것)
+const Behind = {
+  rf: -1, list: [],
+  actors() {
+    if (this.rf === G.rf) return this.list;
+    this.rf = G.rf; const L = this.list; L.length = 0;
+    const add = (o, imp) => { const sx = Iso.sx(o.x, o.y), sy = Iso.sy(o.x, o.y); if (sx > -60 && sx < VW + 60 && sy > -40 && sy < VH + 80) L.push({ sx, sy, d: (o.x + o.y) / TILE, imp }); };
+    if (G.player && !G.player.dead) add(G.player, 1);
+    if (G.comp && G.comp.state !== 'gone' && G.comp.map === World.map) add(G.comp, 1);
+    for (const e of G.enemies) if (e.hp > 0 && !enemyCloaked(e)) add(e, e.state === 'chase' ? 1 : 0.6);
+    return L;
+  },
+  // 나무 바닥점(o) · 화면 위치 · 잎 폭/높이 → 0.3~1 투명도
+  alpha(o, sx, sy, w, h) {
+    const d = (o.x + o.y) / TILE;
+    for (const a of this.actors()) if (a.d < d + 0.3 && Math.abs(a.sx - sx) < w * 0.5 && a.sy < sy + 4 && a.sy > sy - h * 0.92) return 0.32;
+    return 1;
+  },
+};
+
 function render() {
   const p = G.player;
+  G.rf = (G.rf || 0) + 1;
   Iso.reset();
   ctx.fillStyle = '#08080a'; ctx.fillRect(0, 0, VW, VH);
 

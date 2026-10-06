@@ -203,7 +203,10 @@ function drawCityProp(o) {
     let px = sx, py = sy;
     if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
     drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
+    const fade = o.type === 'tree' ? Behind.alpha(o, px, py, (ART.propFit[ak] || { w: 40 }).w * (o.s || 1), (ART.propFit[ak] || { w: 40 }).w * (o.s || 1) * 1.6) : 1; // v1.46
+    ctx.globalAlpha = fade;
     drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
+    ctx.globalAlpha = 1;
     if (o.type === 'car' && o.burnt) burnFx(o.tx, o.ty);
     if (o.type === 'bus' && o.burnt) burnFx(Math.floor(o.x / TILE), Math.floor(o.y / TILE));
     cityArtExtras(o, sx, sy);

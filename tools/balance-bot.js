@@ -3,6 +3,7 @@
 // 실행: npm i playwright (최초 1회) 후  node tools/balance-bot.js <게임 분> [구르기 성공률 0~1] [시작 레벨] [고정 맵]
 //   예) node tools/balance-bot.js 300 0.5          → Lv1부터 300분
 //       node tools/balance-bot.js 60 0.5 22 gangnam → Lv22·상점 희귀+4 장비로 강남만 60분
+//       COMP=assault node tools/balance-bot.js 30 0.5 8 jongno → 동료(박 상병)와 함께 (v1.46)
 const { chromium } = require(process.env.PLAYWRIGHT || 'playwright');
 const MIN = +process.argv[2] || 60, DODGE = process.argv[3] !== undefined ? +process.argv[3] : 0.5;
 const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나리오: 이 레벨·상점 장비로 시작해서 한 맵만 반복 (이야기 끝난 상태)
@@ -11,7 +12,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
   await pg.goto('file://' + require('path').resolve(__dirname, '../index.html')); await pg.evaluate(() => localStorage.clear()); await pg.reload();
   await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
-  await pg.evaluate(([DODGE, START, FIXMAP, FULL]) => {
+  await pg.evaluate(([DODGE, START, FIXMAP, FULL, COMP]) => {
     Settings.tips = false;
     const p = G.player;
     window.B = { raids: [], lvlT: { 1: 0 }, field: null, fieldKey: '', cur: null, seen: new WeakSet(), dodges: 0, dodgeTry: 0, enh: 0, bought: 0 };
@@ -182,8 +183,9 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     }
     { let c0 = p.credits; B.earned = 0; Object.defineProperty(p, 'credits', { get: () => c0, set: v => { if (v > c0) B.earned += v - c0; c0 = v; }, enumerable: true, configurable: true }); } // v1.31 크레딧 수입 측정
     if (FIXMAP) B.mapFor = () => FIXMAP;
+    if (COMP) { p.compHired = [COMP]; p.comp = COMP; } // v1.46 동료와 함께 (COMP=assault|sniper|medic)
     B.deploy();
-  }, [DODGE, START, FIXMAP, !!process.env.FULL]);
+  }, [DODGE, START, FIXMAP, !!process.env.FULL, process.env.COMP || '']);
   let shown = 0;
   for (let m = 0; m < MIN; m += 10) {
     const r = await pg.evaluate(() => { for (let i = 0; i < 30 * 600; i++) B.tick(); input.down = false; return { raids: B.raids, p: { lv: G.player.level, ch: G.player.quest.ch + '-' + G.player.quest.step, cr: G.player.credits, map: World.map } }; });

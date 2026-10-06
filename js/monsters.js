@@ -82,13 +82,26 @@ const Monsters = {
   // ---------------- 네임드 고유 패턴 ----------------
   updateNamed(e, dt) {
     const p = G.player;
+    // v1.46 1~2장 보스 2단계: 체력 절반 아래에서 한 번 — 울부짖고 빨라지며 기술이 하나 늘어남
+    if (!e.phase2 && (e.elite === 'glutton' || e.elite === 'panther') && e.hp < e.maxHp * 0.5) {
+      e.phase2 = true; e.speed *= 1.25; e.skillT = 1.2; e.patIdx = -1;
+      e.patterns = e.elite === 'glutton' ? ['dash', 'glutton', 'glutton'] : ['grenade', 'panther', 'grenade', 'dash'];
+      floatText(e.x, e.y - 60, e.elite === 'glutton' ? '크아아아—!' : '이 자식이…!', '#ff5a3a', 22);
+      SFX.playAt('roar', e.x, e.y, 1, 1600); G.shake = Math.max(G.shake, 8);
+      G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.6, color: '#ff5a3a', r: 140 });
+      log(`${e.bossName || '보스'}이(가) 날뛰기 시작했다!`, '#ff8a6a');
+    }
     e.skillT = (e.skillT ?? 3) - dt;
     if (e.skillT > 0) return;
     // 어설트 보스는 patterns 를 번갈아 사용
     const id = e.patterns ? e.patterns[e.patIdx = ((e.patIdx ?? -1) + 1) % e.patterns.length] : e.elite;
-    if (id === 'glutton') { // 산성 토사물: 플레이어 주변 3곳에 장판
-      e.skillT = 5.5; e.lastAtk = G.time;
-      for (let i = 0; i < 3; i++) this.strike(p.x + rand(-70, 70), p.y + rand(-70, 70), 55, 0.9, e.dmg * 0.6, 'rgba(140,220,70,', true);
+    if (id === 'grenade') { // v1.46 흑표 2단계: 수류탄 — 내 자리에 큰 예고 원 1.1초
+      e.skillT = 3.5; e.lastAtk = G.time;
+      this.strike(p.x, p.y, 80, 1.1, e.dmg * 1.8, 'rgba(255,150,50,');
+      floatText(e.x, e.y - 44, '받아라!', '#ffb050', 15);
+    } else if (id === 'glutton') { // 산성 토사물: 플레이어 주변 3곳에 장판
+      e.skillT = e.phase2 ? 3.5 : 5.5; e.lastAtk = G.time;
+      for (let i = 0; i < (e.phase2 ? 5 : 3); i++) this.strike(p.x + rand(-70, 70), p.y + rand(-70, 70), 55, 0.9, e.dmg * 0.6, 'rgba(140,220,70,', true);
       floatText(e.x, e.y - 50, '우웨엑!', '#8fd14a', 18);
     } else if (id === 'panther') { // 호위병 호출 (최대 4)
       e.skillT = 11; e.lastAtk = G.time;
