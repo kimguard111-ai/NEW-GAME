@@ -30,8 +30,8 @@ const Workshop = {
   // 옵션 재조정 비용. full: 옵션 종류까지 바꿈 / 아니면 수치만 다시 굴림
   rerollCost(it, full) {
     const r = it.rarity || 0;
-    return full ? { scrap: 5 * (r + 1), chip: [0, 0, 1, 2, 4][r], credits: 10 * it.ilvl }
-                : { scrap: 3 * (r + 1), chip: [0, 0, 0, 1, 2][r], credits: 5 * it.ilvl };
+    return full ? { scrap: 5 * (r + 1), chip: [0, 0, 1, 2, 4, 8][r], credits: 10 * it.ilvl }
+                : { scrap: 3 * (r + 1), chip: [0, 0, 0, 1, 2, 4][r], credits: 5 * it.ilvl };
   },
   canPay(c) { const p = G.player; return p.mats.scrap >= (c.scrap || 0) && p.mats.chip >= (c.chip || 0) && p.credits >= (c.credits || 0); },
   pay(c) { const p = G.player; p.mats.scrap -= c.scrap || 0; p.mats.chip -= c.chip || 0; p.credits -= c.credits || 0; },

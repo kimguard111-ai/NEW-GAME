@@ -314,7 +314,7 @@ function gunRateMul(p, w) { return wbase(w.key) === 'lmg' ? 1 - 0.25 * (p.heat |
 
 // v1.50 근접 무기 한 번에 때리는 적 수: 무기 기본 + 등급 (희귀·영웅 +1 · 전설 +2) · 3타 마무리 +1
 const MELEE_TARGETS = { pipe: 2, axe: 3, katana: 3 };
-function meleeTargets(w, fin) { return (MELEE_TARGETS[w.key] || 2) + [0, 0, 1, 1, 2][w.rarity || 0] + (fin ? 1 : 0); }
+function meleeTargets(w, fin) { return (MELEE_TARGETS[w.key] || 2) + [0, 0, 1, 1, 2, 2][w.rarity || 0] + (fin ? 1 : 0); }
 function playerDamageMul(melee) {
   const p = G.player;
   let m = (melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1) * (!melee && p.buffs.rapid > 0 ? 1.2 : 1); // v1.50.7 집중 사격: 연사 대신 피해 일부
@@ -797,6 +797,7 @@ function killEnemy(e) {
     dropAt('credits', { amount: 3000 + randInt(0, 2000) });
     for (let i = 0; i < 3; i++) dropAt('item', { item: randomGear(20, 2.5) });
     rollUnique('titan', 20, dropAt); // v1.12
+    rollMyth('titan', e.level, dropAt); // v1.53 신화
     dropAt('item', { item: makeConsumable('medkit', 5) });
     Workshop.gain(30, 8, '타이탄 잔해 회수');
     // 보스 소환수 정리
@@ -814,6 +815,7 @@ function killEnemy(e) {
     if (Math.random() < 0.5) dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) }); // v1.25 확정 → 50%
     dropAt('credits', { amount: e.level * 40 });
     rollUnique(e.elite, e.level, dropAt); // v1.12 레이븐 · 바벨
+    if (e.elite === 'babel') rollMyth('babel', e.level, dropAt); // v1.53 신화
     if (Math.random() < 0.15) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 · v1.51 30% → 15%
     hitstop(0.12); G.shake = Math.max(G.shake, 10);
   }
@@ -1121,6 +1123,15 @@ function updateGrenades(dt) {
 
 // v1.7.1 장비가 땅에 닿는 순간의 연출 — 드랍이 귀해진 만큼 등급별로 확실하게
 // v1.12 보스 고유 장비 굴림: 기본 확률 + 못 얻을 때마다 +3% (얻으면 초기화)
+// v1.53 신화 무기: 정해진 곳에서만 낮은 확률 (못 얻을 때마다 확률 +pity) · 레벨 제한이 높아 미리 주워 둘 수도 있음
+function makeMyth(key, level) { const w = makeWeapon(key, Math.max(level, WEAPONS[key].lvl), 5); w.name = WEAPONS[key].name; return w; }
+function rollMyth(src, level, dropAt) {
+  const D = MYTH_DROP[src], p = G.player;
+  if (!MYTH_LIVE || !D) return false;
+  p.mythPity = p.mythPity || {};
+  if (Math.random() < D.chance + (p.mythPity[src] || 0) * D.pity) { p.mythPity[src] = 0; dropAt('item', { item: makeMyth(pick(Object.keys(WEAPONS).filter(k => WEAPONS[k].myth)), level) }); return true; }
+  p.mythPity[src] = (p.mythPity[src] || 0) + 1; return false;
+}
 function rollUnique(from, level, dropAt) {
   const uid = Object.keys(UNIQUES).find(k => UNIQUES[k].from === from), p = G.player;
   if (!uid) return;
@@ -1132,6 +1143,16 @@ function rollUnique(from, level, dropAt) {
 
 function dropReveal(d, r) {
   const c = RARITIES[r].color, p = G.player;
+  if (d.kind === 'item' && d.item.rarity === 5) { // v1.53 신화: 붉은 금빛 기둥 · 가장 긴 멈춤
+    const mc = RARITIES[5].color;
+    SFX.play('legend', 4); burst(d.x, d.y, mc, 70, 320, 1.1, 4); burst(d.x, d.y, '#ffe08a', 40, 220, 0.8, 3);
+    G.effects.push({ type: 'ring', x: d.x, y: d.y, t: 0, life: 1.4, color: mc, r: 260 }); G.effects.push({ type: 'ring', x: d.x, y: d.y, t: 0, life: 0.9, color: '#ffe08a', r: 150 });
+    floatText(d.x, d.y - 56, `◆ ${RARITIES[5].name} ◆`, mc, 26);
+    hitstop(0.3); G.shake = Math.max(G.shake, 16); G.flash = { color: mc, t: 0, life: 1.2, a: 0.55 };
+    UI.toast(`◆ ${RARITIES[5].name} 무기 ◆`, `${itemName(d.item)} — ${WEAPONS[d.item.key].role}`);
+    log(`${RARITIES[5].name} 무기가 떨어졌다: ${itemName(d.item)}`, mc);
+    return;
+  }
   if (d.kind === 'item' && d.item.unique) { // v1.12 고유 장비: 분홍 빛기둥 + 긴 멈춤
     const uc = '#ff5aa0';
     SFX.play('legend', 4); burst(d.x, d.y, uc, 50, 260, 0.9, 4); burst(d.x, d.y, '#ffd76a', 20, 180, 0.6, 3);

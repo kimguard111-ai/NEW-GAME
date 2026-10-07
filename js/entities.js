@@ -43,7 +43,7 @@ function makeWeapon(key, ilvl, rarity) {
     dmg: Math.round(b.dmg * scale * 10) / 10,
     affixes: rollAffixes('weapon', key, rarity, ilvl), isNew: true,
   };
-  if (rarity === 4) {
+  if (rarity === 4 && !b.myth) {
     const keys = Object.keys(LEGENDARY).filter(k => !LEGENDARY[k].slot && (!LEGENDARY[k].gun || !b.melee));
     it.legend = pick(keys);
   }
@@ -139,7 +139,7 @@ function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
     if (keys.length) return makeGear(pick(keys), level, r);
   }
   if (Math.random() < 0.7) {
-    const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2 && !WEAPONS[k].illegal); // v1.52 불법 무기는 박씨에게서만
+    const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2 && !WEAPONS[k].myth); // v1.52 불법 무기는 박씨에게서만
     return makeWeapon(pick(keys), level, r);
   }
   if (Math.random() < 0.4) return makeHelmet(pick(Object.keys(HELMETS).filter(k => HELMETS[k].lvl <= level + 2)), level, r);

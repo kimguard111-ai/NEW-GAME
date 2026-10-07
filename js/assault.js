@@ -197,6 +197,7 @@ const Assault = {
     if (first) drop(randomGear(a.level + 1, 2, 3, zone)); // 첫 클리어: 영웅 이상 확정
     if (tier > 1 && tier > ((rec && rec.tier) || 1)) drop(randomGear(lvl + 1, 2, tier >= 10 ? 4 : 3, zone)); // 새 위협 등급 첫 클리어: 영웅 이상 (v1.15 위협 10은 전설)
     if (tier >= 6) { drop(randomGear(lvl + 1, 1.5 + 0.3 * (tier - 5), 3, zone)); Weekly.on('mutator', tier); } // v1.15 변형 규칙 보상
+    { const M = MYTH_DROP.assault; if (tier >= M.tier && rk === M.rank) rollMyth('assault', lvl, (k, o) => drop(o.item)); } // v1.53 신화: 위협 5+ S랭크
     drop(makeConsumable('medkit', 2));
     Workshop.gain(4 + 'BAS'.indexOf(rk) * 3 + 2 * (tier - 1), 1 + 'BAS'.indexOf(rk) + (tier - 1), '작전 보급'); // 재료: 등급·위협 비례
     const better = !rec || 'SAB'.indexOf(rk) < 'SAB'.indexOf(rec.best) || t < rec.time;

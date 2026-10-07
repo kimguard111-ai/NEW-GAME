@@ -530,3 +530,4 @@ body.touch #loot-feed { right: 70px; bottom: 110px; }
 #settings-body { max-height: 72vh; overflow-y: auto; padding-right: 4px; } /* v1.37 설정이 길어져 스크롤 */
 .credit-line { color: #6d6d6d; font-size: 11px; margin: -12px 0 14px; letter-spacing: 0.5px; } /* v1.51 제작 표기 */
 #touch-buttons button.gl { border-color: #ffb04a; color: #ffb04a; font-size: 12px; line-height: 1.1; } #touch-buttons button.gl i { display: block; font-style: normal; font-size: 14px; } #touch-buttons button.gl.off { opacity: .45; } /* v1.52 OX-20 유탄 */
+.r5 { color: #ff4f3a; text-shadow: 0 0 6px rgba(255,80,40,.6); } .bc5 { border-color: #c8321e !important; box-shadow: inset 0 0 8px rgba(255,79,58,.45); } .loot-card.r5 { box-shadow: 0 0 16px #ff4f3a; font-weight: bold; } /* v1.53 신화 */

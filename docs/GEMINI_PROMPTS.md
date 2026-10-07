@@ -876,7 +876,7 @@ Match the art style of the attached images. Create ONE image with a 3 by 1 grid 
 Using the attached character as the exact reference (same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him seen FROM BEHIND, his back turned to the camera, facing away and slightly to the upper RIGHT, so we see the back of his head, his back and the backpack. Both empty hands are raised forward in front of his chest as if holding a rifle pointed away from the camera, but there is NO weapon in his hands. Rows: row 1: 4 frames of idle breathing seen from behind; row 2: 6 frames of a walk cycle walking away from the camera toward the upper right. Same size in every frame, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above, behind him). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No weapon, no helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
 ```
 
-## 24. 불법 무기 (고유 총 3종) (v1.52) — 게임에는 들어가 있음 · 그림만 오면 바로 바뀜
+## 24. 신화 무기 3종 (v1.53) — 게임에는 들어가 있음 · **그림이 오면 드랍을 켬** (`MYTH_LIVE`)
 지금은 같은 계열 그림을 빌려 씁니다 (블래스터 = 산탄총 아이콘 · F-20 · OX-20 = 소총 아이콘 · 손에 든 모습은 돌격소총 몸). **고유 그림이 오면 이 총들만 손에 든 모습이 달라집니다.**
 - 우선순위: ① 아이콘 3개 (한 장) → ② 후드(방어구 없음) 몸 3장 → ③ 방어구별 몸 (자주 입는 것부터)
 - 손에 든 몸은 21절 산탄총 몸 프롬프트를 그대로 쓰고 **총 설명 부분만** 아래 문장으로 바꿈 · 📎 첨부도 21절과 같음

@@ -818,7 +818,7 @@ const UI = {
       G.shopLevel = p.level;
       const stock = [];
       const rr = p.level >= 10 ? 1 : 0; // v1.25 상점은 일반·고급까지만 (좋은 장비는 파밍으로)
-      for (const k of Object.keys(WEAPONS)) if (WEAPONS[k].lvl <= p.level + 2 && !WEAPONS[k].illegal) stock.push(makeWeapon(k, p.level, rr));
+      for (const k of Object.keys(WEAPONS)) if (WEAPONS[k].lvl <= p.level + 2 && !WEAPONS[k].myth) stock.push(makeWeapon(k, p.level, rr));
       for (const k of Object.keys(ARMORS)) if (ARMORS[k].lvl <= p.level + 2) stock.push(makeArmor(k, p.level, rr));
       for (const k of Object.keys(HELMETS)) if (HELMETS[k].lvl <= p.level + 2) stock.push(makeHelmet(k, p.level, rr));
       for (let t = 1; t <= 2; t++) if (BELTS[t].lvl <= p.level + 2) stock.push(makeBelt(t)); // v1.24 벨트 (특수부대 장구류는 뒤지기에서만)

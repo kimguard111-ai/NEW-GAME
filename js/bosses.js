@@ -106,6 +106,7 @@ const Bosses = {
     dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[5].gear) });
     dropAt('item', { item: makeConsumable('medkit', 3) });
     rollUnique('chimera', e.level, dropAt); // v1.12
+    rollMyth('chimera', e.level, dropAt); // v1.53 신화
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0;
     p.labKills = (p.labKills || 0) + 1;
     Workshop.gain(14, 6, '실험 장비 잔해 회수');
