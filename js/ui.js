@@ -526,6 +526,7 @@ const UI = {
 
   // ---------------- NPC ----------------
   dialog(name, text, buttons) {
+    $('panel-dialog').classList.remove('mapdlg'); // v1.53.1 출격 지도만 넓게
     $('dialog-name').textContent = name;
     $('dialog-text').innerHTML = text;
     const box = $('dialog-buttons');

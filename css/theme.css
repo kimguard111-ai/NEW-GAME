@@ -482,3 +482,25 @@ body.combat #combo-n { font-size: 22px; } body.touch.combat #combo-n { font-size
 .att-craft .ico { width: 18px; height: 18px; vertical-align: middle; }
 /* v1.50.9 그림을 다 받기 전 시작 버튼 */
 .title-main button.wait { opacity: .45; cursor: progress; pointer-events: none; }
+/* v1.53.1 출격 지도: 3×2 카드 */
+.map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 8px; }
+.map-card { position: relative; display: flex; gap: 8px; align-items: center; padding: 8px; border: 1px solid #2f2b22; background: #14130f; min-height: 74px; overflow: hidden; }
+.map-card.go { cursor: pointer; } .map-card.go:hover { border-color: var(--acc, #e0b23a); background: #1e1b13; }
+.map-card.locked { opacity: .45; } .map-card.locked .mc-art { filter: grayscale(1) brightness(.6); }
+.map-card.rec { border: 2px solid #7fe08a; box-shadow: 0 0 12px rgba(127,224,138,.35); animation: mcPulse 1.6s ease-in-out infinite; }
+@keyframes mcPulse { 50% { box-shadow: 0 0 20px rgba(127,224,138,.6); } }
+.map-card.wide { margin-bottom: 4px; }
+.mc-art { width: 64px; height: 64px; object-fit: contain; flex: none; }
+.ico-art { display: flex; align-items: center; justify-content: center; } .ico-art .ico { width: 40px; height: 40px; }
+.mc-body { min-width: 0; flex: 1; }
+.mc-name { font-weight: bold; font-size: 15px; color: #f0e6cc; }
+.mc-rec { font-size: 11px; color: #0d1a0f; background: #7fe08a; padding: 0 5px; margin-left: 4px; vertical-align: middle; }
+.mc-lv { font-size: 12px; color: #e0b23a; }
+.mc-desc, .mc-ev, .mc-grave { font-size: 11px; color: #9a9384; line-height: 1.3; }
+.mc-ev { color: #ffd76a; } .mc-grave { color: #ff8a8a; }
+.mc-go { margin-top: 3px; font-size: 13px; font-weight: bold; color: #7fe08a; }
+.map-card:not(.rec) .mc-go { color: var(--acc, #e0b23a); }
+body.touch .map-card { min-height: 0; padding: 5px 6px; gap: 5px; } body.touch .mc-art { width: 44px; height: 44px; } body.touch .mc-desc { display: none; } body.touch .mc-name { font-size: 13px; }
+#panel-dialog.mapdlg { width: min(860px, calc(100vw - 24px)); bottom: auto; top: 50%; transform: translate(-50%, -50%); }
+.map-card.wide { min-height: 0; padding: 5px 8px; } .map-card.wide .mc-art { width: 40px; height: 40px; } .map-card.wide .mc-body { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; } .map-card.wide .mc-go { margin: 0 0 0 auto; }
+body.touch #panel-dialog.mapdlg { top: 6px !important; transform: translateX(-50%); width: calc(100vw - 12px); } body.touch .mc-intro { display: none; } body.touch .map-grid { gap: 5px; margin: 4px 0 5px; } body.touch .mc-lv { font-size: 11px; } body.touch .mc-go { font-size: 12px; margin-top: 1px; } body.touch .map-card.wide .mc-desc { display: inline; }
