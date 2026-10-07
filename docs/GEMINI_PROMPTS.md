@@ -876,6 +876,26 @@ Match the art style of the attached images. Create ONE image with a 3 by 1 grid 
 Using the attached character as the exact reference (same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him seen FROM BEHIND, his back turned to the camera, facing away and slightly to the upper RIGHT, so we see the back of his head, his back and the backpack. Both empty hands are raised forward in front of his chest as if holding a rifle pointed away from the camera, but there is NO weapon in his hands. Rows: row 1: 4 frames of idle breathing seen from behind; row 2: 6 frames of a walk cycle walking away from the camera toward the upper right. Same size in every frame, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above, behind him). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No weapon, no helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
 ```
 
+## 24. 불법 무기 (고유 총 3종) (v1.52) — 게임에는 들어가 있음 · 그림만 오면 바로 바뀜
+지금은 같은 계열 그림을 빌려 씁니다 (블래스터 = 산탄총 아이콘 · F-20 · OX-20 = 소총 아이콘 · 손에 든 모습은 돌격소총 몸). **고유 그림이 오면 이 총들만 손에 든 모습이 달라집니다.**
+- 우선순위: ① 아이콘 3개 (한 장) → ② 후드(방어구 없음) 몸 3장 → ③ 방어구별 몸 (자주 입는 것부터)
+- 손에 든 몸은 21절 산탄총 몸 프롬프트를 그대로 쓰고 **총 설명 부분만** 아래 문장으로 바꿈 · 📎 첨부도 21절과 같음
+- 올리는 곳: `art_raw/new/` (파일 이름은 표대로)
+
+| 총 | 아이콘 이름 | 몸 파일 (후드 · 조끼 …) | 총 설명 (21절 프롬프트의 총 부분을 이걸로) |
+|---|---|---|---|
+| 래피드 블래스터 | `blaster` | `player_blaster.png` · `player_vest_blaster.png` … | `holding a bulky black fully-automatic combat shotgun with a big round drum magazine underneath, a short thick barrel with a vented heat shield, held at the hip with both hands, the barrel pointing straight to the RIGHT` · 3번째 줄: `3 frames of rapid continuous shotgun fire with shaking recoil` |
+| F-20 불펍 소총 | `f20` | `player_f20.png` · `player_vest_f20.png` … | `holding a compact futuristic bullpup assault rifle with a smooth rounded dark-olive polymer body, the magazine behind the grip, and a built-in optical scope on top, shouldered and aimed, the barrel pointing straight to the RIGHT` |
+| OX-20 복합소총 | `ox20` | `player_ox20.png` · `player_vest_ox20.png` … | `holding a large boxy futuristic combat rifle with a fat grenade-launcher barrel above the rifle barrel and a big electronic sight box on top, dark grey with orange markings, shouldered with both hands, the barrels pointing straight to the RIGHT` |
+
+### 24-1 ★ · 아이콘 3개 · `illegal_icons.png` (22절처럼 한 장에 격자)
+```
+Create ONE image with exactly 3 separate weapon icons arranged in a single row with wide empty space between them, on a plain solid magenta (#FF00FF) background, gritty hand-painted post-apocalyptic game item icon style, each weapon seen from the side pointing RIGHT, no text, no shadows on the background:
+1) a bulky black fully-automatic combat shotgun with a big round drum magazine and a vented heat shield
+2) a compact futuristic bullpup assault rifle with a smooth rounded dark-olive polymer body and a built-in optical scope
+3) a large boxy futuristic combat rifle with a fat grenade-launcher barrel above the rifle barrel, dark grey with orange markings
+```
+
 ---
 
 ## 결과가 이상할 때

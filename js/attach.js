@@ -16,7 +16,7 @@ const ATTACHMENTS = {
   dualmag:    { slot: 'mag', name: '쌍탄창', r: 2, lvl: 5, price: 280, guns: ['smg', 'rifle'], desc: '재장전 30% 빠름', reload: 0.7 },
   drum:       { slot: 'mag', name: '드럼 탄창', r: 2, lvl: 7, price: 380, guns: ['smg', 'rifle', 'lmg', 'shotgun'], desc: '장탄 +100% · 재장전 35% 느림 · 들고 있으면 이동 -5%', mag: 2, reload: 1.35, move: 0.95 },
 };
-const GUN_NAMES = { pistol: '권총', smg: '기관단총', shotgun: '산탄총', rifle: '소총', sniper: '저격총', lmg: '기관총' };
+const GUN_NAMES = { pistol: '권총', smg: '기관단총', shotgun: '산탄총', rifle: '소총', sniper: '저격총', lmg: '기관총' }; // 불법 무기는 같은 계열(base)로 끼움
 
 function makeAttach(key) {
   const A = ATTACHMENTS[key];
@@ -31,13 +31,14 @@ function randomAttach(level) {
 }
 // 끼운 부품들의 효과를 곱함 (w 가 없거나 근접 무기면 1)
 function attMul(w, prop) {
-  if (!w || !w.att) return 1;
-  let m = 1;
+  const B = w && WEAPONS[w.key] && WEAPONS[w.key].built; // v1.52 F-20 일체형 조준경
+  let m = B && B[prop] !== undefined ? B[prop] : 1;
+  if (!w || !w.att) return m;
   for (const s in w.att) { const it = w.att[s], A = it && ATTACHMENTS[it.key]; if (A && A[prop] !== undefined) m *= A[prop]; }
   return m;
 }
-function attFits(w, part) { return !!(w && w.kind === 'weapon' && part && part.kind === 'att' && !WEAPONS[w.key].melee && ATTACHMENTS[part.key].guns.includes(w.key)); }
-function attSlotsOf(w) { return Object.keys(ATT_SLOTS).filter(s => Object.values(ATTACHMENTS).some(A => A.slot === s && A.guns.includes(w.key))); }
+function attFits(w, part) { return !!(w && w.kind === 'weapon' && part && part.kind === 'att' && !WEAPONS[w.key].melee && ATTACHMENTS[part.key].guns.includes(wbase(w.key)) && !(WEAPONS[w.key].fixed || []).includes(ATTACHMENTS[part.key].slot)); }
+function attSlotsOf(w) { return Object.keys(ATT_SLOTS).filter(s => !(WEAPONS[w.key].fixed || []).includes(s) && Object.values(ATTACHMENTS).some(A => A.slot === s && A.guns.includes(wbase(w.key)))); }
 
 const Attach = {
   // 가방의 부품을 총에 끼움 (그 칸에 있던 부품은 가방으로)

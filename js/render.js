@@ -733,8 +733,8 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     o.blade = w.key === 'katana' ? '#bfe6ff' : w.key === 'axe' ? '#b33' : '#999';
     o.swing = meleeSwing(p, w);
   } else if (b) {
-    o.gun = w.key === 'sniper' ? 30 : w.key === 'pistol' ? 12 : w.key === 'lmg' ? 26 : w.key === 'shotgun' ? 22 : w.key === 'smg' ? 15 : 20;
-    if (p.recoilT > 0) o.recoil = (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
+    o.gun = wbase(w.key) === 'sniper' ? 30 : wbase(w.key) === 'pistol' ? 12 : wbase(w.key) === 'lmg' ? 26 : wbase(w.key) === 'shotgun' ? 22 : wbase(w.key) === 'smg' ? 15 : 20;
+    if (p.recoilT > 0) o.recoil = (b.pellets || wbase(w.key) === 'sniper' ? 6 : 3) * p.recoilT / 0.07;
   }
   let [anim, at] = animState(moving, p.hurtT, p.lastAtk, w && ART.weaponGroup[w.key] ? heldBody(p, w) : 'player');
   const baseKey = arm && Sprites.get('player_' + arm.key) ? 'player_' + arm.key : 'player'; // 방어구별 몸 그림
@@ -746,7 +746,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   if (heldKey && (grp === 'long' || grp === 'pistol')) {
     // v1.7.9 총을 든 몸: 사격 동작(고개가 크게 젖혀짐 · 연사 때 계속 재시작)은 쓰지 않고 조준 자세 그대로 몸만 뒤로 1~3px
     if (anim === 'attack') [anim, at] = moving ? ['walk', G.time] : ['idle', G.time];
-    if (p.recoilT > 0) sxb = sx - (p.faceX || (Iso.dir(p.aim).x < 0 ? -1 : 1)) * (b.pellets || w.key === 'sniper' ? 3 : 1.5) * p.recoilT / 0.07;
+    if (p.recoilT > 0) sxb = sx - (p.faceX || (Iso.dir(p.aim).x < 0 ? -1 : 1)) * (b.pellets || wbase(w.key) === 'sniper' ? 3 : 1.5) * p.recoilT / 0.07;
   }
   if (Sprites.get(bodyKey)) {
     // 몸 그림(무기·헬멧 없음) + 헬멧을 머리에, 무기를 손에 붙여 그림. 화면 위쪽을 보면 무기가 몸 뒤로
@@ -796,14 +796,14 @@ function drawWeaponIcon(cv, w) {
   const g = cv.getContext('2d'), W = cv.width, H = cv.height;
   g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
   if (!w) return;
-  const art = ART.weapons[w.key];
+  const art = ART.weapons[w.key] || ART.weapons[wbase(w.key)];
   if (art && art.ready) {
     const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height], sc = Math.min(W * 0.9 / rw, H * 0.9 / rh);
     g.drawImage(art.img, rx, ry, rw, rh, (W - rw * sc) / 2, (H - rh * sc) / 2, rw * sc, rh * sc); return;
   }
   // 실루엣: [몸통 길이, 총열, 개머리, 탄창, 조준경, 손잡이] 비율
   const S = { pistol: [0.32, 0.12, 0, 0.18, 0, 1], smg: [0.45, 0.15, 0.12, 0.22, 0, 1], rifle: [0.5, 0.25, 0.2, 0.2, 0, 1], lmg: [0.55, 0.28, 0.2, 0.15, 0, 1],
-    shotgun: [0.5, 0.32, 0.22, 0, 0, 1], sniper: [0.48, 0.38, 0.22, 0.12, 1, 1] }[w.key];
+    shotgun: [0.5, 0.32, 0.22, 0, 0, 1], sniper: [0.48, 0.38, 0.22, 0.12, 1, 1] }[wbase(w.key)];
   const cy = H * 0.42, col = RARITIES[w.rarity || 0].color, dark = '#5d636d', mid = '#8a919b';
   g.save(); g.shadowColor = col; g.shadowBlur = 6;
   if (!S) { // 근접: 손잡이 + 날/머리
@@ -821,7 +821,7 @@ function drawWeaponIcon(cv, w) {
   g.fillStyle = dark; g.fillRect(x0 + L * body * 0.18, cy + 6, 8, 14);                          // 손잡이
   if (mag) { g.fillStyle = mid; g.fillRect(x0 + L * body * 0.42, cy + 6, 10, H * mag); }        // 탄창
   if (scope) { g.fillStyle = '#111'; g.fillRect(x0 + L * body * 0.3, cy - 16, L * body * 0.45, 7); }
-  if (w.key === 'lmg') { g.fillStyle = '#5a5030'; g.fillRect(x0 + L * body * 0.35, cy + 6, 20, 14); } // 탄통
+  if (wbase(w.key) === 'lmg') { g.fillStyle = '#5a5030'; g.fillRect(x0 + L * body * 0.35, cy + 6, 20, 14); } // 탄통
   g.restore();
 }
 
@@ -974,7 +974,7 @@ function drawWeaponOverlay(sx, sy, w, p, fr) {
     const right = Math.cos(ang) >= 0, rel = right ? ang : Math.atan2(d.y, -d.x), r2 = clamp(rel * 0.75, -0.96, 0.96);
     ang = right ? r2 : Math.PI - r2; d.x = Math.cos(ang); d.y = Math.sin(ang);
   }
-  const rc = !b.melee && p.recoilT > 0 ? (b.pellets || w.key === 'sniper' ? 6 : 3) * p.recoilT / 0.07 : 0; // 반동
+  const rc = !b.melee && p.recoilT > 0 ? (b.pellets || wbase(w.key) === 'sniper' ? 6 : 3) * p.recoilT / 0.07 : 0; // 반동
   const H = ART.height.player || 44, fw = H * (ART.handX ?? 0.1);
   // 손(가슴) 위치: 몸 그림의 이번 프레임 머리 위치 기준 (없으면 예전처럼 키 비율)
   let cx = sx, cy = sy - H * ART.handY;
@@ -985,7 +985,7 @@ function drawWeaponOverlay(sx, sy, w, p, fr) {
     if (bk) { cx = sx + fr.head.x * fr.sc * (fr.flip ? -1 : 1) + (fr.flip ? -1 : 1) * H * 0.1; cy = sy + fr.head.y * fr.sc + H * 0.26; } // 등 모습: 오른쪽 어깨 (개머리판을 어깨에 대고 총구는 화면 위 = 멀어지는 쪽)
   }
   const hx = cx + d.x * (fw - rc), hy = cy + d.y * (fw * 0.5 - rc);
-  const art = ART.weapons[w.key];
+  const art = ART.weapons[w.key] || ART.weapons[wbase(w.key)];
   ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
   if (bk) ctx.scale(0.7, 1); // 등 모습: 카메라에서 멀어지는 쪽이라 짧아 보이게
   if ((p.faceX ? p.faceX < 0 : Math.cos(ang) < 0) && !b.melee || b.melee && Math.cos(ang) < 0) ctx.scale(1, -1); // 왼쪽을 겨눌 때 무기가 뒤집혀 보이지 않게 · v1.50.6 몸과 같은 좌우 기준

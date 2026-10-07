@@ -10,7 +10,7 @@ function affixPool(kind, key) {
   const melee = kind === 'weapon' && WEAPONS[key].melee;
   return Object.keys(AFFIXES).filter(k => {
     const sl = AFFIXES[k].slot;
-    if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(key)) return false; // 계열 전용 옵션
+    if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(wbase(key))) return false; // 계열 전용 옵션
     if (kind === 'belt') return sl === 'belt'; // v1.25
     return kind !== 'weapon' ? sl === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee); // 헬멧은 방어구 옵션
   });
@@ -139,7 +139,7 @@ function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
     if (keys.length) return makeGear(pick(keys), level, r);
   }
   if (Math.random() < 0.7) {
-    const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2);
+    const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2 && !WEAPONS[k].illegal); // v1.52 불법 무기는 박씨에게서만
     return makeWeapon(pick(keys), level, r);
   }
   if (Math.random() < 0.4) return makeHelmet(pick(Object.keys(HELMETS).filter(k => HELMETS[k].lvl <= level + 2)), level, r);
@@ -167,7 +167,7 @@ function itemReqLevel(it) {
 function itemDesc(it) {
   if (it.kind === 'weapon') {
     const b = WEAPONS[it.key];
-    let s = `피해 ${Math.round(it.dmg * (RATE_COMP[it.key] || 1) * plusMul(it) * 10) / 10}${b.pellets ? ' x' + b.pellets : ''} · 공격간격 ${b.rate}s`;
+    let s = `피해 ${Math.round(it.dmg * (RATE_COMP[wbase(it.key)] || 1) * plusMul(it) * 10) / 10}${b.pellets ? ' x' + b.pellets : ''} · 공격간격 ${b.rate}s`;
     s += b.melee ? ` · 근접 · 한 번에 최대 ${meleeTargets(it, false)}마리 (3타 ${meleeTargets(it, true)})` : ` · 탄창 ${b.mag} · 사거리 ${b.range}`; // v1.50
     if (b.pierce) s += ' · 관통';
     return s + ` · 요구 Lv${b.lvl}`;
@@ -314,7 +314,7 @@ function meleeReach(w) { const b = WEAPONS[w.key], r = gearBonus(G.player, 'reac
 function magSize(w) { const b = WEAPONS[w.key]; return Math.round(b.mag * (1 + gearBonus(G.player, 'mag', w)) * (perk('bulletStorm') ? 1.3 : 1) * attMul(w, 'mag')); } // v1.50 탄창 부품
 // v1.50.7 연사가 너무 빨라 감당이 안 되던 것: 연사 간격을 늘린 만큼 한 발 피해를 올림 (초당 피해 유지 · 저장된 총에도 적용)
 const RATE_COMP = { smg: 1.2, rifle: 1.2, lmg: 1.28 }; // 재장전 비중이 줄어든 만큼 덜 올림 → 초당 피해가 전과 같게
-function weaponDmg(w) { return w.dmg * (RATE_COMP[w.key] || 1) * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }
+function weaponDmg(w) { return w.dmg * (RATE_COMP[wbase(w.key)] || 1) * plusMul(w) * (1 + gearBonus(G.player, 'dmg', w)); }
 
 // 현재 능력치 기준 무기의 실제 초당 피해 (재장전 시간 포함). 장비 비교와 HUD에 사용
 function weaponDps(p, w) {
@@ -323,7 +323,7 @@ function weaponDps(p, w) {
   const mul = (b.melee ? PlayerStats.meleeMul(p) : PlayerStats.gunMul(p)) * plusMul(w) * (1 + gearBonus(p, 'dmg', w));
   const cc = Math.min(1, PlayerStats.crit(p, w));
   const interval = Math.max(b.melee ? 0 : MIN_FIRE, b.rate * PlayerStats.rateMul(p, w)); // v1.50.7 (예전 rapid ×2 는 rateMul 과 겹쳐 있던 것)
-  let dps = w.dmg * (RATE_COMP[w.key] || 1) * ((b.pellets || 1) + gearBonus(p, 'pellets', w)) * mul * (1 + cc * (PlayerStats.critMul(p, w) - 1)) / interval;
+  let dps = w.dmg * (RATE_COMP[wbase(w.key)] || 1) * ((b.pellets || 1) + gearBonus(p, 'pellets', w)) * mul * (1 + cc * (PlayerStats.critMul(p, w) - 1)) / interval;
   if (!b.melee) {
     const mag = Math.round(b.mag * (1 + gearBonus(p, 'mag', w)));
     const rl = b.reload / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w));

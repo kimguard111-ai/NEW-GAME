@@ -153,10 +153,11 @@ const UI = {
       + (p.inRad ? `<div class="zone-rad">${ICON('rad')} 방사능 피폭 중! 웅덩이에서 벗어나세요</div>` : ''));
 
     const w = curWeapon();
+    if (IS_TOUCH) { const gb = document.querySelector('#touch-buttons .gl'), L = glOf(w); if (gb) { gb.classList.toggle('hidden', !L); if (L) { $('gl-n').textContent = glLeft(w); gb.classList.toggle('off', glLeft(w) < 1); } } } // v1.52 OX-20 유탄 버튼
     if (w) {
       const b = WEAPONS[w.key];
       $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${itemName(w)}</span>`;
-      $('weapon-ammo').innerHTML = b.melee ? '<small>근접</small>' : p.reloadT > 0 ? '<small>재장전…</small>' : `${w.loaded} <small>/ ${b.infinite ? '∞' : fmt(p.ammo[b.ammo] || 0)} ${b.ammo ? AMMO[b.ammo].name : ''}</small>`;
+      $('weapon-ammo').innerHTML = b.melee ? '<small>근접</small>' : p.reloadT > 0 ? '<small>재장전…</small>' : `${w.loaded} <small>/ ${b.infinite ? '∞' : fmt(p.ammo[b.ammo] || 0)} ${b.ammo ? AMMO[b.ammo].name : ''}${b.gl && !IS_TOUCH ? ` · 유탄 ${glLeft(w)}/${b.gl.max} [${keyLabel(keyOf('gl'))}]` : ''}</small>`;
       if (UI.iconFor !== w || UI.iconPlus !== w.plus) { UI.iconFor = w; UI.iconPlus = w.plus; drawWeaponIcon($('weapon-icon'), w); }
       $('weapon-role').textContent = `${b.role} · DPS ${Math.round(weaponDps(p, w))}`;
     } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; $('weapon-role').textContent = ''; drawWeaponIcon($('weapon-icon'), null); UI.iconFor = null; }
@@ -535,12 +536,29 @@ const UI = {
     UI.open('dialog');
   },
 
+  // v1.52 불법 무기 (고유 총 3종): 박씨에게서만 · 크레딧 + 전자 부품 · 영웅 등급, 지금 레벨에 맞춤
+  illegalShop(npc) {
+    const p = G.player, keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].illegal);
+    let h = '"…어디서 났는지는 묻지 마. 한 번에 한 자루씩밖에 못 구해."<br><span class="muted">상자나 적에게선 절대 안 나오는 총. 영웅 등급 · 지금 레벨에 맞춰 줌. 출격에서 죽으면 다른 장비처럼 잃을 수 있음.</span>';
+    for (const k of keys) { const b = WEAPONS[k]; h += `<br><br><b style="color:#ff5aa0">${b.name}</b> <span class="muted">Lv${b.lvl}+ · ₵${fmt(b.illegal.credits)} + ${ICON('chip')}${b.illegal.chip}</span><br><span class="role">${b.role}</span>`; }
+    const btns = keys.map(k => { const b = WEAPONS[k], c = b.illegal, lv = p.level >= b.lvl;
+      return [`${b.name} 사기${lv ? '' : ` (Lv${b.lvl})`}`, () => {
+        if (!lv) { log(`${b.name}: Lv${b.lvl}부터 살 수 있다.`, '#f88'); SFX.play('empty'); return; }
+        if (!Workshop.canPay(c)) { log(`크레딧 ₵${fmt(c.credits)}와 전자 부품 ${c.chip}개가 필요하다.`, '#f88'); SFX.play('empty'); return; }
+        const w = makeWeapon(k, p.level, 3);
+        if (!addItem(w)) { log('가방이 꽉 찼다.', '#f88'); return; }
+        Workshop.pay(c); SFX.play('legend', 3); UI.toast('불법 무기', `${b.name}을(를) 손에 넣었다`); log(`박씨: "${b.name}. 조심해서 쓰게."`, '#ff5aa0');
+        UI.close('dialog'); UI.refreshInventory();
+      }]; });
+    btns.push(['뒤로', () => UI.openNpc(npc)]);
+    UI.dialog('박씨 · 불법 무기', h, btns);
+  },
   openNpc(npc) {
     const p = G.player, bye = ['닫기', () => UI.close('dialog')];
     if (npc.id === 'trader') return RaidEvents.openTrader(npc); // v1.10 떠돌이 상인
     if (npc.id === 'merchant') {
       UI.dialog(npc.name, '"총알이든 약이든, 크레딧만 있으면 다 구해다 주지. 쓸만한 물건 있으면 사 주겠네. 기술을 다시 익히고 싶으면 교범을 봐."', [
-        ['거래하기', () => { UI.close('dialog'); UI.openShop(); }], ['스킬 트리 · 초기화', () => UI.skillShop()], bye]);
+        ['거래하기', () => { UI.close('dialog'); UI.openShop(); }], ['불법 무기', () => UI.illegalShop(npc)], ['스킬 트리 · 초기화', () => UI.skillShop()], bye]);
     } else if (npc.id === 'medic') {
       const mh = PlayerStats.maxHp(p);
       const cost = respecCost(p);
@@ -817,7 +835,7 @@ const UI = {
       G.shopLevel = p.level;
       const stock = [];
       const rr = p.level >= 10 ? 1 : 0; // v1.25 상점은 일반·고급까지만 (좋은 장비는 파밍으로)
-      for (const k of Object.keys(WEAPONS)) if (WEAPONS[k].lvl <= p.level + 2) stock.push(makeWeapon(k, p.level, rr));
+      for (const k of Object.keys(WEAPONS)) if (WEAPONS[k].lvl <= p.level + 2 && !WEAPONS[k].illegal) stock.push(makeWeapon(k, p.level, rr));
       for (const k of Object.keys(ARMORS)) if (ARMORS[k].lvl <= p.level + 2) stock.push(makeArmor(k, p.level, rr));
       for (const k of Object.keys(HELMETS)) if (HELMETS[k].lvl <= p.level + 2) stock.push(makeHelmet(k, p.level, rr));
       for (let t = 1; t <= 2; t++) if (BELTS[t].lvl <= p.level + 2) stock.push(makeBelt(t)); // v1.24 벨트 (특수부대 장구류는 뒤지기에서만)

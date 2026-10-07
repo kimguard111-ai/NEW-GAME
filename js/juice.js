@@ -5,7 +5,7 @@ const Juice = {
   reset() { this.flashes = []; this.casings = []; this.hm = null; this.impacts = []; this.smokes = []; },
   // v1.40 총알이 적에 맞음: 맞은 방향으로 튀는 피·불꽃 + 흰 섬광 + 몸이 휘청 + 묵직한 소리 (+ 큰 총은 아주 짧은 멈춤)
   impact(e, b, a, crit) {
-    const mech = FACTION[e.type] === 'machine', wk = b.w && b.w.key, big = wk === 'shotgun' || wk === 'sniper' || wk === 'rifle' || wk === 'lmg';
+    const mech = FACTION[e.type] === 'machine', wk = b.w && wbase(b.w.key), big = wk === 'shotgun' || wk === 'sniper' || wk === 'rifle' || wk === 'lmg';
     const n = mech ? 7 : crit ? 10 : 6, c = Math.cos(a), s = Math.sin(a);
     for (let i = 0; i < n; i++) { const aa = a + rand(-0.55, 0.55), sp = rand(140, crit ? 380 : 300); G.particles.push({ x: e.x - c * e.r * 0.4, y: e.y - s * e.r * 0.4, vx: Math.cos(aa) * sp, vy: Math.sin(aa) * sp, t: 0, life: rand(0.18, 0.38), color: mech ? (Math.random() < 0.5 ? '#fff2b0' : '#ffb040') : (Math.random() < 0.6 ? '#d42424' : '#7a0c0c'), size: rand(1.6, 3.2), z: 18 + rand(-4, 6), vz: rand(-30, 60) }); }
     this.impacts.push({ x: e.x - c * e.r * 0.5, y: e.y - s * e.r * 0.5, t: 0, life: crit ? 0.09 : 0.06, r: crit ? 13 : big ? 10 : 7, col: mech ? '#fff6c0' : crit ? '#fff2a0' : '#ffffff' });
@@ -26,11 +26,11 @@ const Juice = {
   },
   smoke(x, y, a, big) { for (let i = 0; i < (big ? 3 : 1); i++) this.smokes.push({ x: x + Math.cos(a) * rand(4, 14), y: y + Math.sin(a) * rand(4, 14), vx: Math.cos(a) * rand(8, 24) + rand(-8, 8), vy: Math.sin(a) * rand(8, 24) + rand(-8, 8), t: 0, life: rand(0.5, 0.9), r: rand(3, 5) * (big ? 1.4 : 1) }); if (this.smokes.length > 60) this.smokes.splice(0, this.smokes.length - 60); },
   shot(p, w, mx, my, a) {
-    const b = WEAPONS[w.key], big = b.pellets || w.key === 'sniper';
-    this.flashes.push({ x: mx, y: my, a, t: 0, life: big ? 0.075 : 0.05, s: big ? 21 : w.key === 'lmg' || w.key === 'rifle' ? 15 : 12 }); // v1.40 더 크게
+    const b = WEAPONS[w.key], big = b.pellets || wbase(w.key) === 'sniper';
+    this.flashes.push({ x: mx, y: my, a, t: 0, life: big ? 0.075 : 0.05, s: big ? 21 : wbase(w.key) === 'lmg' || wbase(w.key) === 'rifle' ? 15 : 12 }); // v1.40 더 크게
     this.smoke(mx, my, a, big);
-    this.spread = Math.min(1, this.spread + (big ? 0.7 : w.key === 'pistol' ? 0.35 : 0.18));
-    if (Math.random() < (w.key === 'smg' || w.key === 'lmg' ? 0.6 : 1)) { // 탄피: 총 오른쪽으로 튀어 바닥에 굴러 떨어짐
+    this.spread = Math.min(1, this.spread + (big ? 0.7 : wbase(w.key) === 'pistol' ? 0.35 : 0.18));
+    if (Math.random() < (wbase(w.key) === 'smg' || wbase(w.key) === 'lmg' ? 0.6 : 1)) { // 탄피: 총 오른쪽으로 튀어 바닥에 굴러 떨어짐
       const side = a + Math.PI / 2 + rand(-0.4, 0.4), v = rand(60, 120);
       this.casings.push({ x: p.x, y: p.y, z: 16, vx: Math.cos(side) * v, vy: Math.sin(side) * v, vz: rand(90, 160), t: 0, rest: false, rot: rand(0, TAU), shell: !!b.pellets });
       if (this.casings.length > 80) this.casings.shift();

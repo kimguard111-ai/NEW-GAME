@@ -32,6 +32,7 @@ const Touch = {
     btn('＋', () => setZoom(ZOOM + 0.1), 'small', zoom);
     // v1.50 오른손: 큰 회피 + 스킬 둥근 버튼(#touch-skills) · Q·R·E 는 작게 오른쪽 가장자리 (무기 창 아래)
     btn(ICON('roll'), () => dodge(), 'big roll'); // v0.16 회피
+    btn('유탄<i id="gl-n"></i>', () => fireGL(), 'gl hidden'); // v1.52 OX-20 을 들었을 때만
     document.getElementById('hud').appendChild(bar);
     const side = document.createElement('div'); side.id = 'touch-side';
     btn('E', () => interact(), 'e', side); btn('Q', () => swapWeapon(), '', side); btn('R', () => startReload(), '', side);

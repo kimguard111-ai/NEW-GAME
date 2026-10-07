@@ -58,6 +58,7 @@ window.addEventListener('keydown', e => {
   else if (act === 'belt') Hotbar.edit();
   else if (act === 'compCmd') Companion.command(); // v1.44 동료 명령
   else if (act === 'useMed') quickMedkit(); // v1.48 소모품은 벨트와 따로
+  else if (act === 'gl') fireGL(); // v1.52 OX-20 유탄
 });
 window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
@@ -85,7 +86,7 @@ function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
 function curWeapon() { const p = G.player; return p.equip[p.active]; }
 // v1.49.9 조준 (PC 오른쪽 클릭 누르는 동안): 퍼짐 ↓ · 이동 60% · 시야를 커서 쪽으로 더. 0~1 (부드럽게 들어감)
 function adsOn() { const p = G.player, w = p && curWeapon(); return !IS_TOUCH && !!input.aim && !!w && !WEAPONS[w.key].melee && !p.dead && !UI.anyOpen(); }
-function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.spread[w.key] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
+function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.spread[wbase(w.key)] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
 const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
 function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); }
@@ -296,7 +297,7 @@ function startReload() {
     return;
   }
   p.reloadT = p.reloadMax = b.reload * PlayerStats.reloadMul(p) * attMul(w, 'reload'); // v1.50 탄창 부품
-  SFX.reload(w.key, p.reloadMax); // v1.35 무기별 장전 소리
+  SFX.reload(wbase(w.key), p.reloadMax); // v1.35 무기별 장전 소리
 }
 
 function finishReload() {
@@ -309,7 +310,7 @@ function finishReload() {
 }
 
 // v1.9 기관총 예열: 연사할수록 최대 25% 빨라짐 (0.4초 쉬면 식기 시작)
-function gunRateMul(p, w) { return w.key === 'lmg' ? 1 - 0.25 * (p.heat || 0) : 1; }
+function gunRateMul(p, w) { return wbase(w.key) === 'lmg' ? 1 - 0.25 * (p.heat || 0) : 1; }
 
 // v1.50 근접 무기 한 번에 때리는 적 수: 무기 기본 + 등급 (희귀·영웅 +1 · 전설 +2) · 3타 마무리 +1
 const MELEE_TARGETS = { pipe: 2, axe: 3, katana: 3 };
@@ -331,7 +332,7 @@ function playerAttack() {
   const b = WEAPONS[w.key];
   if (!b.melee) p.atkT = Math.max(MIN_FIRE, b.rate * PlayerStats.rateMul(p) * gunRateMul(p, w)); // v1.50.7 아무리 빨라도 초당 16발
   p.lastAtk = G.time; // 공격 애니메이션용
-  SFX.play(b.melee ? 'swing_' + w.key : { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[w.key] || 'pistol');
+  SFX.play(b.melee ? 'swing_' + w.key : { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[wbase(w.key)] || 'pistol');
   const critMul = PlayerStats.critMul(p, w); let cc = PlayerStats.crit(p, w);
   if (b.melee) {
     // v1.9 근접 3타 콤보: 1·2타는 빠르게, 3타는 무기별 마무리 (쇠파이프 강타 · 도끼 회전 베기 · 칼 찌르기)
@@ -379,7 +380,7 @@ function playerAttack() {
   // 총소리 (v0.16): 근처의 배회하던 적이 소리를 듣고 몰려옴 (근접 무기는 조용함)
   if (G.time - (G.noiseT || -9) > 0.5) {
     G.noiseT = G.time;
-    const ln = (w.key === 'sniper' ? 750 : 550) * attMul(w, 'noise'); // v1.50 소음기
+    const ln = (wbase(w.key) === 'sniper' ? 750 : 550) * attMul(w, 'noise'); // v1.50 소음기
     for (const e of G.enemies) {
       if (e.state === 'chase' || e.hp <= 0 || e.minion || dist(e, p) > ln) continue;
       const nd = Nav.dist && Nav.dist[Math.floor(e.y / TILE) * World.W + Math.floor(e.x / TILE)];
@@ -390,11 +391,11 @@ function playerAttack() {
   if (!(w.legend === 'thrift' && Math.random() < 0.35) && !(p.buffs.rapid > 0 && smod('rapid') === 'b')) w.loaded--; // v1.11 탄약 보급: 소모 없음
   const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false) * attMul(w, 'dmg'), rapid = G.time - (p.lastShot || -9) < 0.3; // v1.50 rapid = 연사 중 (보정기·수직 손잡이)
   // v1.9 무기 손맛: 기관총 예열(연사할수록 정확·빨라짐) · 소총 첫 발 정조준(잠깐 쉬었다 쏘면 정확 + 치명타)
-  const first = w.key === 'rifle' && G.time - (p.lastShot || -9) > 0.35;
-  if (w.key === 'lmg') p.heat = w.unique === 'titan' ? 1 : Math.min(1, (p.heat || 0) + 0.04); // v1.12 타이탄 심장포: 항상 예열
+  const first = wbase(w.key) === 'rifle' && G.time - (p.lastShot || -9) > 0.35;
+  if (wbase(w.key) === 'lmg') p.heat = w.unique === 'titan' ? 1 : Math.min(1, (p.heat || 0) + 0.04); // v1.12 타이탄 심장포: 항상 예열
   const frag = w.unique === 'raven' && (p.ravenN = (p.ravenN || 0) + 1) % 3 === 0; // v1.12 레이븐: 3발째 파편
   p.lastShot = G.time;
-  const spread = b.spread * adsSpreadMul(w) * attMul(w, 'spread') * (rapid ? attMul(w, 'autoSpread') : 1) * (1 - gearBonus(p, 'accuracy', w)) * (w.key === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
+  const spread = b.spread * adsSpreadMul(w) * attMul(w, 'spread') * (rapid ? attMul(w, 'autoSpread') : 1) * (1 - gearBonus(p, 'accuracy', w)) * (wbase(w.key) === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
   const mz = gunMuzzle(p, w), mx = mz.x, my = mz.y, aim0 = mz.a;
   const life = b.range / b.speed;
   const sid = (G.shotId = (G.shotId || 0) + 1); // v1.40 같은 한 발(산탄 여러 알) 표시
@@ -409,16 +410,39 @@ function playerAttack() {
     });
   }
   p.recoilT = 0.07;
-  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || w.key === 'sniper' ? 9 : w.key === 'lmg' || w.key === 'smg' ? 2.2 : w.key === 'rifle' ? 3.5 : 4.5; const kk = k * attMul(w, 'kick'); G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * kk; G.kick.y -= d.y * kk; } // v1.28 사격 반동이 화면에도 // v1.40 반동 조금 더 세게
+  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || wbase(w.key) === 'sniper' ? 9 : wbase(w.key) === 'lmg' || wbase(w.key) === 'smg' ? 2.2 : wbase(w.key) === 'rifle' ? 3.5 : 4.5; const kk = k * attMul(w, 'kick'); G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * kk; G.kick.y -= d.y * kk; } // v1.28 사격 반동이 화면에도 // v1.40 반동 조금 더 세게
   Juice.shot(p, w, mx, my, aim0); // v1.28 총구 섬광 · 탄피
-  if (w.key === 'sniper') { // v1.9 저격: 탄도가 잠깐 남음
+  if (wbase(w.key) === 'sniper') { // v1.9 저격: 탄도가 잠깐 남음
     let ex = mx, ey = my; const c = Math.cos(aim0), sn = Math.sin(aim0);
     for (let d = 0; d < b.range; d += 16) { const nx = mx + c * d, ny = my + sn * d; if (World.solidAt(nx, ny)) break; ex = nx; ey = ny; }
     G.effects.push({ type: 'tracer', x: mx, y: my, x2: ex, y2: ey, t: 0, life: 0.35, color: 'rgba(255,240,200,0.8)', w: 2.5 });
   }
-  G.particles.push({ x: mx, y: my, vx: 0, vy: 0, t: 0, life: 0.06, color: '#ffe9a0', size: b.pellets ? 14 : w.key === 'sniper' ? 12 : 8, z: 22 });
-  G.shake = Math.max(G.shake, b.pellets ? 6 : w.key === 'sniper' ? 7 : w.key === 'lmg' ? 2.2 : 1.5);
+  G.particles.push({ x: mx, y: my, vx: 0, vy: 0, t: 0, life: 0.06, color: '#ffe9a0', size: b.pellets ? 14 : wbase(w.key) === 'sniper' ? 12 : 8, z: 22 });
+  G.shake = Math.max(G.shake, b.pellets ? 6 : wbase(w.key) === 'sniper' ? 7 : wbase(w.key) === 'lmg' ? 2.2 : 1.5);
   if (w.loaded === 0) startReload();
+}
+
+// v1.52 OX-20 공중폭발 유탄: G (모바일: 유탄 버튼) · 8초마다 1발 충전 · 최대 4발 · 총에 붙어 있음 (w.gl)
+const glOf = w => w && WEAPONS[w.key] && WEAPONS[w.key].gl;
+function glLeft(w) { const L = glOf(w); return L ? (w.gl ?? L.max) : 0; }
+function fireGL() {
+  const p = G.player, w = curWeapon(), L = glOf(w);
+  if (!L || p.dead || World.map === 'camp') return;
+  if (glLeft(w) < 1) { floatText(p.x, p.y - 34, '유탄 충전 중', '#aaa', 12); SFX.play('empty'); return; }
+  let tx, ty;
+  if (IS_TOUCH) { // 조준 방향 ±35° 안의 가장 가까운 적, 없으면 그 방향 300px
+    const t = G.enemies.filter(e => e.hp > 0 && dist(e, p) < L.range && Math.abs(angDiff(angleTo(p, e), p.aim)) < 0.6).sort((a, b) => dist(a, p) - dist(b, p))[0];
+    if (t) { tx = t.x; ty = t.y; } else { tx = p.x + Math.cos(p.aim) * 300; ty = p.y + Math.sin(p.aim) * 300; }
+  } else ({ x: tx, y: ty } = Iso.toWorld(input.mx, input.my));
+  const a = Math.atan2(ty - p.y, tx - p.x), d = clamp(Math.hypot(tx - p.x, ty - p.y), 60, L.range);
+  w.gl = glLeft(w) - 1;
+  G.grenades.push({ sx: p.x, sy: p.y, x: p.x, y: p.y, tx: p.x + Math.cos(a) * d, ty: p.y + Math.sin(a) * d, t: 0, dur: 0.16 + d / 1500, tdmg: weaponDmg(w) * playerDamageMul(false) * L.mul, tr: L.r });
+  p.aim = a; p.lastAtk = G.time; p.recoilT = 0.09; SFX.play('shotgun', 0.7); G.shake = Math.max(G.shake, 5);
+  Juice.shot(p, w, gunMuzzle(p, w).x, gunMuzzle(p, w).y, a);
+  if (!p.glTold) { p.glTold = true; log(`유탄 발사! ${L.cd}초마다 1발씩 다시 채워진다 (최대 ${L.max}발).`, '#ffd76a'); }
+}
+function glRecharge(p, dt) { // 들고 있지 않은 총도 충전
+  for (const s of ['w1', 'w2']) { const w = p.equip[s], L = glOf(w); if (!L || glLeft(w) >= L.max) continue; w.glT = (w.glT || 0) + dt; if (w.glT >= L.cd) { w.glT = 0; w.gl = glLeft(w) + 1; } }
 }
 
 // 범위 폭발 (수류탄 / 폭발탄 공용)
@@ -1048,7 +1072,7 @@ function updateBullets(dt) {
             Juice.impact(e, b, Math.atan2(b.vy, b.vx), b.crit); // v1.40 타격감
             damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb, ally: b.ally });
             if (b.mark) e.markT = G.time + 5; // v1.44 윤 저격수 전용: 표적 지정
-            if (wb && wb.key === 'sniper') hitstop(0.045);
+            if (wb && wbase(wb.key) === 'sniper') hitstop(0.045);
             if (b.frag) explode(e.x, e.y, b.dmg * 0.6, 50, { small: true, knock: 8, stagger: 0.1 }); // v1.12 레이븐 파편
             if (b.pierce-- <= 0) { b.life = 0; break; }
           }
@@ -1213,6 +1237,7 @@ function update(dt) {
     p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x); p.aimPt = aimAt; p.aimPtT = G.time;
     if (input.down && !(p.rollT > 0)) playerAttack();
     if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; finishReload(); } }
+    glRecharge(p, dt); // v1.52 OX-20 유탄
     // 캠프 안에서는 천천히 회복
     const mh = PlayerStats.maxHp(p);
     if (World.inSafe(p.x, p.y) && p.hp < mh) p.hp = Math.min(mh, p.hp + mh * 0.08 * dt);
@@ -1290,7 +1315,7 @@ function update(dt) {
   if (Math.hypot(ctx0 - F.x, cty0 - F.y) > 300) { F.x = ctx0; F.y = cty0; } else { const k = 1 - Math.pow(0.00005, dt); F.x += (ctx0 - F.x) * k; F.y += (cty0 - F.y) * k; }
   const lead = Settings.camLead !== false && !p.dead && !UI.anyOpen() && !IS_TOUCH;
   const cw0 = curWeapon(); ADS.k = clamp(ADS.k + (adsOn() ? dt / (0.15 * attMul(cw0, 'adsTime')) : -dt / 0.12), 0, 1); // 0.15초에 들어가고 0.12초에 풀림
-  const far = (cw0 && cw0.key === 'sniper' ? 1.6 : 1) * attMul(cw0, 'adsLead'), lm = 0.2 + 0.22 * ADS.k * far, lcx = 110 + 120 * ADS.k * far, lcy = 70 + 80 * ADS.k * far; // 조준하면 커서 쪽으로 더 멀리 (저격총은 더)
+  const far = (cw0 && wbase(cw0.key) === 'sniper' ? 1.6 : 1) * attMul(cw0, 'adsLead'), lm = 0.2 + 0.22 * ADS.k * far, lcx = 110 + 120 * ADS.k * far, lcy = 70 + 80 * ADS.k * far; // 조준하면 커서 쪽으로 더 멀리 (저격총은 더)
   const lx = lead || ADS.k > 0 ? clamp((input.mx - VW / 2) * lm, -lcx, lcx) : 0, ly = lead || ADS.k > 0 ? clamp((input.my - VH / 2) * lm, -lcy, lcy) : 0, kl = 1 - Math.pow(0.02, dt);
   L.x += (lx - L.x) * kl; L.y += (ly - L.y) * kl;
   const kd = Math.pow(0.0005, dt); KK.x *= kd; KK.y *= kd;

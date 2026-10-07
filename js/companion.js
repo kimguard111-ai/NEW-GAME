@@ -70,7 +70,7 @@ const Companion = {
     const g = this.data().gun, wb = g && WEAPONS[g.key], m = this.dmgMul();
     if (!wb) return { dmg: d.dmg * (1 + (p.level - 1) * 0.14) * m, rate: d.rate, spread: d.spread, speed: d.speed, range: d.range, pellets: 1, pierce: d.pierce || 0, snd: d.snd, gun: d.gun };
     return { dmg: g.dmg * plusMul(g) * 0.7 * m, rate: wb.rate * 1.25, spread: wb.spread * 1.2, speed: wb.speed, range: Math.min(wb.range, 720), pellets: wb.pellets || 1, pierce: wb.pierce || 0, falloff: wb.falloff,
-      snd: { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[g.key] || 'pistol', gun: wb.mag > 20 ? 20 : wb.pellets ? 16 : 12 };
+      snd: { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[wbase(g.key)] || 'pistol', gun: wb.mag > 20 ? 20 : wb.pellets ? 16 : 12 };
   },
 
   // ---------- 캠프: 고용 · 고르기 ----------

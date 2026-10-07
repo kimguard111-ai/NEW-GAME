@@ -31,12 +31,12 @@ const ART = {
     lmg: { file: 'weapons.png', rect: [2624, 0, 320, 114] },
   },
   // 화면에 그릴 무기 길이(px)와 손잡이 위치(그림 왼쪽에서 비율)
-  weaponLen: { pipe: 30, pistol: 15, axe: 32, smg: 22, shotgun: 30, rifle: 32, katana: 38, sniper: 40, lmg: 36 },
-  weaponGrip: { pipe: 0.15, pistol: 0.3, axe: 0.15, smg: 0.35, shotgun: 0.3, rifle: 0.32, katana: 0.12, sniper: 0.3, lmg: 0.35 },
+  weaponLen: { pipe: 30, pistol: 15, axe: 32, smg: 22, shotgun: 30, rifle: 32, katana: 38, sniper: 40, lmg: 36, blaster: 30, f20: 30, ox20: 34 },
+  weaponGrip: { pipe: 0.15, pistol: 0.3, axe: 0.15, smg: 0.35, shotgun: 0.3, rifle: 0.32, katana: 0.12, sniper: 0.3, lmg: 0.35, blaster: 0.3, f20: 0.4, ox20: 0.32 },
   handY: 0.62,     // 손 높이 (플레이어 키 대비, 가슴 높이)
   handX: 0.1,      // 손이 몸 중심에서 앞으로 나온 정도 (플레이어 키 대비)
   // v1.7.7 무기를 든 몸 그림의 그룹: player[_방어구]_그룹 그림이 있으면 그 몸을 쓰고 무기를 따로 붙이지 않음 (근접 무기는 기존 방식)
-  weaponGroup: { pistol: 'pistol', smg: 'long', shotgun: 'long', rifle: 'long', sniper: 'long', lmg: 'long',
+  weaponGroup: { pistol: 'pistol', smg: 'long', shotgun: 'long', rifle: 'long', sniper: 'long', lmg: 'long', blaster: 'long', f20: 'long', ox20: 'long', // v1.52 불법 무기 (고유 그림은 player_<키>)
     pipe: 'heavy', axe: 'heavy', katana: 'blade' }, // v1.7.9 근접 그룹 · v1.8.0 근접은 모두 둔기(도끼) 그림으로 통일 · v1.31 블레이드는 칼 든 몸 그림
   // v1.8.1 총을 든 몸 그림 속 총구 위치 (발 기준, 플레이어 키 대비: 앞으로, 위로) — 그림에서 측정
   muzzle: { long: [0.61, 0.71], pistol: [0.42, 0.73] },
