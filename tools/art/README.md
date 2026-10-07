@@ -8,3 +8,7 @@
 | `blobs.js in.png 출력폴더 이름 [합치는거리=8] [최소크기=600]` | 소품·질감 시트: 격자를 안 지킨 그림도 물체마다 덩어리로 찾아 **자기 픽셀만** 아틀라스로 (`이름.png` + 상자 `이름.json` + 번호 확인용 `chk_이름.png`) |
 
 순서: 그림 보기 → (필요하면) `clean.js` → 캐릭터는 `tool.js`, 소품·질감은 `blobs.js` → 확인용 그림으로 번호 ↔ 키 맞추기 → `js/assets.js` 등록 → 게임 화면 확인 → 원본을 `art_raw/done/` 으로
+
+
+## v1.50.9 WebP
+게임은 `assets/*.webp`를 먼저 읽음 (PNG의 약 1/8). 새 그림을 `assets/`에 PNG로 넣은 뒤 `sh tools/webp.sh` (또는 `sh tools/bump-cache.sh <버전>`이 자동으로) 실행.

@@ -4,7 +4,7 @@ const TitleBG = {
   cv: null, g: null, sky: null, t: 0, embers: [], art: null,
   init() {
     this.cv = document.getElementById('title-bg'); this.g = this.cv.getContext('2d');
-    if (ART.title) { const im = new Image(); im.onload = () => { this.art = im; }; im.src = ART.dir + ART.title; }
+    if (ART.title) { const im = new Image(); im.onload = () => { this.art = im; }; loadArt(im, ART.title, () => {}); } // v1.50.9 webp
     for (let i = 0; i < 70; i++) this.embers.push({ x: Math.random(), y: Math.random(), v: 0.02 + Math.random() * 0.05, s: 1 + Math.random() * 2, ph: Math.random() * 6 });
     const loop = now => {
       if (!document.getElementById('title-screen').classList.contains('hidden')) this.draw(now / 1000);

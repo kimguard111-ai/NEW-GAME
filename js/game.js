@@ -1374,9 +1374,12 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
   { // v1.49 첫 로딩: 그림을 다 받을 때까지 진행 막대 (느린 회선에서 빈 화면처럼 보이던 것)
     const bar = document.createElement('div'); bar.id = 'load-bar'; bar.innerHTML = '<div class="lb-fill"></div><span>그림 불러오는 중…</span>';
     document.querySelector('.title-main').appendChild(bar);
+    // v1.50.9 다 받기 전엔 시작 버튼을 막음 (그림 없이 시작해 코드로 그린 임시 모양이 보이다가 천천히 바뀌던 것) · 30초가 지나면 그냥 열어 줌
+    const gate = [...document.querySelectorAll('#btn-new, #btn-continue')]; gate.forEach(b => b.classList.add('wait')); // 누르기만 막음 (이어서 버튼의 켜짐/꺼짐은 세이브가 정함)
+    const open = () => gate.forEach(b => b.classList.remove('wait'));
     const t0 = performance.now(), tick = () => { const k = Sprites.total ? Sprites.done / Sprites.total : 0;
-      bar.firstChild.style.width = Math.round(k * 100) + '%'; bar.lastChild.textContent = `그림 불러오는 중… ${Sprites.done} / ${Sprites.total}`;
-      if (k >= 1 || performance.now() - t0 > 20000) { bar.classList.add('done'); setTimeout(() => bar.remove(), 600); } else setTimeout(tick, 120); };
+      bar.firstChild.style.width = Math.round(k * 100) + '%'; bar.lastChild.textContent = `그림 불러오는 중… ${Math.round(k * 100)}%`;
+      if (k >= 1 || performance.now() - t0 > 30000) { open(); bar.classList.add('done'); setTimeout(() => bar.remove(), 600); } else setTimeout(tick, 120); };
     tick();
   }
   const btnC = document.getElementById('btn-continue');

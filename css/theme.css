@@ -480,3 +480,5 @@ body.combat #combo-n { font-size: 22px; } body.touch.combat #combo-n { font-size
 .att-craft { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 .att-craft button { padding: 3px 6px !important; margin: 0 !important; font-size: 12px; }
 .att-craft .ico { width: 18px; height: 18px; vertical-align: middle; }
+/* v1.50.9 그림을 다 받기 전 시작 버튼 */
+.title-main button.wait { opacity: .45; cursor: progress; pointer-events: none; }

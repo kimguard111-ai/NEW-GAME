@@ -531,14 +531,16 @@ const Mip = {
   },
 };
 
+// v1.50.9 그림 주소: webp(약 1/8 크기)를 먼저, 못 읽으면 png · 버전을 붙여 업데이트 뒤 옛 그림이 남지 않게
+function artURL(file, png) { const f = !png && /\.png$/.test(file) ? file.slice(0, -4) + '.webp' : file; return ART.dir + f + '?v=' + (typeof GAME_VERSION !== 'undefined' ? GAME_VERSION.replace(/^v/, '') : '0'); }
+function loadArt(im, file, onFail) { im.onerror = () => { if (!im._png && /\.png$/.test(file)) { im._png = true; im.src = artURL(file, true); } else onFail(); }; im.src = artURL(file); }
 const Sprites = {
   total: 0, done: 0, // v1.49 첫 로딩 진행
   load() {
     for (const s of [...Object.values(ART.sprites), ...Object.values(ART.landmarks)]) {
       const im = new Image(); s.ready = false; Sprites.total++; // 다시 읽을 때 이전 상태가 남지 않게
       im.onload = () => { (im.decode ? im.decode().catch(() => {}) : Promise.resolve()).then(() => { s.ready = true; Sprites.done++; }); }; // v1.50.8 다 풀린 뒤에 씀 (폰에서 덜 풀린 그림이 비어 보이던 것)
-      im.onerror = () => { Sprites.done++; console.warn('에셋을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file); };
-      im.src = ART.dir + s.file; s.img = im;
+      s.img = im; loadArt(im, s.file, () => { Sprites.done++; console.warn('에셋을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file); });
     }
   },
   loadAll() { // 무기·헬멧 그림까지 포함
@@ -548,8 +550,7 @@ const Sprites = {
       if (!im) {
         im = cache[s.file] = new Image(); im.users = []; Sprites.total++;
         im.onload = () => (im.decode ? im.decode().catch(() => {}) : Promise.resolve()).then(() => { Sprites.done++; im.users.forEach(u => { u.ready = true; }); if (typeof GroundCache !== 'undefined') GroundCache.clear(); }); // v1.25 바닥 질감이 늦게 읽혀도 다시 그림
-        im.onerror = () => { Sprites.done++; console.warn('무기·헬멧 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file); };
-        im.src = ART.dir + s.file;
+        loadArt(im, s.file, () => { Sprites.done++; console.warn('무기·헬멧 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file); });
       }
       im.users.push(s); s.img = im; s.ready = false;
     }
