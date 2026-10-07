@@ -263,7 +263,7 @@ const PlayerStats = {
   expMul: p => 1 + gearBonus(p, 'exp') + (pas('t5') ? 0.05 : 0),
   // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
   // v1.7: 밸런스 봇 측정 결과 Lv30까지 너무 빠름 → Lv5부터 점점 더 많이 (Lv10 ×1.65 · Lv20 ×2.4 · Lv30 ×3.0)
-  expNext: lvl => Math.floor(70 * lvl * lvl * Math.max(1, Math.pow(lvl / 4, 0.55)) * (lvl >= 3 ? 1.5 : 1)), // v1.25 Lv3부터 ×1.5
+  expNext: lvl => Math.floor(70 * lvl * lvl * Math.max(1, Math.pow(lvl / 4, 0.55)) * (lvl >= 3 ? 1.5 : 1) * (1 + Math.max(0, lvl - 14) * 0.04)), // v1.51 Lv15부터 조금씩 더 (Lv20 ×1.24 · Lv29 ×1.6) // v1.25 Lv3부터 ×1.5
 };
 
 // 스킬 수치: 각 스킬은 연동 능력치 하나를 따라 강해짐
@@ -369,7 +369,8 @@ function isUpgrade(p, it) {
 // ---------------- 적 ----------------
 function makeEnemy(type, x, y, level) {
   const d = ENEMIES[type];
-  const hpMul = 1 + (level - 1) * 0.38, dmgMul = 1 + (level - 1) * 0.26;
+  const lt = Math.max(0, level - 10); // v1.51 후반 점검: 봇이 Lv8 이후 사망 0% → Lv11부터 점점 단단하고 아프게 (Lv20 체력 +15%·피해 +8% · Lv30 +42%·+12%)
+  const hpMul = 1 + (level - 1) * 0.38 + lt * lt * 0.012, dmgMul = 1 + (level - 1) * 0.26 + lt * 0.05;
   const hp = Math.round(d.hp * (d.boss ? 1 : hpMul));
   return {
     type, def: d, x, y, r: d.r, level,
