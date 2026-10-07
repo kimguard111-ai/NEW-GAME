@@ -27,7 +27,7 @@ window.addEventListener('resize', resize);
 resize();
 // 마우스 휠: 카메라 확대 1.0 ~ 1.8
 function setZoom(z) {
-  ZOOM = clamp(Math.round(z * 10) / 10, ZOOM_MIN, 2.2); // v1.21 최대 확대 1.8 → 2.2 (캐릭터가 작아진 만큼)
+  ZOOM = clamp(Math.round(z * 10) / 10, ZOOM_MIN, ZOOM_MAX); // v1.21 최대 확대 1.8 → 2.2 (캐릭터가 작아진 만큼)
   try { localStorage.setItem('seoul2049-zoom', ZOOM); } catch (e) { /* 저장 불가 */ }
   GroundCache.clear(); resize();
 }
