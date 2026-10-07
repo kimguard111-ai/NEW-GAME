@@ -459,7 +459,7 @@ const UI = {
       + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
-    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.map.clear(); }; });
+    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
     $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };
     $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
     $('btn-export').onclick = () => {
@@ -479,7 +479,7 @@ const UI = {
       } catch (e) { log('세이브 코드가 올바르지 않습니다.', '#f66'); }
     };
     $('zoom-range').oninput = e => { setZoom(+e.target.value); $('zoom-val').textContent = ZOOM.toFixed(1) + '배'; };
-    $('btn-lowspec').onclick = () => { Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.map.clear(); UI.refreshSettings(); log('저사양 모드: 조명 · 세부 묘사 · 울림 · 환경음을 껐습니다.', '#8cf'); };
+    $('btn-lowspec').onclick = () => { Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.clear(); UI.refreshSettings(); log('저사양 모드: 조명 · 세부 묘사 · 울림 · 환경음을 껐습니다.', '#8cf'); };
     // v1.37 키 바꾸기: 버튼 누름 → 다음 키 입력으로 바꿈 (겹치면 서로 맞바꿈)
     $('settings-body').querySelectorAll('.key-btn').forEach(b => { b.onclick = () => {
       b.textContent = '키 입력…'; b.classList.add('wait');

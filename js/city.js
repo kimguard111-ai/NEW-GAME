@@ -207,14 +207,21 @@ function poleWires(o, sx, sy) {
   ctx.strokeStyle = 'rgba(20,20,22,0.85)'; ctx.lineWidth = 1;
   for (const [ox, oy, sag] of [[-12, 8, 18], [12, 8, 22], [-8, 18, 26]]) { ctx.beginPath(); ctx.moveTo(sx + ox, top + oy); ctx.quadraticCurveTo((sx + nx) / 2 + ox, (top + ny) / 2 + oy + sag, nx + ox, ny + oy); ctx.stroke(); }
 }
-function subwaySign(o) {
-  const S = Iso.sx, Y = Iso.sy, px = S(o.x + 30, o.y - 18), py = Y(o.x + 30, o.y - 18);
-  ctx.fillStyle = '#2a2c30'; ctx.fillRect(px - 2, py - 74, 4, 74);
-  ctx.fillStyle = '#e8e8e8'; ctx.fillRect(px - 16, py - 92, 32, 22);
-  const lines = [[o.line, o.color]].concat(o.line2 ? [[o.line2, o.color2]] : []);
-  lines.forEach(([ln, col], i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px - 9 + i * 9, py - 85, 4.5, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 7px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ln, px - 9 + i * 9, py - 85); });
-  ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 8px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.name, px + (o.line2 ? 6 : 4), py - 76);
-  if (Settings.light && Light.list.length < LIGHT_CAP) addLight(px, py - 80, 60, 0.5, 'rgba(220,240,255,A)');
+function subwaySign(o) { // v1.50.8 깨끗한 흰 판 → 폐허에 맞게: 어두운 판 + 위쪽 노선 색 띠 · 기울어짐 · 녹·때 · 바랜 글씨 · 전기는 대부분 끊김 (새것 같아 AI 티 나던 것)
+  const S = Iso.sx, Y = Iso.sy, px = S(o.x + 30, o.y - 18), py = Y(o.x + 30, o.y - 18), h = hash2(Math.floor(o.x), Math.floor(o.y));
+  ctx.fillStyle = '#25272b'; ctx.fillRect(px - 2, py - 72, 4, 72); ctx.fillStyle = 'rgba(120,70,40,0.5)'; ctx.fillRect(px - 2, py - 30, 4, 12); // 기둥 + 녹
+  ctx.save(); ctx.translate(px, py - 82); ctx.rotate((h - 0.5) * 0.16);
+  const lines = [[o.line, o.color]].concat(o.line2 ? [[o.line2, o.color2]] : []), w = 34, ht = 18;
+  ctx.fillStyle = '#16181b'; ctx.fillRect(-w / 2 - 1, -ht / 2 - 1, w + 2, ht + 2);
+  ctx.fillStyle = '#3b4048'; ctx.fillRect(-w / 2, -ht / 2, w, ht);
+  ctx.globalAlpha = 0.7; ctx.fillStyle = lines[0][1]; ctx.fillRect(-w / 2, -ht / 2, w, 3); ctx.globalAlpha = 1; // 노선 색 띠
+  ctx.fillStyle = 'rgba(110,70,40,0.45)'; ctx.fillRect(-w / 2 + 4 + h * 18, -ht / 2 + 3, 2, ht - 3); ctx.fillRect(-w / 2 + 22 - h * 10, ht / 2 - 5, 7, 3); // 녹 줄 · 때
+  ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(-w / 2, ht / 2 - 4, w, 4);
+  lines.forEach(([ln, col], i) => { const cx = -w / 2 + 6 + i * 8; ctx.fillStyle = '#16181b'; ctx.beginPath(); ctx.arc(cx, 2, 4.6, 0, TAU); ctx.fill(); ctx.globalAlpha = 0.75; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(cx, 2, 3.8, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#e6e0d0'; ctx.font = 'bold 6px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ln, cx, 2.3); });
+  ctx.fillStyle = 'rgba(214,206,186,0.82)'; ctx.font = '7px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.name, (o.line2 ? 7 : 4), 2.5);
+  ctx.restore();
+  if (h > 0.72 && Settings.light && Light.list.length < LIGHT_CAP && Math.sin(G.time * 13 + h * 50) > 0.2) addLight(px, py - 82, 34, 0.3, 'rgba(200,220,240,A)'); // 몇 곳만 깜빡이는 고장 난 불
 }
 
 // 그림 위에 계속 코드로 얹는 것: 불빛 · 불꽃 · 경광등

@@ -44,6 +44,9 @@ const World = {
 
     // 도로와 블록 (v0.13: 블록 18칸 = 4차선 도로 + 보도 1칸 + 건물 부지 12×12)
     const RW = this.ROADW, L0 = RW + 1, L1 = B - 2, bigLots = [];
+    // v1.50.8 랜드마크(어설트) 둘레 8칸 안에 걸치는 부지는 건물 없이 광장으로 (건물이 붙어 있어 싸우기·찾기 힘들던 것)
+    const LM = LANDMARKS.find(l => l.id === def.landmark), LMP = 8;
+    const lmRect = LM ? { x0: Math.floor(W / 2 - LM.size / 2) - LMP, y0: Math.floor(H / 2 - LM.size / 2) - LMP, x1: Math.floor(W / 2 - LM.size / 2) + LM.size + LMP, y1: Math.floor(H / 2 - LM.size / 2) + LM.size + LMP } : null;
     for (let by = 0; by < Math.ceil(H / B); by++) {
       for (let bx = 0; bx < Math.ceil(W / B); bx++) {
         const ox = bx * B, oy = by * B;
@@ -52,6 +55,10 @@ const World = {
         }
         const kind = rng();
         const shade = rng();
+        if (lmRect && ox + L1 >= lmRect.x0 && ox + L0 <= lmRect.x1 && oy + L1 >= lmRect.y0 && oy + L0 <= lmRect.y1) { // 랜드마크 광장: 보도 바닥 + 가장자리에 띄엄띄엄 엄폐물(버려진 차)
+          for (let y = L0; y <= L1; y++) for (let x = L0; x <= L1; x++) { const tx = ox + x, ty = oy + y, edge = tx < lmRect.x0 + 2 || tx > lmRect.x1 - 2 || ty < lmRect.y0 + 2 || ty > lmRect.y1 - 2; set(tx, ty, edge && rng() < 0.05 ? T.CAR : T.WALK); }
+          continue;
+        }
         // 도심(종로·용산)일수록 고층: 기본 3~6층, 도심 블록 일부는 8~12층
         const bz = def.zone;
         const fillB = (x0, y0, x1, y1, s) => {
@@ -173,7 +180,7 @@ const World = {
     for (const [x0, y0, x1, y1, sh] of bigLots) {
       if (mapId === 'camp' || have >= 3) break;
       let ok = x1 < W - 1 && y1 < H - 1 && (!bt || Math.hypot((x0 + x1) / 2 - bt.x, (y0 + y1) / 2 - bt.y) > 16);
-      for (const l of this.landmarks) if (x0 <= l.tx + l.size + 2 && x1 >= l.tx - 2 && y0 <= l.ty + l.size + 2 && y1 >= l.ty - 2) ok = false;
+      for (const l of this.landmarks) if (x0 <= l.tx + l.size + 8 && x1 >= l.tx - 8 && y0 <= l.ty + l.size + 8 && y1 >= l.ty - 8) ok = false; // v1.50.8 광장(8칸)에는 상가도 안 둠
       for (let y = y0; y <= y1 && ok; y++) for (let x = x0; x <= x1; x++) if (this.bid[y * W + x] >= 0) { ok = false; break; }
       if (!ok) continue;
       this.makeShop(x0, y0, x1, y1, sh, r2); have++;

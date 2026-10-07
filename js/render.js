@@ -152,8 +152,13 @@ function drawOutsideTile(tx, ty) {
 
 // 정적인 바닥을 청크 단위로 미리 그려 캐시 (LRU)
 const OUT_PAD = 14; // 맵 바깥으로 그리는 칸 수
+// v1.50.8 캔버스 메모리 예산: 폰(특히 아이폰 사파리)은 캔버스 메모리 합이 한도를 넘으면 새 캔버스가 소리 없이 비어 버림
+// (타이틀·캐릭터 그림이 벗겨지거나 깜빡이던 것) → 캐시마다 픽셀 예산을 두고, 버릴 때 크기를 0으로 만들어 바로 돌려줌
+const CANVAS_BUDGET = { ground: IS_TOUCH ? 12e6 : 40e6, mip: IS_TOUCH ? 6e6 : 20e6 };
+function freeCanvas(c) { if (c) { c.width = 0; c.height = 0; } }
 const GroundCache = {
-  CH: 16, map: new Map(), LIMIT: 28,
+  CH: 16, map: new Map(), LIMIT: 28, px: 0,
+  clear() { for (const c of this.map.values()) freeCanvas(c.cv); this.map.clear(); this.px = 0; }, // v1.50.8 비울 때 메모리도 바로 돌려줌
   get(cx, cy) {
     const key = cx + ',' + cy;
     let c = this.map.get(key);
@@ -172,8 +177,8 @@ const GroundCache = {
     }
     ctx = saved;
     c = { cv, left, top, z };
-    this.map.set(key, c);
-    if (this.map.size > this.LIMIT) this.map.delete(this.map.keys().next().value);
+    this.map.set(key, c); this.px += cv.width * cv.height;
+    while (this.map.size > 1 && (this.map.size > this.LIMIT || this.px > CANVAS_BUDGET.ground)) { const k = this.map.keys().next().value, o = this.map.get(k); this.px -= o.cv.width * o.cv.height; freeCanvas(o.cv); this.map.delete(k); } // v1.50.8 예산 넘으면 오래된 것부터 바로 해제
     return c;
   },
   draw(tx0, ty0, tx1, ty1) {
@@ -504,22 +509,23 @@ function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
 // ---------------- 스프라이트 (js/assets.js 에 등록된 그림) ----------------
 // v1.49 축소 캐시: 큰 원본(1024px 아틀라스)을 매 프레임 작게 줄여 그리던 것이 가장 무거웠음 → 화면에 그려질 크기로 한 번 줄여 두고 재사용
 const Mip = {
-  map: new Map(), n: 0, zoom: 0,
+  map: new Map(), n: 0, zoom: 0, px: 0, tmp: null,
+  clear() { for (const c of this.map.values()) freeCanvas(c); this.map.clear(); this.px = 0; },
   draw(img, rx, ry, rw, rh, dx, dy, dw, dh) {
     const s = ZOOM * RES, tw = Math.max(1, Math.ceil(Math.abs(dw) * s / 4) * 4), th = Math.max(1, Math.ceil(Math.abs(dh) * s / 4) * 4);
     if (!Settings.mip || rw < tw * 1.5 || rh < th * 1.5) return ctx.drawImage(img, rx, ry, rw, rh, dx, dy, dw, dh); // 별로 안 줄이면 그대로
-    if (this.zoom !== s) { this.map.clear(); this.zoom = s; }
+    if (this.zoom !== s) { this.clear(); this.zoom = s; }
     if (img._mid === undefined) img._mid = ++this.n;
     const key = `${img._mid}|${rx}|${ry}|${rw}|${rh}|${tw}|${th}`;
     let c = this.map.get(key);
     if (!c) {
-      if (this.map.size > 2500) this.map.clear();
+      if (this.map.size > 2500 || this.px > CANVAS_BUDGET.mip) this.clear(); // v1.50.8 픽셀 예산
       c = document.createElement('canvas'); c.width = tw; c.height = th;
       const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
       // 두 단계로 줄여 계단·흐림을 줄임
-      if (rw > tw * 3) { const m = document.createElement('canvas'); m.width = tw * 2; m.height = th * 2; const mg = m.getContext('2d'); mg.imageSmoothingQuality = 'high'; mg.drawImage(img, rx, ry, rw, rh, 0, 0, tw * 2, th * 2); g.drawImage(m, 0, 0, tw, th); }
+      if (rw > tw * 3) { const m = this.tmp || (this.tmp = document.createElement('canvas')); if (m.width < tw * 2 || m.height < th * 2) { m.width = Math.max(m.width, tw * 2); m.height = Math.max(m.height, th * 2); } const mg = m.getContext('2d'); mg.clearRect(0, 0, tw * 2, th * 2); mg.imageSmoothingQuality = 'high'; mg.drawImage(img, rx, ry, rw, rh, 0, 0, tw * 2, th * 2); g.drawImage(m, 0, 0, tw * 2, th * 2, 0, 0, tw, th); } // v1.50.8 중간 캔버스 하나를 돌려 씀
       else g.drawImage(img, rx, ry, rw, rh, 0, 0, tw, th);
-      this.map.set(key, c);
+      this.map.set(key, c); this.px += tw * th;
     }
     ctx.drawImage(c, 0, 0, tw, th, dx, dy, dw, dh);
   },
@@ -530,7 +536,7 @@ const Sprites = {
   load() {
     for (const s of [...Object.values(ART.sprites), ...Object.values(ART.landmarks)]) {
       const im = new Image(); s.ready = false; Sprites.total++; // 다시 읽을 때 이전 상태가 남지 않게
-      im.onload = () => { s.ready = true; Sprites.done++; };
+      im.onload = () => { (im.decode ? im.decode().catch(() => {}) : Promise.resolve()).then(() => { s.ready = true; Sprites.done++; }); }; // v1.50.8 다 풀린 뒤에 씀 (폰에서 덜 풀린 그림이 비어 보이던 것)
       im.onerror = () => { Sprites.done++; console.warn('에셋을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file); };
       im.src = ART.dir + s.file; s.img = im;
     }
@@ -541,7 +547,7 @@ const Sprites = {
       let im = cache[s.file];
       if (!im) {
         im = cache[s.file] = new Image(); im.users = []; Sprites.total++;
-        im.onload = () => { Sprites.done++; im.users.forEach(u => { u.ready = true; }); if (typeof GroundCache !== 'undefined') GroundCache.map.clear(); }; // v1.25 바닥 질감이 늦게 읽혀도 다시 그림
+        im.onload = () => (im.decode ? im.decode().catch(() => {}) : Promise.resolve()).then(() => { Sprites.done++; im.users.forEach(u => { u.ready = true; }); if (typeof GroundCache !== 'undefined') GroundCache.clear(); }); // v1.25 바닥 질감이 늦게 읽혀도 다시 그림
         im.onerror = () => { Sprites.done++; console.warn('무기·헬멧 그림을 불러오지 못해 기본 그래픽을 사용합니다:', ART.dir + s.file); };
         im.src = ART.dir + s.file;
       }
@@ -577,10 +583,10 @@ const Sprites = {
     if (s.ol !== undefined) return s.ol;
     s.ol = null;
     try {
-      const W = s.img.width, H = s.img.height, c = document.createElement('canvas'); c.width = W; c.height = H;
-      const g = c.getContext('2d'), t = 5;
+      const k = IS_TOUCH ? 0.5 : 1, W = Math.ceil(s.img.width * k), H = Math.ceil(s.img.height * k), c = document.createElement('canvas'); c.width = W; c.height = H; s.olK = k; // v1.50.8 폰은 절반 크기
+      const g = c.getContext('2d'), t = 5 * k; g.scale(k, k);
       for (const [dx, dy] of [[t, 0], [-t, 0], [0, t], [0, -t], [t * 0.7, t * 0.7], [-t * 0.7, t * 0.7], [t * 0.7, -t * 0.7], [-t * 0.7, -t * 0.7]]) g.drawImage(s.img, dx, dy);
-      g.globalCompositeOperation = 'source-in'; g.fillStyle = '#c8281c'; g.fillRect(0, 0, W, H);
+      g.globalCompositeOperation = 'source-in'; g.fillStyle = '#c8281c'; g.fillRect(0, 0, W / k, H / k);
       g.globalCompositeOperation = 'destination-out'; g.drawImage(s.img, 0, 0);
       s.ol = c;
     } catch (e) { /* 그림을 못 읽으면 윤곽 없이 */ }
@@ -595,7 +601,7 @@ const Sprites = {
     ctx.save();
     ctx.translate(sx, sy + ART.feetPad * sc);
     if (d.x < 0) ctx.scale(-1, 1); // 그림은 오른쪽을 보는 기준, 왼쪽은 좌우 반전
-    if (ol && !flash) { const o = this.outline(s); if (o) { ctx.globalAlpha = ol; Mip.draw(o, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size); ctx.globalAlpha = 1; } } // v1.46 적 윤곽
+    if (ol && !flash) { const o = this.outline(s); if (o) { ctx.globalAlpha = ol; const ok = s.olK || 1; Mip.draw(o, f * cw * ok, row * s.cell * ok, cw * ok, s.cell * ok, -cw * sc / 2, -size, cw * sc, size); ctx.globalAlpha = 1; } } // v1.46 적 윤곽
     if (flash && 'filter' in ctx) ctx.filter = flash === 2 ? 'brightness(4) saturate(0.15)' : 'brightness(2.6)'; // v1.40 맞은 순간은 하얗게
     Mip.draw(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
     ctx.restore();

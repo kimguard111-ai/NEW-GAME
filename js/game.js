@@ -29,7 +29,7 @@ resize();
 function setZoom(z) {
   ZOOM = clamp(Math.round(z * 10) / 10, ZOOM_MIN, 2.2); // v1.21 최대 확대 1.8 → 2.2 (캐릭터가 작아진 만큼)
   try { localStorage.setItem('seoul2049-zoom', ZOOM); } catch (e) { /* 저장 불가 */ }
-  GroundCache.map.clear(); resize();
+  GroundCache.clear(); resize();
 }
 canvas.addEventListener('wheel', e => { e.preventDefault(); setZoom(ZOOM + (e.deltaY < 0 ? 0.1 : -0.1)); }, { passive: false });
 
@@ -1341,7 +1341,7 @@ const FpsWatch = {
     if (fps >= 24) return;
     this.done = true;
     try { if (localStorage.getItem('seoul2049-autolow')) return; localStorage.setItem('seoul2049-autolow', '1'); } catch (e) { /* 무시 */ }
-    Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.map.clear();
+    Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.clear();
     UI.toast('화면이 버벅여서 저사양 모드를 켰다', `초당 ${Math.round(fps)}프레임이라 그래픽을 낮췄다. 설정에서 조명·세부 묘사를 다시 켤 수 있다`);
   },
 };

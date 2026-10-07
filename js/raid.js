@@ -74,7 +74,7 @@ const Raid = {
     G.labBoss = null; G.labBossDone = false; // v1.5
     G.exits = []; Pop.cells = []; RaidEvents.list = []; RaidEvents.alert = 0; G.extractT = 0; G.zone = World.zoneIndex(); G.bossT = Math.min(G.bossT, 0);
     if (World.map === 'camp') setupCampNpcs(); else G.npcs = [];
-    GroundCache.map.clear(); Nav.dist = null; Nav.t = 0;
+    GroundCache.clear(); Nav.dist = null; Nav.t = 0;
   },
 
   // 매 프레임: 탈출 지점에 머물기
