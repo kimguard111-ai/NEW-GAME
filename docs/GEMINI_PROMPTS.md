@@ -884,16 +884,30 @@ Using the attached character as the exact reference (same hair, same body, same 
 
 | 총 | 아이콘 이름 | 몸 파일 (후드 · 조끼 …) | 총 설명 (21절 프롬프트의 총 부분을 이걸로) |
 |---|---|---|---|
-| 래피드 블래스터 | `blaster` | `player_blaster.png` · `player_vest_blaster.png` … | `holding a bulky black fully-automatic combat shotgun with a big round drum magazine underneath, a short thick barrel with a vented heat shield, held at the hip with both hands, the barrel pointing straight to the RIGHT` · 3번째 줄: `3 frames of rapid continuous shotgun fire with shaking recoil` |
+| 래피드 블래스터 | `blaster` | `player_blaster.png` · `player_vest_blaster.png` … | **24-2 프롬프트 따로** (이터널시티 Lqt/S2 느낌 · 📎 그 아이콘 그림을 같이 첨부) |
 | F-20 불펍 소총 | `f20` | `player_f20.png` · `player_vest_f20.png` … | `holding a compact futuristic bullpup assault rifle with a smooth rounded dark-olive polymer body, the magazine behind the grip, and a built-in optical scope on top, shouldered and aimed, the barrel pointing straight to the RIGHT` |
 | OX-20 복합소총 | `ox20` | `player_ox20.png` · `player_vest_ox20.png` … | `holding a large boxy futuristic combat rifle with a fat grenade-launcher barrel above the rifle barrel and a big electronic sight box on top, dark grey with orange markings, shouldered with both hands, the barrels pointing straight to the RIGHT` |
 
 ### 24-1 ★ · 아이콘 3개 · `illegal_icons.png` (22절처럼 한 장에 격자)
 ```
 Create ONE image with exactly 3 separate weapon icons arranged in a single row with wide empty space between them, on a plain solid magenta (#FF00FF) background, gritty hand-painted post-apocalyptic game item icon style, each weapon seen from the side pointing RIGHT, no text, no shadows on the background:
-1) a bulky black fully-automatic combat shotgun with a big round drum magazine and a vented heat shield
+1) a short, chunky, boxy futuristic automatic shotgun: a big blocky light-silver upper housing like a metal brick on top, a dark gunmetal lower body, a short thick square muzzle shroud at the front, a pistol grip with a box magazine just in front of it, a tiny red indicator light, no stock or only a stubby one
 2) a compact futuristic bullpup assault rifle with a smooth rounded dark-olive polymer body and a built-in optical scope
 3) a large boxy futuristic combat rifle with a fat grenade-launcher barrel above the rifle barrel, dark grey with orange markings
+```
+
+### 24-2 ★ · 래피드 블래스터 (이터널시티 Lqt/S2 느낌) — 아이콘 · 손에 든 몸
+📎 참고 그림(게임 속 아이콘 캡처)을 **같이 첨부** · 몸은 해당 방어구 빈손 몸 그림 + 콘셉트 아트도 첨부
+- 그대로 베끼지 말고 "느낌"만 (모양 특징: 짧고 뭉툭 · 위쪽 커다란 은색 사각 덩어리 · 아래 어두운 몸통 · 앞쪽 짧고 굵은 사각 총구 덮개)
+
+아이콘 (한 장만 따로 만들 때)
+```
+Using the attached weapon picture only as a loose style reference (do not copy it exactly), create ONE game item icon of a short, chunky, boxy futuristic automatic shotgun seen from the side, pointing RIGHT: a big blocky light-silver upper housing shaped like a metal brick sitting on top of the gun, a dark gunmetal lower body, a short thick square muzzle shroud at the front with small vent slots, a pistol grip with a box magazine just in front of it, a tiny red indicator light on the side, no stock or only a stubby one. Overall shape compact and heavy, about 2.5 times longer than tall. Gritty hand-painted post-apocalyptic game icon style, worn metal with scratches, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background, no shadow, no text, no border. Leave the bottom-right corner empty.
+```
+
+손에 든 몸 (`player_blaster.png` · 방어구 버전은 첨부 몸만 바꿔 같은 프롬프트 → `player_exo_blaster.png` …)
+```
+Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), and the attached weapon picture only as a loose reference for the gun's shape, create ONE sprite sheet image of him now holding a short, chunky, boxy futuristic automatic shotgun: a big blocky light-silver upper housing on top, a dark gunmetal lower body, a short thick square muzzle shroud, a pistol grip with a box magazine in front of it. He holds it with both hands at hip-to-chest height, the right hand on the pistol grip, the left hand under the front of the gun, the short muzzle pointing straight to the RIGHT and level with the ground. The gun stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while holding the gun forward; row 2: 6 frames of a walk cycle while keeping the gun forward; row 3: 3 frames of rapid automatic firing with a shaking recoil, no muzzle flash, no bullets, no shells in the air; row 4: 2 frames of getting hit and flinching backward while still holding the gun; row 5: 5 frames of a death animation, dropping the gun, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
 ```
 
 ---
