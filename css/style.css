@@ -528,3 +528,4 @@ body.touch #loot-feed { right: 70px; bottom: 110px; }
 #slot-row .slot { flex: 1; padding: 6px 4px; font-size: 12px; line-height: 1.35; text-align: center; opacity: .75; }
 #slot-row .slot.on { opacity: 1; border-color: #e0b23a; box-shadow: 0 0 0 1px #e0b23a inset; }
 #settings-body { max-height: 72vh; overflow-y: auto; padding-right: 4px; } /* v1.37 설정이 길어져 스크롤 */
+.credit-line { color: #6d6d6d; font-size: 11px; margin: -12px 0 14px; letter-spacing: 0.5px; } /* v1.51 제작 표기 */

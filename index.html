@@ -6,8 +6,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>SEOUL 2049 : 폐허의 도시</title>
-<link rel="stylesheet" href="css/style.css?v=1.50.10">
-<link rel="stylesheet" href="css/theme.css?v=1.50.10"> <!-- v1.38 UI 다시 입히기 -->
+<link rel="stylesheet" href="css/style.css?v=1.51">
+<link rel="stylesheet" href="css/theme.css?v=1.51"> <!-- v1.38 UI 다시 입히기 -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/app/icon192.png">
 <meta name="theme-color" content="#0b0c0e">
@@ -24,6 +24,7 @@
     <h1 class="logo">서울<span>2049</span><small>SEOUL · 붕괴 후 20년</small></h1>
     <h2>시청역 지하에 남은 마지막 캠프. 오늘도 누군가는 지상으로 나간다.</h2>
     <div id="version-label"></div>
+    <div class="credit-line">제작 GuardK111 · 프로그래밍 Claude Code</div>
     <div class="roster">
       <div id="slot-row"></div>
       <input id="name-input" maxlength="10" placeholder="새 이름을 여기에…" value="">
@@ -81,7 +82,7 @@
     <p class="lore">변이 군주 바벨이 쓰러지고, 잠실의 탑에서 20년 동안 울리던 신호가 멎었다.<br>
     블랙선은 흩어졌고, 시청역 캠프의 사람들은 처음으로 지상에서 아침을 맞이했다.</p>
     <div id="ending-stats"></div>
-    <p class="muted">기획·아트 디렉션: 개발자 · 프로그래밍: Claude Code<br>서울은 아직 끝나지 않았다. 어설트, 일일 의뢰, 다시 깨어나는 타이탄, 지하 연구소의 키메라.</p>
+    <p class="muted">제작 · 기획 · 아트 디렉션: GuardK111 · 프로그래밍: Claude Code<br>서울은 아직 끝나지 않았다. 어설트, 일일 의뢰, 다시 깨어나는 타이탄, 지하 연구소의 키메라.</p>
     <button id="btn-ending-continue">계속 플레이</button>
   </div>
 </div>
@@ -203,43 +204,43 @@
   <div id="dialog-buttons"></div>
 </div>
 
-<script src="js/util.js?v=1.50.10"></script>
-<script src="js/icons.js?v=1.50.10"></script>
-<script src="js/settings.js?v=1.50.10"></script>
-<script src="js/sfx.js?v=1.50.10"></script>
-<script src="js/data.js?v=1.50.10"></script>
-<script src="js/world.js?v=1.50.10"></script>
-<script src="js/city.js?v=1.50.10"></script>
-<script src="js/entities.js?v=1.50.10"></script>
-  <script src="js/attach.js?v=1.50.10"></script>
-<script src="js/quests.js?v=1.50.10"></script>
-<script src="js/monsters.js?v=1.50.10"></script>
-<script src="js/assault.js?v=1.50.10"></script>
-<script src="js/raid.js?v=1.50.10"></script>
-<script src="js/scavenge.js?v=1.50.10"></script>
-<script src="js/events.js?v=1.50.10"></script>
-<script src="js/contracts.js?v=1.50.10"></script>
-<script src="js/companion.js?v=1.50.10"></script>
-<script src="js/settlement.js?v=1.50.10"></script>
-<script src="js/camp.js?v=1.50.10"></script>
-<script src="js/gadgets.js?v=1.50.10"></script>
-<script src="js/journal.js?v=1.50.10"></script>
-<script src="js/pop.js?v=1.50.10"></script>
-<script src="js/music.js?v=1.50.10"></script>
-<script src="js/ambience.js?v=1.50.10"></script>
-<script src="js/bosses.js?v=1.50.10"></script>
-<script src="js/assets.js?v=1.50.10"></script>
-<script src="js/render.js?v=1.50.10"></script>
-<script src="js/ui.js?v=1.50.10"></script>
-<script src="js/workshop.js?v=1.50.10"></script>
-<script src="js/interiors.js?v=1.50.10"></script>
-<script src="js/endgame.js?v=1.50.10"></script>
-<script src="js/tips.js?v=1.50.10"></script>
-<script src="js/firstrun.js?v=1.50.10"></script>
-<script src="js/touch.js?v=1.50.10"></script>
-<script src="js/title.js?v=1.50.10"></script>
-<script src="js/turrets.js?v=1.50.10"></script>
-<script src="js/juice.js?v=1.50.10"></script>
-<script src="js/game.js?v=1.50.10"></script>
+<script src="js/util.js?v=1.51"></script>
+<script src="js/icons.js?v=1.51"></script>
+<script src="js/settings.js?v=1.51"></script>
+<script src="js/sfx.js?v=1.51"></script>
+<script src="js/data.js?v=1.51"></script>
+<script src="js/world.js?v=1.51"></script>
+<script src="js/city.js?v=1.51"></script>
+<script src="js/entities.js?v=1.51"></script>
+  <script src="js/attach.js?v=1.51"></script>
+<script src="js/quests.js?v=1.51"></script>
+<script src="js/monsters.js?v=1.51"></script>
+<script src="js/assault.js?v=1.51"></script>
+<script src="js/raid.js?v=1.51"></script>
+<script src="js/scavenge.js?v=1.51"></script>
+<script src="js/events.js?v=1.51"></script>
+<script src="js/contracts.js?v=1.51"></script>
+<script src="js/companion.js?v=1.51"></script>
+<script src="js/settlement.js?v=1.51"></script>
+<script src="js/camp.js?v=1.51"></script>
+<script src="js/gadgets.js?v=1.51"></script>
+<script src="js/journal.js?v=1.51"></script>
+<script src="js/pop.js?v=1.51"></script>
+<script src="js/music.js?v=1.51"></script>
+<script src="js/ambience.js?v=1.51"></script>
+<script src="js/bosses.js?v=1.51"></script>
+<script src="js/assets.js?v=1.51"></script>
+<script src="js/render.js?v=1.51"></script>
+<script src="js/ui.js?v=1.51"></script>
+<script src="js/workshop.js?v=1.51"></script>
+<script src="js/interiors.js?v=1.51"></script>
+<script src="js/endgame.js?v=1.51"></script>
+<script src="js/tips.js?v=1.51"></script>
+<script src="js/firstrun.js?v=1.51"></script>
+<script src="js/touch.js?v=1.51"></script>
+<script src="js/title.js?v=1.51"></script>
+<script src="js/turrets.js?v=1.51"></script>
+<script src="js/juice.js?v=1.51"></script>
+<script src="js/game.js?v=1.51"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.50.10';
+const GAME_VERSION = 'v1.51';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -30,21 +30,21 @@ const AMMO = {
 const WEAPONS = {
   pipe:    { name: '쇠파이프',      icon: 'pipe', melee: true, dmg: 25, rate: 0.55, /* v1.8.1 공속↓·피해↑ (DPS 유지) 0.40/18 */ range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
              role: '3타째 강타로 크게 경직 · 탄약 불필요' },
-  pistol:  { ammo: 'pistol', name: 'M1911 권총',    icon: 'pistol', dmg: 18, rate: 0.42, /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
+  pistol:  { ammo: 'pistol', name: 'P-45 권총',    icon: 'pistol', dmg: 18, rate: 0.42, /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
              quickDraw: true, lvl: 1, price: 80, role: '권총탄이 흔하고 쌈 · 즉시 꺼내 듦 · 언제나 믿을 수 있는 보조무기' },
   axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 55, rate: 1.0, /* v1.8.1 0.8/44 */ range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
              role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄' },
-  smg:     { ammo: 'auto', name: 'MP5 기관단총',  icon: 'smg', dmg: 12, rate: 0.13, /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
+  smg:     { ammo: 'auto', name: 'SP-9 기관단총',  icon: 'smg', dmg: 12, rate: 0.13, /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
-  shotgun: { ammo: 'shell', name: 'M870 산탄총',   icon: 'shotgun', dmg: 10, pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
+  shotgun: { ammo: 'shell', name: 'R-12 산탄총',   icon: 'shotgun', dmg: 10, pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
              lvl: 5, price: 380, role: '근거리 폭발력 · 코앞에서 쏘면 크게 날려버림' },
-  rifle:   { ammo: 'auto', name: 'K2 돌격소총',   icon: 'rifle', dmg: 22, rate: 0.18, /* v1.50.7 0.14 → 0.18 (×1.2) · v1.40.2 17/0.11 (초당 피해 유지) */ mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
+  rifle:   { ammo: 'auto', name: 'KR-49 돌격소총',   icon: 'rifle', dmg: 22, rate: 0.18, /* v1.50.7 0.14 → 0.18 (×1.2) · v1.40.2 17/0.11 (초당 피해 유지) */ mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
              lvl: 8, price: 620, role: '안정적인 중거리 화력 · 끊어 쏘면 첫 발이 정확' },
   katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 62, rate: 0.5, /* v1.8.1 0.38/60 · v1.27 79 → 62 (Lv16 기관총보다 훨씬 강하던 것) */ range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
              role: '긴 칼날 · 3타째 돌진 찌르기 · 가장 빠른 이동' },
-  sniper:  { ammo: 'sniper', name: 'K14 저격소총',  icon: 'sniper', dmg: 140, rate: 1.2, /* v1.27 120 (Lv8 소총보다 약하던 것) */ mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
+  sniper:  { ammo: 'sniper', name: 'SR-49 저격소총',  icon: 'sniper', dmg: 140, rate: 1.2, /* v1.27 120 (Lv8 소총보다 약하던 것) */ mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
              lvl: 12, price: 1100, role: '장거리 일격 · 관통 · 치명타 x2.6' },
-  lmg:     { ammo: 'auto', name: 'K3 기관총',     icon: 'lmg', dmg: 15, rate: 0.1, /* v1.50.7 0.07 → 0.1 (×1.28) */ mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
+  lmg:     { ammo: 'auto', name: 'LM-49 기관총',     icon: 'lmg', dmg: 15, rate: 0.1, /* v1.50.7 0.07 → 0.1 (×1.28) */ mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
              lvl: 16, price: 1800, role: '압도적 지속 화력 · 쏠수록 빨라지고 정확해짐 · 무거움' },
 };
 
@@ -250,12 +250,12 @@ const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'j
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상
 const LANDMARKS = [
-  { id: 'cathedral', name: '무너진 명동성당', zone: 1, tx: 80, ty: 55, size: 7, base: 4, exp: 80, credits: 200 },
+  { id: 'cathedral', name: '무너진 언덕 성당', zone: 1, tx: 80, ty: 55, size: 7, base: 4, exp: 80, credits: 200 },
   { id: 'bosingak', name: '보신각', zone: 2, tx: 38, ty: 86, size: 6, base: 4, exp: 600, credits: 600 },
   { id: 'base', name: '버려진 용산 기지', zone: 3, tx: 98, ty: 92, size: 8, base: 5, exp: 2500, credits: 1500 },
-  { id: 'tower63', name: '63빌딩 잔해', zone: 4, tx: 5, ty: 23, size: 7, base: 4, exp: 6000, credits: 3000 },
-  { id: 'coex', name: '무너진 코엑스', zone: 6, tx: 0, ty: 0, size: 8, base: 5, exp: 9000, credits: 4000 },
-  { id: 'lotte', name: '롯데월드타워 잔해', zone: 7, tx: 0, ty: 0, size: 7, base: 4, exp: 14000, credits: 6000 },
+  { id: 'tower63', name: '금빛타워 잔해', zone: 4, tx: 5, ty: 23, size: 7, base: 4, exp: 6000, credits: 3000 },
+  { id: 'coex', name: '무너진 무역센터', zone: 6, tx: 0, ty: 0, size: 8, base: 5, exp: 9000, credits: 4000 },
+  { id: 'lotte', name: '스카이타워 잔해', zone: 7, tx: 0, ty: 0, size: 7, base: 4, exp: 14000, credits: 6000 },
 ];
 
 const SKILLS = [

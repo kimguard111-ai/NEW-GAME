@@ -72,7 +72,7 @@ const Scavenge = {
     if (Math.random() < C.ammo) drop('ammo', { amount: randInt(15, 40) });
     if (Math.random() < C.med) drop('item', { item: makeConsumable('medkit', 1) });
     if (Math.random() < C.gear * ECON.gear * (perk('treasure') ? 1.25 : 1)) drop('item', { item: randomGear(lvl, (C.bonus || 0.3) + 0.3, 0, z.gear) });
-    if (Math.random() < (c.type === 'locker' ? 0.08 : c.type === 'labcase' ? 0.06 : 0.03)) drop('item', { item: randomAttach(lvl) }); // v1.50 부품
+    if (Math.random() < (c.type === 'locker' ? 0.03 : c.type === 'labcase' ? 0.025 : 0.01)) drop('item', { item: randomAttach(lvl) }); // v1.50 부품 · v1.51 낮춤 (사물함 8→3% · 연구 상자 6→2.5% · 그 외 3→1%)
     if (Math.random() < (c.type === 'locker' ? 0.06 : c.type === 'bag' ? 0.05 : 0.02)) { // v1.24 벨트: 지역이 깊을수록 좋은 벨트
       const r = Math.random(), t = lvl >= 18 && r < 0.15 ? 3 : lvl >= 10 && r < 0.45 ? 2 : 1;
       drop('item', { item: makeBelt(t, lvl) });

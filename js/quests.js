@@ -13,12 +13,12 @@ const ELITES = {
 
 const CHAPTERS = [
   { title: '제1장 · 첫 발걸음', minLevel: 1,
-    intro: '명동은 캠프에서 가장 가까운 폐허지. 먼저 감염자를 정리하고, 명동성당 쪽에서 끊긴 정찰조 신호를 확인해 주게.',
+    intro: '명동은 캠프에서 가장 가까운 폐허지. 먼저 감염자를 정리하고, 언덕 위 성당에서 끊긴 정찰조 신호를 확인해 주게.',
     outro: '먹보를 쓰러뜨렸다고? 명동이 숨을 돌리겠군. 다음은 종로야. 준비되면 캠프로 오게.',
     steps: [
       { type: 'kill', target: 'zombie', count: 8, text: '캠프 밖 명동 잔해의 감염자를 정리하라.',
         reward: { exp: 90, credits: 150, items: [['medkit', 2]], equip: 'vest' } },
-      { type: 'reach', landmark: 'cathedral', text: '정찰조의 마지막 신호가 잡힌 명동성당으로 가라.',
+      { type: 'reach', landmark: 'cathedral', text: '정찰조의 마지막 신호가 잡힌 언덕 위 성당으로 가라.',
         reward: { exp: 150, credits: 150, equip: 'smg' } }, // v1.30 정찰조가 남긴 기관단총 — 권총만으로 버티는 초반을 짧게
       { type: 'hunt', elite: 'glutton', text: '성당에 둥지를 튼 거대 감염체 「먹보」를 처치하라.',
         reward: { exp: 400, credits: 400, gear: 1 } },
@@ -53,7 +53,7 @@ const CHAPTERS = [
     intro: '여의도는 방사능 웅덩이투성이야. 방독면 헬멧 없이는 오래 못 버티니 꼭 챙기게. 그리고... 타이탄을 끝내 주게.',
     outro: '해냈군. 타이탄이 쓰러졌어. 그런데 여의도 지하에서 연구소 입구가 나왔고, 거기 기록에 강남의 「블랙선」이라는 이름이 있었네. 아직 끝이 아니야.',
     steps: [
-      { type: 'reach', landmark: 'tower63', text: '여의도의 63빌딩 잔해로 가라. (방독면 헬멧 권장)',
+      { type: 'reach', landmark: 'tower63', text: '여의도의 금빛타워 잔해로 가라. (방독면 헬멧 권장)',
         reward: { exp: 5000, credits: 2000 } },
       { type: 'collect', from: 'brute', zone: 4, item: '방사능 시료', count: 5, chance: 0.5, text: '여의도의 변이 거한에게서 방사능 시료를 채취하라.',
         reward: { exp: 8000, credits: 3000 } },
@@ -63,13 +63,13 @@ const CHAPTERS = [
   // v1.6 강남 · 잠실
   { title: '제5장 · 강남의 그림자', minLevel: 20,
     intro: '연구소 기록에 나온 민간 군사 회사 「블랙선」이 강남을 틀어쥐고 있네. 놈들이 실험체를 실어 나르고 있었어. 방패병은 정면으로 상대하지 말고 뒤로 돌거나 수류탄을 쓰게.',
-    outro: '레이븐의 단말기에 잠실 좌표가 찍혀 있었네. 롯데타워 꼭대기에서 신호가 나와. 모든 변이의 근원이 거기 있어.',
+    outro: '레이븐의 단말기에 잠실 좌표가 찍혀 있었네. 스카이타워 꼭대기에서 신호가 나와. 모든 변이의 근원이 거기 있어.',
     steps: [
       { type: 'kill', target: 'merc', count: 12, text: '강남 업무지구의 블랙선 용병을 처치하라.',
         reward: { exp: 9000, credits: 4000, items: [['medkit', 3]] } },
       { type: 'collect', from: 'merc', item: '블랙선 반출 기록', count: 6, chance: 0.4, text: '용병에게서 실험체 반출 기록을 회수하라.',
         reward: { exp: 12000, credits: 5000 } },
-      { type: 'reach', landmark: 'coex', text: '블랙선 본부가 있는 무너진 코엑스로 가라.',
+      { type: 'reach', landmark: 'coex', text: '블랙선 본부가 있는 무너진 무역센터로 가라.',
         reward: { exp: 8000, credits: 3000 } },
       { type: 'hunt', elite: 'raven', text: '블랙선 용병대장 「레이븐」을 처치하라.',
         reward: { exp: 25000, credits: 12000, gear: 3 } },
@@ -82,7 +82,7 @@ const CHAPTERS = [
         reward: { exp: 15000, credits: 6000 } },
       { type: 'collect', from: 'brute', zone: 7, item: '변이 핵', count: 6, chance: 0.45, text: '잠실의 변이 거한에게서 변이 핵을 채취하라.',
         reward: { exp: 20000, credits: 8000 } },
-      { type: 'reach', landmark: 'lotte', text: '신호가 나오는 롯데월드타워 잔해로 가라.',
+      { type: 'reach', landmark: 'lotte', text: '신호가 나오는 스카이타워 잔해로 가라.',
         reward: { exp: 12000, credits: 5000 } },
       { type: 'hunt', elite: 'babel', text: '모든 변이의 근원, 변이 군주 「바벨」을 처치하라.',
         reward: { exp: 40000, credits: 20000, gear: 4 } },

@@ -8,14 +8,19 @@ const { chromium } = require(process.env.PLAYWRIGHT || 'playwright');
 const MIN = +process.argv[2] || 60, DODGE = process.argv[3] !== undefined ? +process.argv[3] : 0.5;
 const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나리오: 이 레벨·상점 장비로 시작해서 한 맵만 반복 (이야기 끝난 상태)
 (async () => {
-  const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1280, height: 720 } });
+  const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1280, height: 720 } }); pg.setDefaultTimeout(300000); // v1.51 그림을 다 받을 때까지 시작 버튼이 막혀 있음
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
   await pg.goto('file://' + require('path').resolve(__dirname, '../index.html')); await pg.evaluate(() => localStorage.clear()); await pg.reload();
   await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
-  await pg.evaluate(([DODGE, START, FIXMAP, FULL, COMP]) => {
+  await pg.evaluate(([DODGE, START, FIXMAP, FULL, COMP, AS]) => {
     Settings.tips = false;
     const p = G.player;
     window.B = { raids: [], lvlT: { 1: 0 }, field: null, fieldKey: '', cur: null, seen: new WeakSet(), dodges: 0, dodgeTry: 0, enh: 0, bought: 0 };
+    // v1.51 ASSAULT=<랜드마크 id>: 출격할 때마다 그 어설트를 한 번 하고 탈출 (결과는 B.as)
+    B.as = [];
+    if (AS) { const oc = Assault.clear.bind(Assault), oe = Assault.end.bind(Assault);
+      Assault.clear = () => { const s = G.assault; B.as.push({ ok: true, t: Math.round(s.t), rank: Assault.rank(Math.round(s.t), ASSAULTS[s.id], s.tier), minHp: Math.round(B.asMin * 100), lv: p.level }); oc(); };
+      Assault.end = (ok, why) => { const s = G.assault; if (s && !ok) B.as.push({ ok: false, why, t: Math.round(s.t), wave: s.wave, minHp: Math.round(B.asMin * 100), lv: p.level }); oe(ok, why); }; }
     // 목표 칸까지 거리 지도 (BFS)
     B.makeField = (x, y) => {
       const W = World.W, H = World.H, d = new Int32Array(W * H).fill(-1), q = new Int32Array(W * H);
@@ -81,7 +86,10 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       if (World.map === 'camp') { if (B.cur) B.endRaid(true); return B.deploy(); }
       const c = B.cur, mh = PlayerStats.maxHp(p);
       const med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
-      const leave = G.time - c.t0 > c.plan || p.inventory.length >= 22 || (med === 0 && p.hp < mh * 0.5);
+      let leave = G.time - c.t0 > c.plan || p.inventory.length >= 22 || (med === 0 && p.hp < mh * 0.5);
+      if (AS) leave = !G.assault && c.asDone; // v1.51 어설트 측정: 어설트 끝나면 바로 탈출
+      if (G.assault) B.asMin = Math.min(B.asMin, p.hp / mh);
+      if (G.assault && p.hp < mh * 0.45 && med > 0 && !(p.medT > 0)) quickMedkit();
       // 적 고르기 (가까운 것, 시야 우선)
       let best = null, bd = 1e9;
       for (const e of G.enemies) { if (e.hp <= 0) continue; const d = dist(e, p) + (World.lineOfSight(p, e) ? 0 : 400); if (d < bd) { bd = d; best = e; } }
@@ -97,8 +105,9 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       // 이동 목표: 탈출 / 이야기(도착·네임드) / 전투 / 줍기 / 배회
       const st = Story.step(p), tg = Story.target(p);
       let goal = null;
+      if (AS && !G.assault && !c.asDone) { const l = World.landmarks.find(x => x.id === AS); if (l) { if (dist(p, l) < l.size * TILE / 2 + 80) { if (!p.found.includes(AS)) p.found.push(AS); B.asMin = 1; Assault.start(l); c.asDone = true; } else goal = ['as', l.x, l.y]; } }
       if (leave) { const ex = G.exits.filter(q => !q.locked).sort((a, b2) => dist(a, p) - dist(b2, p))[0]; goal = ['ex', ex.x, ex.y]; }
-      else if (tg && st && (st.type === 'reach' || st.type === 'hunt' || (st.type === 'kill' && st.target === 'boss')) && !(st.type === 'hunt' && G.elite && dist(G.elite, p) < 500) && !(st.target === 'boss' && G.boss && dist(G.boss, p) < 500)) goal = ['st' + st.type, tg.x, tg.y];
+      else if (!goal && !G.assault && tg && st && (st.type === 'reach' || st.type === 'hunt' || (st.type === 'kill' && st.target === 'boss')) && !(st.type === 'hunt' && G.elite && dist(G.elite, p) < 500) && !(st.target === 'boss' && G.boss && dist(G.boss, p) < 500)) goal = ['st' + st.type, tg.x, tg.y];
       // 목표(탈출·이야기)가 있으면 이동은 목표 쪽, 사격은 따로 (사람처럼 쏘면서 이동). 바로 붙은 적만 상대
       if (goal && !(best && bd < 140)) {
         if (best && bd < 600) { input.mx = Iso.sx(best.x, best.y); input.my = Iso.sy(best.x, best.y, 20); input.down = World.lineOfSight(p, best) && bd < range + best.r; } else input.down = false;
@@ -177,7 +186,8 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
         for (const s of SKILLS) { p.srank[s.id] = SKILL_RANKS; p.smodOwned[s.id + '_a'] = true; p.skillMods[s.id] = 'a'; for (const k of ['r1', 'r2', 'cap']) p.stree[s.id + '_' + k] = true; }
         PERK_TIERS.forEach((t, i) => { if (START >= t.lvl) p.perks[i] = t.perks.find(k => PERK_BRANCH[k.id] === 'atk').id; });
         for (const b of Object.keys(PASSIVES)) for (const n of PASSIVES[b]) if (START >= n.lvl) p.passive[n.id] = true;
-        p.hotbar = SKILLS.map((s, i) => 'sk' + i).concat(['med', 'throw', 'util']); p.equip.belt = makeBelt(3, 20);
+        p.skillbar = [0, 1, 2, 3].map(i => 'sk' + i); // v1.51 벨트는 소모품만 (v1.50)
+        p.equip.belt = makeBelt(3, 20);
       }
       p.credits = 5000; UI.closeAll();
     }
@@ -185,7 +195,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     if (FIXMAP) B.mapFor = () => FIXMAP;
     if (COMP) { p.compHired = [COMP]; p.comp = COMP; } // v1.46 동료와 함께 (COMP=assault|sniper|medic)
     B.deploy();
-  }, [DODGE, START, FIXMAP, !!process.env.FULL, process.env.COMP || '']);
+  }, [DODGE, START, FIXMAP, !!process.env.FULL, process.env.COMP || '', process.env.ASSAULT || '']);
   let shown = 0;
   for (let m = 0; m < MIN; m += 10) {
     const r = await pg.evaluate(() => { for (let i = 0; i < 30 * 600; i++) B.tick(); input.down = false; return { raids: B.raids, p: { lv: G.player.level, ch: G.player.quest.ch + '-' + G.player.quest.step, cr: G.player.credits, map: World.map } }; });
@@ -201,6 +211,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   const R = await pg.evaluate(() => B.raids);
   const by = {}; for (const x of R) { const o = by[x.map] = by[x.map] || { n: 0, die: 0, min: 0, kills: 0 }; o.n++; if (!x.ok) o.die++; o.min += +x.min; o.kills += x.kills; }
   for (const k in by) { const o = by[k]; console.log(`${k.padEnd(10)} 출격 ${o.n} · 사망률 ${Math.round(100 * o.die / o.n)}% · 평균 ${(o.min / o.n).toFixed(1)}분 · 분당 처치 ${(o.kills / o.min).toFixed(1)}`); }
+  for (const a of await pg.evaluate(() => B.as)) console.log('어설트', JSON.stringify(a));
   console.log(errs.length ? 'ERRORS:\n' + [...new Set(errs)].slice(0, 8).join('\n') : 'NO ERRORS');
   await b.close();
 })();

@@ -8,7 +8,7 @@ const EVENT_DEFS = {
   survivor: { name: '부상당한 생존자', lab: true },
   safe:     { name: '잠긴 금고',     lab: true },
   nest:     { name: '변이 둥지',     lab: true },
-  trader:   { name: '떠돌이 상인',   lab: false },
+  trader:   { name: '떠돌이 상인',   lab: false, off: true }, // v1.51 삭제 (예전 세이브의 무전실 계획에 남은 것도 무시)
 };
 // 경보: 출격 시간(초) → 단계. 단계마다 적 밀도·출현 속도·엘리트 확률 상승, 3단계는 추적대
 const ALERT_AT = [240, 420, 600];

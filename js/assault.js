@@ -12,15 +12,15 @@ const ASSAULTS = {
   base: { name: '용산 기지 재점령', level: 14, minLevel: 12, par: 75, limit: 270,
     waves: [{ drone: 3, raider: 3, dog: 2 }, { brute: 2, drone: 4, dog: 2 }, { drone: 3, raider: 3, brute: 2, elites: 2 }],
     boss: { name: '방어 시스템 「케르베로스」', art: 'cerberus', base: 'drone', hpMul: 16, dmgMul: 1.2, scale: 1.8, fireMul: 0.35, patterns: ['argos', 'panther'] } },
-  tower63: { name: '63빌딩 정화 작전', level: 19, minLevel: 16, par: 85, limit: 300,
+  tower63: { name: '금빛타워 정화 작전', level: 19, minLevel: 16, par: 85, limit: 300,
     waves: [{ zombie: 8, brute: 2 }, { drone: 4, raider: 3, zombie: 4 }, { brute: 3, drone: 3, zombie: 4, elites: 3 }],
     boss: { name: '방사능 변이체 「군체」', art: 'colony', base: 'brute', hpMul: 9, dmgMul: 1.3, scale: 1.6, patterns: ['glutton', 'argos'], affix: 'commander' } },
 };
 // v1.6 강남 · 잠실
-ASSAULTS.coex = { name: '코엑스 탈환전', level: 24, minLevel: 21, par: 85, limit: 300,
+ASSAULTS.coex = { name: '무역센터 탈환전', level: 24, minLevel: 21, par: 85, limit: 300,
   waves: [{ merc: 4, shield: 2 }, { merc: 4, drone: 3, shield: 2 }, { merc: 4, shield: 3, drone: 2, elites: 2 }],
   boss: { name: '블랙선 중화기병 「모루」', art: 'anvil', base: 'shield', hpMul: 10, dmgMul: 1.3, scale: 1.4, patterns: ['quake', 'dash', 'fan'] } };
-ASSAULTS.lotte = { name: '롯데타워 정화 작전', level: 29, minLevel: 26, par: 90, limit: 300,
+ASSAULTS.lotte = { name: '스카이타워 정화 작전', level: 29, minLevel: 26, par: 90, limit: 300,
   waves: [{ stalker: 4, zombie: 6 }, { stalker: 4, brute: 2, spitter: 3 }, { stalker: 5, brute: 3, zombie: 4, elites: 3 }],
   boss: { name: '포식 변이체 「여왕」', art: 'queen', base: 'brute', hpMul: 10, dmgMul: 1.35, scale: 1.7, patterns: ['glutton', 'brood', 'quake'] } };
 const ASSAULT_R = 13 * TILE; // 봉쇄 구역 반지름

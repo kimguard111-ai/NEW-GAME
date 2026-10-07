@@ -106,13 +106,16 @@ function saveGame(silent = true) {
   } catch (e) { if (!G.saveWarned) { G.saveWarned = true; log('저장하지 못했다. 브라우저 저장 공간이 꽉 찼거나 막혀 있다. 설정 → 세이브 코드 만들기로 따로 보관해 두자.', '#f88'); } }
 }
 function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(str) : str; return !!(s && s.p && s.p.name !== undefined && Array.isArray(s.p.inventory) && s.p.equip && s.p.stats); } catch (e) { return false; } }
+// v1.51 실제 총 이름 → 가상 이름 (예전 세이브의 장비 이름도 바꿈)
+const LEGACY_NAMES = [['M1911 권총', 'P-45 권총'], ['MP5 기관단총', 'SP-9 기관단총'], ['M870 산탄총', 'R-12 산탄총'], ['K2 돌격소총', 'KR-49 돌격소총'], ['K14 저격소총', 'SR-49 저격소총'], ['K3 기관총', 'LM-49 기관총']];
+function renameLegacy(str) { for (const [a, b] of LEGACY_NAMES) str = str.split(a).join(b); return str; }
 function loadSave(n = SAVE_SLOT) {
   try {
     const s = localStorage.getItem(slotKey(n));
     if (!s) return null;
-    if (validSave(s)) return JSON.parse(s);
+    if (validSave(s)) return JSON.parse(renameLegacy(s));
     const b = localStorage.getItem(slotKey(n) + '-bak'); // v1.49 깨진 저장 → 백업으로
-    if (b && validSave(b)) { const v = JSON.parse(b); v.fromBak = true; return v; }
+    if (b && validSave(b)) { const v = JSON.parse(renameLegacy(b)); v.fromBak = true; return v; }
     return null;
   } catch (e) { return null; }
 }
@@ -787,7 +790,7 @@ function killEnemy(e) {
     if (Math.random() < 0.5) dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) }); // v1.25 확정 → 50%
     dropAt('credits', { amount: e.level * 40 });
     rollUnique(e.elite, e.level, dropAt); // v1.12 레이븐 · 바벨
-    if (Math.random() < 0.3) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품
+    if (Math.random() < 0.15) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 · v1.51 30% → 15%
     hitstop(0.12); G.shake = Math.max(G.shake, 10);
   }
   if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
@@ -798,7 +801,7 @@ function killEnemy(e) {
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.34) dropAt('ammo', { amount: randInt(15, 35) }); // v1.33 0.28 → 0.34 (탄약이 4종으로 나뉘어 권총도 탄이 필요)
   if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
-  if (Math.random() < (e.affix ? 0.06 : e.type === 'brute' ? 0.02 : 0.006)) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 (엘리트 6% · 거구 2% · 보통 0.6%)
+  if (Math.random() < (e.affix ? 0.025 : e.type === 'brute' ? 0.008 : 0.002)) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 · v1.51 낮춤 (엘리트 6→2.5% · 거구 2→0.8% · 보통 0.6→0.2%)
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
   const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
