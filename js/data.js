@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.52';
+const GAME_VERSION = 'v1.52.1';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -46,14 +46,15 @@ const WEAPONS = {
              lvl: 12, price: 1100, role: '장거리 일격 · 관통 · 치명타 x2.6' },
   lmg:     { ammo: 'auto', name: 'LM-49 기관총',     icon: 'lmg', dmg: 15, rate: 0.1, /* v1.50.7 0.07 → 0.1 (×1.28) */ mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
              lvl: 16, price: 1800, role: '압도적 지속 화력 · 쏠수록 빨라지고 정확해짐 · 무거움' },
-  // v1.52 불법 무기 (고유 총): 상자·적에게서 나오지 않고 암시장 박씨에게서만 (크레딧 + 전자 부품) · base = 소리·손맛·그림을 빌려 오는 총
+  // v1.52 신화 무기 (특별 총 3종): 지금은 얻을 방법 없음 (v1.52.1 박씨 판매 뺌 · 얻는 법·등급은 정하는 중) · 상자·적·상점에서도 안 나옴
+  // base = 소리·손맛·부품을 빌려 오는 총 · 고유 아이콘과 손에 든 그림을 만들 예정
   // 손에 든 고유 그림은 player[_방어구]_<키> 가 있으면 그걸 씀 (없으면 같은 계열 그림)
-  blaster: { ammo: 'shell', base: 'shotgun', illegal: { credits: 6000, chip: 8 }, name: '래피드 블래스터', icon: 'shotgun', dmg: 7, pellets: 6, rate: 0.25, mag: 20, reload: 3.2, spread: 0.34, speed: 800, range: 230, falloff: true, knock: 5, stagger: 0.12, move: 0.95,
-             lvl: 12, price: 2400, role: '연사 산탄총 · 드럼 탄창 20발 · 근거리를 갈아버림, 멀리선 약함' },
-  f20:     { ammo: 'auto', base: 'rifle', illegal: { credits: 9000, chip: 12 }, name: 'F-20 불펍 소총', icon: 'rifle', dmg: 19, rate: 0.12, mag: 40, reload: 2.1, spread: 0.035, speed: 1150, range: 680, knock: 3, stagger: 0.04, move: 1.0,
-             built: { adsSpread: 0.7, adsLead: 1.35 }, fixed: ['scope'], lvl: 16, price: 3200, role: '가장 빠른 소총 · 2배 조준경 일체형 (조준경 칸 없음) · 탄창 40발' },
-  ox20:    { ammo: 'auto', base: 'rifle', illegal: { credits: 14000, chip: 18 }, name: 'OX-20 복합소총', icon: 'rifle', dmg: 27, rate: 0.2, mag: 30, reload: 2.0, spread: 0.045, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 0.95,
-             gl: { max: 4, cd: 8, mul: 3.2, r: 85, range: 430 }, lvl: 22, price: 4600, role: '돌격소총 + 공중폭발 유탄 (G · 모바일 유탄 버튼) · 유탄은 8초마다 1발 충전, 최대 4발' },
+  blaster: { ammo: 'shell', base: 'shotgun', illegal: true, name: '래피드 블래스터', icon: 'shotgun', dmg: 7, pellets: 6, rate: 0.25, mag: 20, reload: 3.2, spread: 0.34, speed: 800, range: 230, falloff: true, knock: 5, stagger: 0.12, move: 0.95,
+             lvl: 26, price: 2400, role: '연사 산탄총 · 드럼 탄창 20발 · 근거리를 갈아버림, 멀리선 약함' },
+  f20:     { ammo: 'auto', base: 'rifle', illegal: true, name: 'F-20 불펍 소총', icon: 'rifle', dmg: 19, rate: 0.12, mag: 40, reload: 2.1, spread: 0.035, speed: 1150, range: 680, knock: 3, stagger: 0.04, move: 1.0,
+             built: { adsSpread: 0.7, adsLead: 1.35 }, fixed: ['scope'], lvl: 28, price: 3200, role: '가장 빠른 소총 · 2배 조준경 일체형 (조준경 칸 없음) · 탄창 40발' },
+  ox20:    { ammo: 'auto', base: 'rifle', illegal: true, name: 'OX-20 복합소총', icon: 'rifle', dmg: 27, rate: 0.2, mag: 30, reload: 2.0, spread: 0.045, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 0.95,
+             gl: { max: 4, cd: 8, mul: 4, r: 85, range: 430 }, lvl: 30, price: 4600, role: '돌격소총 + 공중폭발 유탄 (G · 모바일 유탄 버튼) · 유탄은 8초마다 1발 충전, 최대 4발' },
 };
 const wbase = k => (WEAPONS[k] && WEAPONS[k].base) || k; // v1.52 불법 무기 → 같은 계열 총 (소리·손맛·부품)
 

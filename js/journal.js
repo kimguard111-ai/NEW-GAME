@@ -102,7 +102,7 @@ const Journal = {
       let h = `<b>적</b> <span class="muted">${seen} / ${all.length}</span><div class="codex">`;
       for (const n of all) { const c = p.codex.kills[n]; h += `<div class="cx${c ? '' : ' no'}">${c ? n : '???'}<span>${c ? fmt(c) : ''}</span></div>`; }
       h += '</div>';
-      const keys = [...Object.keys(WEAPONS), ...Object.keys(ARMORS), ...Object.keys(HELMETS)], got = keys.filter(k => p.codex.items[k] !== undefined).length;
+      const keys = [...Object.keys(WEAPONS).filter(k => !WEAPONS[k].illegal), ...Object.keys(ARMORS), ...Object.keys(HELMETS)], got = keys.filter(k => p.codex.items[k] !== undefined).length;
       h += `<b>장비</b> <span class="muted">${got} / ${keys.length} · 색 = 손에 넣은 최고 등급</span><div class="codex">`;
       for (const k of keys) { const r = p.codex.items[k]; h += `<div class="cx${r === undefined ? ' no' : ''}">${ICON(GEAR_DEFS(k).icon || k)} <span class="r${r ?? 0}">${r === undefined ? '???' : GEAR_DEFS(k).name}</span></div>`; }
       h += '</div>';
