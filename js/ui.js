@@ -47,7 +47,7 @@ const UI = {
   open(name) {
     if ($('panel-' + name).classList.contains('hidden') && name !== 'dialog') SFX.play('open'); // v1.35
     $('panel-' + name).classList.remove('hidden');
-    if (name === 'inventory') UI.refreshInventory();
+    if (name === 'inventory') { UI.refreshInventory(); const p = G.player; if (p && p.rec && p.rec.extracts && World.map === 'camp') p.tutEquip = true; } // v1.54 처음 할 일: 탈출 뒤 캠프에서 가방 열기
     if (name === 'stats') UI.refreshStats();
     if (name === 'quest') UI.refreshQuest();
     if (name === 'settings') UI.refreshSettings();
@@ -192,7 +192,9 @@ const UI = {
     else $('interact-hint').classList.add('hidden');
 
     // 임무 추적 (챕터)
-    UI.html('quest-tracker', G.assault ? Assault.trackerHtml() : UI.trackerHtml(p) + Raid.trackerLine() + RaidEvents.trackerLine() + Bounty.trackerLine());
+    const tut = Tut.on() && Tut.html(); // v1.54 처음 할 일이 끝날 때까지는 그것만
+    $('quest-tracker').classList.toggle('tut', !!tut);
+    UI.html('quest-tracker', G.assault ? Assault.trackerHtml() : tut ? tut + Raid.trackerLine() : UI.trackerHtml(p) + Raid.trackerLine() + RaidEvents.trackerLine() + Bounty.trackerLine());
   },
 
   trackerHtml(p) {

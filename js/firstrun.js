@@ -23,6 +23,53 @@ const HINTS = [
     max: 7, guide: () => FirstRun.nearestExit(), done: () => G.extractT > 0 },
 ];
 
+// v1.54 처음 할 일 체크리스트: 목표 창 자리에 6단계 (지금 할 일 + 하는 법) · 다 하면 이야기 목표로
+const TUT = [
+  { id: 'move', text: '움직이기', how: () => IS_TOUCH ? '화면 왼쪽을 끌기' : `${keyLabel(keyOf('up'))}${keyLabel(keyOf('left'))}${keyLabel(keyOf('down'))}${keyLabel(keyOf('right'))} 키`, done: p => (p.hints || []).includes('move') || !!p.raid },
+  { id: 'deploy', text: '작전 장교 윤씨에게 가서 출격', how: () => `노란 화살표 · 윤씨 곁에서 ${IS_TOUCH ? 'E 버튼' : keyLabel(keyOf('interact'))} → 카드 누르기`, done: p => !!p.raid },
+  { id: 'kill', text: '감염자 쓰러뜨리기', how: () => IS_TOUCH ? '화면 오른쪽을 끌면 그쪽으로 조준·사격' : '마우스로 조준 · 클릭(누르고 있기)으로 사격', done: p => (p.totalKills || 0) > 0 },
+  { id: 'loot', text: '상자·차 뒤지기', how: () => `가까이 가서 ${IS_TOUCH ? 'E 버튼' : keyLabel(keyOf('interact'))} · 끝날 때까지 가만히`, done: p => !!p.tutLoot },
+  { id: 'extract', text: '탈출해서 주운 것 챙기기', how: () => '초록 ◎ 지점(화살표·미니맵)에 5초 서 있기', done: p => !!(p.rec && p.rec.extracts) },
+  { id: 'equip', text: '가방 열어 주운 것 확인', how: () => `${IS_TOUCH ? '위쪽 가방 버튼' : `가방 (${keyLabel(keyOf('inventory'))})`} · ▲ 표시 = 지금보다 좋은 장비 → 눌러서 장착`, done: p => !!p.tutEquip },
+];
+const Tut = {
+  on() { const p = G.player; return !!p && Settings.tips && !p.tutDone; },
+  step() { const p = G.player; return TUT.findIndex(s => !s.done(p)); },
+  // 처음 시작한 캐릭터만 (이미 탈출해 본 세이브는 끝난 것으로)
+  init(p) { if (p.tutDone === undefined) p.tutDone = !!((p.rec && p.rec.extracts) || p.deaths || p.level > 2); },
+  update() {
+    const p = G.player; if (!this.on()) return;
+    const i = this.step();
+    if (i !== this.last && this.last !== undefined && i > this.last) { SFX.play('click', 0.7); floatText(p.x, p.y - 46, '✓ ' + TUT[this.last].text, '#7fe08a', 13); }
+    this.last = i;
+    if (i < 0) { p.tutDone = true; UI.toast('기본 끝!', '이제 「현재 목표」(한씨의 이야기)를 따라가면 된다'); SFX.play('levelup'); }
+    this.guide(p);
+  },
+  // 첫 출격 시작: 조작 그림 한 장 (모바일 = 왼쪽 이동 · 오른쪽 조준·사격 영역 / PC = 키 목록) · 움직이고 쏘거나 15초면 사라짐 · 조작은 막지 않음
+  guide(p) {
+    const el = $('ctl-guide');
+    if (!el) return;
+    if (el.classList.contains('hidden')) {
+      if (p.tutGuide || !p.raid || G.fade || UI.anyOpen()) return;
+      p.tutGuide = true; this.gT = 0; this.g0 = { x: p.x, y: p.y, shot: p.lastShot || 0 };
+      el.innerHTML = IS_TOUCH
+        ? '<div class="cg-l"><div class="cg-ring">✋</div><b>왼쪽을 끌면</b><span>이동</span></div><div class="cg-r"><div class="cg-ring">✋</div><b>오른쪽을 끌면</b><span>그쪽으로 조준하며 사격<br>손을 떼면 멈춤</span></div><div class="cg-x">해 보면 사라진다</div>'
+        : `<div class="cg-pc"><b>기본 조작</b><span>${FirstRun.keyCap('up')}${FirstRun.keyCap('left')}${FirstRun.keyCap('down')}${FirstRun.keyCap('right')} 이동</span><span>${FirstRun.keyCap('mouse')} 조준 · 클릭 사격 · 오른쪽 클릭 정밀 조준</span><span>${FirstRun.keyCap('dodge')} 회피</span><span>${FirstRun.keyCap('reload')} 재장전</span><span>${FirstRun.keyCap('interact')} 뒤지기·말 걸기</span><i>해 보면 사라진다</i></div>`;
+      el.classList.remove('hidden'); return;
+    }
+    this.gT += 1 / 60;
+    const moved = Math.hypot(p.x - this.g0.x, p.y - this.g0.y) > 120, shot = (p.lastShot || 0) > this.g0.shot;
+    if ((moved && shot) || this.gT > 15 || !p.raid || p.dead) el.classList.add('hidden');
+  },
+  html() {
+    const p = G.player, i = this.step(); if (i < 0) return '';
+    let h = `<b>처음 할 일 ${i + 1}/${TUT.length}</b><br><span class="tut-now">▶ ${TUT[i].text}</span> <span class="tut-how">${TUT[i].how()}</span><div class="tut-list">`;
+    TUT.forEach((s, j) => { h += `<div class="${j < i ? 'ok' : j === i ? 'cur' : ''}">${j < i ? '✓' : j === i ? '▶' : '·'} ${s.text}</div>`; });
+    return h + '</div>';
+  },
+  focusNpc() { const p = G.player; return this.on() && World.map === 'camp' && this.step() === 1 ? 'deploy' : null; }, // 출격 차례엔 윤씨만 또렷하게
+};
+
 const FirstRun = {
   cur: null, t: 0,
   busy() { const p = G.player; return !!this.cur || !!G.fade || (Settings.tips && HINTS.some(h => !(p.hints || []).includes(h.id) && h.when(p))); },

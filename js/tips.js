@@ -50,6 +50,7 @@ const Tips = {
     this.t = 0.5;
     const p = G.player;
     if (!p || p.dead || !Settings.tips || FirstRun.busy()) return; // v1.45 키 그림이 떠 있거나 곧 뜰 차례면 기다림
+    if (Tut.on() && p.raid && !(p.rec && p.rec.extracts)) return; // v1.54 첫 출격(처음 할 일) 동안은 다른 도움말 쉬기
     const near = (e, r) => e.hp > 0 && dist(e, p) < r;
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
     if (World.map === 'camp' && !p.tips.includes('growth') && ((p.rec && p.rec.extracts) || p.deaths)) return Growth.show(); // v1.30 첫 출격 뒤 성장 안내 (한 번)

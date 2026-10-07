@@ -504,3 +504,17 @@ body.touch .map-card { min-height: 0; padding: 5px 6px; gap: 5px; } body.touch .
 #panel-dialog.mapdlg { width: min(860px, calc(100vw - 24px)); bottom: auto; top: 50%; transform: translate(-50%, -50%); }
 .map-card.wide { min-height: 0; padding: 5px 8px; } .map-card.wide .mc-art { width: 40px; height: 40px; } .map-card.wide .mc-body { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; } .map-card.wide .mc-go { margin: 0 0 0 auto; }
 body.touch #panel-dialog.mapdlg { top: 6px !important; transform: translateX(-50%); width: calc(100vw - 12px); } body.touch .mc-intro { display: none; } body.touch .map-grid { gap: 5px; margin: 4px 0 5px; } body.touch .mc-lv { font-size: 11px; } body.touch .mc-go { font-size: 12px; margin-top: 1px; } body.touch .map-card.wide .mc-desc { display: inline; }
+/* v1.54 처음 할 일 · 조작 안내 */
+#quest-tracker.tut { border-left-color: #7fe08a !important; }
+#quest-tracker.tut::before { content: '처음 할 일' !important; }
+#quest-tracker .tut-now { color: #7fe08a; font-weight: bold; } #quest-tracker .tut-how { display: block; color: #cfc6b0; font-size: 11px; }
+#quest-tracker .tut-list { margin-top: 4px; font-size: 11px; color: #777; } #quest-tracker .tut-list .ok { color: #6a8f6e; } #quest-tracker .tut-list .cur { color: #e8dcc0; }
+body.touch #quest-tracker.tut.min .tut-list { display: none; } body.touch #quest-tracker.tut.min { max-height: none !important; }
+#ctl-guide { position: absolute; inset: 0; z-index: 40; pointer-events: none; } /* 조작을 막지 않음 · 해 보면 사라짐 */
+#ctl-guide .cg-l, #ctl-guide .cg-r { position: absolute; top: 18%; bottom: 18%; width: 38%; border: 2px dashed rgba(127,224,138,.55); background: rgba(10,20,12,.35); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #e8dcc0; gap: 4px; }
+#ctl-guide .cg-l { left: 4%; } #ctl-guide .cg-r { right: 4%; border-color: rgba(255,200,90,.6); }
+#ctl-guide b { font-size: 18px; } #ctl-guide span { font-size: 14px; color: #cfc6b0; }
+#ctl-guide .cg-ring { font-size: 34px; animation: cgDrag 1.4s ease-in-out infinite; } @keyframes cgDrag { 50% { transform: translate(18px, -10px); } }
+#ctl-guide .cg-x { position: absolute; top: 9%; left: 0; right: 0; text-align: center; color: #9a9384; font-size: 12px; }
+#ctl-guide .cg-pc { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); background: rgba(14,13,10,.9); border: 1px solid #7fe08a; padding: 10px 16px; display: flex; flex-direction: column; gap: 6px; color: #e8dcc0; }
+#ctl-guide .cg-pc span { display: flex; align-items: center; gap: 4px; } #ctl-guide .cg-pc i { color: #777; font-size: 11px; font-style: normal; text-align: right; }

@@ -1210,7 +1210,11 @@ function drawNpc(n) {
   }[n.id];
   if (!Sprites.draw(n.id, 'idle', G.time + n.x * 0.01, sx, sy, angleTo(n, G.player), false))
     drawHuman(sx, sy, { s: 1.05, skin: '#d9b48f', aim: angleTo(n, G.player), ...look });
+  const foc = Tut.focusNpc(); // v1.54 출격 차례엔 윤씨만 또렷하게 (다른 사람 이름은 흐리게)
+  if (foc && foc !== n.id) ctx.globalAlpha = 0.3;
   nameTag(sx, sy - 50 * (ART.charScale || 1) - 4, n.name, '#ffd76a', 'bold 12px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif');
+  ctx.globalAlpha = 1;
+  if (foc === n.id) { const k = 0.5 + 0.5 * Math.sin(G.time * 4); ctx.strokeStyle = `rgba(127,224,138,${0.5 + 0.4 * k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(sx, sy, 26 + 6 * k, 13 + 3 * k, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1; }
   let mark = null;
   if (n.id === 'captain') {
     const p = G.player, c = Story.chapter(p);

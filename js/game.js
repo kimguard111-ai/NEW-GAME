@@ -184,6 +184,7 @@ function startGame(save, name) {
       for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves]) if (it && it.kind === 'weapon' && !it.v127) { if (R[it.key]) it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v127 = true; } }
     P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
     P.contract = null; P.cboard = null; // v1.47.1 출격 계약 게시판 삭제 (받아 둔 계약도 정리)
+    Tut.init(P); // v1.54
     if (!P.hints) P.hints = P.level > 2 || (P.rec && P.rec.extracts) || P.deaths ? HINTS.map(h => h.id).concat('rules') : []; // v1.45 키 그림 안내 (이미 해 본 사람은 건너뜀)
   Bounty.refresh(); // v0.14 일일 의뢰
   Weekly.refresh(); // v1.15 주간 도전
@@ -1238,6 +1239,7 @@ function update(dt) {
   }
   Tips.update(dt);
   FirstRun.update(dt); // v1.45
+  Tut.update(); // v1.54 처음 할 일
   if (!p.dead) {
     const mv = moveInput();
     if (p.rollT > 0) { // 회피 중: 빠르게 미끄러지다 감속

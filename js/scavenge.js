@@ -59,7 +59,7 @@ const Scavenge = {
     if (p.dead || Math.hypot(p.x - s.x, p.y - s.y) > 26) { G.search = null; return; } // 움직이면 취소
     s.t += dt;
     if (s.t < s.dur) return;
-    G.search = null;
+    G.search = null; p.tutLoot = true; // v1.54 처음 할 일
     if (s.target.hint) RaidEvents.finish(s.target); else if (s.target.grave) this.recover(); else this.loot(s.target);
   },
 
