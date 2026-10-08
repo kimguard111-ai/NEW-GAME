@@ -1000,6 +1000,56 @@ Match the art style of the attached concept image. Create ONE image with 3 separ
 
 > 25~27절 그림이 오면: 소품은 길가·골목에 배치 (지역마다 비율 다르게), 외벽은 그 지역 목록(`texZones`)에 추가, 옥상은 지역·건물 높이에 따라 씀
 
+
+## 28~32. 서울다움 추가 (v1.56 · 사용량 쉬는 동안 만들 그림)
+그림이 오면 배치·등록은 코드로 함 (지역마다 비율 다르게). **우선순위 ★** · 이미 있는 22~27절 다음으로
+
+| 순서 | 절 | 파일 | 무엇 | 어디에 |
+|---|---|---|---|---|
+| 1 ★ | 28 | `props_subway.png` | 시청역 지하철 소품 9종 (개찰구 · 자판기 · 스크린도어 · 노선도 · 의자 · 계단 입구 …) | **캠프** (첫 화면 · 「시청역 캠프」답게) |
+| 2 ★ | 30 | `tex_street2.png` | 바닥 6종 (**노란 점자블록** · 붉은 보도블록 · 버스전용차로 · 주차장 · 한강공원 길 · 횡단보도) | 모든 지역 길 |
+| 3 ★ | 29-1 | `props_landmark.png` | 거리 오마주 9종 (해태 같은 석상 · 정자 · 공원 운동기구 · 중앙차로 정류장 · 한강 편의점 파라솔 · 궁궐 담장 …) | 광장 · 공원 · 큰길 |
+| 4 | 29-2 | `prop_overpass.png` | 육교 (한 장) | 큰 교차로 |
+| 5 | 29-3 | `gate.png` | 성문 잔해 (랜드마크 한 장) | 종로 |
+| 6 | 31 | `props_district.png` | 지역 대형 9종 (회전목마 · 롤러코스터 레일 · 야구장 조명탑 · **오리배** · 관람차 곤돌라 · 전광판 · 전시 탱크 · 매표소 · 유람선) | 잠실 · 여의도 · 강남 · 용산 |
+| 7 | 32 | `props_interior3.png` | 한국 가게 실내 9종 (PC방 · 노래방 · 분식집 · 은행 번호표 · 미용실 · 세탁소 · 교실 · 신발장 · 편의점 계산대) | 수색 건물 안 |
+| (빠진 것) | 18-3 | `tex_tall3.png` | 갈색 벽돌(실외기) · 회색 패널 사무실 · 초록 유리 | 외벽 (18절) |
+
+공통: 📎 콘셉트 아트 첨부 · 글자·숫자·상표 없이 (글씨는 게임이 씀) · 실제 장소를 그대로 그리지 말고 "느낌"만
+
+### 28 ★ · 시청역 지하철 소품 9종 · `props_subway.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate pieces of an abandoned Seoul subway station turned into a survivors' camp, each centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) a row of three stainless-steel subway ticket gates with small glass flaps, dusty; 2) a ticket vending machine with a dark screen and coin slots, one side kicked in; 3) a short section of glass platform screen doors with a sliding door half open; 4) a long subway line map board on two legs showing only colored lines and dots (no words); 5) a row of four connected plastic waiting chairs on a metal bar, one chair broken; 6) a red fire hose cabinet and an emergency phone box on a short wall piece; 7) a closed station kiosk with a rolled-down metal shutter and stacked boxes; 8) the top of a subway entrance staircase going down, with a metal handrail and a small roof; 9) a stack of sandbags with a camp lantern and a folded blanket on top. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no letters, no numbers, no logos, no grid lines, no border. Do not use pink or magenta on the objects.
+```
+
+### 29-1 ★ · 거리 오마주 9종 · `props_landmark.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street landmarks and park objects that feel like Seoul without copying any real place, each centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) a weathered stone statue of a mythical lion-like guardian creature (haechi-like) on a low square pedestal, one ear chipped; 2) a small traditional Korean wooden pavilion (jeongja) with a curved dark tile roof on four red posts, a little damaged; 3) a set of outdoor public exercise machines painted yellow and blue (twist stand, leg swing), rusty; 4) a center-lane bus stop island: a long glass shelter roof on posts with a bench and a blank sign panel; 5) a round dry stone fountain basin filled with leaves and debris; 6) a riverside convenience store terrace: a plastic table with a torn parasol and plastic chairs, some knocked over; 7) a short stretch of stone palace-style wall with a dark tiled cap on top; 8) a bronze bust statue on a stone pillar, covered in moss, face worn away; 9) a stack of traffic barricades and a green construction fence panel. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no letters, no numbers, no logos, no grid lines, no border. Do not use pink or magenta on the objects.
+```
+### 29-2 · 육교 · `prop_overpass.png`
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 image of a single ruined Korean pedestrian overpass (footbridge) crossing a road: concrete stairs going up on the left end and down on the right end, a long flat deck with green-painted steel railings, a blank rectangular sign panel hanging on the side of the deck, rust streaks, one section of railing bent. The bridge runs from the left edge toward the right edge, viewed in isometric 3/4 top-down view (camera about 35 degrees above). Only the bridge: no road, no ground, no people, no shadow, no text. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty.
+```
+### 29-3 · 성문 잔해 (종로 랜드마크) · `gate.png`
+```
+Match the art style of the attached concept image. Create ONE image of a single ruined traditional Korean city gate (inspired by the old Seoul fortress gates, not a copy of any real one): a massive stone base with one arched tunnel passage, and on top a wooden pavilion with red-painted columns and a dark curved double tile roof, part of the roof collapsed and burnt, weeds growing on the stones, a few lanterns. The gate stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the gate: no street, no ground, no people, no shadow, no text. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty.
+```
+
+### 30 ★ · 바닥 질감 2 (6종) · `tex_street2.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate SQUARE ground texture panels for a ruined post-apocalyptic Seoul, each seen from DIRECTLY ABOVE (top-down, orthographic, no perspective, no shadows of objects), placed in its own equal cell with thin magenta gaps. Each panel fills its cell edge to edge and tiles SEAMLESSLY on all four sides. In order, left to right, top to bottom: 1) gray Korean sidewalk blocks with a strip of bright yellow tactile paving tiles (raised bars and dots) running straight through the middle, dirty and cracked; 2) red-brown interlocking sidewalk bricks in a herringbone pattern, some missing, weeds in the gaps; 3) dark asphalt with a red-painted bus-only lane surface, the red paint faded and patchy (no letters); 4) a parking lot of gray concrete with faded white parking-space lines and oil stains; 5) a riverside park path of faded blue-green rubber running track with a white edge line; 6) dark asphalt with thick faded white crosswalk stripes. Evenly lit, low contrast so characters stand out on top. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background in the gaps. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 31 · 지역 대형 오브젝트 9종 · `props_district.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate large district objects from a ruined post-apocalyptic Seoul, each centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) a broken carousel with faded painted horses and a collapsed striped canopy; 2) a short twisted section of roller-coaster track on steel supports; 3) a tall stadium floodlight tower with a grid of dark lamps, slightly bent; 4) a swan-shaped pedal boat lying on its side, white paint peeling; 5) a fallen Ferris wheel gondola car, dented, door hanging open; 6) a giant outdoor billboard screen frame on a thick pole, the screen black and cracked (no image); 7) an old green military tank on a low display platform, rusted, hatch open; 8) an amusement park ticket booth with a striped roof and a closed window; 9) a beached small river cruise boat hull section, rusty, tilted. Each object fits its cell; the tall tower, track and billboard may fill the full cell height. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no letters, no numbers, no logos, no grid lines, no border. Do not use pink or magenta on the objects.
+```
+
+### 32 · 한국 가게 실내 9종 · `props_interior3.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate interior furniture pieces from abandoned Korean shops in post-apocalyptic Seoul, each ONE short unit about as wide as a person is tall with its long side running diagonally toward the bottom-right, each centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) a row of two internet-cafe gaming desks with dark monitors, keyboards and padded gaming chairs; 2) a karaoke room sofa (U-shaped, red vinyl) with a low table and a microphone on it; 3) a stainless-steel snack-bar table with two red plastic stools and a tissue box; 4) a bank waiting-ticket machine next to a row of three waiting chairs; 5) a hair salon chair with a large mirror on a stand, mirror cracked; 6) a laundry shop clothes rail with plastic-covered shirts hanging; 7) a school classroom desk with a chair, initials scratched into the wood (no readable letters); 8) a sauna-style shoe locker cabinet with small numbered-looking doors (no real numbers); 9) a convenience store counter with a register, a small display of gum and a microwave behind it. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no letters, no numbers, no logos, no grid lines, no border. Do not use pink or magenta on the objects.
+```
+
 ---
 
 ## 결과가 이상할 때
