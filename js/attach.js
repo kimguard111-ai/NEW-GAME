@@ -4,19 +4,19 @@
 const ATT_SLOTS = { scope: '조준경', muzzle: '총구', grip: '손잡이', mag: '탄창' };
 const ATTACHMENTS = {
   reddot:     { slot: 'scope', name: '도트 조준경', r: 1, lvl: 3, price: 180, guns: ['smg', 'shotgun', 'rifle', 'lmg'], desc: '조준 퍼짐 -15% · 조준이 빨라짐', adsSpread: 0.85, adsTime: 0.6 },
-  scope2:     { slot: 'scope', name: '2배 조준경', r: 2, lvl: 6, price: 320, guns: ['rifle', 'lmg', 'sniper'], desc: '조준 퍼짐 -30% · 조준할 때 더 멀리 봄', adsSpread: 0.7, adsLead: 1.35 },
-  scope4:     { slot: 'scope', name: '4배 저격 조준경', r: 3, lvl: 10, price: 600, guns: ['rifle', 'sniper'], desc: '조준 퍼짐 -50% · 조준할 때 아주 멀리 봄 · 조준 중 더 느림', adsSpread: 0.5, adsLead: 1.8, adsMove: 0.75, adsTime: 1.4 },
-  suppressor: { slot: 'muzzle', name: '소음기', r: 2, lvl: 4, price: 300, guns: ['pistol', 'smg', 'rifle', 'sniper'], desc: '총소리로 적이 몰려오는 거리 -60% · 피해 -5%', noise: 0.4, dmg: 0.95 },
+  scope2:     { slot: 'scope', name: '2배 조준경', r: 2, lvl: 6, price: 320, guns: ['rifle', 'lmg'], desc: '조준 퍼짐 -30% · 조준할 때 더 멀리 봄', adsSpread: 0.7, adsLead: 1.35 },
+  scope4:     { slot: 'scope', name: '4배 저격 조준경', r: 3, lvl: 10, price: 600, guns: ['rifle'], desc: '조준 퍼짐 -50% · 조준할 때 아주 멀리 봄 · 조준 중 더 느림', adsSpread: 0.5, adsLead: 1.8, adsMove: 0.75, adsTime: 1.4 },
+  suppressor: { slot: 'muzzle', name: '소음기', r: 2, lvl: 4, price: 300, guns: ['pistol', 'smg', 'rifle'], desc: '총소리로 적이 몰려오는 거리 -60% · 피해 -5%', noise: 0.4, dmg: 0.95 },
   comp:       { slot: 'muzzle', name: '보정기', r: 1, lvl: 3, price: 200, guns: ['smg', 'rifle', 'lmg'], desc: '연사할 때 퍼짐 -20% · 화면 반동 -40%', autoSpread: 0.8, kick: 0.6 },
   choke:      { slot: 'muzzle', name: '산탄 조임쇠', r: 1, lvl: 5, price: 220, guns: ['shotgun'], desc: '산탄 퍼짐 -30% (멀리서도 맞음)', spread: 0.7 },
   vgrip:      { slot: 'grip', name: '수직 손잡이', r: 1, lvl: 3, price: 180, guns: ['smg', 'rifle', 'lmg', 'shotgun'], desc: '연사할 때 퍼짐 -20%', autoSpread: 0.8 },
   agrip:      { slot: 'grip', name: '앵글 손잡이', r: 1, lvl: 4, price: 200, guns: ['smg', 'rifle', 'shotgun'], desc: '조준 중 이동 속도 60% → 75% · 조준이 빨라짐', adsMove: 1.25, adsTime: 0.75 },
-  laser:      { slot: 'grip', name: '레이저', r: 1, lvl: 2, price: 160, guns: ['pistol', 'smg', 'shotgun', 'rifle', 'sniper', 'lmg'], desc: '조준하지 않고 쏠 때 퍼짐 -25%', hipSpread: 0.75 },
-  extmag:     { slot: 'mag', name: '확장 탄창', r: 1, lvl: 3, price: 200, guns: ['pistol', 'smg', 'rifle', 'sniper'], desc: '장탄 +50% · 재장전 15% 느림', mag: 1.5, reload: 1.15 },
+  laser:      { slot: 'grip', name: '레이저', r: 1, lvl: 2, price: 160, guns: ['pistol', 'smg', 'shotgun', 'rifle', 'lmg'], desc: '조준하지 않고 쏠 때 퍼짐 -25%', hipSpread: 0.75 },
+  extmag:     { slot: 'mag', name: '확장 탄창', r: 1, lvl: 3, price: 200, guns: ['pistol', 'smg', 'rifle'], desc: '장탄 +50% · 재장전 15% 느림', mag: 1.5, reload: 1.15 },
   dualmag:    { slot: 'mag', name: '쌍탄창', r: 2, lvl: 5, price: 280, guns: ['smg', 'rifle'], desc: '재장전 30% 빠름', reload: 0.7 },
   drum:       { slot: 'mag', name: '드럼 탄창', r: 2, lvl: 7, price: 380, guns: ['smg', 'rifle', 'lmg', 'shotgun'], desc: '장탄 +100% · 재장전 35% 느림 · 들고 있으면 이동 -5%', mag: 2, reload: 1.35, move: 0.95 },
 };
-const GUN_NAMES = { pistol: '권총', smg: '기관단총', shotgun: '산탄총', rifle: '소총', sniper: '저격총', lmg: '기관총' }; // 불법 무기는 같은 계열(base)로 끼움
+const GUN_NAMES = { pistol: '권총', smg: '기관단총', shotgun: '산탄총', rifle: '소총', lmg: '기관총' }; // 불법 무기는 같은 계열(base)로 끼움
 
 function makeAttach(key) {
   const A = ATTACHMENTS[key];

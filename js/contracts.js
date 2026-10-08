@@ -175,7 +175,7 @@ const MapEvents = {
     else if (id === 'yongsan') { const k = RaidEvents.spot(900) || s, c = makeEnemy('drone', k.x, k.y, lvl); Monsters.makeElite(c, Monsters.rollAffix('drone')); c.keyCarrier = true; c.evGuard = true; c.bossName = '순찰 드론 (출입 카드)'; G.enemies.push(c);
       e = { ...base, carrier: c, hint: '[E] 무기고 열기 (3초)', dur: 3,
         onStart: e => { if (e.carrier.hp > 0) { log('출입 카드가 필요하다. 순찰 드론(미니맵 주황 점)을 격추하자.', '#aaa'); SFX.play('empty'); return false; } return true; },
-        onFinish: e => { const guns = ['smg', 'shotgun', 'rifle', 'sniper', 'lmg'].filter(k => WEAPONS[k].lvl <= lvl + 2); drop(e, 'item', { item: makeWeapon(pick(guns), lvl, Math.random() < 0.5 ? 2 : 3) }); for (const t of Object.keys(AMMO)) drop(e, 'ammo', { amount: 80, ammo: t }); done(e, '무기고', '총기 · 탄약 4종'); },
+        onFinish: e => { const guns = ['smg', 'shotgun', 'rifle', 'lmg'].filter(k => WEAPONS[k].lvl <= lvl + 2); drop(e, 'item', { item: makeWeapon(pick(guns), lvl, Math.random() < 0.5 ? 2 : 3) }); for (const t of Object.keys(AMMO)) drop(e, 'ammo', { amount: 80, ammo: t }); done(e, '무기고', '총기 · 탄약 4종'); },
         mini: (g, e, b) => { base.mini(g, e, b); if (b && e.carrier.hp > 0) { g.fillStyle = '#ff9a3a'; g.fillRect(e.carrier.x / TILE - 2, e.carrier.y / TILE - 2, 4, 4); } },
         track: e => e.carrier.hp > 0 ? '잠긴 무기고: 순찰 드론 격추' : '무기고 열기' }; }
     else if (id === 'yeouido' || id === 'gangnam') { const yeo = id === 'yeouido';

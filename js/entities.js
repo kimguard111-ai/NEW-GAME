@@ -210,7 +210,7 @@ function newPlayer(name) {
     level: 1, exp: 0, credits: 150, statPoints: 0, sp: 1, spV125: true, srank: {}, spV126: true, // v1.25 스킬 포인트
     stats: { str: 5, dex: 5, vit: 5, agi: 5 },
     hp: 1, ammo: Object.fromEntries(Object.entries(AMMO).map(([k, a]) => [k, a.start])), // v1.33 탄약 4종
-    equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('pipe', 1, 0), armor: null, helmet: null, belt: makeBelt(0) }, // v1.24 벨트 // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
+    equip: { w1: makeWeapon('pistol', 1, 0), w2: makeWeapon('axe', 1, 0), armor: null, helmet: null, belt: makeBelt(0) }, // v1.24 벨트 // 방어구 없이 시작 (첫 임무 보상·상점으로 획득)
     active: 'w1',
     inventory: [makeConsumable('medkit', 3), makeConsumable('ammo', 1)],
     quest: { ch: 0, step: 0, active: false, progress: 0 }, // v0.7 챕터

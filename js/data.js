@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.54';
+const GAME_VERSION = 'v1.55';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -23,17 +23,17 @@ const AMMO = {
   pistol: { name: '권총탄',   color: '#d8c890', k: 0.6,  pack: 48,  price: 15, start: 72 },
   auto:   { name: '기관총탄', color: '#c8a050', k: 1,    pack: 120, price: 45, start: 120, desc: '기관단총 · 소총 · 기관총' },
   shell:  { name: '산탄',     color: '#d05a3a', k: 0.25, pack: 30,  price: 45, start: 24 },
-  sniper: { name: '저격탄',   color: '#7ab0d8', k: 0.12, pack: 15,  price: 50, start: 10 },
+  // v1.55 저격탄 삭제 (남은 탄은 크레딧으로)
+  //sniper: { name: '저격탄',   color: '#7ab0d8', k: 0.12, pack: 15,  price: 50, start: 10 },
 };
 // 무기 기본 정보
 // range: 사거리(px) · knock: 넉백 · stagger: 경직(초) · move: 장착 시 이동속도 배율
 // role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
-  pipe:    { name: '쇠파이프',      icon: 'pipe', melee: true, dmg: 25, rate: 0.55, /* v1.8.1 공속↓·피해↑ (DPS 유지) 0.40/18 */ range: 62, arc: 1.3, knock: 16, stagger: 0.25, move: 1.08, lvl: 1, price: 60,
-             role: '3타째 강타로 크게 경직 · 탄약 불필요' },
+  // v1.55 pipe 삭제 (그림이 있는 무기만 · 세이브의 것은 소방 도끼로 바뀜)
   pistol:  { ammo: 'pistol', name: 'P-45 권총',    icon: 'pistol', dmg: 18, rate: 0.42, /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
              quickDraw: true, lvl: 1, price: 80, role: '권총탄이 흔하고 쌈 · 즉시 꺼내 듦 · 언제나 믿을 수 있는 보조무기' },
-  axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 55, rate: 1.0, /* v1.8.1 0.8/44 */ range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 4, price: 220,
+  axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 55, rate: 1.0, /* v1.8.1 0.8/44 */ range: 72, arc: 2.1, knock: 42, stagger: 0.7, move: 0.98, lvl: 1, price: 220, /* v1.55 쇠파이프 대신 첫 근접 무기 (Lv1~ 초중반) */
              role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄' },
   smg:     { ammo: 'auto', name: 'SP-9 기관단총',  icon: 'smg', dmg: 12, rate: 0.13, /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
@@ -41,24 +41,23 @@ const WEAPONS = {
              lvl: 5, price: 380, role: '근거리 폭발력 · 코앞에서 쏘면 크게 날려버림' },
   rifle:   { ammo: 'auto', name: 'KR-49 돌격소총',   icon: 'rifle', dmg: 22, rate: 0.18, /* v1.50.7 0.14 → 0.18 (×1.2) · v1.40.2 17/0.11 (초당 피해 유지) */ mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
              lvl: 8, price: 620, role: '안정적인 중거리 화력 · 끊어 쏘면 첫 발이 정확' },
-  katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 62, rate: 0.5, /* v1.8.1 0.38/60 · v1.27 79 → 62 (Lv16 기관총보다 훨씬 강하던 것) */ range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 11, price: 900,
+  katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 62, rate: 0.5, /* v1.8.1 0.38/60 · v1.27 79 → 62 (Lv16 기관총보다 훨씬 강하던 것) */ range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 18, price: 900, /* v1.55 후반 근접 (11 → 18) */
              role: '긴 칼날 · 3타째 돌진 찌르기 · 가장 빠른 이동' },
-  sniper:  { ammo: 'sniper', name: 'SR-49 저격소총',  icon: 'sniper', dmg: 140, rate: 1.2, /* v1.27 120 (Lv8 소총보다 약하던 것) */ mag: 5, reload: 2.4, spread: 0.003, speed: 1600, range: 950, pierce: 3, knock: 22, stagger: 0.8, critMul: 2.6, move: 0.9,
-             lvl: 12, price: 1100, role: '장거리 일격 · 관통 · 치명타 x2.6' },
+  // v1.55 sniper 삭제 (그림이 있는 무기만 · 세이브의 것은 돌격소총으로 바뀜)
   lmg:     { ammo: 'auto', name: 'LM-49 기관총',     icon: 'lmg', dmg: 15, rate: 0.1, /* v1.50.7 0.07 → 0.1 (×1.28) */ mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
              lvl: 16, price: 1800, role: '압도적 지속 화력 · 쏠수록 빨라지고 정확해짐 · 무거움' },
   // v1.53 신화 무기 (특별 총 3종): 신화 등급 고정 · 바벨·타이탄·키메라 · 어설트 위협 5+ S랭크에서 낮은 확률 (MYTH_DROP) · 상자·상점에서는 안 나옴 · 죽으면 잃음
   // base = 소리·손맛·부품을 빌려 오는 총 · 고유 아이콘과 손에 든 그림을 만들 예정
   // 손에 든 고유 그림은 player[_방어구]_<키> 가 있으면 그걸 씀 (없으면 같은 계열 그림)
-  blaster: { ammo: 'shell', base: 'shotgun', myth: true, name: '래피드 블래스터', icon: 'shotgun', dmg: 7, pellets: 6, rate: 0.25, mag: 20, reload: 3.2, spread: 0.34, speed: 800, range: 230, falloff: true, knock: 5, stagger: 0.12, move: 0.95,
+  blaster: { ammo: 'shell', base: 'shotgun', myth: true, name: '래피드 블래스터', icon: 'blaster', dmg: 7, pellets: 6, rate: 0.25, mag: 20, reload: 3.2, spread: 0.34, speed: 800, range: 230, falloff: true, knock: 5, stagger: 0.12, move: 0.95,
              lvl: 26, price: 2400, role: '연사 산탄총 · 드럼 탄창 20발 · 근거리를 갈아버림, 멀리선 약함' },
-  f20:     { ammo: 'auto', base: 'rifle', myth: true, name: 'F-20 불펍 소총', icon: 'rifle', dmg: 19, rate: 0.12, mag: 40, reload: 2.1, spread: 0.035, speed: 1150, range: 680, knock: 3, stagger: 0.04, move: 1.0,
+  f20:     { ammo: 'auto', base: 'rifle', myth: true, name: 'F-20 불펍 소총', icon: 'f20', dmg: 19, rate: 0.12, mag: 40, reload: 2.1, spread: 0.035, speed: 1150, range: 680, knock: 3, stagger: 0.04, move: 1.0,
              built: { adsSpread: 0.7, adsLead: 1.35 }, fixed: ['scope'], lvl: 28, price: 3200, role: '가장 빠른 소총 · 2배 조준경 일체형 (조준경 칸 없음) · 탄창 40발' },
-  ox20:    { ammo: 'auto', base: 'rifle', myth: true, name: 'OX-20 복합소총', icon: 'rifle', dmg: 27, rate: 0.2, mag: 30, reload: 2.0, spread: 0.045, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 0.95,
+  ox20:    { ammo: 'auto', base: 'rifle', myth: true, name: 'OX-20 복합소총', icon: 'ox20', dmg: 27, rate: 0.2, mag: 30, reload: 2.0, spread: 0.045, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 0.95,
              gl: { max: 4, cd: 8, mul: 4, r: 85, range: 430 }, lvl: 30, price: 4600, role: '돌격소총 + 공중폭발 유탄 (G · 모바일 유탄 버튼) · 유탄은 8초마다 1발 충전, 최대 4발' },
 };
 // v1.53 신화 무기 드랍: 확률 + 못 얻을 때마다 pity · MYTH_LIVE = false 면 아직 안 나옴 (고유 그림이 오면 켬)
-const MYTH_LIVE = false;
+const MYTH_LIVE = true; // v1.55 고유 그림이 와서 켬
 const MYTH_DROP = { babel: { chance: 0.06, pity: 0.02 }, titan: { chance: 0.03, pity: 0.01 }, chimera: { chance: 0.04, pity: 0.015 }, assault: { chance: 0.06, pity: 0.02, tier: 5, rank: 'S' } };
 const wbase = k => (WEAPONS[k] && WEAPONS[k].base) || k; // v1.52 불법 무기 → 같은 계열 총 (소리·손맛·부품)
 
@@ -126,19 +125,19 @@ const SETS = {
               b2: '방어력 +15%', b3: '체력 50% 이상일 때 받는 피해 -20%' },
   rad:      { name: '방사능 사냥꾼', zones: [4, 5], pieces: { weapon: 'lmg', armor: 'exo', helmet: 'exoHelm' }, color: '#9aff6a',
               b2: '방사능 피해 없음 · 최대 체력 +8%', b3: '엘리트·보스·둥지 피해 +15% · 총알 12% 확률로 소형 폭발' },
-  blacksun: { name: '블랙선', zones: [6, 7], pieces: { weapon: 'sniper', armor: 'exo', helmet: 'exoHelm' }, color: '#ffd23b',
+  blacksun: { name: '블랙선', zones: [6, 7], pieces: { weapon: 'lmg', armor: 'exo', helmet: 'exoHelm' }, color: '#ffd23b',
               b2: '치명타 확률 +8%', b3: '치명타로 처치하면 탄창 +3발 · 2초 동안 치명타 피해 +50%' },
 };
 
 // v1.12 보스 고유 장비: 보스마다 하나, 처치 시 낮은 확률 (못 얻을 때마다 +3%). 고유 효과는 전설 효과 대신 붙음
 const UNIQUES = {
-  fang:    { from: 'redfang', boss: '붉은 이빨', key: 'pipe',    name: '「붉은 이빨」 송곳니 몽둥이', chance: 0.10,
+  fang:    { from: 'redfang', boss: '붉은 이빨', key: 'axe',     name: '「붉은 이빨」 송곳니 도끼', chance: 0.10,
              desc: '근접으로 처치하면 다음 공격 피해 +100%' },
   viper:   { from: 'viper',   boss: '독사',     key: 'shotgun', name: '「독사」의 독니 산탄총', chance: 0.10,
              desc: '산탄 펠릿 +3 · 맞은 적 2초 동안 이동 속도 -35%' },
   goliath: { from: 'goliath', boss: '골리앗',   key: 'axe',     name: '「골리앗」의 팔', chance: 0.10,
              desc: '근접 마무리 범위 +40% · 마무리 피해 +50%' },
-  hawk:    { from: 'hawk',    boss: '매',       key: 'sniper',  name: '「매」의 눈 저격소총', chance: 0.10,
+  hawk:    { from: 'hawk',    boss: '매',       key: 'rifle',   name: '「매」의 눈 정찰소총', chance: 0.10,
              desc: '관통 +2 · 맞은 적 5초 동안 받는 피해 +25% (표식)' },
   shade:   { from: 'shade',   boss: '그림자',   key: 'exo',     name: '「그림자」 은신 외피', chance: 0.10,
              desc: '회피 후 1.5초 동안 이동 속도 +40% · 받는 피해 -30%' },
@@ -218,7 +217,7 @@ const ZONES = [
   { name: '명동 잔해', maxDist: 28, lvl: [1, 4], dark: 0.32, tint: null,
     spawns: [['zombie', 70], ['dog', 30]],
     desc: '감염자 무리가 몰려다닌다', packs: { zombie: [2, 4] },
-    gear: ['pistol', 'smg', 'pipe', 'vest', 'cap'], gearText: '권총·기관단총·쇠파이프' },
+    gear: ['pistol', 'smg', 'axe', 'vest', 'cap'], gearText: '권총·기관단총·소방 도끼' },
   { name: '종로 폐허', maxDist: 44, lvl: [5, 9], dark: 0.42, tint: null,
     spawns: [['zombie', 35], ['dog', 25], ['raider', 40]],
     desc: '약탈자들이 무리 지어 매복한다', packs: { raider: [2, 3], dog: [2, 3] },
@@ -226,25 +225,25 @@ const ZONES = [
   { name: '용산 군사구역', maxDist: 58, lvl: [10, 15], dark: 0.52, tint: 'rgba(40,20,10,0.12)',
     spawns: [['raider', 35], ['brute', 25], ['drone', 25], ['dog', 15]],
     desc: '경비 드론 편대가 순찰한다', packs: { drone: [2, 3] },
-    gear: ['rifle', 'sniper', 'lmg', 'military'], gearText: '돌격소총·저격소총·기관총·군용 강화복' },
+    gear: ['rifle', 'lmg', 'military'], gearText: '돌격소총·기관총·군용 강화복' },
   { name: '여의도 방사능 지대', maxDist: 999, lvl: [16, 20], dark: 0.6, tint: 'rgba(40,120,30,0.12)',
     spawns: [['brute', 30], ['drone', 30], ['raider', 20], ['zombie', 20]],
     desc: '방사능 웅덩이. 들어가면 체력이 깎인다', packs: { zombie: [3, 5] },
-    gear: ['katana', 'lmg', 'sniper', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },
+    gear: ['katana', 'lmg', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },
   // v1.5 지하 연구소 (실내 던전): 방과 복도, 붉은 비상등만 켜진 어둠
   { name: '지하 연구소', maxDist: 999, lvl: [18, 24], dark: 0.82, tint: 'rgba(70,0,0,0.10)',
     spawns: [['subject', 40], ['spitter', 25], ['sentry', 15], ['drone', 20]],
     desc: '어둠 속 실험체 · 보안 포탑 · 최종 실험체 「키메라」', packs: { subject: [2, 4] },
-    gear: ['katana', 'sniper', 'lmg', 'exo', 'exoHelm'], gearText: '고주파 블레이드·저격소총·기관총·외골격 장비' },
+    gear: ['katana', 'lmg', 'exo', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 장비' },
   // v1.6
   { name: '강남 업무지구', maxDist: 999, lvl: [20, 25], dark: 0.55, tint: 'rgba(30,20,70,0.10)',
     spawns: [['merc', 25], ['shield', 25], ['brute', 15], ['dog', 15], ['drone', 10], ['raider', 10]], // v1.7 원거리 비율 70% → 45% (봇 측정 사망률 100%)
     desc: '민간 군사 회사 「블랙선」 구역. 방패병은 뒤를 잡거나 폭발로', packs: { merc: [1, 2] },
-    gear: ['rifle', 'sniper', 'lmg', 'military', 'exo', 'tacHelmet', 'exoHelm'], gearText: '돌격소총·저격소총·기관총·강화복·외골격' },
+    gear: ['rifle', 'lmg', 'military', 'exo', 'tacHelmet', 'exoHelm'], gearText: '돌격소총·기관총·강화복·외골격' },
   { name: '잠실 변이 지대', maxDist: 999, lvl: [25, 30], dark: 0.62, tint: 'rgba(60,10,60,0.10)',
     spawns: [['stalker', 25], ['zombie', 30], ['brute', 15], ['dog', 18], ['spitter', 12]], // v1.7 변이 거한 25→15 (잠실 사망 원인 2위)
     desc: '보이지 않는 포식자 · 석촌호수 물가는 발이 느려진다', packs: { zombie: [3, 5] },
-    gear: ['katana', 'lmg', 'sniper', 'exo', 'exoHelm', 'gasmask'], gearText: '고주파 블레이드·기관총·저격소총·외골격·방독면' },
+    gear: ['katana', 'lmg', 'exo', 'exoHelm', 'gasmask'], gearText: '고주파 블레이드·기관총·외골격·방독면' },
 ];
 
 // v1.3 맵 (출격·탈출): 캠프(거점)에서 맵을 골라 출격하고, 맵 가장자리 탈출 지점으로 귀환

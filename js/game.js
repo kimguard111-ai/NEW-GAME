@@ -110,13 +110,27 @@ function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(s
 // v1.51 실제 총 이름 → 가상 이름 (예전 세이브의 장비 이름도 바꿈)
 const LEGACY_NAMES = [['M1911 권총', 'P-45 권총'], ['MP5 기관단총', 'SP-9 기관단총'], ['M870 산탄총', 'R-12 산탄총'], ['K2 돌격소총', 'KR-49 돌격소총'], ['K14 저격소총', 'SR-49 저격소총'], ['K3 기관총', 'LM-49 기관총']];
 function renameLegacy(str) { for (const [a, b] of LEGACY_NAMES) str = str.split(a).join(b); return str; }
+// v1.55 쇠파이프 → 소방 도끼 · 저격소총 → 돌격소총 (그림이 있는 무기만) · 피해는 기본치 비율로 · 저격탄은 크레딧으로 — 불러올 때 바로 (다른 코드가 없는 무기를 보기 전에)
+function migrateRoster(P) {
+  if (!P || !P.inventory) return P;
+  const MAP = { pipe: ['axe', 25], sniper: ['rifle', 140] }, graves = Object.values(P.graves || {}).flatMap(g => g.items || []), comp = Object.values(P.compData || {}).map(c => c.gun);
+  for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves, ...comp]) {
+    const m = it && it.kind === 'weapon' && MAP[it.key]; if (!m) continue;
+    it.dmg = Math.round(it.dmg * WEAPONS[m[0]].dmg / m[1] * 10) / 10; it.key = m[0];
+    it.name = it.unique && UNIQUES[it.unique] ? UNIQUES[it.unique].name : (it.rarity > 0 ? RARITIES[it.rarity].name + ' ' : '') + WEAPONS[m[0]].name;
+    if (!WEAPONS[m[0]].melee) it.loaded = Math.min(it.loaded || 0, WEAPONS[m[0]].mag); else delete it.loaded;
+  }
+  if (P.ammo && P.ammo.sniper) { P.credits += Math.round(P.ammo.sniper / 15 * 50); delete P.ammo.sniper; }
+  if (P.codex && P.codex.items) { delete P.codex.items.pipe; delete P.codex.items.sniper; }
+  return P;
+}
 function loadSave(n = SAVE_SLOT) {
   try {
     const s = localStorage.getItem(slotKey(n));
     if (!s) return null;
-    if (validSave(s)) return JSON.parse(renameLegacy(s));
+    if (validSave(s)) { const v = JSON.parse(renameLegacy(s)); migrateRoster(v.p); return v; }
     const b = localStorage.getItem(slotKey(n) + '-bak'); // v1.49 깨진 저장 → 백업으로
-    if (b && validSave(b)) { const v = JSON.parse(renameLegacy(b)); v.fromBak = true; return v; }
+    if (b && validSave(b)) { const v = JSON.parse(renameLegacy(b)); migrateRoster(v.p); v.fromBak = true; return v; }
     return null;
   } catch (e) { return null; }
 }
