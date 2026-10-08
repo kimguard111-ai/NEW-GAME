@@ -7,6 +7,16 @@ const EXTRACT_TIME = 5;   // 탈출 지점에 머무는 시간 (초)
 const EXTRACT_R = 70;     // 탈출 지점 반경 (px)
 const STASH_SIZE = 48; // 기본값 — v1.13부터 실제 크기는 Camp.stashSize() (창고 증축)
 
+// v1.56 맵마다 첫 재난문자 (실제 기관·상호 없이 그 시절 문자 말투)
+const MAP_SMS = {
+  myeongdong: '[서울특별시] 중구 일대 감염체 무리 이동 중. 지하상가 진입 금지. 생존자는 시청역 대피소로 이동 바랍니다.',
+  jongno: '[서울특별시] 종로구 무장 약탈 집단 출몰. 단독 이동을 자제하고 큰길을 이용하십시오.',
+  yongsan: '[군 당국] 용산 일대 무인 경비 체계 오작동. 철조망·검문소 접근 금지.',
+  yeouido: '[서울특별시] 영등포구 방사능 수치 위험 단계. 방독면 없이 장시간 체류 금지.',
+  gangnam: '[서울특별시] 강남구 민간 군사회사 무단 점거. 교전 위험 지역입니다.',
+  jamsil: '[서울특별시] 송파구 변이체 둥지 확산. 호수 주변 접근을 금지합니다.',
+  lab: '[방역 당국] 지하 연구시설 격리 해제 경보. 생물학적 위험. 즉시 대피하십시오.',
+};
 const Raid = {
   unlocked(id) { const d = MAPS[id]; return !!d && (d.chapter === undefined || G.player.quest.ch >= d.chapter); },
   inRaid() { return World.map !== 'camp'; },
@@ -66,6 +76,7 @@ const Raid = {
     }
     if (G.grave) log(`${ICON('skull')} 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
     UI.toast(MAPS[id].name, `탈출구 ${G.exits.length}곳, 미니맵 초록 ◎`); // v1.39
+    UI.smsQ = []; if (MAP_SMS[id]) UI.sms(MAP_SMS[id], 2.5); // v1.56 출격 시작 재난문자
     log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}.`, '#8cf'); // v1.39
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)

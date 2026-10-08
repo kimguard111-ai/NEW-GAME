@@ -932,6 +932,74 @@ Match the art style of the FIRST attached weapon image exactly (same painting st
 Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), and the attached weapon picture only as a loose reference for the gun's shape, create ONE sprite sheet image of him now holding a large, boxy, futuristic two-barrel combat rifle: a slim rifle with a short barrel and a curved magazine in front of the pistol grip at the FRONT-BOTTOM, a much thicker grenade-launcher body above and behind it ending in a big flat rear stock with a wide box magazine behind the grip, and a large rectangular electronic fire-control sight box with small knobs mounted on top, dark grey and olive with a few faded yellow markings. The stock is tucked into his right shoulder, both hands on the gun, aimed forward, the barrel pointing straight to the RIGHT and level with the ground. The gun stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while aiming the gun forward; row 2: 6 frames of a walk cycle while keeping the gun aimed forward; row 3: 3 frames of firing with a short sharp recoil, no muzzle flash, no bullets, no shells in the air; row 4: 2 frames of getting hit and flinching backward while still holding the gun; row 5: 5 frames of a death animation, dropping the gun, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
 ```
 
+
+## 25. 서울 거리 2 — 탈것 · 거리 시설 (v1.56, 2단계) · 한 장에 9개 (3×3)
+피드백 「서울만의 것이 안 느껴진다」 → 한국 사람이면 바로 알아보는 거리 물건을 채움. **글자·상표 없이** (현수막·간판 글씨는 게임이 씀)
+| 장 | 파일 이름 | 9개 |
+|---|---|---|
+| 25-1 ★ | `props_seoul2.png` | 1톤 트럭 · 마을버스 · 주황 택시 · 은색 택시 · 배달 오토바이 · 학원 승합차 · 냉동 탑차 · 손수레 · 공공자전거 거치대 |
+| 25-2 ★ | `props_seoul3.png` | 붕어빵 노점 · 분리수거함 · 공중전화 부스 · 빨간 우체통 · 의류수거함 · 지하철 환기구 · 신문 가판대 · 쓰레기 더미 · 전선 감긴 가로수 |
+📎 콘셉트 아트 (같은 그림체)
+
+### 25-1 ★ · 탈것 9종 · `props_seoul2.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate abandoned vehicles from a ruined post-apocalyptic Seoul, Korea, each centered in its own equal cell with wide empty space between them, every vehicle facing toward the BOTTOM-RIGHT of the image (isometric view, the long side runs from top-left to bottom-right), wheels on the ground at the bottom of the cell. In order, left to right, top to bottom: 1) a small blue Korean 1-ton pickup truck with a low open cargo bed holding a few cardboard boxes, dusty and dented; 2) a short green neighborhood minibus (smaller than a city bus), windows cracked; 3) an orange Korean taxi sedan with a small taxi lamp box on the roof (lamp OFF, no letters); 4) a silver taxi sedan with a roof lamp box and a dented hood; 5) a delivery scooter with a big square insulated delivery box on the back, lying on its side; 6) a yellow children's academy shuttle van with black-and-yellow stripes on the back; 7) a white refrigerated box truck with a tall insulated cargo box, rust streaks; 8) a rusty two-wheeled hand cart (Korean street vendor cart) loaded with flattened cardboard; 9) a row of three rusty public rental bicycles in a small metal docking rack. All in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left, realistic relative scale (the trucks are a little longer than a car, the minibus about twice a car). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no road, no ground, no text, no letters, no numbers, no logos, no grid lines, no border. Do not use pink or magenta on the props.
+```
+### 25-2 ★ · 거리 시설 9종 · `props_seoul3.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street objects that make a ruined post-apocalyptic city feel like SEOUL, KOREA, each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above). In order, left to right, top to bottom: 1) a small Korean street-food cart for fish-shaped pastries: a metal cart with a row of fish-shaped iron molds, a torn orange plastic tarp roof, cold and abandoned; 2) a row of three plastic recycling bins in blue, yellow and green with dented lids and a pile of plastic bags next to them; 3) a tall glass public phone booth with a silver frame, one glass pane cracked, the phone handset hanging; 4) a round red metal mailbox on a short post, faded and rusty; 5) a green metal clothing donation box, rectangular with a slot, rust stains; 6) a square subway ventilation grate block on the sidewalk, low concrete base with a metal grille top; 7) a small newsstand kiosk with a closed metal shutter and old faded magazines stuck to the side (no readable letters); 8) a pile of black garbage bags and broken furniture leaning against a stack of tied cardboard; 9) a square concrete tree planter with a dead ginkgo tree and a tangle of wires wrapped around the trunk. Same lighting from the upper left, realistic relative scale. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no road, no ground, no text, no letters, no numbers, no logos, no grid lines, no border. Do not use pink or magenta on the props.
+```
+
+---
+
+## 26. 지역마다 다른 건물 외벽 (v1.56, 3단계) · 한 장에 3개 (18절과 같은 방식)
+지금은 모든 지역이 같은 외벽 몇 장을 돌려 써서 반복이 보임 → **지역마다 그 동네 건물**을 더함 (기존 외벽과 섞여 쓰임). 우선순위 ★ (명동 · 종로 · 잠실 = 첫인상)
+| 장 | 지역 | 3개 (왼쪽부터) |
+|---|---|---|
+| 26-1 ★ | 명동 | 빈 간판 틀이 다닥다닥한 상가 · 흰 타일 가게 건물 · 70년대 호텔 |
+| 26-2 ★ | 종로 | 한옥 벽 (기와 처마 띠) · 60년대 갈색 타일 상가 · 귀금속 상가 |
+| 26-3 | 용산 | 전자상가 (빈 광고 틀) · 기지 담장 (철조망) · 관사 |
+| 26-4 | 여의도 | 화강석 증권가 오피스 · 방송국 (둥근 창) · 강변 아파트 |
+| 26-5 | 강남 | 병원 빌딩 (세로 간판 틀) · 오피스텔 · 유리+석재 빌딩 |
+| 26-6 ★ | 잠실 | 아파트 측벽 (동 번호 자리 비움) · 복도식 아파트 (주황 난간) · 단지 상가 |
+
+**공통 문장** — `[ ]` 자리에 아래 문장을 넣음 · 📎 콘셉트 아트
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 image containing exactly 3 separate TALL flat building wall texture panels side by side, each panel a tall rectangle with width to height ratio 3:5 that fills the full image height, separated by thin vertical solid #FF00FF magenta stripes. Each panel is a FLAT FRONT ORTHOGRAPHIC view (no perspective, no isometric angle, no depth) of exactly ONE storey and ONE narrow window bay of a building wall, designed to repeat seamlessly: the left edge matches the right edge and the top edge matches the bottom edge, no border, no frame, no outline. The single window sits in the middle with plenty of wall around it. From left to right: [ ]. Evenly lit, no cast shadows, no sky, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. No text, no letters, no numbers, no logos. Do not use pink or magenta on the walls.
+```
+### 26-1 ★ · 명동 · `tex_dist1.png`
+```
+1) a narrow Korean commercial building wall crowded with several EMPTY blank signboard frames of different sizes around one small window, bolts and old cables; 2) a bright white glazed-tile shop building wall with a large window and an empty horizontal sign frame above it, dirt streaks; 3) an old 1970s hotel wall in faded beige plaster with one small window and a rusty vertical sign bracket (empty)
+```
+### 26-2 ★ · 종로 · `tex_dist2.png`
+```
+1) a traditional Korean hanok wall: dark wooden posts and beams, white plaster panels and one latticed paper window, with a short strip of dark gray curved roof tiles (giwa eaves) along the very top; 2) a 1960s Korean shop building wall of small brown square tiles with one wooden-frame window and rusty bars; 3) a gray stone-and-plaster wall of an old jewelry shopping arcade with one barred window and a closed small metal shutter
+```
+### 26-3 · 용산 · `tex_dist3.png`
+```
+1) an electronics market building wall of plain concrete covered with many empty rectangular advertisement frames and tangled cables around one window; 2) a tall gray military base perimeter wall topped with coiled barbed wire, painted faded green camouflage at the bottom, no window; 3) an old two-storey officers' residence wall in pale yellow paint with one sliding window and a rusty air conditioner
+```
+### 26-4 · 여의도 · `tex_dist4.png`
+```
+1) a polished dark granite finance-district office wall with one tall tinted window; 2) a white concrete broadcasting building wall with one round porthole window; 3) a high-rise riverside apartment wall in light gray with one window and an enclosed balcony with a rusted railing
+```
+### 26-5 · 강남 · `tex_dist5.png`
+```
+1) a medical clinic building wall with a long EMPTY vertical sign frame running down the right side next to one window; 2) a studio-apartment (officetel) wall with two small identical windows close together and tiny balconies; 3) a mixed glass and beige stone office wall with one wide tinted window and a thin metal canopy
+```
+### 26-6 ★ · 잠실 · `tex_dist6.png`
+```
+1) the plain side wall of a tall Korean apartment tower, smooth light-beige paint with ONE large EMPTY flat panel area near the top (for a building number) and a thin colored stripe, no window; 2) a corridor-style apartment wall: an open outdoor corridor with an orange-painted metal railing and doors behind; 3) an apartment complex shopping building wall with one wide window and an empty horizontal sign frame
+```
+
+## 27. 옥상 질감 2 (v1.56, 3단계) · `tex_roof2.png` · 3개 (13-2와 같은 방식)
+기와 지붕 (종로 한옥) · 초록 방수페인트 옥상 (빌라 · 지금은 코드로 칠함 → 그림이 오면 교체) · 함석·슬레이트 지붕
+```
+Match the art style of the attached concept image. Create ONE image with 3 separate square flat rooftop textures side by side for a post-apocalyptic Seoul, each a solid filled SQUARE seen from DIRECTLY ABOVE (top-down orthographic, no perspective), placed in its own equal cell with wide empty space between them. Each texture must tile seamlessly: the left edge matches the right edge and the top edge matches the bottom edge, no border, no frame. From left to right: 1) dark gray traditional Korean curved clay roof tiles (giwa) in neat overlapping rows, a few cracked or missing; 2) a flat Korean villa rooftop painted bright green waterproofing paint, faded and peeling in patches, with a small drain and hairline cracks; 3) a corrugated rusty metal and slate roof with patched sheets and bolts. Evenly lit, no shadows, no objects, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. No text, no letters, no numbers.
+```
+
+> 25~27절 그림이 오면: 소품은 길가·골목에 배치 (지역마다 비율 다르게), 외벽은 그 지역 목록(`texZones`)에 추가, 옥상은 지역·건물 높이에 따라 씀
+
 ---
 
 ## 결과가 이상할 때

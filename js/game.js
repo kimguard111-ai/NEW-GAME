@@ -1028,6 +1028,7 @@ function updateBossSpawn(dt) {
     G.boss = makeEnemy('boss', bx, by, 20);
     G.enemies.push(G.boss);
     log('대지가 흔들린다... 방사능 군주 타이탄이 모습을 드러냈다!', '#c7f');
+    UI.sms('[서울특별시] 영등포구 초대형 변이체 출현. 지진동 감지. 즉시 실내 대피 바랍니다.'); // v1.56
   }
   if (G.boss && G.boss.hp <= 0) G.boss = null;
 }
@@ -1254,6 +1255,8 @@ function update(dt) {
   Tips.update(dt);
   FirstRun.update(dt); // v1.45
   Tut.update(); // v1.54 처음 할 일
+  UI.smsUpdate(dt); // v1.56 긴급재난문자
+  Camp.broadcast && Camp.broadcast(dt); // v1.56 캠프 안내방송
   if (!p.dead) {
     const mv = moveInput();
     if (p.rollT > 0) { // 회피 중: 빠르게 미끄러지다 감속

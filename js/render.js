@@ -283,6 +283,7 @@ function drawSolidTile(o) {
       if (!glass && Settings.detail) drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h); // v1.10 1층 셔터·때
     }
     City.drawSign(tx, ty); // v1.2 한글 네온 간판
+    if (Settings.detail) City.drawBanner(tx, ty); // v1.56 현수막 · 전단지
     if (!glass && Settings.detail) drawDongNo(tx, ty, ht, ez, h); // v1.21 아파트 동 번호
     if (Settings.detail) drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass);
     else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 환풍기
@@ -462,7 +463,7 @@ function drawFacadeBase(tx, ty, x0, y0, x1, y1, sz, ez, h) {
 // v1.10 옥상: 가장자리 난간(턱) · 실외기 · 물탱크 · 얼룩 · 안테나
 // v1.21 아파트 동 번호: 4층 넘는 건물의 동쪽 벽 위쪽에 '103동' 처럼 칠한 글씨
 function drawDongNo(tx, ty, ht, ez, h) {
-  if (ht < FLOOR_H * 4 || ez > ht - FLOOR_H * 2 || h < 0.3 || h > 0.36 || World.map === 'camp') return;
+  if (ht < FLOOR_H * 4 || ez > ht - FLOOR_H * 2 || h < 0.3 || h > (World.map === 'jamsil' || World.map === 'yeouido' ? 0.48 : 0.38) || World.map === 'camp') return; // v1.56 아파트 동 번호 더 자주 (잠실·여의도 특히)
   if (World.tileAt(tx, ty - 1) !== T.BUILDING || World.height[(ty - 1) * World.W + tx] !== ht) return; // 넓은 벽에만
   ctx.save(); City.faceTransform(tx, ty, 'e', ht - 10);
   ctx.font = 'bold 11px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
@@ -474,6 +475,12 @@ function drawDongNo(tx, ty, ht, ez, h) {
 function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
   const S = Iso.sx, Y = Iso.sy, lip = 3, rim = glass ? '#5a6878' : `rgb(${b + 12},${b + 8},${b + 2})`, rimS = glass ? '#2a3440' : `rgb(${b - 30},${b - 33},${b - 38})`;
   const edge = (dx, dy) => tileHeight(tx + dx, ty + dy) < ht - 4;
+  // v1.56 빌라 옥상 초록 방수페인트 (낮은 건물 · 건물마다 같은 판정: 높이+명암으로 건물 구분)
+  const sh = World.shade[ty * World.W + tx], gb = !glass && ht <= FLOOR_H * 5 && World.map !== 'camp' && hash2(Math.round(ht), Math.round(sh * 1000)) < 0.45;
+  if (gb) {
+    ctx.fillStyle = 'rgba(64,118,82,0.62)'; ctx.beginPath(); ctx.moveTo(S(x0, y0), Y(x0, y0, ht)); ctx.lineTo(S(x1, y0), Y(x1, y0, ht)); ctx.lineTo(S(x1, y1), Y(x1, y1, ht)); ctx.lineTo(S(x0, y1), Y(x0, y1, ht)); ctx.closePath(); ctx.fill();
+    if (h > 0.5 && h < 0.62) { ctx.fillStyle = 'rgba(30,40,32,0.35)'; ctx.beginPath(); ctx.ellipse(S(x0 + 14, y0 + 18), Y(x0 + 14, y0 + 18, ht), 9, 4, 0.4, 0, TAU); ctx.fill(); } // 벗겨진 자국
+  }
   // 얼룩·이끼 (난간보다 먼저)
   if (h > 0.6 && h < 0.75) { ctx.fillStyle = h < 0.68 ? 'rgba(20,18,16,0.25)' : 'rgba(60,80,40,0.22)'; ctx.beginPath(); ctx.ellipse(S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht), 12, 6, 0, 0, TAU); ctx.fill(); }
   if (edge(0, -1)) drawBox(x0, y0, x1, y0 + lip, ht + 4, rim, rimS, rimS, ht, edge(1, 0) ? ht : -1, 0);
@@ -491,7 +498,8 @@ function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
     if (on) { if (Settings.light && Light.list.length < LIGHT_CAP) addLight(cx, top + 14, 70, 0.6, 'rgba(255,40,60,A)'); }
     ctx.lineWidth = 1; return;
   }
-  if (h < 0.055 && propArt(h < 0.04 ? 'acunit' : 'watertank')) drawPropArt(h < 0.04 ? 'acunit' : 'watertank', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht)); // v1.18 그림
+  if (gb && h > 0.9 && h < 0.915 && propArt('watertank')) drawPropArt('watertank', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht)); // v1.56 빌라 옥상 물탱크 더
+  else if (h < 0.055 && propArt(h < 0.04 ? 'acunit' : 'watertank')) drawPropArt(h < 0.04 ? 'acunit' : 'watertank', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht)); // v1.18 그림
   else if (h > 0.985 && propArt('antenna')) drawPropArt('antenna', S(x0 + 16, y0 + 16), Y(x0 + 16, y0 + 16, ht));
   else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 실외기
   else if (h < 0.055 && !glass) { // 물탱크 (원통)

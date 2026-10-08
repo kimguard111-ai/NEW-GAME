@@ -518,3 +518,9 @@ body.touch #quest-tracker.tut.min .tut-list { display: none; } body.touch #quest
 #ctl-guide .cg-x { position: absolute; top: 9%; left: 0; right: 0; text-align: center; color: #9a9384; font-size: 12px; }
 #ctl-guide .cg-pc { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); background: rgba(14,13,10,.9); border: 1px solid #7fe08a; padding: 10px 16px; display: flex; flex-direction: column; gap: 6px; color: #e8dcc0; }
 #ctl-guide .cg-pc span { display: flex; align-items: center; gap: 4px; } #ctl-guide .cg-pc i { color: #777; font-size: 11px; font-style: normal; text-align: right; }
+/* v1.56 긴급재난문자 */
+#sms { position: absolute; top: 74px; left: 50%; transform: translateX(-50%); width: min(380px, 70vw); z-index: 30; background: rgba(22,22,26,.94); border-radius: 12px; padding: 7px 11px 8px; box-shadow: 0 4px 16px rgba(0,0,0,.5); pointer-events: none; animation: smsIn .35s ease-out; }
+#sms .sms-h { display: flex; justify-content: space-between; font-size: 11px; color: #ff6a5a; font-weight: bold; margin-bottom: 3px; } #sms .sms-h i { color: #8a8a90; font-style: normal; font-weight: normal; }
+#sms-t { font-size: 12.5px; line-height: 1.35; color: #ecebe6; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+@keyframes smsIn { from { transform: translate(-50%, -14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+body.touch #sms { top: 48px; width: min(360px, 52vw); padding: 5px 9px 6px; } body.touch #sms-t { font-size: 11px; }

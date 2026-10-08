@@ -180,7 +180,7 @@ const RaidEvents = {
     if (a > this.alert) {
       this.alert = a;
       const msg = ['', '소란을 듣고 주변 무리가 몰려오기 시작했다. 2분마다 증원.', '증원이 잦아지고 엘리트가 섞인다. 75초마다.', '추적대가 투입됐다! 50초마다 온다. 지금 나가는 게 좋다.'][a];
-      UI.toast(`경보 ${a}단계`, msg); log(`${ICON('warn')} 경보 ${a}단계: ${msg}`, '#ff8a5a'); SFX.play('roar', 0.6);
+      UI.sms(`[서울특별시] ${MAPS[World.map] ? MAPS[World.map].name : ''} 일대 경보 ${a}단계 발령. ${msg}`); log(`${ICON('warn')} 경보 ${a}단계: ${msg}`, '#ff8a5a'); SFX.play('roar', 0.6); // v1.56 재난문자로
       this.huntT = 8;
     }
     // v1.16 맵 인구는 정해져 있고(js/pop.js) 증원은 경보 때만: 1단계 120초마다 2명 · 2단계 75초 3명 · 3단계 50초 4명, 바로 추격

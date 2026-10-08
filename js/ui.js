@@ -209,6 +209,16 @@ const UI = {
     return h;
   },
 
+  // v1.56 긴급재난문자: 출격 시작 · 경보 단계 · 큰 사건을 휴대폰 알림처럼 (서울다움) · 6초 · 한 번에 하나
+  sms(text, delay = 0) { UI.smsQ = (UI.smsQ || []).concat([[text, delay]]); },
+  smsUpdate(dt) {
+    const el = $('sms'); if (!el) return;
+    if (UI.smsT > 0) { if ((UI.smsT -= dt) <= 0) el.classList.add('hidden'); return; }
+    const q = UI.smsQ; if (!q || !q.length) return;
+    if ((q[0][1] -= dt) > 0 || G.fade) return;
+    $('sms-t').textContent = q.shift()[0]; el.classList.remove('hidden'); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; UI.smsT = 6;
+    SFX.play('beep', 0.8); setTimeout(() => SFX.play('beep', 0.6), 260);
+  },
   // v1.49.4 출격 중엔 작은 띠로 위쪽 빈 곳에 · 싸우는 중엔 미뤘다가 싸움이 끝나면 차례로 (업적·장 완료가 전투를 가리던 것)
   toast(title, sub) {
     const raid = !!(G.player && G.player.raid);

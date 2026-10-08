@@ -12,6 +12,16 @@ const SIGN_TEXT = {
 // v1.21 맵마다 지하철역 (이름 · 노선 · 노선 색)
 const SUBWAY = { myeongdong: ['명동', '4', '#00a5de'], jongno: ['종각', '1', '#0052a4'], yongsan: ['용산', '1', '#0052a4'], yeouido: ['여의도', '5', '#996cac'],
   gangnam: ['강남', '2', '#00a84d'], jamsil: ['잠실', '2', '#00a84d'] };
+// v1.56 서울다움: 1층 위 현수막 · 벽 전단지 (지역마다 문구) — 실제 상호·지명 없이 그 시절 서울 거리 느낌
+const BANNER_TEXT = {
+  1: ['임대 문의', '점포 정리', '폐업 정리', '전 품목 70%', '외국인 환영', '세일 마지막 날'],
+  2: ['임대 문의', '재개발 결사반대', '생맥주 2천원', '단체 환영', '권리금 없음', '점포 정리'],
+  3: ['임대 문의', '중고 매입', '수리 전문', '현금 매입', '폐업 정리', '전 품목 할인'],
+  4: ['임대 문의', '대피소 →', '사무실 임대', '분양 중', '출입 통제', '긴급 공지'],
+  6: ['임대 문의', '상담 환영', '수강생 모집', '1층 임대', '분양 문의', '대피소 →'],
+  7: ['임대 문의', '입주 환영', '재건축 축하', '관리사무소', '대피소 →', '분양 중'],
+};
+const BANNER_STYLE = [['#e9e4d6', '#c22a2a'], ['#efe1a0', '#2a2a2a'], ['#d9e6ee', '#1e3f8a'], ['#c22a2a', '#f4efe0']]; // 천 색 · 글자 색
 const NEON = ['#ff3b5c', '#3bd6ff', '#ff4fd8', '#5dff6a', '#ffd23b', '#ff8a2a'];
 
 const LIGHT_CAP = 36; // 소품·간판 조명은 프레임당 이 개수까지만 (성능)
@@ -20,7 +30,7 @@ const City = {
 
   generate(seed) {
     const W = World.W, H = World.H, rng = mulberry32(seed + 99), T_ = World.tiles, B = World.BLOCK, RW = World.ROADW;
-    this.props = []; this.signs = new Map(); this.carSkip = new Set(); this.busCells = new Set();
+    this.props = []; this.signs = new Map(); this.banners = new Map(); // v1.56 현수막·전단지 this.carSkip = new Set(); this.busCells = new Set();
     const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? T.BUILDING : T_[y * W + x]);
     const near = (x, y) => World.distTiles(x * TILE + 16, y * TILE + 16) < World.safeR + 2; // 캠프 안은 비움
     const add = (type, x, y, extra) => this.props.push({ type, x, y, ...extra });
@@ -101,6 +111,15 @@ const City = {
       this.signs.set(y * W + x, { face: sOpen && (!eOpen || h < 0.1) ? 's' : 'e', text, color: NEON[Math.floor(h * 331) % NEON.length],
         vert: text.length >= 3 && h < 0.08, z: 30 + Math.floor(h * 1000) % 3 * 14, flick: h < 0.03 });
     }
+    // v1.56 현수막(1층 위 가로 천) · 전단지(눈높이 종이 몇 장) — 길가 벽, 간판과 겹치지 않는 자리
+    if (World.map !== 'camp') for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      if (at(x, y) !== T.BUILDING || World.height[y * W + x] < 44 || this.signs.has(y * W + x)) continue;
+      const h = hash2(x * 19 + 5, y * 23 + 7), zone = Math.max(1, World.zoneIndex(x * TILE, y * TILE));
+      const sOpen = at(x, y + 1) === T.WALK, eOpen = at(x + 1, y) === T.WALK; if (!sOpen && !eOpen) continue;
+      const face = sOpen && (!eOpen || h < 0.5) ? 's' : 'e';
+      if (h < 0.09) { const words = BANNER_TEXT[zone] || BANNER_TEXT[1]; this.banners.set(y * W + x, { kind: 'banner', face, text: words[Math.floor(h * 991) % words.length], st: BANNER_STYLE[Math.floor(h * 577) % BANNER_STYLE.length], sag: 1 + h * 20, torn: h < 0.02 }); }
+      else if (h < 0.26) this.banners.set(y * W + x, { kind: 'poster', face, n: 2 + Math.floor(h * 100) % 4, seed: h });
+    }
   },
 
   // ---------------- 그리기 ----------------
@@ -141,6 +160,26 @@ const City = {
     }
     ctx.restore();
     if (on && Settings.light && Light.list.length < LIGHT_CAP) { const x = (tx + (s.face === 's' ? 0.5 : 1)) * TILE, y = (ty + (s.face === 's' ? 1 : 0.5)) * TILE; addLight(Iso.sx(x, y), Iso.sy(x, y, s.z + 8), 46, 0.45, hexA(s.color)); }
+  },
+
+  // v1.56 현수막 · 전단지
+  drawBanner(tx, ty) {
+    const s = this.banners && this.banners.get(ty * World.W + tx); if (!s) return;
+    ctx.save();
+    if (s.kind === 'banner') {
+      const w = TILE * 0.96, h = 9; this.faceTransform(tx, ty, s.face, 24 + h);
+      ctx.translate(TILE * 0.02, 0); ctx.fillStyle = s.st[0];
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, 0); ctx.lineTo(w, h); if (s.torn) { ctx.lineTo(w * 0.6, h + 1); ctx.lineTo(w * 0.5, h - 3); } ctx.quadraticCurveTo(w / 2, h + s.sag * 0.2, 0, h); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(0, h - 2, w, 2); // 때
+      ctx.fillStyle = s.st[1]; ctx.font = `bold ${s.text.length >= 6 ? 5.5 : s.text.length >= 5 ? 6.5 : 7.5}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(s.text, w / 2, h / 2 + 0.5);
+      ctx.fillStyle = '#222'; ctx.fillRect(-1, -1, 2, 2); ctx.fillRect(w - 1, -1, 2, 2); // 끈
+    } else {
+      this.faceTransform(tx, ty, s.face, 20);
+      for (let i = 0; i < s.n; i++) { const r = (s.seed * 997 * (i + 3)) % 1, px = 3 + r * (TILE - 10), py = 2 + ((r * 7) % 1) * 7, c = ['#e8e2cf', '#efe08a', '#f1c9c9', '#cfe3ef'][Math.floor(r * 40) % 4];
+        ctx.fillStyle = c; ctx.globalAlpha = 0.75; ctx.fillRect(px, py, 5, 6.5); ctx.globalAlpha = 0.6; ctx.fillStyle = '#333'; ctx.fillRect(px + 1, py + 1.5, 3, 0.8); ctx.fillRect(px + 1, py + 3.2, 2.4, 0.6); ctx.globalAlpha = 1; }
+    }
+    ctx.restore();
   },
 
   drawSignArt(s, tx, ty, art, on) {
@@ -202,10 +241,16 @@ function cityArt(o) {
 }
 // v1.22 그림이 있어도 코드로 얹는 것: 전봇대 전선 · 지하철 역 이름 기둥
 function poleWires(o, sx, sy) {
-  if (!o.next) return; // 다음 전봇대까지 처지는 전선 3가닥
-  const K = ISO_K, top = sy - 128 * K, nx = Iso.sx(o.next.x, o.next.y), ny = Iso.sy(o.next.x, o.next.y) - 128 * K;
+  const K = ISO_K, top = sy - 128 * K, hh = (o.x * 7 + o.y * 3) % 97 / 97;
   ctx.strokeStyle = 'rgba(20,20,22,0.85)'; ctx.lineWidth = 1;
-  for (const [ox, oy, sag] of [[-12, 8, 18], [12, 8, 22], [-8, 18, 26]]) { ctx.beginPath(); ctx.moveTo(sx + ox, top + oy); ctx.quadraticCurveTo((sx + nx) / 2 + ox, (top + ny) / 2 + oy + sag, nx + ox, ny + oy); ctx.stroke(); }
+  if (o.next) { // 다음 전봇대까지 처지는 전선 · v1.56 3 → 6가닥 (서울 골목의 엉킨 전깃줄)
+    const nx = Iso.sx(o.next.x, o.next.y), ny = Iso.sy(o.next.x, o.next.y) - 128 * K;
+    for (const [ox, oy, sag] of [[-12, 8, 18], [12, 8, 22], [-8, 18, 26], [6, 14, 34], [-3, 24, 30], [10, 20, 40]]) { ctx.beginPath(); ctx.moveTo(sx + ox, top + oy); ctx.quadraticCurveTo((sx + nx) / 2 + ox, (top + ny) / 2 + oy + sag, nx + ox, ny + oy); ctx.stroke(); }
+  }
+  // v1.56 건물 쪽으로 가는 인입선 2가닥 · 전봇대에 감긴 통신선 뭉치
+  const dir = o.side === 'x' ? 1 : -1, bx = sx + dir * 46, by = top + 34;
+  for (const [ox, sag] of [[0, 10], [6, 16]]) { ctx.beginPath(); ctx.moveTo(sx + ox * dir, top + 12); ctx.quadraticCurveTo((sx + bx) / 2, (top + by) / 2 + sag, bx + ox, by + ox); ctx.stroke(); }
+  if (hh < 0.6) { ctx.strokeStyle = 'rgba(30,30,32,0.9)'; ctx.lineWidth = 1.5; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.ellipse(sx + 3, top + 30 + i * 2, 6 + i, 3, 0.3, 0, TAU); ctx.stroke(); } ctx.lineWidth = 1; }
 }
 function subwaySign(o) { // v1.50.8 깨끗한 흰 판 → 폐허에 맞게: 어두운 판 + 위쪽 노선 색 띠 · 기울어짐 · 녹·때 · 바랜 글씨 · 전기는 대부분 끊김 (새것 같아 AI 티 나던 것)
   const S = Iso.sx, Y = Iso.sy, px = S(o.x + 30, o.y - 18), py = Y(o.x + 30, o.y - 18), h = hash2(Math.floor(o.x), Math.floor(o.y));
