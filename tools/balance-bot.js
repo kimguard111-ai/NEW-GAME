@@ -11,6 +11,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1280, height: 720 } }); pg.setDefaultTimeout(300000); // v1.51 그림을 다 받을 때까지 시작 버튼이 막혀 있음
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
   await pg.goto('file://' + require('path').resolve(__dirname, '../index.html')); await pg.evaluate(() => localStorage.clear()); await pg.reload();
+  if (process.env.QUEST) await pg.evaluate(q => { window.__QUEST = q; }, process.env.QUEST);
   if (process.env.TIER) await pg.evaluate(t => { window.__TIER = t; }, +process.env.TIER); // v1.63 TIER=<위협 등급> (ASSAULT 와 함께)
   await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
   await pg.evaluate(([DODGE, START, FIXMAP, FULL, COMP, AS]) => {
@@ -196,6 +197,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     }
     { let c0 = p.credits; B.earned = 0; Object.defineProperty(p, 'credits', { get: () => c0, set: v => { if (v > c0) B.earned += v - c0; c0 = v; }, enumerable: true, configurable: true }); } // v1.31 크레딧 수입 측정
     if (FIXMAP) B.mapFor = () => FIXMAP;
+    if (window.__QUEST) { const [c, st] = window.__QUEST.split('-').map(Number); p.quest = { ch: c, step: st, active: true, progress: 0 }; p.finalEnd = p.ended = false; } // v1.62 QUEST=<장>-<단계> (0부터): 그 이야기 단계부터
     if (COMP) { p.compHired = [COMP]; p.comp = COMP; } // v1.46 동료와 함께 (COMP=assault|sniper|medic)
     B.deploy();
   }, [DODGE, START, FIXMAP, !!process.env.FULL, process.env.COMP || '', process.env.ASSAULT || '']);
