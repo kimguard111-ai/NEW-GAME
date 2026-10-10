@@ -24,9 +24,11 @@ ASSAULTS.lotte = { name: '스카이타워 정화 작전', level: 29, minLevel: 2
   waves: [{ stalker: 4, zombie: 6 }, { stalker: 4, brute: 2, spitter: 3 }, { stalker: 5, brute: 3, zombie: 4, elites: 3 }],
   boss: { name: '포식 변이체 「여왕」', art: 'queen', base: 'brute', hpMul: 10, dmgMul: 1.35, scale: 1.7, patterns: ['glutton', 'brood', 'quake'] } };
 const ASSAULT_R = 13 * TILE; // 봉쇄 구역 반지름
-// 위협 등급 (v0.14 엔드게임): 등급마다 적 레벨 +3 · 체력 +30% · 보상 증가. 등급 N을 깨면 N+1 개방
+// 위협 등급 (v0.14 엔드게임): 등급마다 적 레벨 +2 · 체력 +20% (v1.63) · 보상 증가. 등급 N을 깨면 N+1 개방
 const TIER_MAX = 10; // v1.15: 6~10은 적 레벨 대신 이번 주 변형 규칙이 단계마다 하나씩 붙음
-const tierLvl = t => 3 * (Math.min(t, 5) - 1) + Math.max(0, t - 5), tierHp = t => 1 + 0.3 * (Math.min(t, 5) - 1) + 0.15 * Math.max(0, t - 5);
+// v1.63 등급마다 +3레벨·체력 +30% → +2레벨·+20% (봇 측정: 위협 1은 Lv25에 50~60초 S, 위협 5는 Lv25~27 6번 모두 시간 초과 — 레벨 비례 체력과 곱해져 위협 5가 위협 1의 약 4배 → 약 2.8배)
+const tierLvl = t => 2 * (Math.min(t, 5) - 1) + Math.max(0, t - 5), tierHp = t => 1 + 0.2 * (Math.min(t, 5) - 1) + 0.15 * Math.max(0, t - 5);
+const tierLimit = (a, t = 1) => a.limit + 15 * (Math.min(t, 5) - 1); // v1.63 제한 시간도 등급마다 +15초
 // v1.15 변형 규칙 (주마다 순서가 바뀜): 위협 6 = 1개 · 7 = 2개 … 10 = 5개
 const MUTATORS = {
   swift:    { name: '질주', desc: '적 이동 속도 +25%' },
@@ -67,7 +69,7 @@ const Assault = {
     const top = Math.min(TIER_MAX, (rec.tier || 1) + 1), btns = [];
     for (let t = 1; t <= top; t++) btns.push([`위협 ${t} (적 Lv${a.level + tierLvl(t)})${t > 5 ? ' ' + tierMutators(t).map(m => MUTATORS[m].name).join('·') : ''}`, () => { UI.close('dialog'); this.start(l, t); }]);
     btns.push(['취소', () => UI.close('dialog')]);
-    UI.dialog(a.name, `위협 등급이 높을수록 적 레벨 +3 · 체력 +30%씩, 보상(장비 등급·전자 부품·경험치)도 커집니다.<br><span class="muted">위협 N을 클리어하면 N+1이 열립니다. (최대 ${TIER_MAX})</span>`
+    UI.dialog(a.name, `위협 등급이 높을수록 적 레벨 +2 · 체력 +20% · 제한 시간 +15초씩, 보상(장비 등급·전자 부품·경험치)도 커집니다.<br><span class="muted">위협 N을 클리어하면 N+1이 열립니다. (최대 ${TIER_MAX})</span>`
       + `<br><b style="color:#ff8a5a">위협 6~10: 이번 주 변형 규칙</b> <span class="muted">(매주 월요일 바뀜, 단계마다 하나씩 추가)</span><br>${weekMutators().map((m, i) => `<span class="muted">${i + 6}:</span> ${MUTATORS[m].name} — ${MUTATORS[m].desc}`).join('<br>')}`, btns);
   },
 
@@ -78,7 +80,7 @@ const Assault = {
     G.enemies = G.enemies.filter(e => e.def.boss || dist(e, l) > 1400);
     G.assault = { id: l.id, l, wave: -1, phase: 'ready', t: 0, wait: 3, boss: null, tier, muts: tierMutators(tier) };
     if (G.assault.muts.length) log(`변형 규칙: ${G.assault.muts.map(m => `${MUTATORS[m].name}(${MUTATORS[m].desc})`).join(' · ')}`, '#ff8a5a');
-    UI.toast(`어설트: ${a.name}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `웨이브 ${a.waves.length}개 + 거점 보스 · 제한 시간 ${a.limit}초 · 봉쇄선 밖으로 나갈 수 없음`);
+    UI.toast(`어설트: ${a.name}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `웨이브 ${a.waves.length}개 + 거점 보스 · 제한 시간 ${tierLimit(a, tier)}초 · 봉쇄선 밖으로 나갈 수 없음`);
     log(`어설트 개시: ${a.name}. 3초 후 첫 웨이브!`, '#ff9a5a');
     G.effects.push({ type: 'ring', x: l.x, y: l.y, t: 0, life: 1, color: '#ff6a4a', r: ASSAULT_R });
   },
@@ -89,7 +91,7 @@ const Assault = {
     const p = G.player, a = ASSAULTS[s.id], l = s.l;
     if (p.dead) return this.end(false, '전투 불능');
     s.t += dt;
-    if (s.t > a.limit) return this.end(false, '제한 시간 초과');
+    if (s.t > tierLimit(a, s.tier)) return this.end(false, '제한 시간 초과');
     // 봉쇄선: 밖으로 나갈 수 없음
     const d = dist(p, l);
     if (d > ASSAULT_R - p.r) {
@@ -181,7 +183,7 @@ const Assault = {
     G.shake = Math.max(G.shake, 10);
   },
 
-  par(a, tier = 1) { return Math.round(a.par * (1 + 0.1 * (tier - 1))); }, // 높은 위협은 S 기준 시간 완화
+  par(a, tier = 1) { return Math.round(a.par * (1 + 0.15 * (tier - 1))); }, // v1.63 등급마다 S 기준 +10% → +15% // 높은 위협은 S 기준 시간 완화
   rank(t, a, tier = 1) { const par = this.par(a, tier); return t <= par ? 'S' : t <= par * 1.4 ? 'A' : 'B'; },
 
   clear() {
@@ -197,7 +199,7 @@ const Assault = {
     if (first) drop(randomGear(a.level + 1, 2, 3, zone)); // 첫 클리어: 영웅 이상 확정
     if (tier > 1 && tier > ((rec && rec.tier) || 1)) drop(randomGear(lvl + 1, 2, tier >= 10 ? 4 : 3, zone)); // 새 위협 등급 첫 클리어: 영웅 이상 (v1.15 위협 10은 전설)
     if (tier >= 6) { drop(randomGear(lvl + 1, 1.5 + 0.3 * (tier - 5), 3, zone)); Weekly.on('mutator', tier); } // v1.15 변형 규칙 보상
-    { const M = MYTH_DROP.assault; if (tier >= M.tier && rk === M.rank) rollMyth('assault', lvl, (k, o) => drop(o.item)); } // v1.53 신화: 위협 5+ S랭크
+    { const M = MYTH_DROP.assault; if (tier >= M.tier && 'SAB'.indexOf(rk) <= 'SAB'.indexOf(M.rank)) rollMyth('assault', lvl, (k, o) => drop(o.item)); } // v1.53 신화: 위협 5+ · v1.63 A 등급 이상
     drop(makeConsumable('medkit', 2));
     Workshop.gain(4 + 'BAS'.indexOf(rk) * 3 + 2 * (tier - 1), 1 + 'BAS'.indexOf(rk) + (tier - 1), '작전 보급'); // 재료: 등급·위협 비례
     const better = !rec || 'SAB'.indexOf(rk) < 'SAB'.indexOf(rec.best) || t < rec.time;
@@ -223,7 +225,7 @@ const Assault = {
 
   trackerHtml() {
     const s = G.assault, a = ASSAULTS[s.id];
-    const left = G.enemies.filter(e => e.assault && e.hp > 0).length, rem = Math.max(0, Math.ceil(a.limit - s.t));
+    const left = G.enemies.filter(e => e.assault && e.hp > 0).length, rem = Math.max(0, Math.ceil(tierLimit(a, s.tier) - s.t));
     const stage = s.wave >= a.waves.length ? '거점 보스' : s.wave < 0 ? '준비' : `웨이브 ${s.wave + 1} / ${a.waves.length}`;
     return `<b style="color:#ff9a5a">${ICON('swords')} ${a.name}${s.tier > 1 ? ` · 위협 ${s.tier}` : ''}</b><br>${stage}${s.phase === 'fight' ? ` · 남은 적 <b>${left}</b>` : ''}`
       + `<br><span class="muted">${Math.floor(s.t)}초 · 예상 등급 ${this.rank(s.t, a, s.tier)} · 남은 시간 ${rem}초</span>`;

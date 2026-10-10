@@ -122,7 +122,7 @@ const Journal = {
       h += `<b style="color:#ff5aa0">고유 장비</b> <span class="muted">${uk.filter(k => p.codex.uniq[k]).length} / ${uk.length}</span><div class="codex">`;
       for (const k of uk) h += `<div class="cx${p.codex.uniq[k] ? '' : ' no'}"><span style="color:${p.codex.uniq[k] ? '#ff5aa0' : ''}">${p.codex.uniq[k] ? UNIQUES[k].name : `??? (${UNIQUES[k].boss})`}</span></div>`;
       { const mk = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), mc = RARITIES[5].color; // v1.63 신화 무기 (탈출해서 확보한 것)
-        h += `</div><b style="color:${mc}">신화 무기</b> <span class="muted">${mk.filter(k => p.codex.myth[k]).length} / ${mk.length} · 바벨·타이탄·키메라 · 어설트 위협 5+ S</span><div class="codex">`;
+        h += `</div><b style="color:${mc}">신화 무기</b> <span class="muted">${mk.filter(k => p.codex.myth[k]).length} / ${mk.length} · 바벨·타이탄·키메라 · 어설트 위협 5+ A 이상</span><div class="codex">`;
         for (const k of mk) h += `<div class="cx${p.codex.myth[k] ? '' : ' no'}">${ICON(WEAPONS[k].icon || k)} <span style="color:${p.codex.myth[k] ? mc : ''}">${p.codex.myth[k] ? WEAPONS[k].name : '???'}</span></div>`; }
       h += '</div><b>세트</b><div class="codex">';
       for (const [sid, S] of Object.entries(SETS)) h += `<div class="cx"><span style="color:${S.color}">${S.name}</span><span>${['weapon', 'armor', 'helmet'].map(sl => p.codex.sets[sid + ':' + sl] ? '■' : '□').join('')}</span></div>`;
