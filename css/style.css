@@ -541,3 +541,10 @@ body.touch #loot-feed { right: 70px; bottom: 110px; }
 .tut-dots span { color: #555; font-size: 10px; margin-right: 2px; } .tut-dots .ok { color: #7fe08a; } .tut-dots .cur { color: #ffd76a; }
 #quest-tracker .tut-now { font-size: 15px; } #quest-tracker .tut-how { font-size: 12px; } /* v1.64 지금 할 일을 크게 */
 .mc-diff { display: flex; gap: 4px; flex-wrap: wrap; margin: 4px 0 2px; } .mc-diff .dbtn { border: 1px solid #555; border-radius: 3px; padding: 2px 6px; font-size: 12px; cursor: pointer; background: rgba(0,0,0,.35); } .mc-diff .dbtn small { font-size: 10px; opacity: .85; } .mc-diff .dbtn.off { opacity: .4; cursor: default; } .mc-diff .dbtn:not(.off):hover { background: rgba(255,255,255,.08); } /* v1.66 잠실 난이도 */
+body.touch .panel, body.touch #raid-summary > div { zoom: 1; } /* v1.67 모바일 창은 화면에 맞춰 짜여 있어 키우면 넘침 — 글자 크기는 HUD에만 */
+/* v1.67 글자 크기를 키워도 창이 화면 안에: 높이 한도를 확대 배율로 나눔 (zoom 이 vh 도 키우므로) · 넘칠 때만 안에서 스크롤 */
+body:not(.touch) .panel { max-height: calc((100vh - 110px) / var(--tsp)); overflow-y: auto; }
+body:not(.touch) #panel-dialog { bottom: calc(140px / var(--tsp)); max-height: calc((100vh - 150px) / var(--tsp)); overflow-y: visible; }
+body:not(.touch) #panel-dialog.mapdlg { max-height: calc((100vh - 16px) / var(--tsp)); }
+body:not(.touch) #panel-quest { top: calc(80px / var(--tsp)); max-height: calc((100vh - 96px) / var(--tsp)); }
+body:not(.touch) #panel-enhance { top: calc(80px / var(--tsp)); max-height: calc((100vh - 100px) / var(--tsp)); }

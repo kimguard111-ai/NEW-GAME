@@ -129,6 +129,7 @@ const SFX = {
       case 'impactCrit': this.noise(0.06, 1300, 1.3, 0.38 * v); this.noise(0.11, 160, 1, 0.5 * v, 'lowpass'); this.tone(1700, 0.06, 0.08 * v, 'triangle', 0, 0.6); this.tone(95, 0.09, 0.22 * v, 'sine', 0, 0.5); break;
       case 'ricochet': this.tone(rand(2200, 3200), 0.16, 0.035 * v, 'sine', 0, 0.55); this.click(0.08 * v, 0, 3600); break; // 피융
       case 'crit': this.noise(0.08, 3000, 2, 0.3 * v); this.tone(1400, 0.07, 0.15 * v, 'triangle', 0, 0.6); break;
+      case 'headshot': this.noise(0.04, 4200, 1.8, 0.4 * v, 'highpass'); this.tone(2650, 0.22, 0.16 * v, 'triangle', 0, 0.97); this.tone(3980, 0.16, 0.06 * v, 'sine', 0.005, 0.98); this.tone(82, 0.14, 0.32 * v, 'sine', 0, 0.45); this.noise(0.09, 260, 1, 0.3 * v, 'lowpass', 0.5); this.tone(2650, 0.12, 0.05 * v, 'triangle', 0.09, 0.97); break; // v1.67 헤드샷: 철모를 때리는 「팅」 + 둔탁한 퍽 + 짧은 메아리
       case 'metal': this.tone(900 + R() * 300, 0.08, 0.15 * v, 'triangle', 0, 0.7); this.tone(2300 + R() * 400, 0.2, 0.04 * v, 'sine', 0.01, 0.98); break; // 쇳소리 + 잔향
       case 'kill': this.noise(0.18, 350, 0.9, 0.45 * v, 'lowpass', 0.4); this.tone(140, 0.12, 0.2 * v, 'sine', 0, 0.5); break;
       case 'boom': this.noise(0.6, 600, 0.5, 0.9 * v, 'lowpass', 0.1); this.tone(55, 0.5, 0.5 * v, 'sine', 0, 0.5); this.noise(0.9, 160, 0.5, 0.3 * v, 'lowpass', 0.6, 0.08); break; // 낮은 굉음 꼬리

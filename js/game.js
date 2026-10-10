@@ -1126,7 +1126,7 @@ function updateBullets(dt) {
             // v1.9 산탄총 코앞 사격: 크게 밀치고 경직
             const pb = wb && wb.pellets && b.maxLife - b.life < 0.1;
             Juice.impact(e, b, Math.atan2(b.vy, b.vx), b.crit); // v1.40 타격감
-            let hs = 1; if (b.headOf === e) { hs = (e.def.boss || e.elite || e.fieldBoss || e.labBoss) ? 1.25 : 1.5; if (G.time - (e.hsTxt || -9) > 0.35) { e.hsTxt = G.time; floatText(e.x, e.y - (ART.height[e.art || e.type] || 44) - 8, '헤드샷!', '#ff5a4a', 15); SFX.play('crit', 0.8); } } // v1.66 헤드샷 (보스 ×1.25)
+            let hs = 1; if (b.headOf === e) { hs = (e.def.boss || e.elite || e.fieldBoss || e.labBoss) ? 1.25 : 1.5; if (G.time - (e.hsTxt || -9) > 0.35) { e.hsTxt = G.time; floatText(e.x, e.y - (ART.height[e.art || e.type] || 44) - 8, '헤드샷!', '#ff5a4a', 15); SFX.play('headshot'); } } // v1.66 헤드샷 (보스 ×1.25)
             damageEnemy(e, b.dmg * fall * hs, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb, ally: b.ally });
             if (b.mark) e.markT = G.time + 5; // v1.44 윤 저격수 전용: 표적 지정
             if (wb && wbase(wb.key) === 'sniper') hitstop(0.045);
