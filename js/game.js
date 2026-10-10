@@ -308,7 +308,16 @@ function startReload() {
   const p = G.player, w = curWeapon();
   if (!w) return;
   const b = WEAPONS[w.key];
+  if (!b.melee && p.reloadT > 0) { // v1.65 액티브 재장전: 장전 중 한 번 더 누르면 — 금색 칸이면 즉시 끝 + 이 탄창 피해 +20% · 빗나가면 0.6초 더 걸림 (한 번만)
+    if (p.arTried) return; p.arTried = true;
+    const k = 1 - p.reloadT / p.reloadMax;
+    if (k >= AR_WIN[0] && k <= AR_WIN[1]) { p.reloadT = 0; finishReload(); w.arBoost = true; floatText(p.x, p.y - 40, '완벽 장전! 피해 +20%', '#ffd76a', 15); SFX.play('item', 1.4); G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.4, color: '#ffd76a', r: 46 }); }
+    else { p.reloadT += 0.6; p.reloadMax += 0.6; floatText(p.x, p.y - 40, '삐끗!', '#ff8a6a', 13); SFX.play('empty'); }
+    return;
+  }
   if (b.melee || p.reloadT > 0 || w.loaded >= magSize(w)) return;
+  w.arBoost = false; p.arTried = false;
+  if (!p.arTold && G.player.raid) { p.arTold = true; log(`재장전 중 막대가 금색 칸에 왔을 때 ${IS_TOUCH ? '장전 버튼' : keyLabel(keyOf('reload'))}을 한 번 더 → 완벽 장전 (즉시 · 이 탄창 피해 +20%). 빗나가면 조금 늦어짐.`, '#ffd76a'); } // v1.65
   if ((p.ammo[b.ammo] || 0) <= 0 && !b.infinite) {
     if (G.noAmmoT <= 0) { log(`${AMMO[b.ammo].name}이 없습니다! 다른 총이나 근접 무기로 교체(Q)하거나 출격 지도에서 사세요.`, '#f88'); G.noAmmoT = 2; SFX.play('empty'); }
     return;
@@ -317,6 +326,7 @@ function startReload() {
   SFX.reload(wbase(w.key), p.reloadMax); // v1.35 무기별 장전 소리
 }
 
+const AR_WIN = [0.42, 0.62]; // v1.65 액티브 재장전 금색 칸 (장전 진행 비율)
 function finishReload() {
   const p = G.player, w = curWeapon();
   if (!w || WEAPONS[w.key].melee) return;
@@ -340,6 +350,8 @@ function playerDamageMul(melee) {
   if (!melee && perk('steadyAim') && G.time - (p.lastHurt || -9) > 2) m *= 1.15;
   if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) m *= 1.25;
   if (pas('a5')) m *= 1.05; if (branchOn('atk')) m *= 1.08; // v1.23 패시브 트리
+  if (!melee) { const cw = curWeapon(); if (cw && cw.arBoost) m *= 1.2; } // v1.65 완벽 장전한 탄창
+  if (p.buffs.perfect > 0) m *= 1.3; // v1.65 완벽 회피 뒤 3초
   return m * Camp.dmgMul(); // v1.13 사격장
 }
 
@@ -600,11 +612,17 @@ function gainExp(n) {
   if (p.level >= MAX_LEVEL) p.exp = 0;
 }
 
+const PERFECT_DODGE = 0.2; // v1.65 구르기 시작 뒤 이 시간 안에 막은 공격 = 완벽 회피
 function damagePlayer(dmg, srcX, srcY) {
   const p = G.player;
   if (p.dead || World.inSafe(p.x, p.y)) return;
   if (p.invT > 0) return; // v1.11 두 번째 숨 무적
   if (p.rollT > 0) { // 회피 무적
+    if (G.time - (p.lastRoll || -9) < PERFECT_DODGE && p.perfRoll !== p.lastRoll) { // v1.65 완벽 회피: 구르기 시작 직후에 맞을 뻔함 → 잠깐 느려지고 3초 동안 피해 +30%
+      p.perfRoll = p.lastRoll; p.buffs.perfect = 3; G.slowT = 0.45; p.dodgeTxt = G.time;
+      floatText(p.x, p.y - 44, '완벽 회피!', '#7fe8ff', 18); SFX.play('item', 1.8); G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.5, color: '#7fe8ff', r: 70 });
+      return;
+    }
     if (G.time - (p.dodgeTxt || 0) > 0.4) { p.dodgeTxt = G.time; floatText(p.x, p.y - 30, '회피!', '#9fe0ff', 14); }
     return;
   }
@@ -663,7 +681,7 @@ function respawn() {
   if (World.map !== 'camp') { Raid.toCamp(); document.getElementById('death-screen').classList.add('hidden'); saveGame(); return; } // 출격 맵에서 죽으면 캠프로
   const p = G.player, c = World.campCenter();
   p.x = c.x; p.y = c.y; p.dead = false; p.hp = PlayerStats.maxHp(p); p.reloadT = 0; p.hurtT = 0;
-  p.buffs.rapid = 0; p.buffs.adren = 0; p.buffs.regen = 0; p.buffs.shield = 0; p.buffs.stim = 0; p.plate = 0;
+  p.buffs.rapid = 0; p.buffs.adren = 0; p.buffs.regen = 0; p.buffs.shield = 0; p.buffs.stim = 0; p.buffs.perfect = 0; p.plate = 0;
   G.enemies = G.enemies.filter(e => e.def.boss || dist(e, p) > 900);
   G.bullets = []; G.strikes = []; G.pools = [];
   document.getElementById('death-screen').classList.add('hidden');
@@ -681,6 +699,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (setOn('rad', 3) && bigE) dmg *= 1.15; // v1.12 방사능 사냥꾼 3세트
   if ((e.markT || 0) > G.time) dmg *= 1.25; // v1.12 매의 표식
   if (e.armorMut) dmg *= 0.8; // v1.15 변형 규칙: 장갑
+  if (!hit.noProc && ((e.windT || 0) > 0 || (e.aimT || 0) > 0)) { dmg *= 1.5; if (G.time - (e.gapTxt || -9) > 0.6) { e.gapTxt = G.time; floatText(e.x, e.y - e.r - 14, '빈틈!', '#ffd76a', 13); } } // v1.65 공격 준비 중(조준선·휘두르기 예고)인 적은 피해 +50%
   if (w && w.unique === 'hawk') e.markT = G.time + 5;
   if (w && w.unique === 'viper') e.slowT = G.time + 2;
   dmg = Math.max(1, Math.round(dmg));
@@ -1305,6 +1324,7 @@ function update(dt) {
   for (let i = 0; i < SKILLS.length; i++) p.skillCd[i] = Math.max(0, (p.skillCd[i] || 0) - dt); // v1.26 스킬 5개
   p.buffs.rapid = Math.max(0, p.buffs.rapid - dt);
   p.buffs.adren = Math.max(0, p.buffs.adren - dt);
+  p.buffs.perfect = Math.max(0, (p.buffs.perfect || 0) - dt); // v1.65 완벽 회피
   p.invT = Math.max(0, (p.invT || 0) - dt);
   p.buffs.shield = Math.max(0, (p.buffs.shield || 0) - dt);
   p.buffs.stim = Math.max(0, (p.buffs.stim || 0) - dt);
@@ -1406,7 +1426,7 @@ function frame(now) {
     try {
       if (G.paused) { /* 일시정지: 그리기만 */ }
       else if (G.hitstop > 0) G.hitstop -= dt; // 타격 정지 중에는 월드 정지
-      else update(dt);
+      else { if (G.slowT > 0) G.slowT -= dt; update(G.slowT > 0 ? dt * 0.35 : dt); } // v1.65 완벽 회피 슬로모
       render();
       UI.updateHUD(dt);
       FpsWatch.tick(dt);

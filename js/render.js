@@ -810,8 +810,9 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   // v1.64 캠프에서도 내 이름표 없음 (첫 화면 글자 줄이기)
   if (p.reloadT > 0) {
     const b2 = WEAPONS[w.key];
-    ctx.fillStyle = '#000'; ctx.fillRect(sx - 18, sy + 8, 36, 4);
-    ctx.fillStyle = '#ffd27a'; ctx.fillRect(sx - 18, sy + 8, 36 * (1 - p.reloadT / (p.reloadMax || b2.reload)), 4);
+    ctx.fillStyle = '#000'; ctx.fillRect(sx - 25, sy + 8, 50, 6); // v1.65 막대를 키우고 액티브 재장전 금색 칸
+    if (!p.arTried) { ctx.fillStyle = 'rgba(255,200,50,0.9)'; ctx.fillRect(sx - 25 + 50 * AR_WIN[0], sy + 7, 50 * (AR_WIN[1] - AR_WIN[0]), 8); }
+    ctx.fillStyle = '#e8e4d8'; ctx.fillRect(sx - 25, sy + 9, 50 * (1 - p.reloadT / (p.reloadMax || b2.reload)), 4);
   }
 }
 
