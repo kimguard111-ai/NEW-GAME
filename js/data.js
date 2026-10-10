@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.61.1';
+const GAME_VERSION = 'v1.61.2';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -59,7 +59,7 @@ const WEAPONS = {
 };
 // v1.53 신화 무기 드랍: 확률 + 못 얻을 때마다 pity · MYTH_LIVE = false 면 아직 안 나옴 (고유 그림이 오면 켬)
 const MYTH_LIVE = true; // v1.55 고유 그림이 와서 켬
-const MYTH_TEST = true; // v1.61.1 시험용: Lv25가 되면(또는 Lv25 이상 세이브를 불러오면) 신화 3종을 창고로 한 번 줌 · 이 동안 신화 레벨 제한 25 — 출시 전 false
+const MYTH_TEST = true; // v1.61.2 시험 모드: 새 게임·불러오기 모두 바로 Lv26 + 신화 3종 · 이 동안 신화 레벨 제한 25 — 출시 전 false
 const MYTH_DROP = { babel: { chance: 0.06, pity: 0.02 }, titan: { chance: 0.03, pity: 0.01 }, chimera: { chance: 0.04, pity: 0.015 }, assault: { chance: 0.06, pity: 0.02, tier: 5, rank: 'S' } };
 const wbase = k => (WEAPONS[k] && WEAPONS[k].base) || k; // v1.52 불법 무기 → 같은 계열 총 (소리·손맛·부품)
 
