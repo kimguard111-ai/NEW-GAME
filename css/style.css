@@ -437,6 +437,22 @@ body.touch .hot.gad .cyc { font-size: 12px; padding: 0 4px; top: 0; right: 0; ba
 .cx { font-size: 11px; padding: 3px 6px; background: rgba(255,255,255,0.04); border-radius: 3px; display: flex; justify-content: space-between; align-items: center; gap: 4px; }
 .cx.no { color: #555; }
 .cx .ico { width: 16px; height: 16px; }
+/* v1.68 도감: 등급별 칸 · 못 찾은 것은 실루엣 */
+.cxsubs { margin-bottom: 6px; }
+.cxnote { font-size: 11px; margin: 2px 0 6px; }
+.cxh { margin-top: 8px; font-size: 12px; }
+.cxdone { font-size: 10px; color: #7ce07c; border: 1px solid #7ce07c88; border-radius: 3px; padding: 0 4px; }
+.cxbar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; margin: 3px 0 4px; overflow: hidden; }
+.cxbar i { display: block; height: 100%; }
+.cxg { display: grid; grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); gap: 4px; margin-bottom: 4px; }
+.cxt { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px 3px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; font-size: 10px; text-align: center; line-height: 1.15; min-width: 0; }
+.cxt span { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cxt .ico { width: 34px; height: 34px; }
+.cxt .cxp { width: 46px; height: 46px; object-fit: contain; }
+.cxt em { position: absolute; top: 2px; right: 4px; font-style: normal; font-size: 9px; color: #aaa; }
+.cxt.no { background: rgba(0,0,0,0.25); color: #666; }
+.cxt.no .ico, .cxt.no .cxp { filter: brightness(0) drop-shadow(0 0 1px rgba(170,170,190,0.55)); opacity: 0.75; }
+.cxg.myth .cxt:not(.no) { box-shadow: 0 0 8px #ff4f3a55; }
 .ach { font-size: 12px; padding: 3px 0; color: #777; }
 .ach.ok { color: #ffd76a; }
 .inv-cell .mark.lock { left: auto; right: 2px; bottom: 1px; top: auto; }

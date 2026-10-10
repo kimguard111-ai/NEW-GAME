@@ -19,6 +19,10 @@ const ACHIEVEMENTS = [
   { id: 'story',  name: '서울의 영웅',     desc: '이야기 6장 완료',       ok: p => Story.done(p), r: { credits: 10000, chip: 10 } },
   { id: 'lv30',   name: '정점',            desc: 'Lv30 달성',             ok: p => p.level >= 30, r: { chip: 10 } },
   { id: 'leg1',   name: '빛나는 것',       desc: '전설 장비 손에 넣기',   ok: p => Object.values(p.codex.items).some(r => r >= 4), r: { credits: 1000 } },
+  { id: 'cx2',    name: '희귀 도감',       desc: '도감 희귀 등급 장비 칸 모두 밝히기', ok: p => Journal.gearKeys().every(k => (p.codex.items[k] ?? -1) >= 2), r: { credits: 3000, chip: 5 } }, // v1.68 도감 등급 완성
+  { id: 'cx3',    name: '영웅 도감',       desc: '도감 영웅 등급 장비 칸 모두 밝히기', ok: p => Journal.gearKeys().every(k => (p.codex.items[k] ?? -1) >= 3), r: { credits: 10000, chip: 15 } },
+  { id: 'cx4',    name: '전설 도감',       desc: '도감 전설 등급 장비 칸 모두 밝히기', ok: p => Journal.gearKeys().every(k => (p.codex.items[k] ?? -1) >= 4), r: { credits: 40000, chip: 40 } },
+  { id: 'cxFoe',  name: '서울 생태 보고서', desc: '도감의 적 모두 쓰러뜨리기', ok: p => Journal.foeList().every(f => p.codex.kills[f.name]), r: { credits: 15000, chip: 15 } },
   { id: 'uniq1',  name: '전리품',          desc: '보스 고유 장비 손에 넣기', ok: p => Object.keys(p.codex.uniq).length >= 1, r: { chip: 5 } },
   { id: 'uniqAll', name: '수집가',         desc: '보스 고유 장비 9종 모두', ok: p => Object.keys(p.codex.uniq).length >= Object.keys(UNIQUES).length, r: { credits: 30000, chip: 30 } },
   { id: 'set3',   name: '세트 완성',       desc: '세트 3부위 착용',       ok: p => Object.keys(SETS).some(k => setCount(p, k) >= 3), r: { chip: 5 } },
@@ -101,30 +105,66 @@ const Journal = {
     const n = ACHIEVEMENTS.filter(a => p.ach[a.id]).length;
     return `<div class="jtabs">${t('quest', '임무')}${t('codex', '도감')}${t('ach', `업적 ${n}/${ACHIEVEMENTS.length}`)}${t('rec', '기록')}</div>`;
   },
+  gearKeys() { return [...Object.keys(WEAPONS).filter(k => !WEAPONS[k].myth), ...Object.keys(ARMORS), ...Object.keys(HELMETS)]; }, // v1.68 도감 장비 목록
+  // v1.68 도감 적 목록: g = 등급 (0 일반 · 1 정예 · 2 필드 보스 · 3 어설트 보스 · 4 최종) · art = 초상화 그림 키
+  foeList() {
+    if (this._foes) return this._foes;
+    const L = [], seen = new Set(), add = (name, art, g, hint) => { if (!seen.has(name)) { seen.add(name); L.push({ name, art, g, hint }); } };
+    for (const [k, d] of Object.entries(ENEMIES)) if (!d.boss) add(d.name, d.art || k, 0);
+    for (const [k, d] of Object.entries(ELITES)) add(d.name, k, 1, '??? · 이야기 중 나타나는 정예');
+    for (const d of Object.values(FIELD_BOSSES)) add(d.name, d.art, 2, '??? · 지역 어딘가의 필드 보스');
+    for (const a of Object.values(ASSAULTS)) add(a.boss.name, a.boss.art, 3, '??? · 어설트 작전의 끝');
+    for (const [k, d] of Object.entries(ENEMIES)) if (d.boss) add(d.name, d.art || k, 4, '??? · 방사능 지대의 군주');
+    add(LAB_BOSS.name, LAB_BOSS.art, 4, '??? · 격리 연구소 깊은 곳');
+    return (this._foes = L);
+  },
+  // v1.68 적 초상화: 서 있는 그림 첫 칸을 작게 (그림이 없거나 덜 읽혔으면 빈 칸 · 다음에 다시)
+  portrait(key) {
+    const P = this._por || (this._por = {}); if (P[key]) return P[key];
+    const s = ART.sprites[key];
+    if (!s || !s.ready) return 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    try {
+      const cw = s.w || s.cell, row = (s.anims.idle || Object.values(s.anims)[0])[0], t = document.createElement('canvas'); t.width = cw; t.height = s.cell;
+      const tg = t.getContext('2d'); tg.drawImage(s.img, 0, row * s.cell, cw, s.cell, 0, 0, cw, s.cell);
+      const d = tg.getImageData(0, 0, cw, s.cell).data; let x0 = cw, y0 = s.cell, x1 = 0, y1 = 0; // 그림이 있는 범위만 잘라 크게
+      for (let y = 0; y < s.cell; y++) for (let x = 0; x < cw; x++) if (d[(y * cw + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      if (x1 < x0) { x0 = y0 = 0; x1 = cw - 1; y1 = s.cell - 1; }
+      const bw = x1 - x0 + 1, bh = y1 - y0 + 1, k = 60 / Math.max(bw, bh), c = document.createElement('canvas'); c.width = c.height = 64;
+      c.getContext('2d').drawImage(t, x0, y0, bw, bh, (64 - bw * k) / 2, 62 - bh * k, bw * k, bh * k);
+      return (P[key] = c.toDataURL());
+    } catch (e) { return (P[key] = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='); }
+  },
   bodyHtml() {
     const p = G.player; this.ensure(p);
-    if (this.tab === 'codex') {
-      const names = new Set();
-      for (const k of Object.keys(ENEMIES)) names.add(ENEMIES[k].name);
-      for (const k of Object.keys(ELITES)) names.add(ELITES[k].name);
-      for (const k of Object.keys(FIELD_BOSSES)) names.add(FIELD_BOSSES[k].name);
-      names.add(LAB_BOSS.name);
-      for (const k of Object.keys(ASSAULTS)) names.add(ASSAULTS[k].boss.name);
-      const all = [...names], seen = all.filter(n => p.codex.kills[n]).length;
-      let h = `<b>적</b> <span class="muted">${seen} / ${all.length}</span><div class="codex">`;
-      for (const n of all) { const c = p.codex.kills[n]; h += `<div class="cx${c ? '' : ' no'}">${c ? n : '???'}<span>${c ? fmt(c) : ''}</span></div>`; }
-      h += '</div>';
-      const keys = [...Object.keys(WEAPONS).filter(k => !WEAPONS[k].myth), ...Object.keys(ARMORS), ...Object.keys(HELMETS)], got = keys.filter(k => p.codex.items[k] !== undefined).length;
-      h += `<b>장비</b> <span class="muted">${got} / ${keys.length} · 색 = 손에 넣은 최고 등급</span><div class="codex">`;
-      for (const k of keys) { const r = p.codex.items[k]; h += `<div class="cx${r === undefined ? ' no' : ''}">${ICON(GEAR_DEFS(k).icon || k)} <span class="r${r ?? 0}">${r === undefined ? '???' : GEAR_DEFS(k).name}</span></div>`; }
-      h += '</div>';
-      const uk = Object.keys(UNIQUES);
-      h += `<b style="color:#ff5aa0">고유 장비</b> <span class="muted">${uk.filter(k => p.codex.uniq[k]).length} / ${uk.length}</span><div class="codex">`;
-      for (const k of uk) h += `<div class="cx${p.codex.uniq[k] ? '' : ' no'}"><span style="color:${p.codex.uniq[k] ? '#ff5aa0' : ''}">${p.codex.uniq[k] ? UNIQUES[k].name : `??? (${UNIQUES[k].boss})`}</span></div>`;
-      { const mk = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), mc = RARITIES[5].color; // v1.63 신화 무기 (탈출해서 확보한 것)
-        h += `</div><b style="color:${mc}">신화 무기</b> <span class="muted">${mk.filter(k => p.codex.myth[k]).length} / ${mk.length} · 바벨·타이탄·키메라 · 어설트 위협 5+ A 이상</span><div class="codex">`;
-        for (const k of mk) h += `<div class="cx${p.codex.myth[k] ? '' : ' no'}">${ICON(WEAPONS[k].icon || k)} <span style="color:${p.codex.myth[k] ? mc : ''}">${p.codex.myth[k] ? WEAPONS[k].name : '???'}</span></div>`; }
-      h += '</div><b>세트</b><div class="codex">';
+    if (this.tab === 'codex') { // v1.68 도감: 장비는 등급(티어)별 · 못 찾은 것은 실루엣 · 적은 등급별 초상화
+      const sub = this.cxTab || 'gear', st = (id, name) => `<button class="jtab cxsub${sub === id ? ' on' : ''}" data-cxtab="${id}">${name}</button>`;
+      const tile = (on, img, name, col, tip, extra = '') => `<div class="cxt${on ? '' : ' no'}" title="${tip}" style="${on && col ? `border-color:${col}55` : ''}">${img}<span style="${on && col ? `color:${col}` : ''}">${on ? name : '???'}</span>${extra}</div>`;
+      const head = (name, got, all, col, note = '') => `<div class="cxh"><b style="color:${col}">${name}</b> <span class="muted">${got} / ${all}${note ? ' · ' + note : ''}</span>${got >= all ? ' <span class="cxdone">완성</span>' : ''}</div><div class="cxbar"><i style="width:${Math.round(got / all * 100)}%;background:${col}"></i></div>`;
+      const gk = this.gearKeys(), cnt = t => gk.filter(k => (p.codex.items[k] ?? -1) >= t).length;
+      const fs = this.foeList(), fGot = fs.filter(f => p.codex.kills[f.name]).length;
+      let h = `<div class="jtabs cxsubs">${st('gear', `장비 ${gk.reduce((a, k) => a + Math.max(0, (p.codex.items[k] ?? -1) + 1), 0)}/${gk.length * 5}`)}${st('foe', `적 ${fGot}/${fs.length}`)}</div>`;
+      if (sub === 'foe') {
+        for (const [g, gname, col] of [[0, '일반 적', '#cfcfcf'], [1, '정예', '#ffd76a'], [2, '필드 보스', '#ff9a4a'], [3, '어설트 보스', '#ff6a5a'], [4, '최종 보스', RARITIES[5].color]]) {
+          const L = fs.filter(f => f.g === g); if (!L.length) continue;
+          h += head(gname, L.filter(f => p.codex.kills[f.name]).length, L.length, col) + '<div class="cxg foe">';
+          for (const f of L) { const c = p.codex.kills[f.name]; h += tile(c, `<img class="cxp" src="${this.portrait(f.art)}" alt="">`, f.name, col, c ? `${f.name} · ${fmt(c)}마리 처치` : (f.hint || '아직 쓰러뜨리지 못한 적'), c ? `<em>${fmt(c)}</em>` : ''); }
+          h += '</div>';
+        }
+        return h;
+      }
+      h += '<div class="muted cxnote">같은 장비라도 더 높은 등급을 손에 넣어야 칸이 밝혀집니다. 실루엣의 정체를 찾아보세요.</div>';
+      for (let t = 0; t < 5; t++) {
+        const R = RARITIES[t]; h += head(R.name, cnt(t), gk.length, R.color) + '<div class="cxg">';
+        for (const k of gk) { const D = GEAR_DEFS(k), on = (p.codex.items[k] ?? -1) >= t; h += tile(on, ICON(D.icon || k), D.name, R.color, on ? `${R.name} ${D.name}` : `??? · Lv${D.lvl || 1}+ 장비`); }
+        h += '</div>';
+      }
+      const uk = Object.keys(UNIQUES), ug = uk.filter(k => p.codex.uniq[k]).length;
+      h += head('고유', ug, uk.length, '#ff5aa0', '필드·지역 보스 전용') + '<div class="cxg">';
+      for (const k of uk) { const U = UNIQUES[k], on = p.codex.uniq[k]; h += tile(on, ICON(WEAPONS[U.key] ? WEAPONS[U.key].icon || U.key : U.key), U.name, '#ff5aa0', on ? `${U.name} — ${U.desc}` : `??? · ${U.boss}에게서`); }
+      const mk = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), mc = RARITIES[5].color, mg = mk.filter(k => p.codex.myth[k]).length;
+      h += '</div>' + head('신화', mg, mk.length, mc, '바벨·타이탄·키메라 · 어설트 위협 5+ A 이상 · 탈출해야 등록') + '<div class="cxg myth">';
+      for (const k of mk) { const on = p.codex.myth[k]; h += tile(on, ICON(WEAPONS[k].icon || k), WEAPONS[k].name, mc, on ? `${WEAPONS[k].name} — ${WEAPONS[k].role || ''}` : '??? · 신화 무기'); }
+      h += '</div><div class="cxh"><b>세트</b></div><div class="codex">';
       for (const [sid, S] of Object.entries(SETS)) h += `<div class="cx"><span style="color:${S.color}">${S.name}</span><span>${['weapon', 'armor', 'helmet'].map(sl => p.codex.sets[sid + ':' + sl] ? '■' : '□').join('')}</span></div>`;
       return h + '</div>';
     }
@@ -150,5 +190,6 @@ const Journal = {
   },
   bind(root) {
     root.querySelectorAll('[data-jtab]').forEach(b => { b.onclick = () => { this.tab = b.dataset.jtab; SFX.play('ui'); UI.refreshQuest(); }; });
+    root.querySelectorAll('[data-cxtab]').forEach(b => { b.onclick = () => { this.cxTab = b.dataset.cxtab; SFX.play('ui'); UI.refreshQuest(); }; }); // v1.68 도감 장비 / 적
   },
 };
