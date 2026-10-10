@@ -128,9 +128,9 @@ function loadSave(n = SAVE_SLOT) {
   try {
     const s = localStorage.getItem(slotKey(n));
     if (!s) return null;
-    if (validSave(s)) { const v = JSON.parse(renameLegacy(s)); migrateRoster(v.p); return v; }
+    if (validSave(s)) { const v = JSON.parse(renameLegacy(s)); migrateRoster(v.p); mythTestGrant(v.p); return v; }
     const b = localStorage.getItem(slotKey(n) + '-bak'); // v1.49 깨진 저장 → 백업으로
-    if (b && validSave(b)) { const v = JSON.parse(renameLegacy(b)); migrateRoster(v.p); v.fromBak = true; return v; }
+    if (b && validSave(b)) { const v = JSON.parse(renameLegacy(b)); migrateRoster(v.p); mythTestGrant(v.p); v.fromBak = true; return v; }
     return null;
   } catch (e) { return null; }
 }
@@ -593,6 +593,7 @@ function gainExp(n) {
     if (pt) { UI.toast(`Lv${pt.lvl} 특성 선택`, `능력치 창(C)에서 ${pt.perks.map(k => k.name).join(' · ')} 중 하나`); log(`특성을 고를 수 있다: ${pt.perks.map(k => k.name).join(' · ')} (능력치 창 C)`, '#ffd76a'); }
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.8, color: '#ffd76a', r: 80 });
     floatText(p.x, p.y - 40, 'LEVEL UP!', '#ffd76a', 22);
+    mythTestGrant(p, true); // v1.61.1 시험용 신화
     UI.buildHotbar(); UI.refreshStats();
     saveGame();
   }
@@ -1143,6 +1144,15 @@ function updateGrenades(dt) {
 // v1.7.1 장비가 땅에 닿는 순간의 연출 — 드랍이 귀해진 만큼 등급별로 확실하게
 // v1.12 보스 고유 장비 굴림: 기본 확률 + 못 얻을 때마다 +3% (얻으면 초기화)
 // v1.53 신화 무기: 정해진 곳에서만 낮은 확률 (못 얻을 때마다 확률 +pity) · 레벨 제한이 높아 미리 주워 둘 수도 있음
+// v1.61.1 시험용 신화 3종 (MYTH_TEST · v1.61.1): 창고로 한 번만 · 출격 중 레벨 업이어도 창고라 잃지 않음
+function mythTestGrant(P, live) {
+  if (!MYTH_TEST || !P || P.level < 25 || P.mythTestGot) return false;
+  P.mythTestGot = true; P.stash = P.stash || [];
+  for (const k of Object.keys(WEAPONS).filter(k => WEAPONS[k].myth)) { const w = makeMyth(k, P.level); w.isNew = true; P.stash.push(w); }
+  const msg = () => { UI.toast('시험용 신화 무기 3종', '창고(창고 관리인 정씨)에 넣어 뒀다 · 래피드 블래스터 · F-20 · OX-20'); log('시험용 신화 무기 3종이 창고에 들어왔다.', '#ff8a3d'); };
+  if (live) msg(); else setTimeout(() => { if (G.player === P) msg(); }, 2500);
+  return true;
+}
 function makeMyth(key, level) { const w = makeWeapon(key, Math.max(level, WEAPONS[key].lvl), 5); w.name = WEAPONS[key].name; return w; }
 function rollMyth(src, level, dropAt) {
   const D = MYTH_DROP[src], p = G.player;

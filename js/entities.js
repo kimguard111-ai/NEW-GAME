@@ -157,7 +157,7 @@ function enhanceCost(it) { return Math.round((20 + it.ilvl * 6) * Math.pow(it.pl
 function enhanceRate(it) { return Math.min(1, ENHANCE.rates[it.plus] + (it.fails || 0) * ENHANCE.failBonus + Camp.enhanceBonus()); }
 
 function itemReqLevel(it) {
-  if (it.kind === 'weapon') return WEAPONS[it.key].lvl;
+  if (it.kind === 'weapon') return MYTH_TEST && WEAPONS[it.key].myth ? Math.min(25, WEAPONS[it.key].lvl) : WEAPONS[it.key].lvl; // v1.61.1 시험 중엔 신화도 Lv25
   if (it.kind === 'armor') return ARMORS[it.key].lvl;
   if (it.kind === 'helmet') return HELMETS[it.key].lvl;
   if (it.kind === 'belt') return BELTS[it.rarity].lvl;
