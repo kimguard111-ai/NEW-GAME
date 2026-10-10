@@ -79,6 +79,19 @@ const ART = {
     lamp: { file: 'props_lamp.png', rect: [4, 200, 313, 518], ax: 0.093 }, // v1.31.2 다시 그린 가로등 (기둥이 그림 왼쪽 → ax = 기둥 위치)
     signal: { file: 'props_street.png', rect: [476, 184, 251, 178] },
     trash: { file: 'props_street.png', rect: [226, 4, 153, 122] },
+    // v1.58 props_seoul2
+    truck: { file: 'props_seoul2.png', rect: [4, 4, 258, 142] }, taxi_o: { file: 'props_seoul2.png', rect: [266, 4, 265, 138] }, minibus: { file: 'props_seoul2.png', rect: [535, 4, 302, 179] }, taxi_s: { file: 'props_seoul2.png', rect: [4, 187, 270, 138] }, delivery: { file: 'props_seoul2.png', rect: [278, 187, 167, 129] }, van: { file: 'props_seoul2.png', rect: [449, 187, 270, 171] }, reefer: { file: 'props_seoul2.png', rect: [723, 187, 269, 217] }, handcart: { file: 'props_seoul2.png', rect: [4, 408, 158, 125] }, bikes: { file: 'props_seoul2.png', rect: [166, 408, 219, 152] },
+    // v1.58 props_seoul3
+    fishcart: { file: 'props_seoul3.png', rect: [4, 4, 189, 204] }, recycle: { file: 'props_seoul3.png', rect: [197, 4, 245, 170] }, phonebooth: { file: 'props_seoul3.png', rect: [446, 4, 110, 212] }, mailbox: { file: 'props_seoul3.png', rect: [560, 4, 78, 154] }, clothesbin: { file: 'props_seoul3.png', rect: [642, 4, 111, 166] }, vent: { file: 'props_seoul3.png', rect: [757, 4, 202, 127] }, kiosk: { file: 'props_seoul3.png', rect: [4, 220, 191, 232] }, trashpile: { file: 'props_seoul3.png', rect: [199, 220, 205, 147] }, wiretree: { file: 'props_seoul3.png', rect: [408, 220, 170, 316] },
+    // v1.58 props_subway
+    gates: { file: 'props_subway.png', rect: [4, 4, 308, 235] }, ticketm: { file: 'props_subway.png', rect: [316, 4, 170, 243] }, screendoor: { file: 'props_subway.png', rect: [490, 4, 240, 254] }, linemap: { file: 'props_subway.png', rect: [734, 4, 217, 258] }, chairs: { file: 'props_subway.png', rect: [4, 266, 285, 232] }, firebox: { file: 'props_subway.png', rect: [293, 266, 195, 250] }, stationkiosk: { file: 'props_subway.png', rect: [492, 266, 280, 287] }, stairs: { file: 'props_subway.png', rect: [4, 557, 342, 270] }, sandlamp: { file: 'props_subway.png', rect: [350, 557, 278, 195] },
+    // v1.58 props_landmark
+    haechi: { file: 'props_landmark.png', rect: [4, 4, 151, 184] }, pavilion: { file: 'props_landmark.png', rect: [159, 4, 220, 206] }, gym: { file: 'props_landmark.png', rect: [383, 4, 152, 169] }, gym2: { file: 'props_landmark.png', rect: [539, 4, 162, 178] }, busshelter: { file: 'props_landmark.png', rect: [705, 4, 243, 216] }, fountain: { file: 'props_landmark.png', rect: [4, 224, 223, 146] }, parasol: { file: 'props_landmark.png', rect: [231, 224, 176, 203] }, palacewall: { file: 'props_landmark.png', rect: [464, 224, 242, 191] }, bust: { file: 'props_landmark.png', rect: [710, 224, 92, 193] }, barricades: { file: 'props_landmark.png', rect: [806, 224, 212, 184] },
+    // v1.58 props_district
+    carousel: { file: 'props_district.png', rect: [4, 4, 229, 231] }, coaster: { file: 'props_district.png', rect: [237, 4, 310, 220] }, swanboat: { file: 'props_district.png', rect: [551, 4, 179, 132] }, gondola: { file: 'props_district.png', rect: [734, 4, 175, 176] }, billboard: { file: 'props_district.png', rect: [4, 239, 178, 330] }, floodlight: { file: 'props_district.png', rect: [186, 239, 163, 501] }, tank: { file: 'props_district.png', rect: [353, 239, 269, 178] }, ticketbooth: { file: 'props_district.png', rect: [626, 239, 156, 198] }, riverboat: { file: 'props_district.png', rect: [4, 744, 254, 175] },
+    gate: { file: 'gate.png', rect: [4, 4, 936, 557] }, overpass: { file: 'prop_overpass.png', rect: [4, 4, 1003, 523] }, // v1.58 성문 잔해 (종로) · 육교 (등록만)
+    // v1.58 props_interior3
+    in_pcbang: { file: 'props_interior3.png', rect: [4, 4, 276, 215] }, in_karaoke: { file: 'props_interior3.png', rect: [284, 4, 279, 181] }, in_snackbar: { file: 'props_interior3.png', rect: [567, 4, 194, 152] }, in_ticket: { file: 'props_interior3.png', rect: [765, 4, 87, 165] }, in_wait: { file: 'props_interior3.png', rect: [856, 4, 149, 136] }, in_salon: { file: 'props_interior3.png', rect: [4, 223, 137, 194] }, in_laundry: { file: 'props_interior3.png', rect: [145, 223, 178, 198] }, in_desk: { file: 'props_interior3.png', rect: [327, 223, 166, 184] }, in_shoelocker: { file: 'props_interior3.png', rect: [497, 223, 142, 187] }, in_counter: { file: 'props_interior3.png', rect: [643, 223, 225, 189] },
     tree: { file: 'props_street.png', rect: [4, 4, 118, 176] },
     // props_vehicle.png
     bus: { file: 'props_vehicle.png', rect: [294, 207, 380, 303], mirror: true },
@@ -162,6 +175,13 @@ const ART = {
   },
   // 소품 그림을 화면에 놓는 크기: w = 화면 가로(px, 확대 1배 기준) · y = 그림 아래쪽을 바닥 점보다 얼마나 아래에 둘지
   propFit: {
+    truck: { w: 100, y: 18 }, taxi_o: { w: 92, y: 18 }, minibus: { w: 130, y: 24 }, taxi_s: { w: 92, y: 18 }, delivery: { w: 34, y: 5 }, van: { w: 98, y: 18 }, reefer: { w: 104, y: 20 }, handcart: { w: 34, y: 5 }, bikes: { w: 46, y: 6 },
+    fishcart: { w: 40, y: 6 }, recycle: { w: 40, y: 6 }, phonebooth: { w: 22, y: 4 }, mailbox: { w: 14, y: 2 }, clothesbin: { w: 22, y: 4 }, vent: { w: 40, y: 8 }, kiosk: { w: 36, y: 8 }, trashpile: { w: 40, y: 6 }, wiretree: { w: 40, y: 6 },
+    gates: { w: 64, y: 8 }, ticketm: { w: 28, y: 6 }, screendoor: { w: 60, y: 8 }, linemap: { w: 52, y: 4 }, chairs: { w: 50, y: 6 }, firebox: { w: 34, y: 6 }, stationkiosk: { w: 48, y: 10 }, stairs: { w: 72, y: 12 }, sandlamp: { w: 52, y: 8 },
+    haechi: { w: 36, y: 6 }, pavilion: { w: 110, y: 16 }, gym: { w: 42, y: 6 }, gym2: { w: 40, y: 6 }, busshelter: { w: 84, y: 10 }, fountain: { w: 96, y: 14 }, parasol: { w: 56, y: 8 }, palacewall: { w: 88, y: 12 }, bust: { w: 20, y: 4 }, barricades: { w: 56, y: 8 },
+    carousel: { w: 150, y: 20 }, coaster: { w: 190, y: 16 }, swanboat: { w: 52, y: 8 }, gondola: { w: 48, y: 8 }, billboard: { w: 80, y: 6 }, floodlight: { w: 70, y: 6 }, tank: { w: 120, y: 20 }, ticketbooth: { w: 46, y: 8 }, riverboat: { w: 150, y: 20 },
+    in_pcbang: { w: 64, y: 10 }, in_karaoke: { w: 40, y: 8 }, in_snackbar: { w: 40, y: 8 }, in_ticket: { w: 16, y: 4 }, in_wait: { w: 32, y: 6 }, in_salon: { w: 30, y: 6 }, in_laundry: { w: 40, y: 6 }, in_desk: { w: 28, y: 6 }, in_shoelocker: { w: 32, y: 6 }, in_counter: { w: 44, y: 8 }, // v1.58
+    gate: { w: 296, y: 72 }, overpass: { w: 300, y: 30 },
     lamp: { w: 66, y: 2 }, tree: { w: 92, y: 4 }, deadtree: { w: 78, y: 4 }, /* v1.21 실제 스케일 */ trash: { w: 34, y: 4 }, cone: { w: 13, y: 2 }, barrel: { w: 19, y: 3 },
     hydrant: { w: 15, y: 2 }, bench: { w: 40, y: 6 }, signal: { w: 64, y: 2 },
     car_a: { w: 92, y: 18 }, car_b: { w: 96, y: 18 }, car_c: { w: 92, y: 18 }, police: { w: 92, y: 18 }, bus: { w: 210, y: 40 }, car_burnt: { w: 92, y: 18 }, /* v1.21 2칸 승용차 · 5칸 버스 */
@@ -191,11 +211,23 @@ const ART = {
     f_shop: { file: 'tex_facade.png', rect: [661, 283, 317, 266] },
     // tex_facade2.png
     f_apartment2: { file: 'tex_tall2.png', rect: [689, 3, 332, 566] },
-    f_brick2: { file: 'tex_tall3.png', rect: [3, 3, 332, 566] },
+    f_brick2: { file: 'tex_tall3.png', rect: [3, 3, 330, 566] }, // v1.58 다시 그린 tex_tall3
     f_office2: { file: 'tex_tall3.png', rect: [347, 3, 330, 566] },
-    f_glass2: { file: 'tex_tall3.png', rect: [689, 3, 332, 566] },
+    f_glass2: { file: 'tex_tall3.png', rect: [691, 3, 330, 566] },
     f_burnt2: { file: 'tex_tall4.png', rect: [3, 3, 332, 566] },
     // tex_roof.png
+    // v1.58 지역 외벽 (프롬프트 26절) — 패널 3개씩 · 오른쪽 분홍이 남은 건 잘라냄
+    d1_signs: { file: 'tex_dist1.png', rect: [3, 3, 330, 566] }, d1_tile: { file: 'tex_dist1.png', rect: [347, 3, 330, 566] }, d1_hotel: { file: 'tex_dist1.png', rect: [691, 3, 282, 566] },
+    d2_hanok: { file: 'tex_dist2.png', rect: [3, 3, 330, 566] }, d2_tile60: { file: 'tex_dist2.png', rect: [347, 3, 330, 566] }, d2_jewel: { file: 'tex_dist2.png', rect: [691, 3, 330, 566] },
+    d3_elec: { file: 'tex_dist3.png', rect: [3, 3, 330, 566] }, d3_basewall: { file: 'tex_dist3.png', rect: [347, 3, 330, 566] }, d3_quarters: { file: 'tex_dist3.png', rect: [691, 3, 330, 566] },
+    d4_granite: { file: 'tex_dist4.png', rect: [3, 3, 330, 566] }, d4_broadcast: { file: 'tex_dist4.png', rect: [347, 3, 330, 566] }, d4_riverapt: { file: 'tex_dist4.png', rect: [691, 3, 330, 566] },
+    d5_clinic: { file: 'tex_dist5.png', rect: [3, 3, 330, 566] }, d5_officetel: { file: 'tex_dist5.png', rect: [347, 3, 330, 566] }, d5_glassstone: { file: 'tex_dist5.png', rect: [691, 3, 330, 566] },
+    d6_aptside: { file: 'tex_dist6.png', rect: [3, 3, 330, 566] }, d6_corridor: { file: 'tex_dist6.png', rect: [347, 3, 330, 566] }, d6_mallshop: { file: 'tex_dist6.png', rect: [691, 3, 280, 566] },
+    // v1.58 옥상 2 (27절): 기와 · 초록 방수페인트 · 함석 — 정사각으로 잘라 씀 (세 번째 아래 분홍 상자 피함)
+    r_giwa: { file: 'tex_roof2.png', rect: [3, 3, 330, 330] }, r_green: { file: 'tex_roof2.png', rect: [350, 40, 324, 324] }, r_tin: { file: 'tex_roof2.png', rect: [692, 3, 328, 328] },
+    // v1.58 바닥 2 (30절): 점자블록 보도 · 붉은 보도블록 · 버스전용차로 · 주차장 · 한강공원 길 · 횡단보도
+    g_tactile: { file: 'tex_street2.png', rect: [3, 3, 330, 277] }, g_redbrick: { file: 'tex_street2.png', rect: [347, 3, 330, 277] }, g_buslane: { file: 'tex_street2.png', rect: [690, 3, 331, 277] },
+    g_parking: { file: 'tex_street2.png', rect: [3, 292, 330, 277] }, g_parkpath: { file: 'tex_street2.png', rect: [347, 292, 330, 277] }, g_crosswalk: { file: 'tex_street2.png', rect: [690, 292, 331, 277] },
     r_concrete: { file: 'tex_roof.png', rect: [7, 7, 330, 342] },
     r_gravel: { file: 'tex_roof.png', rect: [347, 7, 330, 342] },
     r_tar: { file: 'tex_roof.png', rect: [687, 7, 330, 341] },
@@ -232,19 +264,20 @@ const ART = {
   // v1.25 실내 바닥 질감 (가공 도구 「v1.25 실내 바닥 질감 6종」 → tex 안에 붙여넣기). 2×2칸에 한 장을 펼침
   // 상가 이름 → 소품 그림 · 바닥 질감 · 장식 (없는 그림은 지금처럼 코드로 그림)
   shopArt: {
-    편의점: { obj: 'in_snack', floor: 'fl_tile', front: 'sf_conv' }, 약국: { obj: 'in_pharma', floor: 'fl_lino', front: 'sf_pharma' }, 마트: { obj: 'in_mart', floor: 'fl_tile', front: 'sf_mart' },
+    편의점: { obj: 'in_snack', floor: 'fl_tile', deco: 'in_counter', front: 'sf_conv' }, 약국: { obj: 'in_pharma', floor: 'fl_lino', front: 'sf_pharma' }, 마트: { obj: 'in_mart', floor: 'fl_tile', front: 'sf_mart' },
     서점: { obj: 'in_books', floor: 'fl_wood', front: 'sf_books' }, 전자상가: { obj: 'in_elec', floor: 'fl_tile', front: 'sf_elec' }, 카페: { obj: 'in_cafe', floor: 'fl_wood', front: 'sf_cafe' },
-    분식집: { obj: 'in_food', floor: 'fl_concrete', front: 'sf_food' }, 은행: { obj: 'in_bank', floor: 'fl_marble', front: 'sf_bank' }, 병원: { obj: 'in_hosp', floor: 'fl_lino', deco: 'in_bed', front: 'sf_hosp' },
-    파출소: { obj: 'in_police', floor: 'fl_marble', front: 'sf_police' }, PC방: { obj: 'in_pc', floor: 'fl_carpet', front: 'sf_pc' }, 세탁소: { obj: 'in_washer', floor: 'fl_concrete', front: 'sf_laundry' },
+    분식집: { obj: 'in_food', floor: 'fl_concrete', deco: 'in_snackbar', front: 'sf_food' }, 은행: { obj: 'in_bank', floor: 'fl_marble', deco: ['in_ticket', 'in_wait'], front: 'sf_bank' }, 병원: { obj: 'in_hosp', floor: 'fl_lino', deco: ['in_bed', 'in_wait'], front: 'sf_hosp' },
+    파출소: { obj: 'in_police', floor: 'fl_marble', front: 'sf_police' }, PC방: { obj: 'in_pc', floor: 'fl_carpet', deco: 'in_pcbang', front: 'sf_pc' }, 세탁소: { obj: 'in_washer', floor: 'fl_concrete', deco: 'in_laundry', front: 'sf_laundry' },
+    노래방: { obj: 'in_karaoke', floor: 'fl_carpet' }, 미용실: { obj: 'in_salon', floor: 'fl_tile', deco: 'in_wait' }, 학원: { obj: 'in_desk', floor: 'fl_lino', deco: 'in_shoelocker' }, // v1.58 실내 3 (32절)
   },
   // v1.31.1 지역마다 외벽 후보 — 그림이 없는 키는 건너뜀 (f_tile·f_villa… 는 v1.31.1 프롬프트 15-2)
-  texZones: { 0: ['f_apartment', 'f_brick', 'f_apartment2', 'f_villa', 'f_tile'],
-    1: ['f_brick', 'f_apartment', 'f_office', 'f_brick2', 'f_apartment2', 'f_signframe', 'f_tile', 'f_motel'],
-    2: ['f_brick', 'f_apartment', 'f_brick2', 'f_apartment2', 'f_tile', 'f_villa', 'f_vines', 'f_signframe'],
-    3: ['f_office', 'f_burnt', 'f_apartment', 'f_office2', 'f_military', 'f_scaffold', 'f_signframe'], // v1.40.2 f_burnt2(무너진 벽 구멍)는 건물 전체에 줄지어 기괴해서 뺌
-    4: ['f_office', 'f_glass', 'f_burnt', 'f_office2', 'f_stone', 'f_scaffold'],
-    6: ['f_glass', 'f_office', 'f_glass2', 'f_office2', 'f_stone'],
-    7: ['f_apartment', 'f_burnt', 'f_brick', 'f_apartment2', 'f_corridor', 'f_villa', 'f_vines'] },
+  texZones: { 0: ['f_apartment', 'f_brick', 'f_apartment2', 'f_villa', 'f_tile'], // v1.58 d1_~d6_ = 지역 외벽 (26절)
+    1: ['f_brick', 'f_apartment', 'f_office', 'f_brick2', 'f_apartment2', 'f_signframe', 'f_tile', 'f_motel', 'd1_signs', 'd1_tile', 'd1_hotel'],
+    2: ['f_brick', 'f_apartment', 'f_brick2', 'f_apartment2', 'f_tile', 'f_villa', 'f_vines', 'f_signframe', 'd2_hanok', 'd2_hanok', 'd2_tile60', 'd2_jewel'],
+    3: ['f_office', 'f_burnt', 'f_apartment', 'f_office2', 'f_military', 'f_scaffold', 'f_signframe', 'd3_elec', 'd3_basewall', 'd3_quarters'], // v1.40.2 f_burnt2(무너진 벽 구멍)는 건물 전체에 줄지어 기괴해서 뺌
+    4: ['f_office', 'f_glass', 'f_burnt', 'f_office2', 'f_stone', 'f_scaffold', 'd4_granite', 'd4_broadcast', 'd4_riverapt'],
+    6: ['f_glass', 'f_office', 'f_glass2', 'f_office2', 'f_stone', 'd5_clinic', 'd5_officetel', 'd5_glassstone'],
+    7: ['f_apartment', 'f_burnt', 'f_brick', 'f_apartment2', 'f_corridor', 'f_villa', 'f_vines', 'd6_aptside', 'd6_corridor', 'd6_mallshop'] },
   // v1.31.1 일반 건물 1층 상가: 칸·면마다 이 중 하나 (f_shop + 프롬프트 15-1의 9종)
   groundSet: ['f_shop', 'g_shutter', 'g_glass', 'g_awning', 'g_awning2', 'g_phone', 'g_grille', 'g_salon', 'g_salon2', 'g_realty', 'g_karaoke', 'g_empty'], // v1.31 변형(…2) 섞어 반복 줄이기
 

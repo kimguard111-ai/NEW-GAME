@@ -45,9 +45,31 @@ function groundTex(tx, ty, t, x, y) {
   ctx.drawImage(a.img, rx + (((tx % q) + q) % q) * rw / q, ry + (((ty % q) + q) % q) * rh / q, rw / q, rh / q, x, y, TILE + 0.6, TILE + 0.6);
   return true;
 }
+// v1.58 바닥 2 (30절): 길가 점자블록(블록 절반) · 붉은 보도블록(명동·종로·잠실 안쪽 보도) · 버스전용차로(강남·여의도 세로 큰길 일부) · 주차장 · 공원 길(여의도·잠실)
+// 반환 [키, 가로 칸 위치(0~3 · null = tx%4), 90° 돌림]
+function groundKey2(tx, ty, t) {
+  if (World.map === 'camp' || (World.def && World.def.lab)) return null;
+  const B = World.BLOCK, RW = World.ROADW, lx = tx % B, ly = ty % B, bx = Math.floor(tx / B), by = Math.floor(ty / B), z = World.zoneIndex();
+  if (t === T.WALK) {
+    if (World.lots && World.lots.has(by * 1000 + bx) && lx > RW && ly > RW) return ['g_parking', null, false];
+    if ((lx === RW) !== (ly === RW) && hash2(bx * 3 + 1, by * 5 + 2) < 0.35) return ['g_tactile', 1.5, ly === RW]; // 노란 줄이 칸 가운데 오게
+    if (lx > RW && ly > RW && (z === 1 || z === 2 || z === 7) && hash2(bx * 7 + 4, by * 3 + 9) < 0.5) return ['g_redbrick', null, false];
+  } else if (t === T.GRASS && (z === 4 || z === 7) && (lx === RW + 6 || ly === RW + 6)) return ['g_parkpath', 1.5, ly === RW + 6 && lx !== RW + 6];
+  else if ((t === T.ROAD || t === T.CAR) && (z === 4 || z === 6) && lx < RW && ly >= RW && hash2(bx * 5 + 7, 3) < 0.4) return ['g_buslane', lx, false];
+  return null;
+}
+function groundTex2(tx, ty, t, x, y) {
+  const g = groundKey2(tx, ty, t); if (!g) return false;
+  const a = ART.tex && ART.tex[g[0]]; if (!a || !a.ready) return false;
+  const [rx, ry, rw, rh] = a.rect, q = 4, col = g[1] == null ? (((tx % q) + q) % q) : g[1], row = ((g[2] ? tx : ty) % q + q) % q;
+  if (!g[2]) { ctx.drawImage(a.img, rx + col * rw / q, ry + row * rh / q, rw / q, rh / q, x, y, TILE + 0.6, TILE + 0.6); return true; }
+  ctx.save(); ctx.translate(x + TILE / 2, y + TILE / 2); ctx.rotate(Math.PI / 2);
+  ctx.drawImage(a.img, rx + col * rw / q, ry + row * rh / q, rw / q, rh / q, -TILE / 2 - 0.3, -TILE / 2 - 0.3, TILE + 0.6, TILE + 0.6); ctx.restore(); return true;
+}
 function drawGroundTile(tx, ty, t) {
   const x = tx * TILE, y = ty * TILE, h = hash2(tx, ty);
-  if (!groundTex(tx, ty, t, x, y)) { ctx.fillStyle = TILE_COLORS[t]; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); }
+  const g2 = groundTex2(tx, ty, t, x, y); // v1.58 이 그림이 깔리면 아래 코드 보도블록으로 덮지 않음
+  if (!g2 && !groundTex(tx, ty, t, x, y)) { ctx.fillStyle = TILE_COLORS[t]; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); }
   if (t === T.ROAD || t === T.CAR) {
     const lx = tx % World.BLOCK, ly = ty % World.BLOCK, RW = World.ROADW;
     ctx.fillStyle = '#8a7a3a'; // 중앙선 (4차선: 2번째와 3번째 칸 사이)
@@ -63,7 +85,7 @@ function drawGroundTile(tx, ty, t) {
     if (lx === RW && ly < RW) for (let i = 0; i < 4; i++) ctx.fillRect(x + 5, y + 2 + i * 8, 22, 4);
     if (h < 0.06) { ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x + h * 200, y + 10, 10, 6); }
     if (Settings.detail) roadWear(x, y, h, tx, ty);
-  } else if (t === T.WALK) { // v1.10 보도블록: 칸마다 조금씩 다른 색 · 깨진 블록 · 틈새 풀
+  } else if (t === T.WALK && !g2) { // v1.10 보도블록: 칸마다 조금씩 다른 색 · 깨진 블록 · 틈새 풀
     const v = Math.floor((hash2(tx * 5 + 1, ty * 3 + 2) - 0.5) * 10);
     ctx.fillStyle = `rgb(${69 + v},${70 + v},${75 + v})`; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
     ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
@@ -174,7 +196,7 @@ const GroundCache = {
     // 경계 이음매 방지를 위해 한 칸씩 더 그림
     for (let ty = cy * CH - 1; ty <= cy * CH + CH; ty++) for (let tx = cx * CH - 1; tx <= cx * CH + CH; tx++) {
       if (tx < 0 || ty < 0 || tx >= World.W || ty >= World.H) { if (tx >= -OUT_PAD && ty >= -OUT_PAD && tx < World.W + OUT_PAD && ty < World.H + OUT_PAD) drawOutsideTile(tx, ty); continue; }
-      drawGroundTile(tx, ty, World.tiles[ty * World.W + tx]);
+      const gi = ty * World.W + tx; drawGroundTile(tx, ty, City.groundOf.has(gi) ? City.groundOf.get(gi) : World.tiles[gi]); // v1.58 큰 소품 밑은 원래 바닥
     }
     ctx = saved;
     c = { cv, left, top, z };
@@ -285,7 +307,7 @@ function drawSolidTile(o) {
     City.drawSign(tx, ty); // v1.2 한글 네온 간판
     if (Settings.detail) City.drawBanner(tx, ty); // v1.56 현수막 · 전단지
     if (!glass && Settings.detail) drawDongNo(tx, ty, ht, ez, h); // v1.21 아파트 동 번호
-    if (Settings.detail) drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass);
+    if (Settings.detail) drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass, fv);
     else if (h < 0.04) drawBox(x0 + 9, y0 + 9, x1 - 9, y1 - 9, ht + 8, '#4a4a4e', '#2e2e32', '#3a3a3e', ht, ht, 0); // 옥상 환풍기
   } else if (t === T.PROP && insideBid(tx, ty)) { // 실내 소품 (v0.15)
     const bd = World.buildings[World.bid[ty * World.W + tx]], S = SHOP_STYLES[bd.style], ph = tileHeight(tx, ty);
@@ -472,12 +494,19 @@ function drawDongNo(tx, ty, ht, ez, h) {
   ctx.restore();
 }
 
-function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass) {
+// v1.58 옥상 종류 (건물마다 같은 판정: 높이+명암으로 건물 구분) — 초록 방수페인트(빌라) · 기와(한옥 외벽) · 함석(낮은 건물 일부)
+function roofKind(tx, ty, ht, glass, v) {
+  if (glass || World.map === 'camp' || ht > FLOOR_H * 5) return null;
+  if (v === 'd2_hanok') return 'giwa';
+  const r = hash2(Math.round(ht), Math.round(World.shade[ty * World.W + tx] * 1000));
+  return r < 0.45 ? 'green' : ht <= FLOOR_H * 3 && r > 0.82 ? 'tin' : null;
+}
+function drawRoof(tx, ty, x0, y0, x1, y1, ht, b, h, glass, fv) {
   const S = Iso.sx, Y = Iso.sy, lip = 3, rim = glass ? '#5a6878' : `rgb(${b + 12},${b + 8},${b + 2})`, rimS = glass ? '#2a3440' : `rgb(${b - 30},${b - 33},${b - 38})`;
   const edge = (dx, dy) => tileHeight(tx + dx, ty + dy) < ht - 4;
-  // v1.56 빌라 옥상 초록 방수페인트 (낮은 건물 · 건물마다 같은 판정: 높이+명암으로 건물 구분)
-  const sh = World.shade[ty * World.W + tx], gb = !glass && ht <= FLOOR_H * 5 && World.map !== 'camp' && hash2(Math.round(ht), Math.round(sh * 1000)) < 0.45;
-  if (gb) {
+  // v1.56 빌라 옥상 초록 방수페인트 — v1.58 옥상 그림(r_green)을 깔았으면 덧칠 안 함
+  const rk = roofKind(tx, ty, ht, glass, fv), gb = rk === 'green';
+  if (gb && !(fv && ART.tex.r_green && ART.tex.r_green.ready)) {
     ctx.fillStyle = 'rgba(64,118,82,0.62)'; ctx.beginPath(); ctx.moveTo(S(x0, y0), Y(x0, y0, ht)); ctx.lineTo(S(x1, y0), Y(x1, y0, ht)); ctx.lineTo(S(x1, y1), Y(x1, y1, ht)); ctx.lineTo(S(x0, y1), Y(x0, y1, ht)); ctx.closePath(); ctx.fill();
     if (h > 0.5 && h < 0.62) { ctx.fillStyle = 'rgba(30,40,32,0.35)'; ctx.beginPath(); ctx.ellipse(S(x0 + 14, y0 + 18), Y(x0 + 14, y0 + 18, ht), 9, 4, 0.4, 0, TAU); ctx.fill(); } // 벗겨진 자국
   }
@@ -860,7 +889,7 @@ function shopFront(i) {
   const nd = bd.door ? Math.min(...bd.door.map(([dx, dy]) => Math.max(Math.abs(dx - tx), Math.abs(dy - ty)))) : 0;
   return { front: nd <= 2 ? fk : null, upper }; // v1.32 가게 앞모습은 문 양옆 2칸까지만 (건물 둘레 전체가 같은 진열창이던 것) — 나머지는 일반 1층
 }
-const LOW_ONLY = new Set(['f_vines', 'f_scaffold', 'f_motel', 'f_villa', 'f_burnt']); // v1.40.2 불탄 벽(구멍)도 낮은 건물에만 // v1.32 담쟁이·비계·모텔·빌라는 4층 이하에만 (고층 전체를 덮으면 인위적)
+const LOW_ONLY = new Set(['f_vines', 'f_scaffold', 'f_motel', 'f_villa', 'f_burnt', 'd2_hanok', 'd2_jewel', 'd3_basewall', 'd3_quarters']); // v1.58 한옥·금은방 상가·기지 담·관사도 낮은 건물만 // v1.40.2 불탄 벽(구멍)도 낮은 건물에만 // v1.32 담쟁이·비계·모텔·빌라는 4층 이하에만 (고층 전체를 덮으면 인위적)
 function facadeVariant(tx, ty, glass, ht = 0) {
   if (!ART.tex) return null;
   const ok = k => { const a = ART.tex[k]; return a && a.ready ? k : null; };
@@ -923,8 +952,10 @@ function drawTexBuilding(tx, ty, x0, y0, x1, y1, ht, sz, ez, v, shade, front) {
   face('s', sz); face('e', ez);
   // 옥상
   const roofs = ['r_concrete', 'r_gravel', 'r_tar'].filter(k => ART.tex[k] && ART.tex[k].ready);
+  const rk = World.bid[ty * World.W + tx] >= 0 ? null : roofKind(tx, ty, ht, v.startsWith('f_glass'), v), rs = rk && ART.tex['r_' + rk]; // v1.58 기와·초록 방수페인트·함석
+  if (rs && rs.ready) roofs.splice(0, roofs.length, 'r_' + rk);
   if (roofs.length) {
-    const r = ART.tex[roofs[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 5 + 1, Math.floor(ty / World.BLOCK) * 3 + 7) * roofs.length)]];
+    const r = ART.tex[roofs.length === 1 ? roofs[0] : roofs[Math.floor(hash2(Math.floor(tx / World.BLOCK) * 5 + 1, Math.floor(ty / World.BLOCK) * 3 + 7) * roofs.length)]];
     const [rx, ry, rw, rh] = r.rect || [0, 0, r.img.width, r.img.height], q = 4, z = ZOOM * RES; // 질감 하나를 4×4칸에 걸쳐 펼침
     ctx.save(); ctx.setTransform(ISO_K * z, ISO_K / 2 * z, -ISO_K * z, ISO_K / 2 * z, -G.cam.x * z, (-G.cam.y - ht * ISO_K) * z);
     ctx.drawImage(r.img, rx + (((tx % q) + q) % q) * rw / q, ry + (((ty % q) + q) % q) * rh / q, rw / q, rh / q, x0, y0, TILE + 0.5, TILE + 0.5);
@@ -1737,7 +1768,7 @@ function interiorDeco(b) {
     for (let ty = b.y0 + 1; ty < b.y1; ty++) for (let tx = b.x0 + 1; tx < b.x1; tx++) {
       if (World.tileAt(tx, ty) !== T.FLOOR || b.crates.some(c => c.tx === tx && c.ty === ty)) continue;
       const h = hash2(tx * 31 + 7, ty * 17 + 3);
-      const key = extra && h < 0.04 ? extra : h < 0.07 ? 'in_chair' : h < 0.1 ? 'in_boxes' : h < 0.13 ? 'in_debris' : null;
+      const key = extra && h < 0.04 ? (Array.isArray(extra) ? extra[Math.floor(h * 997) % extra.length] : extra) : h < 0.07 ? 'in_chair' : h < 0.1 ? 'in_boxes' : h < 0.13 ? 'in_debris' : null;
       if (key) b.deco.push({ key, x: tx * TILE + 16, y: ty * TILE + 16, flip: h * 1000 % 2 < 1 });
     }
   }
@@ -1759,7 +1790,7 @@ function drawCrate(c) {
 }
 
 // v1.47 가게 종류 → 문 위 판 (0 노란 철판 · 1 관공서 파랑·흰색 · 2 초록+차양 · 3 나무)
-const DOOR_SIGN = { 파출소: 1, 병원: 1, 은행: 1, 약국: 1, 카페: 3, 서점: 3, 분식집: 2, 세탁소: 2, 마트: 2, PC방: 0, 전자상가: 0, 편의점: 0 };
+const DOOR_SIGN = { 파출소: 1, 병원: 1, 은행: 1, 약국: 1, 카페: 3, 서점: 3, 분식집: 2, 세탁소: 2, 마트: 2, PC방: 0, 전자상가: 0, 편의점: 0, 노래방: 0, 미용실: 3, 학원: 1 };
 function doorSignVar(name) { return DOOR_SIGN[name] ?? 0; }
 // 상가 이름 (바깥에서 가까이 가면 출입문 위에 표시)
 function drawShopSigns() {

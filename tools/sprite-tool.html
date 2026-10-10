@@ -91,7 +91,7 @@
           <option value="props_object">v1.18 맵 오브젝트 9종 (3×3)</option>
           <option value="props_camp">v1.18 캠프 소품 9종 (3×3)</option>
           <option value="props_deco">v1.18 잔해·옥상 장식 9종 (3×3)</option>
-          <option value="props_seoul">v1.22 서울 거리 소품 6종 (3×2)</option>
+          <option value="props_seoul">v1.22 서울 거리 소품 6종 (3×2)</option><option value="props_seoul2">v1.58 서울 탈것 9종 (3×3)</option><option value="props_seoul3">v1.58 서울 거리 시설 9종 (3×3)</option><option value="props_subway">v1.58 시청역 지하철 소품 9종 (3×3)</option><option value="props_landmark">v1.58 거리 오마주 9종 (3×3)</option><option value="props_district">v1.58 지역 대형 9종 (3×3)</option><option value="props_interior3">v1.58 한국 가게 실내 9종 (3×3)</option>
           <option value="props_interior1">v1.25 실내 소품 9종 — 상가 (3×3)</option>
           <option value="props_interior2">v1.25 실내 소품 9종 — 창구·상자·장식 (3×3)</option>
           <option value="tex_floor">v1.25 실내 바닥 질감 6종 (3×2)</option>
@@ -346,6 +346,12 @@ const ATLAS = {
   props_street:  { file: 'props_street.png', cols: 3, rows: 3, target: 'props', keys: ['lamp', 'tree', 'deadtree', 'trash', 'cone', 'barrel', 'hydrant', 'bench', 'signal'] },
   props_vehicle: { file: 'props_vehicle.png', cols: 3, rows: 2, target: 'props', keys: ['car_a', 'car_b', 'car_c', 'police', 'bus', 'car_burnt'] },
   props_object:  { file: 'props_object.png', cols: 3, rows: 3, target: 'props', keys: ['dumpster', 'locker', 'labcase', 'bag', 'safe', 'airdrop', 'generator', 'nest', 'mine'] },
+  props_seoul2: { file: 'props_seoul2.png', cols: 3, rows: 3, target: 'props', keys: ['truck', 'minibus', 'taxi_o', 'taxi_s', 'delivery', 'van', 'reefer', 'handcart', 'bikes'] }, // v1.58
+  props_seoul3: { file: 'props_seoul3.png', cols: 3, rows: 3, target: 'props', keys: ['fishcart', 'recycle', 'phonebooth', 'mailbox', 'clothesbin', 'vent', 'kiosk', 'trashpile', 'wiretree'] }, // v1.58
+  props_subway: { file: 'props_subway.png', cols: 3, rows: 3, target: 'props', keys: ['gates', 'ticketm', 'screendoor', 'linemap', 'chairs', 'firebox', 'stationkiosk', 'stairs', 'sandlamp'] }, // v1.58
+  props_landmark: { file: 'props_landmark.png', cols: 3, rows: 3, target: 'props', keys: ['haechi', 'pavilion', 'gym', 'busshelter', 'fountain', 'parasol', 'palacewall', 'bust', 'barricades'] }, // v1.58
+  props_district: { file: 'props_district.png', cols: 3, rows: 3, target: 'props', keys: ['carousel', 'coaster', 'floodlight', 'swanboat', 'gondola', 'billboard', 'tank', 'ticketbooth', 'riverboat'] }, // v1.58
+  props_interior3: { file: 'props_interior3.png', cols: 3, rows: 3, target: 'props', keys: ['in_pcbang', 'in_karaoke', 'in_snackbar', 'in_ticket', 'in_salon', 'in_laundry', 'in_desk', 'in_shoelocker', 'in_counter'] }, // v1.58
   props_seoul:   { file: 'props_seoul.png', cols: 3, rows: 2, target: 'props', keys: ['pole', 'busstop', 'pocha', 'scooter', 'subway', 'cross'] }, // v1.22
   props_camp:    { file: 'props_camp.png', cols: 3, rows: 3, target: 'props', keys: ['tent', 'tent_medic', 'crates', 'workbench', 'maptable', 'radio', 'campfire', 'container', 'sandbags'] },
   // v1.19 건물 질감 (js/assets.js 의 tex 안에 붙여넣기): 게임이 건물 벽·옥상 면에 기울여 붙임

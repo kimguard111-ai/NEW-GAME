@@ -14,9 +14,9 @@ const SHOP_STYLES = {
   washer:  { h: 30, c: ['#c8ccd0', '#8a8e92', '#a8acb0'] },  // 세탁기 (벽 따라)
 };
 const SHOP_STYLE_OF = { 편의점: 'shelf', 약국: 'shelf', 마트: 'shelf', 서점: 'shelf', 전자상가: 'shelf', 카페: 'table', 분식집: 'table',
-  은행: 'counter', 병원: 'counter', 파출소: 'counter', PC방: 'desk', 세탁소: 'washer' };
+  은행: 'counter', 병원: 'counter', 파출소: 'counter', PC방: 'desk', 세탁소: 'washer', 노래방: 'table', 미용실: 'table', 학원: 'desk' }; // v1.58 노래방·미용실·학원
 const FLOOR_H = 54; // 한 층 높이 (v0.13: 24 → 36 · v1.21 → 54 = 2.7m, 1m = 20단위 실제 스케일)
-const SHOP_NAMES = ['편의점', '약국', '은행', '카페', '병원', '마트', 'PC방', '파출소', '분식집', '전자상가', '서점', '세탁소'];
+const SHOP_NAMES = ['편의점', '약국', '은행', '카페', '병원', '마트', 'PC방', '파출소', '분식집', '전자상가', '서점', '세탁소', '노래방', '미용실', '학원'];
 
 const World = {
   W: 72, H: 72, BLOCK: 18, ROADW: 4, // v0.13 블록 18 (4차선 도로, 큰 건물) · v1.3 맵마다 크기 다름 (MAPS)
@@ -44,6 +44,7 @@ const World = {
 
     // 도로와 블록 (v0.13: 블록 18칸 = 4차선 도로 + 보도 1칸 + 건물 부지 12×12)
     const RW = this.ROADW, L0 = RW + 1, L1 = B - 2, bigLots = [];
+    this.lots = new Set(); // v1.58 주차장 블록 (바닥 그림)
     // v1.50.8 랜드마크(어설트) 둘레 8칸 안에 걸치는 부지는 건물 없이 광장으로 (건물이 붙어 있어 싸우기·찾기 힘들던 것)
     const LM = LANDMARKS.find(l => l.id === def.landmark), LMP = 8;
     const lmRect = LM ? { x0: Math.floor(W / 2 - LM.size / 2) - LMP, y0: Math.floor(H / 2 - LM.size / 2) - LMP, x1: Math.floor(W / 2 - LM.size / 2) + LM.size + LMP, y1: Math.floor(H / 2 - LM.size / 2) + LM.size + LMP } : null;
@@ -75,6 +76,7 @@ const World = {
           for (let y = L0; y <= L1; y++) for (let x = L0; x <= L1; x++) set(ox + x, oy + y, T.GRASS);
         } else if (kind < 0.27) {
           // 광장 · 주차장: 보도 바닥 + 버려진 차 몇 대 (엄폐물)
+          this.lots.add(by * 1000 + bx);
           for (let y = L0; y <= L1; y++) for (let x = L0; x <= L1; x++) set(ox + x, oy + y, (x - L0) % 4 === 1 && (y - L0) % 3 === 1 && rng() < 0.35 ? T.CAR : T.WALK);
         } else if (kind < 0.39) {
           // 붕괴된 건물

@@ -26,11 +26,11 @@ const NEON = ['#ff3b5c', '#3bd6ff', '#ff4fd8', '#5dff6a', '#ffd23b', '#ff8a2a'];
 
 const LIGHT_CAP = 36; // 소품·간판 조명은 프레임당 이 개수까지만 (성능)
 const City = {
-  props: [], signs: new Map(), carSkip: new Set(), busCells: new Set(),
+  props: [], signs: new Map(), carSkip: new Set(), busCells: new Set(), groundOf: new Map(),
 
   generate(seed) {
     const W = World.W, H = World.H, rng = mulberry32(seed + 99), T_ = World.tiles, B = World.BLOCK, RW = World.ROADW;
-    this.props = []; this.signs = new Map(); this.banners = new Map(); // v1.56 현수막·전단지 this.carSkip = new Set(); this.busCells = new Set();
+    this.props = []; this.signs = new Map(); this.banners = new Map(); this.carSkip = new Set(); this.busCells = new Set(); this.groundOf = new Map(); // v1.56 현수막·전단지 · v1.58 주석이 뒤 코드를 삼켜 맵이 바뀌어도 차량 칸 기록이 안 지워지던 것
     const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? T.BUILDING : T_[y * W + x]);
     const near = (x, y) => World.distTiles(x * TILE + 16, y * TILE + 16) < World.safeR + 2; // 캠프 안은 비움
     const add = (type, x, y, extra) => this.props.push({ type, x, y, ...extra });
@@ -79,6 +79,8 @@ const City = {
       const h = hash2(x * 5 + 3, y * 9 + 1), zone = World.zoneIndex(x * TILE, y * TILE), [lx, ly] = cells[cells.length - 1];
       add('car', (x + lx + 1) / 2 * TILE, (y + ly + 1) / 2 * TILE, { vertical: vert, front: lx + ly, len: cells.length, h, police: h < 0.12 && zone >= 1, burnt: isBurningCar(x, y), tx: x, ty: y });
     }
+    // v1.58 서울 거리 소품 2 · 공원/광장 오마주 · 지역 대형 소품 (프롬프트 28~31절 — 그림이 등록된 것만, 빈 칸에만)
+    this.seoulProps(at, near, add, rng);
     // v1.21 전봇대끼리 전선 잇기 (같은 줄, 9칸 간격)
     const poles = this.props.filter(p => p.type === 'pole');
     for (const p of poles) p.next = poles.find(q => q !== p && q.side === p.side && (p.side === 'x' ? q.x === p.x && q.y > p.y && q.y - p.y <= 9 * TILE + 1 : q.y === p.y && q.x > p.x && q.x - p.x <= 9 * TILE + 1)) || null;
@@ -100,6 +102,9 @@ const City = {
       C('bench', -200, 95); C('maptable', 205, 110); C('radio', 175, -120); C('generator', 255, 30);
       C('crates', 245, 160, { n: 2 });
       for (const [fac, pos] of Object.entries(CAMP_FAC_POS)) C('facility', pos[0], pos[1], { fac }); // v1.13 캠프 시설
+      // v1.58 시청역 대합실 흔적 (프롬프트 28절): 개찰구 · 발권기 · 스크린도어 조각 · 노선도 · 대합실 의자 · 소화전함 · 역 매점 · 모래주머니+작업등 · 녹슨 미니버스
+      for (const [key, dx, dy, flip] of [['gates', 20, 290], ['ticketm', -40, 300], ['screendoor', -230, -235, true], ['linemap', -315, -60], ['chairs', -125, 165], ['firebox', 300, -50],
+        ['stationkiosk', 255, -225, true], ['sandlamp', 300, 120, true], ['minibus', -300, 245]]) C('deco', dx, dy, { key, flip: !!flip });
     }
     // 간판: 길가 건물의 남쪽·동쪽 벽 (화면에 보이는 면)
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
@@ -120,6 +125,68 @@ const City = {
       if (h < 0.09) { const words = BANNER_TEXT[zone] || BANNER_TEXT[1]; this.banners.set(y * W + x, { kind: 'banner', face, text: words[Math.floor(h * 991) % words.length], st: BANNER_STYLE[Math.floor(h * 577) % BANNER_STYLE.length], sag: 1 + h * 20, torn: h < 0.02 }); }
       else if (h < 0.26) this.banners.set(y * W + x, { kind: 'poster', face, n: 2 + Math.floor(h * 100) % 4, seed: h });
     }
+  },
+
+  // v1.58 기존 소품과 안 겹치게 두 번째 해시로 깔기. solid = 가운데 n×n칸을 막음 (바닥 그림은 원래 바닥 그대로 — groundOf)
+  seoulProps(at, near, add, rng) {
+    const W = World.W, H = World.H, T_ = World.tiles, B = World.BLOCK, RW = World.ROADW, map = World.map;
+    const SOFT = new Set(['tree', 'paper', 'trash', 'cone', 'scooter']), cell = p => Math.floor(p.y / TILE) * W + Math.floor(p.x / TILE); // 큰 소품 자리에 있으면 치우는 것
+    const occ = new Set(this.props.filter(p => !SOFT.has(p.type)).map(cell)), soft = new Set(this.props.filter(p => SOFT.has(p.type)).map(cell));
+    const has = k => !!(ART.props && ART.props[k]);
+    const edge = (x, y) => (World.edgePts || []).some(e => Math.abs(e.x / TILE - x) < 7 && Math.abs(e.y / TILE - y) < 7);
+    const free = (x0, y0, n, ok) => { for (let y = y0 - 1; y <= y0 + n; y++) for (let x = x0 - 1; x <= x0 + n; x++) if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1 || occ.has(y * W + x) || (n < 2 && soft.has(y * W + x)) || !ok(at(x, y)) || near(x, y) || edge(x, y)) return false; return true; };
+    const put = (key, x0, y0, n, solid, extra) => {
+      if (!has(key)) return false;
+      const m = n >= 4 ? 3 : 1; // 성문처럼 큰 건 앞뒤 나무도 더 치움 (가려서 안 보이던 것)
+      if (n >= 2) this.props = this.props.filter(p => { const c = cell(p), cx = c % W, cy = Math.floor(c / W); return !(SOFT.has(p.type) && cx >= x0 - m && cx < x0 + n + m && cy >= y0 - m && cy < y0 + n + m); });
+      add('deco', (x0 + n / 2) * TILE, (y0 + n / 2) * TILE, { key, ...extra });
+      for (let y = y0 - 1; y <= y0 + n; y++) for (let x = x0 - 1; x <= x0 + n; x++) occ.add(y * W + x);
+      if (solid) for (let y = y0; y < y0 + n; y++) for (let x = x0; x < x0 + n; x++) { const i = y * W + x; this.groundOf.set(i, T_[i]); T_[i] = T.CAR; this.carSkip.add(i); this.busCells.add(i); }
+      return true;
+    };
+    if (map === 'camp' || (World.def && World.def.lab)) return;
+    const zone = World.zoneIndex(), open = t => t === T.WALK || t === T.GRASS || t === T.RUBBLE;
+    // 길가: 우체통 · 의류수거함 · 공중전화 · 가판대 · 재활용 더미 · 쓰레기봉투 더미 · 공공자전거 · 리어카 · 배달 오토바이 · 생선 손수레(시장 동네) · 실외기(건물 옆)
+    const CURB = [['mailbox', 0.010], ['clothesbin', 0.018], ['phonebooth', 0.023], ['recycle', 0.031], ['trashpile', 0.040], ['bikes', 0.046], ['delivery', 0.052], ['handcart', 0.057]];
+    if (zone === 1 || zone === 2) CURB.push(['kiosk', 0.062]);
+    if (zone === 1 || zone === 2 || zone === 7) CURB.push(['fishcart', 0.066]);
+    if (zone === 6 || zone === 4) CURB.push(['busshelter', 0.07]);
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      if (at(x, y) !== T.WALK || occ.has(y * W + x) || near(x, y)) continue;
+      const h = hash2(x * 11 + 5, y * 7 + 13), lx = x % B, ly = y % B, curb = lx === RW || ly === RW, side = lx === RW ? 'x' : 'y';
+      if (curb) { const c = CURB.find(([, p]) => h < p); if (c && put(c[0], x, y, 1, false, { side, flip: (side === 'x') !== (h * 1000 % 2 < 1) })) continue; }
+      else if (h < 0.05 && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) === T.BUILDING)) put('vent', x, y, 1, false, { flip: h < 0.025 });
+    }
+    // 길가 죽은 나무 몇 그루 → 전선이 감긴 나무
+    for (const p of this.props) if (p.type === 'tree' && p.dead && has('wiretree') && at(Math.floor(p.x / TILE), Math.floor(p.y / TILE)) === T.WALK && hash2(Math.floor(p.x), Math.floor(p.y)) < 0.2) { p.type = 'deco'; p.key = 'wiretree'; }
+    // 공원·광장: 운동기구 · 흉상 · 해태(종로↑) · 정자 · 분수 · 파라솔(물가) · 바리케이드(용산·강남) · 궁궐 담(종로)
+    const parks = [];
+    for (let by = 0; by * B < H; by++) for (let bx = 0; bx * B < W; bx++) {
+      const x0 = bx * B + RW + 1, y0 = by * B + RW + 1, x1 = Math.min(W - 2, bx * B + B - 2), y1 = Math.min(H - 2, by * B + B - 2);
+      let g = 0, n = 0; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { n++; if (at(x, y) === T.GRASS || at(x, y) === T.WALK || at(x, y) === T.WATER) g++; }
+      if (n > 40 && g / n > 0.9) parks.push([x0, y0, x1, y1]);
+    }
+    const SMALL = ['gym', 'gym2', 'bust', 'fountain'].concat(zone === 2 ? ['haechi', 'haechi', 'pavilion', 'palacewall'] : zone === 1 ? ['pavilion', 'haechi'] : [],
+      zone === 4 || zone === 7 ? ['parasol', 'parasol'] : [], zone === 3 || zone === 6 ? ['barricades', 'barricades'] : []);
+    const BIG = { // [키, 막는 칸 n, 맵당 개수]
+      jamsil: [['carousel', 2, 1], ['coaster', 3, 1], ['gondola', 1, 2], ['ticketbooth', 1, 2], ['floodlight', 1, 3]],
+      gangnam: [['billboard', 1, 4]], yongsan: [['tank', 2, 2], ['floodlight', 1, 2]], yeouido: [['riverboat', 2, 1], ['floodlight', 1, 1]],
+      jongno: [['gate', 5, 1], ['pavilion', 2, 1]], myeongdong: [['fountain', 2, 1]] }[map] || [];
+    const SIZE = { pavilion: 2, fountain: 2, palacewall: 2 }, SOLIDK = new Set(['bust', 'haechi', 'fountain', 'pavilion', 'palacewall', 'barricades']);
+    const tryPut = (key, n, solid, tries) => {
+      for (let k = 0; k < tries; k++) {
+        const pk = parks.length && rng() < 0.75 ? parks[Math.floor(rng() * parks.length)] : null;
+        const x = pk ? pk[0] + 1 + Math.floor(rng() * Math.max(1, pk[2] - pk[0] - n - 1)) : 2 + Math.floor(rng() * (W - 4 - n)), y = pk ? pk[1] + 1 + Math.floor(rng() * Math.max(1, pk[3] - pk[1] - n - 1)) : 2 + Math.floor(rng() * (H - 4 - n));
+        if (!pk && at(x, y) !== T.WALK) continue; // 공원 밖이면 보도/광장 위만
+        if (free(x, y, n, open) && put(key, x, y, n, solid, { flip: rng() < 0.5 })) return true;
+      }
+      return false;
+    };
+    for (const [key, n, cnt] of BIG) for (let i = 0; i < cnt; i++) tryPut(key, n, true, 300);
+    const nSmall = Math.round(W * H / 700);
+    for (let i = 0; i < nSmall; i++) { const key = SMALL[Math.floor(rng() * SMALL.length)]; tryPut(key, SIZE[key] || 1, SOLIDK.has(key), 60); }
+    // 잠실 석촌호수: 오리배 몇 척 (물 위, 안 막음)
+    if (map === 'jamsil') for (let i = 0, k = 0; i < 4 && k < 400; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)); if (free(x, y, 1, t => t === T.WATER) && put('swanboat', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
   },
 
   // ---------------- 그리기 ----------------
@@ -232,7 +299,7 @@ function cityArt(o) {
   if (o.type === 'car') { // v1.21 2칸 승용차
     if (o.burnt && propArt('car_burnt')) return 'car_burnt';
     if (o.police) return propArt('police') ? 'police' : null;
-    const ks = ['car_a', 'car_b', 'car_c'].filter(k => propArt(k)); return ks.length ? ks[Math.floor(o.h * 97) % ks.length] : null;
+    const ks = (o.h > 0.55 ? ['car_a', 'car_b', 'car_c', 'taxi_o', 'taxi_s', 'truck', 'van', 'reefer'] : ['car_a', 'car_b', 'car_c']).filter(k => propArt(k)); return ks.length ? ks[Math.floor(o.h * 97) % ks.length] : null; // v1.58 택시·1톤 트럭·승합차·냉동 탑차 (절반쯤)
   }
   if (o.type === 'tent' && o.medic) return 'tent_medic';
   if (o.type === 'deco') return o.key;
@@ -303,10 +370,12 @@ function drawCityProp(o) {
     let px = sx, py = sy;
     if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
     drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
-    const fade = o.type === 'tree' ? Behind.alpha(o, px, py, (ART.propFit[ak] || { w: 40 }).w * (o.s || 1), (ART.propFit[ak] || { w: 40 }).w * (o.s || 1) * 1.6) // v1.46
+    const fw = (ART.propFit[ak] || { w: 40 }).w;
+    const fade = o.type === 'tree' ? Behind.alpha(o, px, py, fw * (o.s || 1), fw * (o.s || 1) * 1.6) // v1.46
+      : o.type === 'deco' && fw >= 70 ? Behind.alpha(o, px, py, fw, fw * 1.2) // v1.58 큰 소품(회전목마·탱크 등) 뒤도 반투명
       : o.type === 'bus' || o.type === 'car' || o.type === 'police' ? Behind.vehicle(o, ak, px, py) : 1; // v1.47.1 버스·차 뒤에 사람·적이 있으면 반투명
     ctx.globalAlpha = fade;
-    drawPropArt(ak, px, py, o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
+    drawPropArt(ak, px, py, o.type === 'deco' ? !!o.flip : o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
     ctx.globalAlpha = 1;
     if (o.type === 'car' && o.burnt) burnFx(o.tx, o.ty);
     if (o._noFx) return;
