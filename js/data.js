@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.62';
+const GAME_VERSION = 'v1.62.1';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -196,8 +196,8 @@ const ENEMIES = {
   raider: { name: '약탈자',   hp: 50,  dmg: 7,  speed: 92,  r: 12, exp: 18, weight: 1, color: '#b5523b', atkCd: 1.0, aggro: 460,
             ranged: true, range: 320, fireCd: 1.4, bulletSpeed: 380, nade: 'weak' }, /* v1.46 1.2·430 → 1.4·380 (종로 봇 사망 73%: 총알이 대부분 — 옆으로 피할 수 있게) */ // v1.32 약탈자도 가끔 수류탄 (용병보다 드물고 약함)
   brute:  { name: '변이 거한', hp: 190, dmg: 22, speed: 56,  r: 20, exp: 45, weight: 2.5, color: '#7a4f8a', atkCd: 1.5, aggro: 360 },
-  drone:  { name: '경비 드론', hp: 60,  dmg: 9,  speed: 115, r: 11, exp: 26, weight: 0.8, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
-            ranged: true, range: 290, fireCd: 0.9, bulletSpeed: 480, flying: true },
+  drone:  { name: '경비 드론', hp: 60,  dmg: 7.5, /* v1.62 9 → 7.5 · 쏘는 간격 0.9 → 1.1: 봇 완주 측정 용산 사망률 78% (사망 원인 1위 드론 총알) */ speed: 115, r: 11, exp: 26, weight: 0.8, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
+            ranged: true, range: 290, fireCd: 1.1, bulletSpeed: 480, flying: true },
   // v1.5 지하 연구소
   subject: { name: '탈주 실험체', hp: 70, dmg: 13, speed: 128, r: 12, exp: 30, weight: 0.9, color: '#c8b8b0', atkCd: 0.8, aggro: 400 },
   spitter: { name: '산성 실험체', hp: 85, dmg: 16, speed: 70,  r: 13, exp: 34, weight: 1.1, color: '#8fd14a', atkCd: 1.0, aggro: 440,
