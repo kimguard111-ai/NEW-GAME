@@ -807,7 +807,7 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     ctx.beginPath(); ctx.ellipse(sx, sy - 22, 20, 30, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
   }
   if (ui) return;
-  if (World.map === 'camp') nameTag(sx, sy - 48 * (ART.charScale || 1) - 4, p.name, '#9fe08f', '12px sans-serif'); // v1.28 출격 중엔 내 이름표 없이
+  // v1.64 캠프에서도 내 이름표 없음 (첫 화면 글자 줄이기)
   if (p.reloadT > 0) {
     const b2 = WEAPONS[w.key];
     ctx.fillStyle = '#000'; ctx.fillRect(sx - 18, sy + 8, 36, 4);
@@ -1250,10 +1250,11 @@ function drawNpc(n) {
   }[n.id];
   if (!Sprites.draw(n.id, 'idle', G.time + n.x * 0.01, sx, sy, angleTo(n, G.player), false))
     drawHuman(sx, sy, { s: 1.05, skin: '#d9b48f', aim: angleTo(n, G.player), ...look });
-  const foc = Tut.focusNpc(); // v1.54 출격 차례엔 윤씨만 또렷하게 (다른 사람 이름은 흐리게)
-  if (foc && foc !== n.id) ctx.globalAlpha = 0.3;
-  nameTag(sx, sy - 50 * (ART.charScale || 1) - 4, n.name, '#ffd76a', 'bold 12px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif');
+  const foc = Tut.focusNpc(), far = Math.hypot(n.x - G.player.x, n.y - G.player.y) > 260; // v1.54 출격 차례엔 윤씨만 또렷하게 · v1.64 멀리 있는 사람 이름도 흐리게 (첫 화면에 노란 이름 7개가 한꺼번에 보이던 것)
+  if (foc ? foc !== n.id : far) ctx.globalAlpha = foc ? 0.25 : 0.45;
+  nameTag(sx, sy - 50 * (ART.charScale || 1) - 4, n.name, '#ffd76a', `bold ${foc === n.id ? 14 : far ? 11 : 12}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`);
   ctx.globalAlpha = 1;
+  if (foc === n.id) { const by = sy - 50 * (ART.charScale || 1) - 26 - Math.abs(Math.sin(G.time * 3)) * 8; ctx.fillStyle = '#ffd76a'; ctx.beginPath(); ctx.moveTo(sx - 8, by - 10); ctx.lineTo(sx + 8, by - 10); ctx.lineTo(sx, by); ctx.closePath(); ctx.fill(); } // v1.64 ▼
   if (foc === n.id) { const k = 0.5 + 0.5 * Math.sin(G.time * 4); ctx.strokeStyle = `rgba(127,224,138,${0.5 + 0.4 * k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(sx, sy, 26 + 6 * k, 13 + 3 * k, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1; }
   let mark = null;
   if (n.id === 'captain') {
@@ -1394,8 +1395,9 @@ function render() {
   for (const h of World.hazards) { // 방사능 웅덩이
     const pul = 0.75 + Math.sin(G.time * 2.5 + h.x) * 0.15;
     const g = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, h.r);
-    g.addColorStop(0, `rgba(120,255,80,${0.55 * pul})`); g.addColorStop(0.7, `rgba(60,200,40,${0.35 * pul})`); g.addColorStop(1, 'rgba(40,120,20,0)');
+    g.addColorStop(0, `rgba(255,215,60,${0.5 * pul})`); g.addColorStop(0.7, `rgba(240,150,30,${0.32 * pul})`); g.addColorStop(1, 'rgba(160,70,10,0)'); // v1.64 초록 → 방사능 노랑·주황 + 빨간 점선 테두리
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = `rgba(255,60,40,${0.45 * pul})`; ctx.lineWidth = 2; ctx.setLineDash([8, 6]); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
   }
   for (const f of G.fires) { // v1.11 소이탄 불길
     const a = Math.min(1, (f.life - f.t) / 0.6), fl = 0.85 + Math.sin(G.time * 13 + f.x) * 0.15;
@@ -1405,14 +1407,15 @@ function render() {
   }
   for (const pl of G.pools) { // 산성 장판
     const a = Math.min(1, (pl.life - pl.t) / 0.6);
-    ctx.fillStyle = `rgba(120,200,60,${0.4 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill();
-    ctx.strokeStyle = `rgba(170,255,90,${0.6 * a})`; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = `rgba(230,90,30,${0.38 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill(); // v1.64 초록 → 주황·빨강
+    ctx.strokeStyle = `rgba(255,50,40,${(0.55 + Math.sin(G.time * 8) * 0.2) * a})`; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
   }
   for (const s of G.strikes) { // 예고 원: 테두리 + 안쪽이 차오름
     const k = Math.min(1, s.t / s.delay);
-    ctx.strokeStyle = s.color + (0.5 + Math.sin(G.time * 20) * 0.2) + ')'; ctx.lineWidth = 3;
+    ctx.strokeStyle = `rgba(255,40,30,${0.6 + Math.sin(G.time * 20) * 0.25})`; ctx.lineWidth = 3.5; // v1.64 테두리는 늘 빨강 (안쪽만 공격 색)
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
-    ctx.fillStyle = s.color + '0.3)'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * k, 0, TAU); ctx.fill();
+    ctx.fillStyle = s.color + '0.32)'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * k, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,40,30,0.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x - s.r * 0.25, s.y - s.r * 0.25); ctx.lineTo(s.x + s.r * 0.25, s.y + s.r * 0.25); ctx.moveTo(s.x + s.r * 0.25, s.y - s.r * 0.25); ctx.lineTo(s.x - s.r * 0.25, s.y + s.r * 0.25); ctx.stroke(); ctx.lineWidth = 1; // ✕ 표시
   }
   if (G.assault) { // 어설트 봉쇄선
     const l = G.assault.l;
@@ -1421,8 +1424,8 @@ function render() {
   }
   if (World.bossTile) {
     const bx = World.bossTile.x * TILE + 16, by = World.bossTile.y * TILE + 16;
-    ctx.strokeStyle = 'rgba(80,255,90,0.3)'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(bx, by, 7.5 * TILE, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,70,50,0.35)'; ctx.lineWidth = 3; ctx.setLineDash([16, 10]); // v1.64 보스 아레나 초록 → 빨강 점선
+    ctx.beginPath(); ctx.arc(bx, by, 7.5 * TILE, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
   }
   for (const e of G.exits || []) { // v1.3 탈출 지점: 초록 원 + 맥박
     const k = (G.time * 0.8) % 1;
@@ -1604,9 +1607,9 @@ function render() {
   for (const e of G.exits || []) if (!e.locked) addLight(Iso.sx(e.x, e.y), Iso.sy(e.x, e.y), 160, 0.9, 'rgba(110,240,130,A)'); // 탈출 지점
   for (const f of G.fires) addLight(Iso.sx(f.x, f.y), Iso.sy(f.x, f.y), f.r * 2.2, 0.8, 'rgba(255,130,50,A)'); // v1.11 불길
   for (const ef of G.effects) if (ef.type === 'boom') addLight(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y), ef.r * 2.4 * (1 - ef.t / ef.life), 1, 'rgba(255,150,50,A)');
-  for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(120,255,100,A)' : 'rgba(255,90,60,A)');
-  for (const s of G.strikes) addLight(Iso.sx(s.x, s.y), Iso.sy(s.x, s.y), s.r * 1.8, 0.5 + 0.4 * s.t / s.delay, s.pool ? 'rgba(140,230,70,A)' : 'rgba(255,90,50,A)');
-  for (const h of World.hazards) addLight(Iso.sx(h.x, h.y), Iso.sy(h.x, h.y), h.r * 2.6, 0.75, 'rgba(110,255,80,A)');
+  for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(255,150,50,A)' : 'rgba(255,90,60,A)');
+  for (const s of G.strikes) addLight(Iso.sx(s.x, s.y), Iso.sy(s.x, s.y), s.r * 1.8, 0.5 + 0.4 * s.t / s.delay, s.pool ? 'rgba(255,130,40,A)' : 'rgba(255,90,50,A)');
+  for (const h of World.hazards) addLight(Iso.sx(h.x, h.y), Iso.sy(h.x, h.y), h.r * 2.6, 0.75, 'rgba(255,200,60,A)');
   for (const l of World.landmarks) {
     const lc = { cathedral: 'rgba(255,190,120,A)', bosingak: 'rgba(255,90,60,A)', base: 'rgba(230,240,255,A)', tower63: 'rgba(255,210,100,A)', coex: 'rgba(255,80,140,A)', lotte: 'rgba(200,120,255,A)' }[l.id];
     addLight(Iso.sx(l.x, l.y), Iso.sy(l.x, l.y, 20), l.size * 70, 0.8, lc);
@@ -1901,7 +1904,7 @@ function drawMinimapIso(mm) {
   RaidEvents.minimap(g); // v1.10 사건
   Pop.minimap(g); // v1.17 마지막 적들
   if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = e.locked ? '#ffaa3c' : '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
-  for (const h of World.hazards) dot(h.x, h.y, 'rgba(120,255,80,0.6)', 3);
+  for (const h of World.hazards) dot(h.x, h.y, 'rgba(255,190,50,0.7)', 3); // v1.64 방사능 = 노랑
   for (const l of World.landmarks) dot(l.x, l.y, p.found.includes(l.id) ? '#ffd76a' : '#888', 5);
   const tg = Story.target(p); // 현재 목표 (깜빡임)
   if (tg && Math.sin(G.time * 6) > -0.3) { g.strokeStyle = '#ffd76a'; g.lineWidth = 0.8; g.beginPath(); g.arc(tg.x / TILE, tg.y / TILE, 4, 0, TAU); g.stroke(); }

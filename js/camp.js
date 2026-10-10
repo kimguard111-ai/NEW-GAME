@@ -99,7 +99,8 @@ const CAMP_FAC_POS = { med: [-285, 45], range: [-70, 215], store: [115, -255], b
 // 시설 그리기 (단계에 따라 커짐) — City 소품 'facility'
 function drawFacility(o) {
   const l = Camp.lv(o.fac), sx = Iso.sx(o.x, o.y), sy = Iso.sy(o.x, o.y), S = Iso.sx, Y = Iso.sy;
-  if (!l && o.fac !== 'radio') { // 공사 예정 표지
+  if (!l && o.fac !== 'radio') { // 공사 예정 표지 · v1.64 처음 할 일 중엔 숨기고, 그 뒤엔 가까이 갔을 때만 (첫 화면이 빽빽하던 것)
+    if (Tut.on() || Math.hypot(o.x - G.player.x, o.y - G.player.y) > 220) return;
     ctx.strokeStyle = '#5a4a2e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - 22); ctx.stroke(); ctx.lineWidth = 1;
     ctx.fillStyle = '#8a6a3e'; ctx.fillRect(sx - 14, sy - 32, 28, 12); ctx.fillStyle = '#2a1e10'; ctx.font = 'bold 8px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('공사 예정', sx, sy - 26);
     ctx.strokeStyle = 'rgba(255,200,60,0.35)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.ellipse(sx, sy, 34, 17, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([]);

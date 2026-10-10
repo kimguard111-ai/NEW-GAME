@@ -460,6 +460,7 @@ const UI = {
       + opt('bgm', '배경 음악', '맵 분위기 음악 · 적이 쫓아오면 전투 음악 (v1.17)')
       + `<div class="set-row"><b>음악 음량</b> <span id="mus-val">${Math.round((Settings.musicVol ?? 0.5) * 100)}%</span><br><input type="range" id="mus-range" min="0" max="1" step="0.05" value="${Settings.musicVol ?? 0.5}"></div>`
       + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
+      + `<div class="set-row"><b>글자 크기</b> <span class="muted">화면 글씨 · 창 글씨</span><br>${[[1, '보통'], [1.15, '크게'], [1.3, '아주 크게']].map(([v, n]) => `<button class="ts-btn${Math.abs(textScale() - v) < 0.01 ? ' on' : ''}" data-ts="${v}">${n}</button>`).join(' ')}</div>` // v1.64
       + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="${ZOOM_MAX}" step="0.1" value="${ZOOM}"></div>`
       + opt('tips', '도움말 팁', '처음 겪는 상황에서 한 번씩 안내')
       + opt('reverb', '울림', '바깥 메아리 · 실내 울림 (끄면 가벼워짐, 모바일은 기본 끔)')
@@ -474,6 +475,7 @@ const UI = {
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
     $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
+    $('settings-body').querySelectorAll('.ts-btn').forEach(b => { b.onclick = () => { Settings.textScale = +b.dataset.ts; Settings.save(); applyTextScale(); UI.refreshSettings(); }; }); // v1.64
     $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };
     $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
     $('btn-export').onclick = () => {

@@ -17,9 +17,10 @@ const Settings = {
   outline: true, // v1.46 적 붉은 윤곽선 · 발밑 고리
   mip: true,     // v1.49 그림 축소 캐시 (끄면 원본을 매번 줄여 그림 — 문제 확인용)
   keys: null,    // v1.37 조작 키 (null = 기본)
+  textScale: null, // v1.64 글자 크기 (null = 기본: PC 1.15 · 모바일 1.0) — 「글자가 너무 작다」 피드백
   fullscreen: true, // v1.45.2 모바일: 화면을 처음 누르면 전체 화면 (나갔다가도 다시 누르면 돌아감)
   load() { try { Object.assign(this, JSON.parse(localStorage.getItem('seoul2049-settings') || '{}')); } catch (e) { /* 저장 불가 */ } },
-  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, outline: this.outline, keys: this.keys, fullscreen: this.fullscreen, camLead: this.camLead, rmbAim: this.rmbAim, mip: this.mip })); } catch (e) { /* 저장 불가 */ } },
+  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, outline: this.outline, keys: this.keys, fullscreen: this.fullscreen, textScale: this.textScale, camLead: this.camLead, rmbAim: this.rmbAim, mip: this.mip })); } catch (e) { /* 저장 불가 */ } },
 };
 // v1.37 키 바꾸기: 행동 → 키 (소문자 e.key). 벨트 1~8 · ESC 는 고정
 const KEY_DEFAULTS = { up: 'w', left: 'a', down: 's', right: 'd', dodge: ' ', reload: 'r', swap: 'q', interact: 'e', inventory: 'i', stats: 'c', skills: 'k', quest: 'j', settings: 'o', belt: 'b', compCmd: 'f', useMed: 'x', gl: 'g' };
@@ -27,3 +28,7 @@ const KEY_NAMES = { up: '위로 이동', left: '왼쪽 이동', down: '아래로
 function keyOf(act) { return (Settings.keys && Settings.keys[act]) || KEY_DEFAULTS[act]; }
 function keyLabel(k) { return k === ' ' ? 'Space' : k.startsWith('arrow') ? ({ arrowup: '↑', arrowdown: '↓', arrowleft: '←', arrowright: '→' })[k] : k.length === 1 ? k.toUpperCase() : k; }
 Settings.load();
+// v1.64 글자 크기: HUD 글자 칸은 그대로 · 창은 덜 키움 (화면 밖으로 안 넘치게)
+function textScale() { return Settings.textScale || ((('ontouchstart' in window) || navigator.maxTouchPoints > 0) ? 1 : 1.15); }
+function applyTextScale() { const t = textScale(), r = document.documentElement.style; r.setProperty('--ts', t); r.setProperty('--tsp', 1 + (t - 1) * 0.6); }
+applyTextScale();

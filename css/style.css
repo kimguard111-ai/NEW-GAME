@@ -531,3 +531,12 @@ body.touch #loot-feed { right: 70px; bottom: 110px; }
 .credit-line { color: #6d6d6d; font-size: 11px; margin: -12px 0 14px; letter-spacing: 0.5px; } /* v1.51 제작 표기 */
 #touch-buttons button.gl { border-color: #ffb04a; color: #ffb04a; font-size: 12px; line-height: 1.1; } #touch-buttons button.gl i { display: block; font-style: normal; font-size: 14px; } #touch-buttons button.gl.off { opacity: .45; } /* v1.52 OX-20 유탄 */
 .r5 { color: #ff4f3a; text-shadow: 0 0 6px rgba(255,80,40,.6); } .bc5 { border-color: #c8321e !important; box-shadow: inset 0 0 8px rgba(255,79,58,.45); } .loot-card.r5 { box-shadow: 0 0 16px #ff4f3a; font-weight: bold; } /* v1.53 신화 */
+
+/* v1.64 글자 크기 설정 (--ts: HUD 글자 칸 · --tsp: 창) — 「글자가 너무 작다」 피드백 */
+:root { --ts: 1; --tsp: 1; }
+#hud-top-left, #quest-tracker, #log, #hud-weapon, #interact-hint, #tip, #keyhint, #toast, #loot-feed, #sms, #hud-zone, #ctl-guide { zoom: var(--ts); } /* 메뉴·벨트 버튼은 그대로 (커지면 서로 겹침) */
+.panel, #raid-summary > div { zoom: var(--tsp); }
+.ts-btn.on { border-color: #e0b23a; color: #e0b23a; }
+#weapon-role { display: none; } /* v1.64 무기 설명 한 줄은 가방 툴팁에만 (HUD 글자 줄이기) */
+.tut-dots span { color: #555; font-size: 10px; margin-right: 2px; } .tut-dots .ok { color: #7fe08a; } .tut-dots .cur { color: #ffd76a; }
+#quest-tracker .tut-now { font-size: 15px; } #quest-tracker .tut-how { font-size: 12px; } /* v1.64 지금 할 일을 크게 */

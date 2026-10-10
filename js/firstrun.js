@@ -63,11 +63,11 @@ const Tut = {
   },
   html() {
     const p = G.player, i = this.step(); if (i < 0) return '';
-    let h = `<b>처음 할 일 ${i + 1}/${TUT.length}</b><br><span class="tut-now">▶ ${TUT[i].text}</span> <span class="tut-how">${TUT[i].how()}</span><div class="tut-list">`;
-    TUT.forEach((s, j) => { h += `<div class="${j < i ? 'ok' : j === i ? 'cur' : ''}">${j < i ? '✓' : j === i ? '▶' : '·'} ${s.text}</div>`; });
-    return h + '</div>';
+    // v1.64 지금 할 일 하나만 크게 + 진행 점 (전체 목록이 빽빽해 시선이 흩어지던 것)
+    const dots = TUT.map((s, j) => `<span class="${j < i ? 'ok' : j === i ? 'cur' : ''}">●</span>`).join('');
+    return `<span class="tut-dots">${dots}</span><br><span class="tut-now">▶ ${TUT[i].text}</span><br><span class="tut-how">${TUT[i].how()}</span>`;
   },
-  focusNpc() { const p = G.player; return this.on() && World.map === 'camp' && this.step() === 1 ? 'deploy' : null; }, // 출격 차례엔 윤씨만 또렷하게
+  focusNpc() { const p = G.player; return this.on() && World.map === 'camp' && this.step() <= 1 && this.step() >= 0 ? 'deploy' : null; }, // 출격 차례엔 윤씨만 또렷하게 · v1.64 첫 화면(움직이기)부터
 };
 
 const FirstRun = {

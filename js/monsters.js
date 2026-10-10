@@ -54,7 +54,9 @@ const Monsters = {
   buff(e) { return e.buffT > 0 ? 1.3 : 1; },
 
   // ---------------- 예고 공격 (바닥 원 → 지연 폭발) / 장판 ----------------
+  // v1.64 색 규칙: 나쁜 것 = 빨강·주황·노랑 (테두리는 늘 빨강) · 좋은 것 = 초록·파랑 — 보스 공격이 초록이라 좋은 건 줄 알고 일부러 맞던 것
   strike(x, y, r, delay, dmg, color, pool = false) {
+    if (pool || /^rgba\((1[0-4]\d|2[0-3]\d),\s*(2[0-5]\d|1[89]\d),\s*\d+,|^rgba\(230,80,255,/.test(color)) color = pool ? 'rgba(255,120,30,' : 'rgba(255,70,50,'; // 초록·보라 예고 → 주황·빨강
     G.strikes.push({ x, y, r, t: 0, delay, dmg, color, pool });
     if (Math.hypot(x - G.player.x, y - G.player.y) < r + 200) SFX.play('warn', 0.7);
   },
@@ -67,7 +69,7 @@ const Monsters = {
       if (!p.dead && Math.hypot(p.x - s.x, p.y - s.y) < s.r + p.r) damagePlayer(s.dmg);
       G.effects.push({ type: 'boom', x: s.x, y: s.y, t: 0, life: 0.35, r: s.r });
       SFX.playAt('boom', s.x, s.y, 0.7, 1300);
-      burst(s.x, s.y, s.pool ? '#8fd14a' : '#ffb040', 16, 200, 0.4, 4);
+      burst(s.x, s.y, s.pool ? '#ff8a30' : '#ffb040', 16, 200, 0.4, 4); // v1.64 산성도 주황
       G.shake = Math.max(G.shake, 5);
       if (s.pool) G.pools.push({ x: s.x, y: s.y, r: s.r * 0.9, t: 0, life: 4, dps: s.dmg * 0.5 });
     }

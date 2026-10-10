@@ -892,7 +892,7 @@ function updateBoss(e, dt, d) {
   if (e.bossT1 <= 0) {
     e.bossT1 = 3.2;
     const n = rage > 1 ? 24 : 16, off = rand(0, TAU);
-    for (let i = 0; i < n; i++) spawnEnemyBullet(e, off + i / n * TAU, 260, e.dmg * 0.6, '#7fff6a', 5);
+    for (let i = 0; i < n; i++) spawnEnemyBullet(e, off + i / n * TAU, 260, e.dmg * 0.6, '#ff9a3a', 5); // v1.64 초록 → 주황 (적 탄은 늘 빨강·주황)
   }
   if (e.bossT2 <= 0) {
     e.bossT2 = 9;
