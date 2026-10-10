@@ -434,7 +434,7 @@ function playerAttack() {
     const crit = Math.random() < cc + (first ? 0.1 : 0);
     G.bullets.push({
       x: mx, y: my, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, falloff: b.falloff,
-      dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w, frag: frag && i === 0, sid,
+      dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w, frag: frag && i === 0, sid, headOf: p.aimHead ? p.aimTarget : null, // v1.66 머리를 겨눈 탄
       color: crit ? '#ffef7a' : w.legend === 'boom' ? '#ff8a3a' : '#ffd27a',
     });
   }
@@ -799,7 +799,7 @@ function killEnemy(e) {
   const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
   SFX.play(e.def.boss || e.fieldBoss || e.elite ? 'roar' : 'kill', e.def.boss ? 1 : 0.8);
   const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul * (p.raid ? 1.4 : 1) * (World.def && World.def.lab ? 1.5 : 1)); // v1.31 연구소: 적이 적어(분당 처치 3.2) 경험치 ×1.5 // 엘리트 4배 · v1.16 출격 맵 처치 경험치 ×1.4 (적이 무한히 나오지 않는 만큼)
-  gainExp(exp);
+  gainExp(Math.round(exp * ((curDiff() || {}).exp || 1))); // v1.66 난이도 경험치
   p.totalKills++;
   const ck = e.art && Sprites.get(e.art) ? e.art : e.type; // 보스 전용 그림이면 그 그림으로 쓰러짐
   if (Sprites.get(ck) && ART.sprites[ck].anims.death) {
@@ -854,9 +854,11 @@ function killEnemy(e) {
     dropAt('credits', { amount: e.level * 40 });
     rollUnique(e.elite, e.level, dropAt); // v1.12 레이븐 · 바벨
     if (e.elite === 'babel') rollMyth('babel', e.level, dropAt); // v1.53 신화
+    if (e.elite === 'babel' && p.raid && p.raid.diff === 1 && !p.hellOpen) { p.hellOpen = true; UI.toast('헬 난이도 개방', '잠실을 「헬」로 출격할 수 있다 (출격 지도)'); log('하드 바벨을 쓰러뜨렸다 — 잠실 헬 난이도가 열렸다.', '#ff4a4a'); } // v1.66
     if (Math.random() < 0.15) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 · v1.51 30% → 15%
     hitstop(0.12); G.shake = Math.max(G.shake, 10);
   }
+  { const D = curDiff(); if (D && D.elite && (e.affix || e.fieldBoss) && !e.minion) rollMyth('hard', e.level, dropAt); } // v1.66 하드·헬: 엘리트·필드 보스도 신화 (낮은 확률)
   if (e.affix) { // 엘리트: 사망 효과 + 추가 보상
     Monsters.onDeath(e);
     dropAt('credits', { amount: e.level * 12 });
@@ -870,7 +872,7 @@ function killEnemy(e) {
   const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)
   const zoneBonus = Math.max(0, World.zoneIndex(e.x, e.y) - 1) * 0.15;
   if (Math.random() < gearChance * ECON.gear * (perk('treasure') ? 1.25 : 1)) { // v1.25 ×0.3
-    const it = randomGear(e.level, 0.4 + zoneBonus + (e.type === 'brute' ? 0.6 : 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear);
+    const it = randomGear(e.level, 0.4 + zoneBonus + (e.type === 'brute' ? 0.6 : 0) + ((curDiff() || {}).gear || 0), p.pity >= PITY_DROPS ? 3 : 0, ZONES[World.zoneIndex(e.x, e.y)].gear); // v1.66 난이도 장비 등급
     p.pity = it.rarity >= 3 ? 0 : p.pity + 1;
     dropAt('item', { item: it });
   }
@@ -1085,11 +1087,24 @@ function updateRadiation(dt) {
   const hel = p.equip.helmet, res = hel ? HELMETS[hel.key].radRes || 0 : 0; // 방독면
   const d = Math.max(1, Math.round(PlayerStats.maxHp(p) * 0.015 * (1 - res)));
   p.hp -= d;
-  floatText(p.x, p.y - 20, `방사능 -${d}`, '#7fff6a', 13);
+  floatText(p.x, p.y - 20, `방사능 -${d}`, '#ffb040', 13); // v1.66 받는 피해 = 주황
   if (p.hp <= 0) playerDie();
 }
 
 // ---------------- 투사체 / 수류탄 / 드랍 ----------------
+// v1.66 화면에 그려진 적 그림 사각형 (발 기준 위로 키만큼) 안에 마우스가 있으면 그 적 · 위쪽 22% = 머리
+function enemyScreenH(e) { const k = e.art && ART.height[e.art] ? e.art : e.type; return (ART.height[k] || 44) * (ART.charScale || 1) * (k === e.type ? (e.scale || 1) : 1); }
+function hoverEnemy(mx, my) {
+  let best = null, bd = 1e9;
+  for (const e of G.enemies) {
+    if (e.hp <= 0 || (typeof enemyCloaked === 'function' && enemyCloaked(e))) continue;
+    const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y), H = enemyScreenH(e), W = Math.max(e.r * 2.4, H * 0.45);
+    if (mx < sx - W / 2 || mx > sx + W / 2 || my < sy - H - 4 || my > sy + 6) continue;
+    const d = Math.abs(mx - sx) + Math.abs(my - (sy - H / 2));
+    if (d < bd) { bd = d; best = { e, head: my < sy - H * 0.78 && H >= 30 }; }
+  }
+  return best;
+}
 function updateBullets(dt) {
   const p = G.player;
   for (const b of G.bullets) {
@@ -1111,7 +1126,8 @@ function updateBullets(dt) {
             // v1.9 산탄총 코앞 사격: 크게 밀치고 경직
             const pb = wb && wb.pellets && b.maxLife - b.life < 0.1;
             Juice.impact(e, b, Math.atan2(b.vy, b.vx), b.crit); // v1.40 타격감
-            damageEnemy(e, b.dmg * fall, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb, ally: b.ally });
+            let hs = 1; if (b.headOf === e) { hs = (e.def.boss || e.elite || e.fieldBoss || e.labBoss) ? 1.25 : 1.5; if (G.time - (e.hsTxt || -9) > 0.35) { e.hsTxt = G.time; floatText(e.x, e.y - (ART.height[e.art || e.type] || 44) - 8, '헤드샷!', '#ff5a4a', 15); SFX.play('crit', 0.8); } } // v1.66 헤드샷 (보스 ×1.25)
+            damageEnemy(e, b.dmg * fall * hs, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb, ally: b.ally });
             if (b.mark) e.markT = G.time + 5; // v1.44 윤 저격수 전용: 표적 지정
             if (wb && wbase(wb.key) === 'sniper') hitstop(0.045);
             if (b.frag) explode(e.x, e.y, b.dmg * 0.6, 50, { small: true, knock: 8, stagger: 0.1 }); // v1.12 레이븐 파편
@@ -1175,10 +1191,11 @@ function mythTestGrant(P) {
 }
 function makeMyth(key, level) { const w = makeWeapon(key, Math.max(level, WEAPONS[key].lvl), 5); w.name = WEAPONS[key].name; return w; }
 function rollMyth(src, level, dropAt) {
-  const D = MYTH_DROP[src], p = G.player;
+  const p = G.player, DF = curDiff(), D = src === 'hard' ? DF && DF.elite : MYTH_DROP[src]; // v1.66 하드·헬 엘리트 신화
   if (!MYTH_LIVE || !D) return false;
+  const dm = src === 'hard' ? 1 : DF ? DF.myth : 1; // v1.66 난이도 배율 (바벨 하드 ×2 · 헬 ×4)
   p.mythPity = p.mythPity || {};
-  if (Math.random() < D.chance + (p.mythPity[src] || 0) * D.pity) { p.mythPity[src] = 0;
+  if (Math.random() < (D.chance + (p.mythPity[src] || 0) * D.pity) * dm) { p.mythPity[src] = 0;
     const all = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), had = (p.codex && p.codex.myth) || {}, fresh = all.filter(k => !had[k]); // v1.63 아직 확보 못 한 신화부터
     dropAt('item', { item: makeMyth(pick(fresh.length ? fresh : all), level) }); return true; }
   p.mythPity[src] = (p.mythPity[src] || 0) + 1; return false;
@@ -1308,7 +1325,10 @@ function update(dt) {
     }
     Ambience.playerStep(p, dt, !!mv && !(p.rollT > 0)); // v1.35 바닥별 발소리
     if (IS_TOUCH) Touch.aimUpdate(p); // 모바일 오른쪽 조이스틱 → 조준점·사격
-    const aimAt = Iso.toWorld(input.mx, input.my, 20); // 가슴 높이 조준
+    let aimAt = Iso.toWorld(input.mx, input.my, 20); // 가슴 높이 조준
+    const hv = IS_TOUCH ? null : hoverEnemy(input.mx, input.my); // v1.66 마우스가 적 그림 위면 그 적을 조준 (머리·몸 위를 눌러도 발밑 판정에 맞게) · 위쪽 = 머리
+    p.aimTarget = hv && hv.e; p.aimHead = !!(hv && hv.head);
+    if (hv) aimAt = { x: hv.e.x, y: hv.e.y };
     p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x); p.aimPt = aimAt; p.aimPtT = G.time;
     if (input.down && !(p.rollT > 0)) playerAttack();
     if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; finishReload(); } }

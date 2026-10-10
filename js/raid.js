@@ -39,15 +39,17 @@ const Raid = {
         + `<div class="mc-body"><div class="mc-name">${ok ? '' : ICON('lock') + ' '}${d.name}${id === rec && ok ? ' <span class="mc-rec">추천</span>' : ''}</div>`
         + `<div class="mc-lv">Lv${z.lvl[0]}~${z.lvl[1]}</div><div class="mc-desc">${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</div>`
         + (gr ? `<div class="mc-grave">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</div>` : '') + ev
+        + (ok && id === DIFF_MAP && diffOpen(p) > 0 ? `<div class="mc-diff">${DIFFS.map((D, i) => i > diffOpen(p) ? `<span class="dbtn off">${ICON('lock')} ${D.name}</span>` : `<span class="dbtn" data-diff="${i}" style="border-color:${D.color};color:${D.color}">${D.name}${i ? ` <small>경험치 ×${D.exp} · 신화 ×${D.myth}</small>` : ''}</span>`).join('')}</div>${diffOpen(p) < 2 ? '<div class="muted" style="font-size:11px">헬: 하드에서 바벨을 쓰러뜨리면</div>' : ''}` : '') // v1.66 잠실 난이도
         + (ok ? '<div class="mc-go">▶ 출격</div>' : '') + '</div></div>';
     };
     h += `<div class="map-grid">${MAP_ORDER.filter(id => !MAPS[id].lab).map(card).join('')}</div>` + MAP_ORDER.filter(id => MAPS[id].lab).map(card).join('');
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨', h, btns); $('panel-dialog').classList.add('mapdlg');
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격
+    $('dialog-text').querySelectorAll('[data-diff]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); UI.close('dialog'); FirstRun.rules(() => this.deploy(DIFF_MAP, +b.dataset.diff)); }; }); // v1.66 난이도 골라 출격
   },
 
-  deploy(id) {
+  deploy(id, diff = 0) {
     const p = G.player;
     // v1.7 비상 보급: 구급상자도 돈도 없으면 2개, 예비 탄약이 바닥이면 120발 (죽음의 악순환 방지 — 봇 측정에서 발견)
     const med = p.inventory.find(i => i.key === 'medkit');
@@ -60,7 +62,7 @@ const Raid = {
     const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
     G.exits = pts.filter(q => q !== start);
     p.x = start.x; p.y = start.y; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 출격 때 체력을 채워 주지 않음 (의무병 · 구급상자 의미)
-    p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0 };
+    p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0, diff: id === DIFF_MAP ? Math.max(0, Math.min(diff, diffOpen(p))) : 0 }; // v1.66 잠실 난이도
     if (FirstRun.rookie()) G.fbT = 1e9; // v1.45 첫 출격엔 필드 보스 없음
     G.extractT = 0; G.search = null;
     Scavenge.generate(); // v1.4 뒤질 곳
@@ -75,12 +77,12 @@ const Raid = {
       if (best) [G.grave.x, G.grave.y] = best;
     }
     if (G.grave) log(`${ICON('skull')} 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
-    UI.toast(MAPS[id].name, `탈출구 ${G.exits.length}곳, 미니맵 초록 ◎`); // v1.39
+    { const D = DIFFS[p.raid.diff]; UI.toast(MAPS[id].name + (p.raid.diff ? ` · ${D.name}` : ''), p.raid.diff ? `적 Lv+${D.lv} · 체력 ×${D.hp} · 피해 ×${D.dmg} · 경험치 ×${D.exp} · 신화 ×${D.myth} · 바벨이 스카이타워에 나타남` : `탈출구 ${G.exits.length}곳, 미니맵 초록 ◎`); } // v1.39 · v1.66 난이도
     UI.smsQ = []; if (MAP_SMS[id]) UI.sms(MAP_SMS[id], 2.5); // v1.56 출격 시작 재난문자
     log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}.`, '#8cf'); // v1.39
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
-    G.fade = { t: 0, life: 1.4, text: MAPS[id].name, sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17
+    G.fade = { t: 0, life: 1.4, text: MAPS[id].name + (p.raid.diff ? ' · ' + DIFFS[p.raid.diff].name : ''), sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17
     if (World.def.lab) log('비상 전원만 남은 연구소다. 붉은 비상등 아래가 그나마 밝다. 격리실(미니맵 붉은 방)에 무언가 있다.', '#ff8a8a');
     saveGame();
   },

@@ -368,13 +368,15 @@ function isUpgrade(p, it) {
 
 // ---------------- 적 ----------------
 function makeEnemy(type, x, y, level) {
-  const d = ENEMIES[type];
+  const d = ENEMIES[type], D = curDiff(); // v1.66 잠실 하드·헬
+  if (D) level += D.lv;
   const lt = Math.max(0, level - 10); // v1.51 후반 점검: 봇이 Lv8 이후 사망 0% → Lv11부터 점점 단단하고 아프게 (Lv20 체력 +15%·피해 +8% · Lv30 +42%·+12%)
   const hpMul = 1 + (level - 1) * 0.38 + lt * lt * 0.012, dmgMul = 1 + (level - 1) * 0.26 + lt * 0.05;
   const hp = Math.round(d.hp * (d.boss ? 1 : hpMul));
+  const hpD = Math.round(hp * (D ? D.hp : 1));
   return {
     type, def: d, x, y, r: d.r, level,
-    hp, maxHp: hp, dmg: d.dmg * (d.boss ? 1 : dmgMul),
+    hp: hpD, maxHp: hpD, dmg: d.dmg * (d.boss ? 1 : dmgMul) * (D ? D.dmg : 1),
     speed: d.speed * ENEMY_SPEED * rand(0.92, 1.08), // v1.32 적 이동 전체 ×0.85 (플레이어 감속만큼)
     atkT: rand(0, 1), fireT: rand(0.5, 1.5), state: 'idle', stunT: 0,
     wanderA: rand(0, TAU), wanderT: 0, hitT: 0, stuckT: 0, sideDir: Math.random() < 0.5 ? 1 : -1,

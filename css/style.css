@@ -540,3 +540,4 @@ body.touch #loot-feed { right: 70px; bottom: 110px; }
 #weapon-role { display: none; } /* v1.64 무기 설명 한 줄은 가방 툴팁에만 (HUD 글자 줄이기) */
 .tut-dots span { color: #555; font-size: 10px; margin-right: 2px; } .tut-dots .ok { color: #7fe08a; } .tut-dots .cur { color: #ffd76a; }
 #quest-tracker .tut-now { font-size: 15px; } #quest-tracker .tut-how { font-size: 12px; } /* v1.64 지금 할 일을 크게 */
+.mc-diff { display: flex; gap: 4px; flex-wrap: wrap; margin: 4px 0 2px; } .mc-diff .dbtn { border: 1px solid #555; border-radius: 3px; padding: 2px 6px; font-size: 12px; cursor: pointer; background: rgba(0,0,0,.35); } .mc-diff .dbtn small { font-size: 10px; opacity: .85; } .mc-diff .dbtn.off { opacity: .4; cursor: default; } .mc-diff .dbtn:not(.off):hover { background: rgba(255,255,255,.08); } /* v1.66 잠실 난이도 */

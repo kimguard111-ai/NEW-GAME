@@ -147,6 +147,8 @@ const Story = {
     // v1.0: 다음 장은 레벨이 되면 무전으로 바로 시작 (캠프 왕복 없음)
     if (c0 && !p.quest.active && p.level >= c0.minLevel && !p.dead && World.map === CHAPTER_MAP[p.quest.ch] && G.time - (this.autoT || -99) > 5) { this.autoT = G.time; this.start(p); }
     const st = this.step(p);
+    // v1.66 잠실 하드·헬: 이야기와 상관없이 출격마다 바벨이 스카이타워에 한 번 나타남 (신화 ×2 · ×4)
+    if (p.raid && p.raid.diff && World.map === DIFF_MAP && !p.raid.babel && !G.elite && !p.dead) { const l = World.landmarks.find(x => x.id === ELITES.babel.at); if (l && dist(p, l) < 950) { p.raid.babel = true; this.spawnElite('babel', l); } }
     if (!st || p.dead) return;
     if (st.type === 'reach') {
       const l = World.landmarks.find(x => x.id === st.landmark);

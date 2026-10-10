@@ -123,7 +123,7 @@ const Bosses = {
       e.phase = ph; e.invulnT = 1.5; e.charge = 0;
       if (ph === 3) e.speed = e.def.speed * ENEMY_SPEED * 1.35;
       G.shake = 22; hitstop(0.2);
-      G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.9, color: '#7fff6a', r: 380 });
+      G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.9, color: '#ff5a3a', r: 380 }); // v1.66 색 규칙: 충격파도 빨강
       const d = dist(e, p);
       if (d < 380 && !p.dead) {
         const a = angleTo(e, p); for (let i = 0; i < 8; i++) World.move(p, Math.cos(a) * 18, Math.sin(a) * 18);
@@ -143,7 +143,7 @@ const Bosses = {
     }
     if (ph === 3 && (e.novaT = (e.novaT ?? 3) - dt) <= 0) {
       e.novaT = 10;
-      Monsters.strike(e.x, e.y, 270, 1.8, e.dmg * 2.2, 'rgba(255,60,60,');
+      Monsters.strike(e.x, e.y, 270, 1.8, e.dmg * 1.8, 'rgba(255,60,60,'); // v1.66 2.2 → 1.8
       floatText(e.x, e.y - 90, '방사능 폭발!', '#ff6060', 20);
     }
   },

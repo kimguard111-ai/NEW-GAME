@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.65';
+const GAME_VERSION = 'v1.66';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -61,6 +61,16 @@ const WEAPONS = {
 const MYTH_LIVE = true; // v1.55 고유 그림이 와서 켬
 const MYTH_TEST = false; // v1.61.2 시험 모드: 새 게임·불러오기 모두 바로 Lv26 + 신화 3종 · 이 동안 신화 레벨 제한 25 — 출시 전 false
 const MYTH_DROP = { babel: { chance: 0.06, pity: 0.02 }, titan: { chance: 0.03, pity: 0.01 }, chimera: { chance: 0.04, pity: 0.015 }, assault: { chance: 0.06, pity: 0.02, tier: 5, rank: 'A' } }; // v1.63 어설트는 위협 5+ A 등급 이상 (S만이면 최상급 장비로도 거의 못 함)
+// v1.66 마지막 맵(잠실) 난이도: 하드 = 이야기를 끝내면 · 헬 = 하드에서 바벨을 쓰러뜨리면 · 적 레벨·체력·피해 ↑ · 경험치·장비 등급·신화 확률 ↑
+// 하드·헬에서는 바벨이 출격마다 스카이타워에 나타남 (이야기 뒤에도 신화를 노릴 수 있게) · 엘리트·필드 보스도 낮은 확률로 신화
+const DIFF_MAP = 'jamsil';
+const DIFFS = [
+  { name: '일반', lv: 0, hp: 1, dmg: 1, exp: 1, gear: 0, myth: 1, color: '#cfc6b0' },
+  { name: '하드', lv: 4, hp: 1.5, dmg: 1.3, exp: 1.5, gear: 0.5, myth: 2, elite: { chance: 0.01, pity: 0.004 }, color: '#ff9a3a' },
+  { name: '헬', lv: 8, hp: 2.2, dmg: 1.7, exp: 2.5, gear: 1.0, myth: 4, elite: { chance: 0.03, pity: 0.01 }, color: '#ff4a4a' },
+];
+function curDiff() { const p = typeof G !== 'undefined' && G.player; return p && p.raid && p.raid.diff ? DIFFS[p.raid.diff] : null; }
+function diffOpen(p) { return !p.finalEnd ? 0 : p.hellOpen ? 2 : 1; }
 const wbase = k => (WEAPONS[k] && WEAPONS[k].base) || k; // v1.52 불법 무기 → 같은 계열 총 (소리·손맛·부품)
 
 // v1.9 근접 3타 콤보. 1·2타(MELEE_COMBO) → 3타 무기별 마무리(MELEE_FINISH). 값은 무기 기본치에 곱함
@@ -209,7 +219,7 @@ const ENEMIES = {
              ranged: true, range: 360, fireCd: 2.8, burst: 3, bulletSpeed: 480, nade: true }, // v1.7 하향: 피해 11→7 · 사격 간격 1.9→2.4 · 사거리 420→360 · 탄속 560→480  // 3점사 · 가끔 수류탄
   shield:  { name: '방패 돌격병', hp: 170, dmg: 14, speed: 78, r: 14, exp: 48, weight: 2.2, color: '#3a3e46', atkCd: 1.6, aggro: 460, shield: true }, // 정면 피해 65% 감소 · 느리게 돌아섬 · v1.7 하향 (체력 200→170 · 피해 20→14 · 공격 간격 1.3→1.6)
   stalker: { name: '은신 변이체', hp: 120, dmg: 16, /* v1.7 21→16: 위협은 은신, 피해까지 최고일 필요 없음 */ speed: 150, r: 12, exp: 46, weight: 0.9, color: '#4a3a5a', atkCd: 0.9, aggro: 420, pounce: true, cloak: true }, // 가까이 오거나 맞기 전엔 거의 안 보임
-  boss:   { name: '방사능 군주 타이탄', hp: 60000, /* v1.7 90000→60000: 엔딩이 6장으로 옮겨져 중간 보스, 봇 측정상 Lv20 장비로 2분+ */ dmg: 130, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
+  boss:   { name: '방사능 군주 타이탄', hp: 52000, /* v1.7 90000→60000: 엔딩이 6장으로 옮겨져 중간 보스, 봇 측정상 Lv20 장비로 2분+ · v1.66 → 52000 · 피해 130 → 110 (봇 완주: 장비 운 나쁜 판에 타이탄에서 12번 사망 — 장판·폭발·돌진) */ dmg: 110, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
 };
 
 // 지역 (캠프 중심으로부터 타일 거리)

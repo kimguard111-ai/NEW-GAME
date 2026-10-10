@@ -132,12 +132,13 @@ const Juice = {
     } else {
       const reload = p.reloadT > 0, gap = (5 + (b.spread || 0) * 70 * (1 - gearBonus(p, 'accuracy', w)) + this.spread * 10) * adsSpreadMul(w) * attMul(w, 'spread'), len = 6 - ADS.k * 2; // v1.49.9 조준하면 좁아짐
       for (const pass of [0, 1]) {
-        ctx.strokeStyle = pass ? (reload ? '#8a8a8a' : '#f2ecd8') : 'rgba(0,0,0,0.55)'; ctx.lineWidth = pass ? 1.6 : 3.4;
+        ctx.strokeStyle = pass ? (reload ? '#8a8a8a' : p.aimHead ? '#ff4a3a' : p.aimTarget ? '#ffb27a' : '#f2ecd8') : 'rgba(0,0,0,0.55)'; ctx.lineWidth = pass ? 1.6 : 3.4; // v1.66 적 위 = 주황 · 머리 위 = 빨강
         ctx.beginPath();
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(x + dx * gap, y + dy * gap); ctx.lineTo(x + dx * (gap + len), y + dy * (gap + len)); }
         ctx.stroke();
       }
       ctx.fillStyle = '#f2ecd8'; ctx.fillRect(x - 0.8, y - 0.8, 1.6, 1.6);
+      if (p.aimHead && !reload) { ctx.strokeStyle = 'rgba(255,74,58,0.85)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(x, y, gap + len + 3, 0, TAU); ctx.stroke(); } // v1.66 헤드샷 조준 고리
       if (reload) { const k = 1 - p.reloadT / (p.reloadMax || 1); ctx.strokeStyle = '#ffd76a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, gap + len + 4, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(k, 0, 1)); ctx.stroke(); }
     }
     if (this.hm) { // 명중 X
