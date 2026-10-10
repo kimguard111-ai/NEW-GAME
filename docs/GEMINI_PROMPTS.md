@@ -1065,6 +1065,22 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a compact black submachine gun with a short barrel, a straight magazine under the grip and a folding stock, held with both hands at chest height, the right hand on the pistol grip and the left hand on the short handguard, the barrel pointing straight to the RIGHT and level with the ground. The submachine gun stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while holding the gun forward; row 2: 6 frames of a walk cycle while keeping the gun forward; row 3: 3 frames of rapid firing with a small shaking recoil, no muzzle flash, no bullets, no shells in the air; row 4: 2 frames of getting hit and flinching backward while still holding the gun; row 5: 5 frames of a death animation, dropping the gun, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
 ```
 
+## 34. 기관총 든 몸 (v1.60) — LM-49 기관총 (후반 무기)
+지금 기관총을 들면 돌격소총 든 몸(`player_long`)에 총만 바뀜 → 기관총 몸이 있으면 바로 바뀜 (33절 기관단총과 같은 방식 · 올리는 즉시 적용)
+| 장 | 파일 이름 | 방어구 | 📎 첨부할 몸 |
+|---|---|---|---|
+| 34-1 | `player_lmg.png` | 없음 (후드) | `Player.png` |
+| 34-2 | `player_vest_lmg.png` | 방탄 조끼 | `player_best1.png` |
+| 34-3 ★ | `player_tactical_lmg.png` | 전술 조끼 | `player_best2.png` |
+| 34-4 ★ | `player_military_lmg.png` | 군용 강화복 | `player_best3.png` |
+| 34-5 ★ | `player_exo_lmg.png` | 외골격 | `player_best4.png` |
+📎 해당 방어구 빈손 몸 + 기관총 아이콘 (가방 화면의 LM-49 기관총 그림 캡처 — 같은 총으로 나오게) · 방어구 버전은 첨부 몸만 바꿔 같은 프롬프트
+★ = 기관총은 후반(Lv20 근처) 무기라 실제로 들고 다닐 때 입는 방어구부터
+```
+Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a heavy black light machine gun with a long barrel, a folded bipod under the front of the barrel, a carrying handle on top and a box magazine under the gun with a short ammo belt, held low at hip height with both hands, the right hand on the pistol grip and the left hand under the handguard supporting the weight, the barrel pointing straight to the RIGHT and level with the ground. The gun looks heavy and he leans back slightly to hold it. The machine gun stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while holding the gun forward; row 2: 6 frames of a slow heavy walk cycle while keeping the gun forward; row 3: 3 frames of continuous firing with a strong shaking recoil, no muzzle flash, no bullets, no shells in the air; row 4: 2 frames of getting hit and flinching backward while still holding the gun; row 5: 5 frames of a death animation, dropping the gun, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+> 결과가 이상할 때: 총이 화면 밖으로 잘리면 "leave wide space on the right of every frame" 추가 · 탄띠가 프레임마다 달라도 괜찮음 · 한 칸에 사람이 둘 이상 그려지면 그 장은 다시 생성 (방패 돌격병이 이것 때문에 맞을 때 갈라져 보였음)
+
 ---
 
 ## 결과가 이상할 때

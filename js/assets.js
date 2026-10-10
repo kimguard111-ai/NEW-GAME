@@ -311,7 +311,7 @@ const ART = {
     subject: { file: 'subject.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     spitter: { file: 'spitter.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     sentry: { file: 'sentry.png', cell: 128, w: 192, anims: { idle: [0, 8], attack: [1, 8], hit: [2, 2], walk: [3, 4], death: [4, 6] } },
-    shield: { file: 'shield.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 10], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    shield: { file: 'shield.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 10, [2, 3, 4, 5, 6, 7, 8, 9]], attack: [2, 4, [1, 2, 3]], hit: [3, 2], death: [4, 5] } }, // v1.60 걷기 1~2칸 · 공격 1칸에 작은 사람 2~3명이 겹쳐 그려져 있어 뺌 (맞을 때 셋으로 갈라져 보이던 것)
     stalker: { file: 'stalker.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 10], attack: [2, 4], hit: [3, 2, [0, 0]], death: [4, 5, [3, 2, 4, 1, 0]] } },
     boss: { file: 'boss.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 6] } },
     deploy: { file: 'deploy.png', cell: 128, w: 192, anims: { idle: [0, 4] } },
