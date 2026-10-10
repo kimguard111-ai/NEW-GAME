@@ -883,9 +883,10 @@ function drawHelmetOverlay(sx, sy, info, hel, color) {
 const TexCache = { strips: new Map() };
 // v1.31.1 상가(들어갈 수 있는 건물) 외벽: 가게 종류별 앞모습 그림(sf_…)이 있으면 1층, 위층은 지역 외벽 — 없으면 null (코드 그림)
 function shopFront(i) {
-  const bd = World.buildings[World.bid[i]], sa = bd && ART.shopArt[bd.name], fk = sa && sa.front;
-  if (!fk || !ART.tex[fk] || !ART.tex[fk].ready) return null;
+  const bd = World.buildings[World.bid[i]], sa = bd && ART.shopArt[bd.name]; let fk = sa && sa.front;
+  if (fk && (!ART.tex[fk] || !ART.tex[fk].ready)) fk = null; // v1.59 가게 앞 그림이 없어도 외벽 그림은 씀 (노래방·미용실·학원이 코드 상자로 그려지던 것)
   const tx = i % World.W, ty = Math.floor(i / World.W), upper = facadeVariant(tx, ty, false, tileHeight(tx, ty)) || fk;
+  if (!upper) return null;
   const nd = bd.door ? Math.min(...bd.door.map(([dx, dy]) => Math.max(Math.abs(dx - tx), Math.abs(dy - ty)))) : 0;
   return { front: nd <= 2 ? fk : null, upper }; // v1.32 가게 앞모습은 문 양옆 2칸까지만 (건물 둘레 전체가 같은 진열창이던 것) — 나머지는 일반 1층
 }
@@ -1343,6 +1344,12 @@ const Behind = {
   alpha(o, sx, sy, w, h) {
     const d = (o.x + o.y) / TILE;
     for (const a of this.actors()) if (a.d < d + 0.3 && Math.abs(a.sx - sx) < w * 0.5 && a.sy < sy + 4 && a.sy > sy - h * 0.92) return 0.32;
+    return 1;
+  },
+  // v1.59 큰 소품(성문 등): 화면 영역이 넓어 아무 적이나 뒤에 있으면 늘 반투명이던 것 → 나·동료가 뒤에 있을 때만 반쯤
+  big(o, sx, sy, w, h) {
+    const d = (o.x + o.y) / TILE;
+    for (const a of this.actors()) if (a.imp === 1 && a.d < d + 0.3 && Math.abs(a.sx - sx) < w * 0.4 && a.sy < sy && a.sy > sy - h * 0.85) return 0.5;
     return 1;
   },
 };

@@ -5,7 +5,7 @@
 
 const EVENT_DEFS = {
   airdrop:  { name: '보급 투하',     lab: false },
-  survivor: { name: '부상당한 생존자', lab: true },
+  survivor: { name: '부상당한 생존자', lab: true, off: true }, // v1.59 삭제 (캠프 합류는 탈출할 때 찾아오는 피난민으로)
   safe:     { name: '잠긴 금고',     lab: true },
   nest:     { name: '변이 둥지',     lab: true },
   trader:   { name: '떠돌이 상인',   lab: false, off: true }, // v1.51 삭제 (예전 세이브의 무전실 계획에 남은 것도 무시)

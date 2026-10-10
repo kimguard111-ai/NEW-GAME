@@ -3,7 +3,12 @@
 // v1.44 동료 2차: 총 쥐여 주기 (탄 무한) · 동료 레벨 (함께 잡으면 오름) · 명령 (따라와/대기/조용히) · 개인 부탁 → 전용 능력
 const COMP_MAX_LV = 10, COMP_CMDS = ['follow', 'hold', 'quiet'], COMP_CMD_NAMES = { follow: '따라와', hold: '여기서 대기', quiet: '조용히' };
 const COMPANIONS = {
-  assault: { sprite: 'comp_assault', tint: 'none', name: '박 상병', role: '돌격', lvl: 5, price: 1500, hpMul: 1.4, dmg: 9, rate: 0.17, range: 420, spread: 0.06, speed: 950, gun: 20, snd: 'rifle',
+  // v1.59 처음 고용할 수 있는 동료 = 서 간호사 (Lv5) · 박 상병은 Lv8로
+  medic: { sprite: 'comp_medic', tint: 'none', name: '서 간호사', role: '의무', lvl: 5, price: 1500, hpMul: 1.0, dmg: 8, rate: 0.5, range: 380, spread: 0.05, speed: 950, gun: 12, snd: 'pistol', heal: true,
+    look: { body: '#d8d0c0', helmet: null, legs: '#4a4a52' }, desc: '권총은 약하지만 내 체력이 70% 아래면 12초마다 15% 치료해 준다.',
+    bark: { hire: '"다치면 바로 말해요."', kill: ['휴…', '맞았다!'], hurt: ['아파요!', '저 좀 지켜 줘요!'], down: '"…괜찮아요… 가요…"', up: '"고마워요. 이번엔 제가 지킬게요."', heal: ['가만있어 봐요, 붕대 감을게요.', '피 좀 멈추고 가요.', '움직이지 마요!'], lv: '"이제 손이 덜 떨려요."' },
+    quest: { what: '의약품 상자', map: 'myeongdong', ask: '"명동 약국 창고에 상자 하나가 남아 있대요. 그게 있으면 훨씬 많이 고칠 수 있어요."', perk: '야전 치료', perkDesc: '치료가 15% → 25%, 12초 → 9초마다', thanks: '"이걸로 사람 여럿 살려요. 고마워요."' } },
+  assault: { sprite: 'comp_assault', tint: 'none', name: '박 상병', role: '돌격', lvl: 8, price: 2500, hpMul: 1.4, dmg: 9, rate: 0.17, range: 420, spread: 0.06, speed: 950, gun: 20, snd: 'rifle',
     look: { body: '#4a5a3a', helmet: '#3a4a2a', legs: '#2a2e22' }, desc: '소총으로 꾸준히 쏜다. 맷집이 좋다.',
     bark: { hire: '"박 상병, 따라가겠습니다."', kill: ['하나 처리!', '정리됐습니다.', '다음!'], hurt: ['윽, 맞았습니다!', '엄호 바랍니다!'], down: '"…먼저 가십시오…"', up: '"고맙습니다. 아직 싸울 수 있습니다."', lv: '"감이 돌아옵니다."' },
     quest: { what: '부대 인식표', map: 'jongno', ask: '"종로에서 우리 분대가 끊겼습니다. 분대장 인식표만이라도 찾아 주십시오."', perk: '엄호 사격', perkDesc: '내 체력이 30% 아래로 떨어지면 5초 동안 두 배 빠르게 쏜다 (30초마다)', thanks: '"…이제 분대장님 몫까지 싸우겠습니다."' } },
@@ -11,10 +16,6 @@ const COMPANIONS = {
     look: { body: '#5a5040', helmet: '#3a3226', legs: '#2a261e' }, desc: '멀리서 한 방씩. 관통한다. 몸은 약하다.',
     bark: { hire: '"멀리 있는 건 내가 맡지."', kill: ['명중.', '하나.', '쓰러졌다.'], hurt: ['가까이 붙었어!', '거리 좀 벌려 줘!'], down: '"…총 좀… 챙겨 줘…"', up: '"빚졌네."', lv: '"손이 좀 풀렸어."' },
     quest: { what: '부서진 조준경', map: 'jongno', ask: '"종로 옥상에 두고 온 조준경이 있어. 부서졌어도 그게 있어야 눈이 맞아."', perk: '표적 지정', perkDesc: '맞힌 적은 5초 동안 내가 주는 피해 +25%', thanks: '"좋아. 이제 내가 찍으면 네가 끝내."' } },
-  medic: { sprite: 'comp_medic', tint: 'none', name: '서 간호사', role: '의무', lvl: 8, price: 2500, hpMul: 1.0, dmg: 8, rate: 0.5, range: 380, spread: 0.05, speed: 950, gun: 12, snd: 'pistol', heal: true,
-    look: { body: '#d8d0c0', helmet: null, legs: '#4a4a52' }, desc: '권총은 약하지만 내 체력이 70% 아래면 12초마다 15% 치료해 준다.',
-    bark: { hire: '"다치면 바로 말해요."', kill: ['휴…', '맞았다!'], hurt: ['아파요!', '저 좀 지켜 줘요!'], down: '"…괜찮아요… 가요…"', up: '"고마워요. 이번엔 제가 지킬게요."', heal: ['가만있어 봐요, 붕대 감을게요.', '피 좀 멈추고 가요.', '움직이지 마요!'], lv: '"이제 손이 덜 떨려요."' },
-    quest: { what: '의약품 상자', map: 'myeongdong', ask: '"명동 약국 창고에 상자 하나가 남아 있대요. 그게 있으면 훨씬 많이 고칠 수 있어요."', perk: '야전 치료', perkDesc: '치료가 15% → 25%, 12초 → 9초마다', thanks: '"이걸로 사람 여럿 살려요. 고마워요."' } },
 };
 
 const Companion = {
@@ -73,6 +74,24 @@ const Companion = {
       snd: { smg: 'smg', rifle: 'rifle', lmg: 'lmg', shotgun: 'shotgun', sniper: 'sniper' }[wbase(g.key)] || 'pistol', gun: wb.mag > 20 ? 20 : wb.pellets ? 16 : 12 };
   },
 
+  // v1.59 동료 화력 (초당 피해 대략) — 총 고르는 창에서 비교용
+  dps(id, gun) {
+    const p = G.player, d = COMPANIONS[id], cd = this.data(id), m = 1 + 0.06 * (cd.lv - 1), wb = gun && WEAPONS[gun.key];
+    if (!wb) return d.dmg * (1 + (p.level - 1) * 0.14) * m / d.rate;
+    return gun.dmg * plusMul(gun) * 0.7 * m * (wb.pellets || 1) / (wb.rate * 1.25);
+  },
+  // v1.59 총 쥐여 주기 창: 가방에서 따로 「동료에게 주기」를 찾아야 해서 몰랐던 것 → 동료 창에서 바로 고름
+  pickGun() {
+    const p = G.player, id = p.comp, d = this.def(), cd = this.data(); if (!d) return;
+    const guns = p.inventory.filter(it => this.canGive(it) && !it.locked), now = Math.round(this.dps(id, cd.gun));
+    let h = `"${d.name}에게 줄 총을 고르게. 탄은 걱정 말고." <br><span class="muted">동료는 총 피해의 70%로 쏘고 탄은 무한. 지금 화력 <b style="color:#e6dfcc">${now}</b>/초 (${cd.gun ? itemName(cd.gun) : '기본 총'})</span><br>`;
+    if (!guns.length) h += '<div class="muted" style="margin-top:6px">가방에 줄 수 있는 총이 없다 (근접 무기 · 잠긴 장비는 안 됨).</div>';
+    const btns = guns.slice(0, 8).map(it => { const v = Math.round(this.dps(id, it)), diff = v - now;
+      return [`${itemName(it)} · ${v}/초 ${diff >= 0 ? '▲' + diff : '▼' + (-diff)}`, () => { this.give(it); this.open(); }]; });
+    btns.push(['돌아가기', () => this.open()]);
+    UI.dialog(`${d.name}에게 총 주기`, h, btns);
+  },
+
   // ---------- 캠프: 고용 · 고르기 ----------
   open() {
     const p = G.player; p.compHired = p.compHired || [];
@@ -83,7 +102,7 @@ const Companion = {
       let info = '';
       if (cd) { // v1.44 레벨 · 쥔 총 · 개인 부탁
         info = `<br><span style="color:#9fd0ff">Lv${cd.lv}</span>${cd.lv < COMP_MAX_LV ? ` <span class="muted">(${cd.xp}/${cd.lv * 12})</span>` : ' <span class="muted">(최고)</span>'}`
-          + ` · <span class="muted">총:</span> ${cd.gun ? `<b class="r${cd.gun.rarity || 0}">${itemName(cd.gun)}</b>` : '<span class="muted">기본 총</span>'}`;
+          + ` · <span class="muted">총:</span> ${cd.gun ? `<b class="r${cd.gun.rarity || 0}">${itemName(cd.gun)}</b>` : '<span class="muted">기본 총</span>'} <span class="muted">(화력 ${Math.round(this.dps(id, cd.gun))}/초)</span>`;
         if (cd.quest === 'done') info += `<br><span style="color:#9fbf6a">전용 능력 「${d.quest.perk}」</span> <span class="muted">${d.quest.perkDesc}</span>`;
         else if (cd.quest === 'active') info += `<br><span style="color:#ffd76a">부탁: 「${MAPS[d.quest.map].name}」에서 ${d.quest.what} 찾아오기 (함께 출격)</span>`;
         else info += `<br><span class="muted">${cd.lv >= 3 ? '할 얘기가 있는 눈치다.' : 'Lv3이 되면 개인 부탁을 꺼낸다.'}</span>`;
@@ -99,11 +118,12 @@ const Companion = {
         cd.quest = 'active'; SFX.play('quest'); log(`${d.name}: ${d.quest.ask}`, '#9fd0ff');
         UI.toast(`부탁: ${d.quest.what}`, `${d.name}을(를) 데리고 「${MAPS[d.quest.map].name}」에 출격`); saveGame(); this.open();
       }]);
+      if (on && World.map === 'camp') btns.push([`${d.name}에게 총 쥐여 주기`, () => this.pickGun()]); // v1.59
       if (cd && cd.gun) btns.push([`${d.name}에게서 총 돌려받기`, () => { this.takeBack(id); this.open(); }]);
     }
     if (p.comp) btns.push(['혼자 가기', () => { p.comp = null; G.comp = null; saveGame(); this.open(); }]);
     btns.push(['닫기', () => UI.close('dialog')]);
-    h += `<span class="muted">총은 가방에서 골라 「동료에게 주기」 · 출격 중 [${keyLabel(keyOf('compCmd'))}] 로 명령 (따라와 / 여기서 대기 / 조용히)</span>`;
+    h += `<span class="muted">함께 가는 동료에게 「총 쥐여 주기」 (가방에서 무기를 눌러 「동료에게 주기」도 됨) · 출격 중 [${keyLabel(keyOf('compCmd'))}] 로 명령 (따라와 / 여기서 대기 / 조용히)</span>`;
     UI.dialog('생존자 대장 한씨', h, btns);
   },
 

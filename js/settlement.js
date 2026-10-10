@@ -34,6 +34,8 @@ const Settlement = {
   // 탈출 (Raid.extract): 구한 사람 합류 + 사람들이 물건을 모아 둠
   onExtract(r) {
     for (const n of (r && r.rescued) || []) this.join(n);
+    // v1.59 생존자 구출 사건을 뺀 대신: 살아서 탈출하면 가끔 무전을 듣고 피난민이 찾아옴 (구한 사람이 없을 때 30%)
+    if (!(r && r.rescued && r.rescued.length) && this.residents().length < RES_CAP && Math.random() < 0.3) { const taken = new Set(this.residents().map(x => x.name)), free = RES_NAMES.filter(n => !taken.has(n)); this.join(pick(free.length ? free : RES_NAMES)); }
     const p = G.player; p.campGifts = p.campGifts || [];
     for (const res of this.residents()) if (Math.random() < 0.55 && p.campGifts.length < 24) p.campGifts.push(res.job);
   },
@@ -72,7 +74,7 @@ const Settlement = {
   },
   open() { // 한씨 대화: 캠프 사람들
     const rs = this.residents(), p = G.player, next = CAMP_GROWTH.find(g => g.n > rs.length);
-    let h = `"사람이 늘었어. 다 자네가 데려온 사람들이지."<br><span class="muted">밖에서 구한 사람(부상당한 생존자 · 호위)을 데리고 살아 나오면 캠프에 남는다. 출격하고 돌아올 때마다 저마다 뭔가를 모아 둔다 (모닥불 옆 상자).</span><br>`;
+    let h = `"사람이 늘었어. 다 자네가 데려온 사람들이지."<br><span class="muted">살아서 탈출하고 돌아오면 가끔 무전을 듣고 피난민이 찾아와 캠프에 남는다. 출격하고 돌아올 때마다 저마다 뭔가를 모아 둔다 (모닥불 옆 상자).</span><br>`;
     h += rs.length ? rs.map(r => `<div class="sum-row"><span>${r.name}</span><b>${RES_JOBS[r.job].name} · ${RES_JOBS[r.job].what}</b></div>`).join('') : '<div class="muted">아직 아무도 없다.</div>';
     h += `<div class="muted" style="margin-top:6px">${rs.length} / ${RES_CAP}명${next ? ` · ${next.n}명이 되면 캠프가 커진다` : ''}</div>`;
     UI.dialog('생존자 대장 한씨', h, [['닫기', () => UI.close('dialog')]]);

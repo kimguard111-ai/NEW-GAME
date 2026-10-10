@@ -181,7 +181,7 @@ const ART = {
     haechi: { w: 36, y: 6 }, pavilion: { w: 110, y: 16 }, gym: { w: 42, y: 6 }, gym2: { w: 40, y: 6 }, busshelter: { w: 84, y: 10 }, fountain: { w: 96, y: 14 }, parasol: { w: 56, y: 8 }, palacewall: { w: 88, y: 12 }, bust: { w: 20, y: 4 }, barricades: { w: 56, y: 8 },
     carousel: { w: 150, y: 20 }, coaster: { w: 190, y: 16 }, swanboat: { w: 52, y: 8 }, gondola: { w: 48, y: 8 }, billboard: { w: 80, y: 6 }, floodlight: { w: 70, y: 6 }, tank: { w: 120, y: 20 }, ticketbooth: { w: 46, y: 8 }, riverboat: { w: 150, y: 20 },
     in_pcbang: { w: 64, y: 10 }, in_karaoke: { w: 40, y: 8 }, in_snackbar: { w: 40, y: 8 }, in_ticket: { w: 16, y: 4 }, in_wait: { w: 32, y: 6 }, in_salon: { w: 30, y: 6 }, in_laundry: { w: 40, y: 6 }, in_desk: { w: 28, y: 6 }, in_shoelocker: { w: 32, y: 6 }, in_counter: { w: 44, y: 8 }, // v1.58
-    gate: { w: 296, y: 72 }, overpass: { w: 300, y: 30 },
+    gate: { w: 415, y: 100 }, /* v1.59 5칸 → 7칸 */ overpass: { w: 300, y: 30 },
     lamp: { w: 66, y: 2 }, tree: { w: 92, y: 4 }, deadtree: { w: 78, y: 4 }, /* v1.21 실제 스케일 */ trash: { w: 34, y: 4 }, cone: { w: 13, y: 2 }, barrel: { w: 19, y: 3 },
     hydrant: { w: 15, y: 2 }, bench: { w: 40, y: 6 }, signal: { w: 64, y: 2 },
     car_a: { w: 92, y: 18 }, car_b: { w: 96, y: 18 }, car_c: { w: 92, y: 18 }, police: { w: 92, y: 18 }, bus: { w: 210, y: 40 }, car_burnt: { w: 92, y: 18 }, /* v1.21 2칸 승용차 · 5칸 버스 */
@@ -268,7 +268,7 @@ const ART = {
     서점: { obj: 'in_books', floor: 'fl_wood', front: 'sf_books' }, 전자상가: { obj: 'in_elec', floor: 'fl_tile', front: 'sf_elec' }, 카페: { obj: 'in_cafe', floor: 'fl_wood', front: 'sf_cafe' },
     분식집: { obj: 'in_food', floor: 'fl_concrete', deco: 'in_snackbar', front: 'sf_food' }, 은행: { obj: 'in_bank', floor: 'fl_marble', deco: ['in_ticket', 'in_wait'], front: 'sf_bank' }, 병원: { obj: 'in_hosp', floor: 'fl_lino', deco: ['in_bed', 'in_wait'], front: 'sf_hosp' },
     파출소: { obj: 'in_police', floor: 'fl_marble', front: 'sf_police' }, PC방: { obj: 'in_pc', floor: 'fl_carpet', deco: 'in_pcbang', front: 'sf_pc' }, 세탁소: { obj: 'in_washer', floor: 'fl_concrete', deco: 'in_laundry', front: 'sf_laundry' },
-    노래방: { obj: 'in_karaoke', floor: 'fl_carpet' }, 미용실: { obj: 'in_salon', floor: 'fl_tile', deco: 'in_wait' }, 학원: { obj: 'in_desk', floor: 'fl_lino', deco: 'in_shoelocker' }, // v1.58 실내 3 (32절)
+    노래방: { obj: 'in_karaoke', floor: 'fl_carpet', front: 'g_karaoke' }, 미용실: { obj: 'in_salon', floor: 'fl_tile', deco: 'in_wait', front: 'g_salon' }, 학원: { obj: 'in_desk', floor: 'fl_lino', deco: 'in_shoelocker' }, // v1.58 실내 3 (32절)
   },
   // v1.31.1 지역마다 외벽 후보 — 그림이 없는 키는 건너뜀 (f_tile·f_villa… 는 v1.31.1 프롬프트 15-2)
   texZones: { 0: ['f_apartment', 'f_brick', 'f_apartment2', 'f_villa', 'f_tile'], // v1.58 d1_~d6_ = 지역 외벽 (26절)

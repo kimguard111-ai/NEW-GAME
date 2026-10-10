@@ -171,7 +171,7 @@ const City = {
     const BIG = { // [키, 막는 칸 n, 맵당 개수]
       jamsil: [['carousel', 2, 1], ['coaster', 3, 1], ['gondola', 1, 2], ['ticketbooth', 1, 2], ['floodlight', 1, 3]],
       gangnam: [['billboard', 1, 4]], yongsan: [['tank', 2, 2], ['floodlight', 1, 2]], yeouido: [['riverboat', 2, 1], ['floodlight', 1, 1]],
-      jongno: [['gate', 5, 1], ['pavilion', 2, 1]], myeongdong: [['fountain', 2, 1]] }[map] || [];
+      jongno: [['gate', 7, 1], ['pavilion', 2, 1]], myeongdong: [['fountain', 2, 1]] }[map] || [];
     const SIZE = { pavilion: 2, fountain: 2, palacewall: 2 }, SOLIDK = new Set(['bust', 'haechi', 'fountain', 'pavilion', 'palacewall', 'barricades']);
     const tryPut = (key, n, solid, tries) => {
       for (let k = 0; k < tries; k++) {
@@ -372,7 +372,7 @@ function drawCityProp(o) {
     drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
     const fw = (ART.propFit[ak] || { w: 40 }).w;
     const fade = o.type === 'tree' ? Behind.alpha(o, px, py, fw * (o.s || 1), fw * (o.s || 1) * 1.6) // v1.46
-      : o.type === 'deco' && fw >= 70 ? Behind.alpha(o, px, py, fw, fw * 1.2) // v1.58 큰 소품(회전목마·탱크 등) 뒤도 반투명
+      : o.type === 'deco' && fw >= 200 ? Behind.big(o, px, py, fw, fw * 0.6) : o.type === 'deco' && fw >= 70 ? Behind.alpha(o, px, py, fw, fw * 1.2) // v1.58 큰 소품(회전목마·탱크 등) 뒤도 반투명
       : o.type === 'bus' || o.type === 'car' || o.type === 'police' ? Behind.vehicle(o, ak, px, py) : 1; // v1.47.1 버스·차 뒤에 사람·적이 있으면 반투명
     ctx.globalAlpha = fade;
     drawPropArt(ak, px, py, o.type === 'deco' ? !!o.flip : o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
