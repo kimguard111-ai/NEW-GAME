@@ -11,15 +11,17 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1280, height: 720 } }); pg.setDefaultTimeout(300000); // v1.51 그림을 다 받을 때까지 시작 버튼이 막혀 있음
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
   await pg.goto('file://' + require('path').resolve(__dirname, '../index.html')); await pg.evaluate(() => localStorage.clear()); await pg.reload();
+  if (process.env.TIER) await pg.evaluate(t => { window.__TIER = t; }, +process.env.TIER); // v1.63 TIER=<위협 등급> (ASSAULT 와 함께)
   await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
   await pg.evaluate(([DODGE, START, FIXMAP, FULL, COMP, AS]) => {
+    window.AS_TIER = +(window.__TIER || 1);
     Settings.tips = false;
     const p = G.player;
     window.B = { raids: [], lvlT: { 1: 0 }, field: null, fieldKey: '', cur: null, seen: new WeakSet(), dodges: 0, dodgeTry: 0, enh: 0, bought: 0 };
     // v1.51 ASSAULT=<랜드마크 id>: 출격할 때마다 그 어설트를 한 번 하고 탈출 (결과는 B.as)
     B.as = [];
     if (AS) { const oc = Assault.clear.bind(Assault), oe = Assault.end.bind(Assault);
-      Assault.clear = () => { const s = G.assault; B.as.push({ ok: true, t: Math.round(s.t), rank: Assault.rank(Math.round(s.t), ASSAULTS[s.id], s.tier), minHp: Math.round(B.asMin * 100), lv: p.level }); oc(); };
+      Assault.clear = () => { const s = G.assault, e0 = B.earned, x0 = p.exp + PlayerStats.expNext(p.level) * 0; B.as.push({ ok: true, tier: s.tier, t: Math.round(s.t), rank: Assault.rank(Math.round(s.t), ASSAULTS[s.id], s.tier), minHp: Math.round(B.asMin * 100), lv: p.level }); const lv0 = p.level, ex0 = p.exp; oc(); const a = B.as[B.as.length - 1]; a.cr = Math.round(B.earned - e0); a.exp = p.level > lv0 ? 'lvup' : p.exp - ex0; };
       Assault.end = (ok, why) => { const s = G.assault; if (s && !ok) B.as.push({ ok: false, why, t: Math.round(s.t), wave: s.wave, minHp: Math.round(B.asMin * 100), lv: p.level }); oe(ok, why); }; }
     // 목표 칸까지 거리 지도 (BFS)
     B.makeField = (x, y) => {
@@ -106,7 +108,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       // 이동 목표: 탈출 / 이야기(도착·네임드) / 전투 / 줍기 / 배회
       const st = Story.step(p), tg = Story.target(p);
       let goal = null;
-      if (AS && !G.assault && !c.asDone) { const l = World.landmarks.find(x => x.id === AS); if (l) { if (dist(p, l) < l.size * TILE / 2 + 80) { if (!p.found.includes(AS)) p.found.push(AS); B.asMin = 1; Assault.start(l); c.asDone = true; } else goal = ['as', l.x, l.y]; } }
+      if (AS && !G.assault && !c.asDone) { const l = World.landmarks.find(x => x.id === AS); if (l) { if (dist(p, l) < l.size * TILE / 2 + 80) { if (!p.found.includes(AS)) p.found.push(AS); B.asMin = 1; Assault.start(l, +(window.AS_TIER || 1)); c.asDone = true; } else goal = ['as', l.x, l.y]; } }
       if (leave) { const ex = G.exits.filter(q => !q.locked).sort((a, b2) => dist(a, p) - dist(b2, p))[0]; goal = ['ex', ex.x, ex.y]; }
       else if (!goal && !G.assault && tg && st && (st.type === 'reach' || st.type === 'hunt' || (st.type === 'kill' && st.target === 'boss')) && !(st.type === 'hunt' && G.elite && dist(G.elite, p) < 500) && !(st.target === 'boss' && G.boss && dist(G.boss, p) < 500)) goal = ['st' + st.type, tg.x, tg.y];
       // 목표(탈출·이야기)가 있으면 이동은 목표 쪽, 사격은 따로 (사람처럼 쏘면서 이동). 바로 붙은 적만 상대

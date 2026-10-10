@@ -119,6 +119,7 @@ const Raid = {
     p.raid = null;
     this.toCamp();
     this.summary(true, r, items);
+    Journal.onMythSecured(items); // v1.63 신화 확보 (캠프로 돌아온 뒤 — 출격 중이면 알림이 밀림)
     log(`탈출 성공! 이번 출격: 장비 ${items.length}개, 크레딧 ${fmt(r.credits)} 확보.`, '#7fe08a');
     SFX.play('quest');
     Bounty.on('extract');
@@ -160,7 +161,8 @@ const Raid = {
     const li = items.length ? items.map(it => `<span class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</span>`).join('<br>') : '<span class="muted">없음</span>';
     $('summary-title').textContent = ok ? '탈출 성공' : '사망';
     $('summary-title').className = ok ? 'ok' : 'bad';
-    $('summary-body').innerHTML = `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}</b></div>`
+    const myth = ok ? items.filter(it => it.rarity === 5) : [], mc = RARITIES[5].color; // v1.63 신화 확보는 결과 카드 맨 위에
+    $('summary-body').innerHTML = myth.map(it => `<div class="sum-row" style="border:1px solid ${mc};padding:4px 6px;margin-bottom:6px"><span style="color:${mc}">◆ 신화 무기 확보</span><b style="color:${mc}">${itemName(it)}</b></div>`).join('') + `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}</b></div>`
       + `<div class="sum-row"><span>시간</span><b>${Math.floor(r.t / 60)}분 ${Math.floor(r.t % 60)}초</b></div>`
       + `<div class="sum-row"><span>처치</span><b>${r.kills || 0}</b></div>`
       + `<div class="sum-row"><span>${ok ? '확보한 크레딧' : '잃은 크레딧'}</span><b>₵${fmt(ok ? r.credits : this.lastDeath.credits)}</b></div>`

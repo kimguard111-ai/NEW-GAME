@@ -153,11 +153,11 @@ const UI = {
       + (p.inRad ? `<div class="zone-rad">${ICON('rad')} 방사능 피폭 중! 웅덩이에서 벗어나세요</div>` : ''));
 
     const w = curWeapon();
-    if (IS_TOUCH) { const gb = document.querySelector('#touch-buttons .gl'), L = glOf(w); if (gb) { gb.classList.toggle('hidden', !L); if (L) { $('gl-n').textContent = glLeft(w); gb.classList.toggle('off', glLeft(w) < 1); } } } // v1.52 OX-20 유탄 버튼
+    if (IS_TOUCH) { const gb = document.querySelector('#touch-buttons .gl'), L = glOf(w); if (gb) { gb.classList.toggle('hidden', !L); if (L) { $('gl-n').textContent = w.glCd > 0 ? Math.ceil(w.glCd) : '●'; gb.classList.toggle('off', glLeft(w) < 1); } } } // v1.52 OX-20 유탄 버튼
     if (w) {
       const b = WEAPONS[w.key];
       $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${itemName(w)}</span>`;
-      $('weapon-ammo').innerHTML = b.melee ? '<small>근접</small>' : p.reloadT > 0 ? '<small>재장전…</small>' : `${w.loaded} <small>/ ${b.infinite ? '∞' : fmt(p.ammo[b.ammo] || 0)} ${b.ammo ? AMMO[b.ammo].name : ''}${b.gl && !IS_TOUCH ? ` · 유탄 ${glLeft(w)}/${b.gl.max} [${keyLabel(keyOf('gl'))}]` : ''}</small>`;
+      $('weapon-ammo').innerHTML = b.melee ? '<small>근접</small>' : p.reloadT > 0 ? '<small>재장전…</small>' : `${w.loaded} <small>/ ${b.infinite ? '∞' : fmt(p.ammo[b.ammo] || 0)} ${b.ammo ? AMMO[b.ammo].name : ''}${b.gl && !IS_TOUCH ? ` · 유탄 ${w.glCd > 0 ? w.glCd.toFixed(1) + '초' : '준비'} [${keyLabel(keyOf('gl'))}]` : ''}</small>`;
       if (UI.iconFor !== w || UI.iconPlus !== w.plus) { UI.iconFor = w; UI.iconPlus = w.plus; drawWeaponIcon($('weapon-icon'), w); }
       $('weapon-role').textContent = `${b.role} · DPS ${Math.round(weaponDps(p, w))}`;
     } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; $('weapon-role').textContent = ''; drawWeaponIcon($('weapon-icon'), null); UI.iconFor = null; }

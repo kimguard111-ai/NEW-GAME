@@ -6,7 +6,7 @@
 const ELITES = {
   glutton: { name: '거대 감염체 「먹보」', base: 'zombie', level: 5, at: 'cathedral', hpMul: 9, dmgMul: 1.6, scale: 1.45, speedMul: 0.85 },
   panther: { name: '약탈자 두목 「흑표」', base: 'raider', level: 10, at: 'bosingak', hpMul: 8, dmgMul: 1.4, scale: 1.25, fireMul: 0.45 },
-  argos:   { name: '자율 전투 드론 「아르고스」', base: 'drone', level: 15, at: 'base', hpMul: 9, dmgMul: 1.3, scale: 1.7, fireMul: 0.4 },
+  argos:   { name: '자율 전투 드론 「아르고스」', base: 'drone', level: 13, at: 'base', hpMul: 9, dmgMul: 1.3, scale: 1.7, fireMul: 0.4 }, // v1.62 Lv15 → 13 (3장에 오는 Lv10~12가 봇 기준 8번 연속 사망)
   raven:   { name: '블랙선 용병대장 「레이븐」', base: 'merc', level: 25, at: 'coex', hpMul: 12, dmgMul: 1.3, scale: 1.3, fireMul: 0.5 }, // v1.6
   babel:   { name: '변이 군주 「바벨」', base: 'brute', level: 30, at: 'lotte', hpMul: 16, dmgMul: 1.4, scale: 1.8, speedMul: 1.15 },
 };

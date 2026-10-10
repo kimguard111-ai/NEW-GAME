@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.61.2';
+const GAME_VERSION = 'v1.62';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -55,11 +55,11 @@ const WEAPONS = {
   f20:     { ammo: 'auto', base: 'rifle', myth: true, name: 'F-20 불펍 소총', icon: 'f20', dmg: 19, rate: 0.12, mag: 40, reload: 2.1, spread: 0.035, speed: 1150, range: 680, knock: 3, stagger: 0.04, move: 1.0,
              built: { adsSpread: 0.7, adsLead: 1.35 }, fixed: ['scope'], lvl: 28, price: 3200, role: '가장 빠른 소총 · 2배 조준경 일체형 (조준경 칸 없음) · 탄창 40발' },
   ox20:    { ammo: 'auto', base: 'rifle', myth: true, name: 'OX-20 복합소총', icon: 'ox20', dmg: 27, rate: 0.2, mag: 30, reload: 2.0, spread: 0.045, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 0.95,
-             gl: { max: 4, cd: 8, mul: 4, r: 85, range: 430 }, lvl: 30, price: 4600, role: '돌격소총 + 공중폭발 유탄 (G · 모바일 유탄 버튼) · 유탄은 8초마다 1발 충전, 최대 4발' },
+             gl: { cd: 5, mul: 4, r: 85, range: 430 }, lvl: 30, price: 4600, role: '돌격소총 + 공중폭발 유탄 (G · 모바일 유탄 버튼) · 유탄은 탄 수 없이 5초마다 한 발' }, // v1.62 4발 충전식 → 쿨타임 5초
 };
 // v1.53 신화 무기 드랍: 확률 + 못 얻을 때마다 pity · MYTH_LIVE = false 면 아직 안 나옴 (고유 그림이 오면 켬)
 const MYTH_LIVE = true; // v1.55 고유 그림이 와서 켬
-const MYTH_TEST = true; // v1.61.2 시험 모드: 새 게임·불러오기 모두 바로 Lv26 + 신화 3종 · 이 동안 신화 레벨 제한 25 — 출시 전 false
+const MYTH_TEST = false; // v1.61.2 시험 모드: 새 게임·불러오기 모두 바로 Lv26 + 신화 3종 · 이 동안 신화 레벨 제한 25 — 출시 전 false
 const MYTH_DROP = { babel: { chance: 0.06, pity: 0.02 }, titan: { chance: 0.03, pity: 0.01 }, chimera: { chance: 0.04, pity: 0.015 }, assault: { chance: 0.06, pity: 0.02, tier: 5, rank: 'S' } };
 const wbase = k => (WEAPONS[k] && WEAPONS[k].base) || k; // v1.52 불법 무기 → 같은 계열 총 (소리·손맛·부품)
 

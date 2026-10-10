@@ -115,8 +115,9 @@ const Monsters = {
       floatText(e.x, e.y - 40, '얘들아, 쳐라!', '#ff7a5a', 16);
     } else if (id === 'argos') { // 미사일 포격: 플레이어 위치 3곳 예고 후 폭발
       e.skillT = 6; e.lastAtk = G.time;
-      this.strike(p.x, p.y, 70, 1.1, e.dmg * 2.2, 'rgba(255,60,60,');
-      for (let i = 0; i < 2; i++) this.strike(p.x + rand(-110, 110), p.y + rand(-110, 110), 70, 1.1 + i * 0.25, e.dmg * 2.2, 'rgba(255,60,60,');
+      const md = e.elite === 'argos' ? 1.7 : 2.2; // v1.62 아르고스 본인의 포격만 2.2 → 1.7 (다른 보스가 빌려 쓰는 포격은 그대로)
+      this.strike(p.x, p.y, 70, 1.1, e.dmg * md, 'rgba(255,60,60,');
+      for (let i = 0; i < 2; i++) this.strike(p.x + rand(-110, 110), p.y + rand(-110, 110), 70, 1.1 + i * 0.25, e.dmg * md, 'rgba(255,60,60,');
       floatText(e.x, e.y - 50, '표적 지정', '#ff6060', 16);
     } else if (id === 'dash') { // 돌진: 붉은 선 예고 0.5초 후 질주 (보스 돌진과 같은 방식)
       e.skillT = 4; e.charge = 1.3; e.chargeA = angleTo(e, p);

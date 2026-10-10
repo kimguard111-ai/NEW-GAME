@@ -439,27 +439,27 @@ function playerAttack() {
   if (w.loaded === 0) startReload();
 }
 
-// v1.52 OX-20 공중폭발 유탄: G (모바일: 유탄 버튼) · 8초마다 1발 충전 · 최대 4발 · 총에 붙어 있음 (w.gl)
+// v1.52 OX-20 공중폭발 유탄: G (모바일: 유탄 버튼) · v1.62 탄 수 없이 쿨타임 5초 (남은 시간은 총에 붙어 있음: w.glCd)
 const glOf = w => w && WEAPONS[w.key] && WEAPONS[w.key].gl;
-function glLeft(w) { const L = glOf(w); return L ? (w.gl ?? L.max) : 0; }
+function glLeft(w) { return glOf(w) && !(w.glCd > 0) ? 1 : 0; } // 1 = 쏠 수 있음
 function fireGL() {
   const p = G.player, w = curWeapon(), L = glOf(w);
   if (!L || p.dead || World.map === 'camp') return;
-  if (glLeft(w) < 1) { floatText(p.x, p.y - 34, '유탄 충전 중', '#aaa', 12); SFX.play('empty'); return; }
+  if (glLeft(w) < 1) { floatText(p.x, p.y - 34, `유탄 ${w.glCd.toFixed(1)}초`, '#aaa', 12); SFX.play('empty'); return; }
   let tx, ty;
   if (IS_TOUCH) { // 조준 방향 ±35° 안의 가장 가까운 적, 없으면 그 방향 300px
     const t = G.enemies.filter(e => e.hp > 0 && dist(e, p) < L.range && Math.abs(angDiff(angleTo(p, e), p.aim)) < 0.6).sort((a, b) => dist(a, p) - dist(b, p))[0];
     if (t) { tx = t.x; ty = t.y; } else { tx = p.x + Math.cos(p.aim) * 300; ty = p.y + Math.sin(p.aim) * 300; }
   } else ({ x: tx, y: ty } = Iso.toWorld(input.mx, input.my));
   const a = Math.atan2(ty - p.y, tx - p.x), d = clamp(Math.hypot(tx - p.x, ty - p.y), 60, L.range);
-  w.gl = glLeft(w) - 1;
+  w.glCd = L.cd;
   G.grenades.push({ sx: p.x, sy: p.y, x: p.x, y: p.y, tx: p.x + Math.cos(a) * d, ty: p.y + Math.sin(a) * d, t: 0, dur: 0.16 + d / 1500, tdmg: weaponDmg(w) * playerDamageMul(false) * L.mul, tr: L.r });
   p.aim = a; p.lastAtk = G.time; p.recoilT = 0.09; SFX.play('shotgun', 0.7); G.shake = Math.max(G.shake, 5);
   Juice.shot(p, w, gunMuzzle(p, w).x, gunMuzzle(p, w).y, a);
-  if (!p.glTold) { p.glTold = true; log(`유탄 발사! ${L.cd}초마다 1발씩 다시 채워진다 (최대 ${L.max}발).`, '#ffd76a'); }
+  if (!p.glTold2) { p.glTold2 = true; log(`유탄 발사! ${L.cd}초마다 한 발씩 쏠 수 있다.`, '#ffd76a'); }
 }
-function glRecharge(p, dt) { // 들고 있지 않은 총도 충전
-  for (const s of ['w1', 'w2']) { const w = p.equip[s], L = glOf(w); if (!L || glLeft(w) >= L.max) continue; w.glT = (w.glT || 0) + dt; if (w.glT >= L.cd) { w.glT = 0; w.gl = glLeft(w) + 1; } }
+function glRecharge(p, dt) { // 들고 있지 않은 총도 쿨타임이 돎
+  for (const s of ['w1', 'w2']) { const w = p.equip[s]; if (glOf(w) && w.glCd > 0) w.glCd = Math.max(0, w.glCd - dt); }
 }
 
 // 범위 폭발 (수류탄 / 폭발탄 공용)
@@ -1159,7 +1159,9 @@ function rollMyth(src, level, dropAt) {
   const D = MYTH_DROP[src], p = G.player;
   if (!MYTH_LIVE || !D) return false;
   p.mythPity = p.mythPity || {};
-  if (Math.random() < D.chance + (p.mythPity[src] || 0) * D.pity) { p.mythPity[src] = 0; dropAt('item', { item: makeMyth(pick(Object.keys(WEAPONS).filter(k => WEAPONS[k].myth)), level) }); return true; }
+  if (Math.random() < D.chance + (p.mythPity[src] || 0) * D.pity) { p.mythPity[src] = 0;
+    const all = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), had = (p.codex && p.codex.myth) || {}, fresh = all.filter(k => !had[k]); // v1.63 아직 확보 못 한 신화부터
+    dropAt('item', { item: makeMyth(pick(fresh.length ? fresh : all), level) }); return true; }
   p.mythPity[src] = (p.mythPity[src] || 0) + 1; return false;
 }
 function rollUnique(from, level, dropAt) {

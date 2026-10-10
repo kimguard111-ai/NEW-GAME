@@ -38,7 +38,8 @@ const Journal = {
   // ---------- 기록 ----------
   ensure(p) {
     p.codex = p.codex || { kills: {}, items: {}, uniq: {}, sets: {} };
-    for (const k of ['kills', 'items', 'uniq', 'sets']) p.codex[k] = p.codex[k] || {};
+    for (const k of ['kills', 'items', 'uniq', 'sets', 'myth']) p.codex[k] = p.codex[k] || {}; // v1.63 myth = 탈출해서 확보한 신화 무기
+    if (!p.mythChk) { p.mythChk = true; for (const it of [...(p.inventory || []), ...Object.values(p.equip || {}), ...(p.stash || [])]) if (it && it.rarity === 5 && !it.raid && WEAPONS[it.key]) p.codex.myth[it.key] = true; } // 이미 가진 것
     p.rec = p.rec || {}; p.ach = p.ach || {};
   },
   enemyName(e) { return e.bossName || (e.elite && ELITES[e.elite] && ELITES[e.elite].name) || (e.nest ? e.def.name : null) || e.def.name; },
@@ -51,6 +52,17 @@ const Journal = {
     p.codex.items[it.key] = Math.max(p.codex.items[it.key] ?? -1, it.rarity || 0);
     if (it.unique) p.codex.uniq[it.unique] = true;
     if (it.set) for (const [slot, key] of Object.entries(SETS[it.set].pieces)) if (key === it.key) p.codex.sets[it.set + ':' + slot] = true;
+  },
+  // v1.63 신화 확보: 들고 탈출한 순간 (주웠을 때가 아니라 내 것이 됐을 때) — 처음이면 크게
+  onMythSecured(items) {
+    const p = G.player; this.ensure(p);
+    for (const it of items.filter(it => it.rarity === 5 && WEAPONS[it.key] && WEAPONS[it.key].myth)) {
+      const first = !p.codex.myth[it.key]; p.codex.myth[it.key] = true;
+      const n = Object.keys(p.codex.myth).length, all = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth).length, mc = RARITIES[5].color;
+      UI.toast(`◆ 신화 무기 확보 ◆${first ? '' : ' (중복)'}`, `${itemName(it)} · 신화 ${n} / ${all}${n === all && first ? ' · 전부 모았다!' : ''}`);
+      log(`신화 무기를 들고 살아 돌아왔다: ${itemName(it)} (${n}/${all})`, mc);
+      if (first) { G.flash = { color: mc, t: 0, life: 1.0, a: 0.4 }; SFX.play('legend', 3); }
+    }
   },
   onExtract(r, credits) {
     const p = G.player; this.ensure(p);
@@ -109,6 +121,9 @@ const Journal = {
       const uk = Object.keys(UNIQUES);
       h += `<b style="color:#ff5aa0">고유 장비</b> <span class="muted">${uk.filter(k => p.codex.uniq[k]).length} / ${uk.length}</span><div class="codex">`;
       for (const k of uk) h += `<div class="cx${p.codex.uniq[k] ? '' : ' no'}"><span style="color:${p.codex.uniq[k] ? '#ff5aa0' : ''}">${p.codex.uniq[k] ? UNIQUES[k].name : `??? (${UNIQUES[k].boss})`}</span></div>`;
+      { const mk = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), mc = RARITIES[5].color; // v1.63 신화 무기 (탈출해서 확보한 것)
+        h += `</div><b style="color:${mc}">신화 무기</b> <span class="muted">${mk.filter(k => p.codex.myth[k]).length} / ${mk.length} · 바벨·타이탄·키메라 · 어설트 위협 5+ S</span><div class="codex">`;
+        for (const k of mk) h += `<div class="cx${p.codex.myth[k] ? '' : ' no'}">${ICON(WEAPONS[k].icon || k)} <span style="color:${p.codex.myth[k] ? mc : ''}">${p.codex.myth[k] ? WEAPONS[k].name : '???'}</span></div>`; }
       h += '</div><b>세트</b><div class="codex">';
       for (const [sid, S] of Object.entries(SETS)) h += `<div class="cx"><span style="color:${S.color}">${S.name}</span><span>${['weapon', 'armor', 'helmet'].map(sl => p.codex.sets[sid + ':' + sl] ? '■' : '□').join('')}</span></div>`;
       return h + '</div>';
@@ -128,7 +143,8 @@ const Journal = {
         + row('사망', p.deaths || 0) + row('탈출 성공', r.extracts || 0) + row('가장 오래 버틴 출격', `${Math.floor((r.longRaid || 0) / 60)}분 ${(r.longRaid || 0) % 60}초`)
         + row('한 출격 최대 크레딧', `₵${fmt(r.bestRaidCr || 0)}`) + row('한 출격 최대 처치', r.bestRaidKills || 0) + row('완료한 출격 사건', r.events || 0) + row('맵 완전 소탕', r.clears || 0)
         + row('필드 보스 / 타이탄 / 키메라', `${p.fieldBossKills || 0} / ${p.bossKills || 0} / ${p.labKills || 0}`)
-        + row('고유 장비', `${Object.keys(p.codex.uniq).length} / ${Object.keys(UNIQUES).length}`) + row('업적', `${ACHIEVEMENTS.filter(a => p.ach[a.id]).length} / ${ACHIEVEMENTS.length}`);
+        + row('고유 장비', `${Object.keys(p.codex.uniq).length} / ${Object.keys(UNIQUES).length}`) + row('신화 무기', `${Object.keys(p.codex.myth || {}).length} / ${Object.keys(WEAPONS).filter(k => WEAPONS[k].myth).length}`) // v1.63
+        + row('어설트 최고 위협 · S 등급', (() => { const a = Object.values(p.assaults || {}); return a.length ? `위협 ${Math.max(...a.map(x => x.tier || 1))} · S ${a.filter(x => x.best === 'S').length}곳` : '-'; })()) + row('업적', `${ACHIEVEMENTS.filter(a => p.ach[a.id]).length} / ${ACHIEVEMENTS.length}`);
     }
     return null; // 임무 탭은 기존 내용
   },
