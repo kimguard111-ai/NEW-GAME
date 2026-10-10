@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.56';
+const GAME_VERSION = 'v1.57';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -15,7 +15,8 @@ const RARITIES = [
 ];
 // 천장: 몬스터 장비 드랍이 이 횟수만큼 영웅 미만이면 다음 드랍은 영웅 이상 확정
 // v1.25 파밍 경제: 장비가 귀하고 돈이 덜 벌리게 (확률 드랍 · 땅에 떨어지는 크레딧 · 판매가에 곱함)
-const ECON = { gear: 0.3, cr: 0.5, sell: 0.2 };
+const ECON = { gear: 0.3, cr: 0.35, sell: 0.15 }; // v1.57 크레딧 0.5 → 0.35 · 판매 0.2 → 0.15 (돈이 너무 잘 벌리던 것)
+const MED_CD = 8; // v1.57 구급상자 쿨타임(초) — 무한히 먹으면 쉬워지던 것
 const PITY_DROPS = 10; // v1.25 드랍 자체가 귀해진 만큼 15 → 10 // v0.10 드랍률 하향에 맞춰 50 → 35 · v1.5.1 → 25 · v1.7.1 → 15 (드랍이 더 귀해진 만큼)
 
 // v1.33 탄약 4종 — 총마다 쓰는 탄이 다름. k = 기관총탄 1발 대비 양 (줍거나 상자로 받을 때) · pack/price = 출격 지도에서 사는 묶음
@@ -177,7 +178,7 @@ const HELMETS = {
 };
 
 const CONSUMABLES = {
-  medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복', price: 40, stack: 20 },
+  medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복 · 8초에 한 번', price: 40, stack: 20 },
   ammo:   { name: '탄약 상자', icon: 'ammo', desc: '들고 있는 총의 탄약 (기관총탄 120발어치)', price: 45, stack: 20 },
   // v1.14 투척물 (6번 칸, T로 바꿈) · 보조 (7번 칸, Y로 바꿈)
   molotov: { name: '화염병', icon: 'molotov', desc: '던진 자리에 5초 불길 (넓게 · 계속 피해)', price: 90, stack: 10, slot: 'throw' },
@@ -217,10 +218,10 @@ const ZONES = [
   { name: '명동 잔해', maxDist: 28, lvl: [1, 4], dark: 0.32, tint: null,
     spawns: [['zombie', 70], ['dog', 30]],
     desc: '감염자 무리가 몰려다닌다', packs: { zombie: [2, 4] },
-    gear: ['pistol', 'smg', 'axe', 'vest', 'cap'], gearText: '권총·기관단총·소방 도끼' },
+    gear: ['pistol', 'smg', 'vest', 'cap'], gearText: '권총·기관단총·방탄모' } /* v1.57 도끼는 처음부터 있으니 특산에서 뺌 */,
   { name: '종로 폐허', maxDist: 44, lvl: [5, 9], dark: 0.42, tint: null,
-    spawns: [['zombie', 35], ['dog', 25], ['raider', 40]],
-    desc: '약탈자들이 무리 지어 매복한다', packs: { raider: [2, 3], dog: [2, 3] },
+    spawns: [['zombie', 45], ['dog', 25], ['raider', 28]], // v1.57 약탈자 40 → 28 (총 쏘는 적이 너무 많아 쾌적하지 않던 것)
+    desc: '약탈자들이 무리 지어 매복한다', packs: { raider: [1, 2], dog: [2, 3] },
     gear: ['shotgun', 'axe', 'tactical', 'tacHelmet'], gearText: '산탄총·소방 도끼·전술 조끼·전술 헬멧' },
   { name: '용산 군사구역', maxDist: 58, lvl: [10, 15], dark: 0.52, tint: 'rgba(40,20,10,0.12)',
     spawns: [['raider', 35], ['brute', 25], ['drone', 25], ['dog', 15]],

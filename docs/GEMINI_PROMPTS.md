@@ -1050,6 +1050,21 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate interior furniture pieces from abandoned Korean shops in post-apocalyptic Seoul, each ONE short unit about as wide as a person is tall with its long side running diagonally toward the bottom-right, each centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) a row of two internet-cafe gaming desks with dark monitors, keyboards and padded gaming chairs; 2) a karaoke room sofa (U-shaped, red vinyl) with a low table and a microphone on it; 3) a stainless-steel snack-bar table with two red plastic stools and a tissue box; 4) a bank waiting-ticket machine next to a row of three waiting chairs; 5) a hair salon chair with a large mirror on a stand, mirror cracked; 6) a laundry shop clothes rail with plastic-covered shirts hanging; 7) a school classroom desk with a chair, initials scratched into the wood (no readable letters); 8) a sauna-style shoe locker cabinet with small numbered-looking doors (no real numbers); 9) a convenience store counter with a register, a small display of gum and a microwave behind it. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no letters, no numbers, no logos, no grid lines, no border. Do not use pink or magenta on the objects.
 ```
 
+
+## 33. 기관단총 든 몸 (v1.57) ★ — 1장에서 처음 받는 총
+지금 기관단총을 들면 돌격소총 든 몸(`player_long`)이 나옴 → 기관단총 몸이 있으면 바로 바뀜 (21절 산탄총과 같은 방식 · 올리는 즉시 적용)
+| 장 | 파일 이름 | 방어구 | 📎 첨부할 몸 |
+|---|---|---|---|
+| 33-1 ★ | `player_smg.png` | 없음 (후드) | `Player.png` |
+| 33-2 ★ | `player_vest_smg.png` | 방탄 조끼 | `player_best1.png` |
+| 33-3 | `player_tactical_smg.png` | 전술 조끼 | `player_best2.png` |
+| 33-4 | `player_military_smg.png` | 군용 강화복 | `player_best3.png` |
+| 33-5 | `player_exo_smg.png` | 외골격 | `player_best4.png` |
+📎 해당 방어구 빈손 몸 + 기관단총 아이콘 (가방 화면의 기관단총 그림 캡처 — 같은 총으로 나오게) · 방어구 버전은 첨부 몸만 바꿔 같은 프롬프트
+```
+Using the attached character as the exact reference (same face, same hair, same body, same clothes and armor, same backpack, same size, bare head), create ONE sprite sheet image of him now holding a compact black submachine gun with a short barrel, a straight magazine under the grip and a folding stock, held with both hands at chest height, the right hand on the pistol grip and the left hand on the short handguard, the barrel pointing straight to the RIGHT and level with the ground. The submachine gun stays in his hands in every frame except the death frames. Rows: row 1: 4 frames of idle breathing while holding the gun forward; row 2: 6 frames of a walk cycle while keeping the gun forward; row 3: 3 frames of rapid firing with a small shaking recoil, no muzzle flash, no bullets, no shells in the air; row 4: 2 frames of getting hit and flinching backward while still holding the gun; row 5: 5 frames of a death animation, dropping the gun, falling down and lying on the ground. Same size in every frame, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No helmet, no shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
 ---
 
 ## 결과가 이상할 때

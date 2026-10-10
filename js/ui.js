@@ -84,7 +84,7 @@ const UI = {
     for (let i = 0; i < n; i++) {
       const k = p.hotbar[i], d = document.createElement('div'), key = `<span class="key">${IS_TOUCH ? '' : BELT_KEYS[i]}</span>`;
       d.dataset.slot = i; d.dataset.act = k || 'empty';
-      if (k) { const c = CONSUMABLES[k], cnt = consCount(k); d.className = 'hot' + (cnt ? '' : ' empty'); d.title = `${c.name}: ${c.desc}`; d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" data-cnt="${k}">${cnt}</span>`; }
+      if (k) { const c = CONSUMABLES[k], cnt = consCount(k); d.className = 'hot' + (cnt ? '' : ' empty'); d.title = `${c.name}: ${c.desc}`; d.innerHTML = `${key}<div class="icon">${ICON(c.icon)}</div>${c.name}<span class="cnt" data-cnt="${k}">${cnt}</span>${k === 'medkit' ? '<div class="cd" data-medcd></div>' : ''}`; } // v1.57 구급상자 쿨타임 표시
       else { d.className = 'hot free'; d.title = '빈 칸. 눌러서 소모품 등록 (B)'; d.innerHTML = `${key}<div class="icon">＋</div>비어 있음`; }
       belt.appendChild(d);
     }
@@ -162,6 +162,7 @@ const UI = {
       $('weapon-role').textContent = `${b.role} · DPS ${Math.round(weaponDps(p, w))}`;
     } else { $('weapon-name').textContent = '맨손'; $('weapon-ammo').textContent = '-'; $('weapon-role').textContent = ''; drawWeaponIcon($('weapon-icon'), null); UI.iconFor = null; }
 
+    for (const el of document.querySelectorAll('#hotbar [data-medcd]')) el.style.height = (100 * Math.max(0, (p.medCd || 0) - G.time) / MED_CD) + '%'; // v1.57
     SKILLS.forEach((s, i) => {
       const el = $('cd' + i);
       if (el) el.style.height = (100 * p.skillCd[i] / ((p.skillCdMax && p.skillCdMax[i]) || s.cd)) + '%';

@@ -288,6 +288,12 @@ const World = {
         const i = y * W + x;
         if (SOLID.has(this.tiles[i]) || this.bid[i] >= 0) { this.tiles[i] = T.ROAD; this.bid[i] = -1; }
       }
+      // v1.57 가장자리가 건물로 둘러싸여 출격하자마자 갇히던 것: 안쪽으로 원래 도로가 나올 때까지 3칸 폭 길을 뚫음
+      const dx = Math.sign((W >> 1) - tx), dy = Math.sign((H >> 1) - ty);
+      for (let k = 2, x = tx + dx * 2, y = ty + dy * 2; k < Math.max(W, H) / 2; k++, x += dx, y += dy) {
+        if (this.tiles[y * W + x] === T.ROAD && this.bid[y * W + x] < 0) break; // 원래 도로에 닿음
+        for (let o = -1; o <= 1; o++) { const i = (y + (dx ? o : 0)) * W + x + (dy ? o : 0); if (SOLID.has(this.tiles[i]) || this.bid[i] >= 0) { this.tiles[i] = T.ROAD; this.bid[i] = -1; } }
+      }
       this.edgePts.push({ x: tx * TILE + 16, y: ty * TILE + 16, side });
     }
   },

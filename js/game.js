@@ -199,6 +199,7 @@ function startGame(save, name) {
     P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
     P.contract = null; P.cboard = null; // v1.47.1 출격 계약 게시판 삭제 (받아 둔 계약도 정리)
     Tut.init(P); // v1.54
+    for (const k of ['lastAtk', 'lastShot', 'lastRoll', 'lastHurt', 'mLast', 'rollAtk', 'aimPtT', 'medCd']) P[k] = -9; // v1.57 시각 기록은 새 시계(G.time=0) 기준으로 — 예전 시각이 남아 이어하기 직후 몸이 안 보이던 것
     if (!P.hints) P.hints = P.level > 2 || (P.rec && P.rec.extracts) || P.deaths ? HINTS.map(h => h.id).concat('rules') : []; // v1.45 키 그림 안내 (이미 해 본 사람은 건너뜀)
   Bounty.refresh(); // v0.14 일일 의뢰
   Weekly.refresh(); // v1.15 주간 도전
@@ -521,6 +522,8 @@ function useItem(it) {
   if (it.key === 'medkit') {
     const mh = PlayerStats.maxHp(p);
     if (p.hp >= mh) { log('체력이 이미 가득합니다.', '#aaa'); return; }
+    if ((p.medCd || 0) > G.time) { floatText(p.x, p.y - 34, `구급상자 ${Math.ceil(p.medCd - G.time)}초`, '#aaa', 12); SFX.play('empty'); return; } // v1.57 쿨타임
+    p.medCd = G.time + MED_CD;
     const amt = Math.round(mh * 0.4 * (perk('fieldMedic') ? 1.5 : 1) * (pas('s4') ? 1.2 : 1) * (1 + gearBonus(p, 'medHeal')));
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
@@ -1280,7 +1283,7 @@ function update(dt) {
     glRecharge(p, dt); // v1.52 OX-20 유탄
     // 캠프 안에서는 천천히 회복
     const mh = PlayerStats.maxHp(p);
-    if (World.inSafe(p.x, p.y) && p.hp < mh) p.hp = Math.min(mh, p.hp + mh * 0.08 * dt);
+    if (World.inSafe(p.x, p.y) && p.hp < mh) p.hp = Math.min(mh, p.hp + mh * 0.012 * dt); // v1.57 캠프 회복 8%/초 → 1.2%/초 (바로 채우려면 의무병)
     else if (p.hp < mh) p.hp = Math.min(mh, p.hp + PlayerStats.regen(p) * dt); // 체력 스탯·옵션 재생
   }
   p.rollCd = (p.rollCd || 0) - dt;

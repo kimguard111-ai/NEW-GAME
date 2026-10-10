@@ -624,7 +624,7 @@ const Sprites = {
 function animState(moving, hitT, lastAtk, key) {
   const s = Sprites.get(key);
   if (hitT > 0) return ['hit', 0.12 - hitT];
-  if (s && lastAtk !== undefined && G.time - lastAtk < Math.max(0.15, Sprites.dur(s, 'attack'))) return ['attack', G.time - lastAtk];
+  if (s && lastAtk !== undefined && G.time >= lastAtk && G.time - lastAtk < Math.max(0.15, Sprites.dur(s, 'attack'))) return ['attack', G.time - lastAtk]; // v1.57 G.time >= lastAtk: 이어하기 직후 예전 시각이 남아 공격 동작을 음수 시간으로 그리다 몸이 안 보이던 것
   return moving ? ['walk', G.time] : ['idle', G.time];
 }
 

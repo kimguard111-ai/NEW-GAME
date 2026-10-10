@@ -25,7 +25,7 @@ const Raid = {
   openMap() {
     const p = G.player, btns = [], med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
     let h = '<div class="mc-intro">"어디로 나갈 건가? 뭘 줍든 살아서 돌아와야 네 거야." <span class="muted">카드를 누르면 바로 나간다</span></div>'
-      + `<div class="prep">출격 준비: ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${p.inventory.length}/${Camp.bagSize()}</b> · ₵${fmt(p.credits)}</div>`;
+      + `<div class="prep">출격 준비: 체력 <b style="color:${p.hp < PlayerStats.maxHp(p) * 0.7 ? '#ff8a8a' : 'inherit'}">${Math.round(p.hp)}/${PlayerStats.maxHp(p)}</b>${p.hp < PlayerStats.maxHp(p) * 0.7 ? ' <span style="color:#ff8a8a">(의무병 이씨에게 치료부터)</span>' : ''} · ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${p.inventory.length}/${Camp.bagSize()}</b> · ₵${fmt(p.credits)}</div>`;
     btns.push([`${ICON('medkit')} +3 (120₵)`, () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
     for (const [k, a] of Object.entries(AMMO)) btns.push([`${ICON('ammo_' + k)} ${a.name} +${a.pack} (${a.price}₵)`, () => { if (p.credits < a.price) return log('크레딧이 부족합니다.', '#f88'); addAmmo(p, k, a.pack); p.credits -= a.price; SFX.play('ammo'); this.openMap(); }]); // v1.33 탄약 4종
     h += `<div class="sum-head">${ICON('map')} 출격할 곳</div>`; // v1.45.2 맵 목록을 먼저 · 계약은 그 아래
@@ -59,7 +59,7 @@ const Raid = {
     this.resetWorld();
     const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
     G.exits = pts.filter(q => q !== start);
-    p.x = start.x; p.y = start.y; p.hp = PlayerStats.maxHp(p); p.stam = 100;
+    p.x = start.x; p.y = start.y; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 출격 때 체력을 채워 주지 않음 (의무병 · 구급상자 의미)
     p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0 };
     if (FirstRun.rookie()) G.fbT = 1e9; // v1.45 첫 출격엔 필드 보스 없음
     G.extractT = 0; G.search = null;
@@ -150,7 +150,8 @@ const Raid = {
     this.resetWorld();
     Object.assign(p, World.campCenter());
     G.fade = { t: 0, life: 1.1, text: '시청역 생존자 캠프', sub: '' }; // v1.17
-    p.dead = false; p.hp = PlayerStats.maxHp(p); p.stam = 100;
+    p.dead = false; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 돌아와도 체력 그대로 → 의무병 이씨(무료 · 바로) 또는 캠프에서 천천히 회복
+    if (p.hp < PlayerStats.maxHp(p) * 0.7) log('의무병 이씨에게 가면 바로 치료해 준다. (캠프에 있으면 천천히 회복)', '#8f8');
     UI.refreshAll();
   },
 

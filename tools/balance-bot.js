@@ -51,6 +51,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     };
     // 캠프 정비: 장착·판매·보충·강화·능력치
     B.camp = () => {
+      p.hp = PlayerStats.maxHp(p); // v1.57 의무병 치료 (출격 때 체력을 채워 주지 않게 바뀜)
       for (const s of SKILLS) if (p.level >= s.lvl && !p.skills[s.id] && p.sp >= SKILL_SP.root) { p.sp -= SKILL_SP.root; p.skills[s.id] = true; p.srank[s.id] = 1; } // v1.25 스킬 포인트
       for (const s of SKILLS) while (p.skills[s.id] && srank(s.id) < SKILL_RANKS && p.level >= rankLvl(s, srank(s.id) + 1) && p.sp >= SKILL_SP.root) { p.sp -= SKILL_SP.root; p.srank[s.id] = srank(s.id) + 1; } // v1.26 등급
       for (const s of SKILLS) if (p.stree[s.id + '_r2'] && srank(s.id) >= SKILL_RANKS && !p.smodOwned[s.id + '_a'] && !p.smodOwned[s.id + '_b'] && p.sp >= SKILL_SP.a) { p.sp -= SKILL_SP.a; p.smodOwned[s.id + '_a'] = true; p.skillMods[s.id] = 'a'; } // v1.25 갈래
