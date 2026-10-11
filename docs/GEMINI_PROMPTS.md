@@ -1217,6 +1217,14 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 
 ---
 
+## 45. 도전 던전 출입구 4종 · `props_dunexit.png` (2×2)
+지금 코드 그림인 **연구소 승강기(▼ 다음 층)** · **타워 위층 계단(▲ 다음 층)**, 그리고 두 던전의 **비상 계단(탈출)** 자리. 다음 층으로 가는 것과 탈출구가 한눈에 구별되게 (다음 층 = 차갑고 위험한 색 · 탈출 = 초록 비상구 느낌)
+```
+Match the art style of the attached concept image. Create ONE image with a 2 by 2 grid of 4 separate objects, each about one and a half times as tall as a person, centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) a heavy industrial freight elevator in an underground bio-research lab, steel doors half open with darkness below, yellow-and-black hazard stripes around the frame and a cold cyan indicator light pointing down; 2) an emergency stairwell exit in the same underground lab, a reinforced steel door propped open with concrete stairs leading up and a glowing green emergency light above; 3) an open stairwell in an abandoned skyscraper office floor, a fire door held open showing stairs climbing upward, purple mutant roots creeping along the frame and a warm amber light from above; 4) an emergency exit in the same skyscraper, a green-painted fire door slightly open with stairs leading down and a glowing green emergency light above. No people. No text, no letters, no numbers, no arrows drawn as text, no logos, no grid lines. Detailed dark pixel art, desaturated colors. Solid flat #FF00FF magenta background. Keep the fourth object away from the bottom-right corner. Do not use pink or magenta on the objects.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
