@@ -1083,6 +1083,64 @@ Using the attached character as the exact reference (same face, same hair, same 
 
 ---
 
+## 35~38. 완성도 아트 (v1.70 점검 · 출시 전)
+v1.70에 게임 전체를 훑어본 결과: **캐릭터 · 적 · 보스 · 동료 · 주민 · 소품 · 장비 아이콘은 모두 그림이 있음.** 아직 코드로 그린 것은 아래뿐입니다.
+
+| 순서 | 장 | 파일 이름 | 어디에 보이나 | 왜 |
+|---|---|---|---|---|
+| 1 ★ | 35 | `app_icon.png` (정사각 1장) | 폰 홈 화면 · 구글 플레이 · itch | 지금 아이콘은 타이틀 그림을 잘라 쓴 것이라 작게 보면 아무것도 안 보임. **출시에 꼭 필요** |
+| 2 ★ | 36 | `store_feature.png` (가로 2:1 1장) | 구글 플레이 상단 배너 · itch 커버 | 스토어 필수 이미지 |
+| 3 ★ | 37-1~3 | `icons_ui1.png` · `icons_ui2.png` · `icons_ui3.png` | **화면 오른쪽 위 메뉴 버튼 6개(가방 · 미션 · 능력치 · 스킬 · 설정 · 폰)** · 기록 줄 · 창 제목 · 업적 · 출격 지도 | 22개가 아직 코드로 그린 단순 도형. 메뉴 버튼은 항상 보이는 자리 |
+| 4 | 38 | `ending.png` (가로 16:9 1장) | 6장을 끝냈을 때 엔딩 화면 | 지금은 검은 바탕에 글자만 |
+
+- 35 · 36은 Gemini가 글자를 잘 못 쓰므로 **글자 없이** 받고, 게임 이름(SEOUL 2049)은 제가 도구로 얹습니다.
+- 37은 17절 아이콘과 같은 방식 (격자 · 마젠타 배경 · **오른쪽 아래 칸은 비움** — 17-1에서 9번째 「전자 부품」이 워터마크와 같이 지워져 지금도 코드 그림인 것도 여기서 다시 받음).
+- (안 해도 되는 것) 도끼 · 카타나 · 소총 전용 몸: 근접 몸 · 장총 몸을 같이 써서 어색하지 않음 / 학원 간판: 다른 가게 외벽 그림으로 대신 그려짐 / NPC 걷기 동작: 서 있기만 함.
+
+### 35. 앱 아이콘 · `app_icon.png` (정사각)
+📎 콘셉트 아트 + `Player.png` (주인공)
+```
+Match the art style of the attached concept image. Create ONE square app icon illustration for a post-apocalyptic Seoul survival action game: a close-up bust of the attached character wearing a dark gas mask with glowing orange lens reflections, hood up, a rifle strap over the shoulder, seen from a slight low angle, filling most of the square, with the silhouette of Namsan Seoul Tower and a burning orange-red sky behind him. Very bold simple shapes and strong contrast so it stays readable when shrunk to a tiny phone icon, the face and mask centered inside the middle 70 percent of the square. Detailed dark pixel art, desaturated colors with warm orange highlights. No text, no letters, no numbers, no logos, no border, no frame, no rounded corners.
+```
+
+### 36. 스토어 배너 · `store_feature.png` (가로 2:1)
+📎 콘셉트 아트 + `Player.png` · 왼쪽 40%는 제가 게임 이름을 얹을 자리로 비워 둠
+```
+Match the art style of the attached concept image. Create ONE wide banner illustration in a 2:1 aspect ratio for a post-apocalyptic Seoul survival action game. On the right side, the attached character in a hooded jacket and tactical vest aims a rifle toward the left, standing on a cracked Seoul street with abandoned buses, collapsed neon Korean shop signs, mutated creatures approaching in the haze, and Namsan Seoul Tower against a burning orange night sky in the distance. Keep the left 40 percent of the image calm and darker (smoky sky and silhouetted ruins only) with no important details there. Cinematic isometric-leaning three-quarter view, detailed dark pixel art, desaturated colors with warm orange highlights. No text, no letters, no numbers, no logos, no border.
+```
+
+### 37. UI 아이콘 22종 · 3장 (17절과 같은 방식)
+📎 콘셉트 아트 · 아이콘은 **작게(20~40px) 보이므로** 굵은 실루엣 · 한 물체만 · 칸 가운데
+
+| 장 | 격자 | 파일 이름 | 내용 (순서대로) |
+|---|---|---|---|
+| 37-1 | 3×3 | `icons_ui1.png` | 배낭(가방) · 임무 수첩 · 능력치 막대그래프 · 톱니바퀴(설정) · 낡은 휴대폰 · 접힌 지도 · 자물쇠 · 전자 부품 · 크레딧 동전 |
+| 37-2 | 3×3 | `icons_ui2.png` | 별 훈장(업적) · 해골 · 경고 삼각형 · 방사능 표지 · 무전기 · 보급 상자 · 문(탈출) · 방패 · 현상수배 전단 |
+| 37-3 | 2×2 | `icons_ui3.png` | 전구(팁) · 나침반 · 엇갈린 칼 두 자루 · 새싹(성장) |
+
+#### 37-1 · `icons_ui1.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate game interface icons for a post-apocalyptic survival game, each a single object centered in its own equal cell with wide empty space around it, seen from a slight top-down three-quarter angle, with a very bold clear silhouette that stays readable at very small size. In order, left to right, top to bottom: 1) a worn olive canvas backpack; 2) a small leather mission notebook with a pencil; 3) a small bar chart of three rising metal bars; 4) a steel gear cog; 5) a cracked old smartphone with a glowing screen; 6) a folded paper city map with a red route line; 7) a heavy steel padlock; 8) a green electronic circuit board chip with gold contacts; 9) a stack of gold-and-brass coins stamped with a simple ring pattern. No people, no hands. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the whole image empty of drawing except the ninth icon kept small and away from the corner. No text, no letters, no numbers, no logos, no border, no grid lines. Do not use pink or magenta on the objects.
+```
+
+#### 37-2 · `icons_ui2.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate game interface icons for a post-apocalyptic survival game, each a single object centered in its own equal cell with wide empty space around it, with a very bold clear silhouette that stays readable at very small size. In order, left to right, top to bottom: 1) a gold star-shaped military medal on a short ribbon; 2) a cracked human skull; 3) a yellow-and-black warning triangle sign with an exclamation shape made of a bar and dot; 4) a round yellow radiation hazard sign; 5) a rugged handheld military radio with an antenna; 6) an olive supply crate with a parachute strap; 7) a heavy metal emergency exit door slightly open with light behind it; 8) a battered riot shield; 9) a torn paper wanted poster with a red stamp mark and a silhouette face. No people, no hands. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Keep the ninth icon small and away from the bottom-right corner. No text, no letters, no numbers, no logos, no border, no grid lines. Do not use pink or magenta on the objects.
+```
+
+#### 37-3 · `icons_ui3.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 2 by 2 grid of 4 separate game interface icons for a post-apocalyptic survival game, each a single object centered in its own equal cell with wide empty space around it, with a very bold clear silhouette that stays readable at very small size. In order, left to right, top to bottom: 1) a glowing yellow light bulb; 2) a brass field compass with a red needle; 3) two crossed machetes; 4) a small green sprout growing from a crack in concrete. No people, no hands. Detailed dark pixel art, desaturated colors with warm highlights. Solid flat #FF00FF magenta background. Keep the fourth icon away from the bottom-right corner. No text, no letters, no numbers, no logos, no border, no grid lines. Do not use pink or magenta on the objects.
+```
+
+### 38. 엔딩 그림 · `ending.png` (가로 16:9)
+📎 콘셉트 아트 + `Player.png` · 엔딩 글자가 가운데 아래에 겹치므로 아래 1/3은 어둡고 단순하게
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 illustration for the ending of a post-apocalyptic Seoul survival game: at dawn, the attached character seen from behind stands on a rooftop beside a small group of survivors and a hand-made flag, looking over the ruined Seoul skyline toward Namsan Seoul Tower, the first pale golden sunlight breaking through thinning radioactive clouds, a few rebuilt rooftop gardens and string lights in the camp below, quiet and hopeful mood. Keep the bottom third of the image dark and simple. Detailed dark pixel art, desaturated colors with warm golden highlights. No text, no letters, no numbers, no logos, no border.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
