@@ -17,7 +17,7 @@ const Pause = {
     const p = G.player, best = Object.values(p.assaults).reduce((a, r) => Math.max(a, r.tier || 1), 0);
     G.paused = true; input.down = false;
     $('ending-stats').innerHTML = `<p>${Pause.statsHtml()}<br>필드 보스 ${p.fieldBossKills || 0} · 어설트 최고 위협 ${best || '-'} · 타이탄 처치 ${p.bossKills} · 키메라 처치 ${p.labKills || 0}</p>`;
-    $('ending-screen').classList.remove('hidden');
+    $('ending-screen').classList.remove('hidden'); Music.ending(true); // v1.76 엔딩 곡
     SFX.play('levelup');
   },
   init() {
@@ -27,7 +27,7 @@ const Pause = {
     $('btn-pause-settings').onclick = () => { Pause.toggle(); UI.open('settings'); };
     $('btn-title').onclick = () => { saveGame(); location.reload(); };
     $('btn-summary-ok').onclick = () => $('raid-summary').classList.add('hidden');
-    $('btn-ending-continue').onclick = () => { $('ending-screen').classList.add('hidden'); G.paused = false; };
+    $('btn-ending-continue').onclick = () => { $('ending-screen').classList.add('hidden'); G.paused = false; Music.ending(false); };
   },
 };
 

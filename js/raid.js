@@ -123,7 +123,7 @@ const Raid = {
     this.summary(true, r, items);
     Journal.onMythSecured(items); // v1.63 신화 확보 (캠프로 돌아온 뒤 — 출격 중이면 알림이 밀림)
     log(`탈출 성공! 이번 출격: 장비 ${items.length}개, 크레딧 ${fmt(r.credits)} 확보.`, '#7fe08a');
-    SFX.play('quest');
+    SFX.play('quest'); Music.sting('sting_extract'); // v1.76 탈출 음악
     Bounty.on('extract');
     saveGame();
   },

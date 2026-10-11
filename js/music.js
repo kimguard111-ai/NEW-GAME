@@ -16,7 +16,9 @@ const MOODS = {
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 // v1.72 음악 파일 (docs/MUSIC_PROMPTS.md · Gemini): 있는 곡만 파일로, 없는 맵은 위 합성 음악 그대로
 // title = 타이틀 · camp = 캠프(바탕) · combat = 전투 층(적이 쫓아오는 만큼 커짐) · boss = 보스가 있으면 전투 층 대신
-const MUSIC_FILES = { title: 'bgm_title.mp3', camp: 'bgm_camp.mp3', combat: 'bgm_combat.mp3', boss: 'bgm_boss.mp3' };
+const MUSIC_FILES = { title: 'bgm_title.mp3', camp: 'bgm_camp.mp3', combat: 'bgm_combat.mp3', boss: 'bgm_boss.mp3', ending: 'bgm_ending.mp3', sting_extract: 'sting_extract.mp3' };
+const MUSIC_MAPS = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'lab']; // v1.76 맵별 탐색 곡 (bgm_<맵>.mp3)
+for (const k of MUSIC_MAPS) MUSIC_FILES[k] = 'bgm_' + k + '.mp3';
 const MUSIC_XF = 2.5, MUSIC_FILE_VOL = 0.5; // 반복 이음매 겹침(초) · 파일 곡 크기 (v1.74 1.4 → 0.5: 배경에 잔잔히)
 
 const Music = {
@@ -44,6 +46,19 @@ const Music = {
       T.src.push(s); T.next = t + D - MUSIC_XF;
     }
   },
+  // v1.76 짧은 음악 한 번 (탈출 등) — 다른 곡은 잠깐 줄였다가 돌아옴
+  sting(n) {
+    if (!SFX.ctx || !this.ensure() || !this.has(n)) return;
+    const c = SFX.ctx, s = c.createBufferSource(), g = c.createGain(); s.buffer = this.tracks[n].buf; g.gain.value = MUSIC_FILE_VOL * 1.3;
+    s.connect(g); g.connect(this.gain); s.start(c.currentTime + 0.05);
+    for (const [k, T] of Object.entries(this.tracks)) if (T.g && T.lvl > 0 && k !== n) { T.g.gain.setTargetAtTime(T.lvl * MUSIC_FILE_VOL * 0.25, c.currentTime, 0.2); T.g.gain.setTargetAtTime(T.lvl * MUSIC_FILE_VOL, c.currentTime + s.buffer.duration - 1, 0.8); }
+  },
+  // v1.76 엔딩 화면: 엔딩 곡만 (게임이 멈춰 있어서 따로 돌림)
+  ending(on) {
+    clearInterval(this.endT); if (!SFX.ctx || !this.ensure()) return;
+    const tick = () => { for (const k of Object.keys(this.tracks)) if (k !== 'ending' && k !== 'sting_extract') this.level(k, 0); this.level('ending', on ? 1 : 0); this.syn.gain.setTargetAtTime(on ? 0 : 1, SFX.ctx.currentTime, 0.5); };
+    this.track('ending'); tick(); if (on) this.endT = setInterval(tick, 300); else this.synV = -1; // 끝나면 update 가 합성 음악 크기를 다시 정함
+  },
   // 타이틀 화면 (게임 루프 전): title.js 가 매 프레임 부름
   titleTick() {
     if (!SFX.ctx || !this.ensure()) return;
@@ -70,15 +85,16 @@ const Music = {
     this.target = boss ? 1 : G.assault ? 0.8 : Math.min(1, n / 4);
     this.intensity += (this.target - this.intensity) * Math.min(1, dt * (this.target > this.intensity ? 1.5 : 0.35));
     { // v1.72 파일 곡: 캠프 = 캠프 곡 · 출격 = 합성 탐색 음악 위에 전투/보스 곡
-      const inCamp = World.map === 'camp', I = this.intensity, cf = boss ? 'boss' : 'combat';
-      this.level('title', 0);
+      const inCamp = World.map === 'camp', I = this.intensity, cf = boss ? 'boss' : 'combat', mapT = MUSIC_FILES[World.map] && World.map !== 'camp' ? World.map : null;
+      this.level('title', 0); this.level('ending', 0);
       this.level('camp', inCamp ? 1 : 0);
-      if (!inCamp) { this.track('combat'); this.track('boss'); }
+      if (!inCamp) { this.track('combat'); this.track('boss'); this.track('sting_extract'); }
+      for (const k of MUSIC_MAPS) if (k === mapT || (this.tracks[k] && this.tracks[k].on)) this.level(k, k === mapT ? 1 - 0.65 * Math.min(1, I * 1.2) : 0); // v1.76 맵 곡 (전투가 커지면 줄어듦)
       const fileFight = !inCamp && this.has(cf);
       this.level('combat', fileFight && cf === 'combat' ? Math.min(1, I * 1.2) : 0);
       this.level('boss', fileFight && cf === 'boss' ? Math.min(1, I * 1.2) : 0);
       this.fileFight = fileFight;
-      const sv = (inCamp && this.has('camp') ? 0 : 1) * (fileFight ? 1 - 0.85 * Math.min(1, I * 1.2) : 1);
+      const sv = ((inCamp && this.has('camp')) || (mapT && this.has(mapT)) ? 0 : 1) * (fileFight ? 1 - 0.85 * Math.min(1, I * 1.2) : 1);
       if (Math.abs(sv - (this.synV ?? 1)) > 0.01) { this.synV = sv; this.syn.gain.setTargetAtTime(sv, c.currentTime, 0.5); }
     }
     const eighth = 60 / this.mood.tempo / 2;
