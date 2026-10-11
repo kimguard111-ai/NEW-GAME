@@ -166,6 +166,10 @@ const ART = {
   // v1.35.1 아이콘 그림 (프롬프트 17 · icons_gear / icons_items / icons_skills) — 키는 아이콘 이름 (vest · medkit · ammo_pistol · rapid · roll …)
   // 예: vest: { file: 'icons_gear.png', rect: [x, y, w, h] } · 없으면 코드 아이콘
   icons: {
+    // v1.71 UI 아이콘 22종 (프롬프트 37 · 메뉴 버튼 · 기록 · 업적 · 지도)
+    quest: { file: 'icons_ui1.png', rect: [4,4,263,194] }, stats: { file: 'icons_ui1.png', rect: [271,4,218,219] }, bag: { file: 'icons_ui1.png', rect: [493,4,257,273] }, settings: { file: 'icons_ui1.png', rect: [754,4,246,228] }, phone: { file: 'icons_ui1.png', rect: [4,281,238,258] }, map: { file: 'icons_ui1.png', rect: [246,281,291,208] }, lock: { file: 'icons_ui1.png', rect: [541,281,180,246] }, chip: { file: 'icons_ui1.png', rect: [725,281,268,192] }, credits: { file: 'icons_ui1.png', rect: [4,543,99,113] },
+    skull: { file: 'icons_ui2.png', rect: [4,4,228,238] }, warn: { file: 'icons_ui2.png', rect: [236,4,269,233] }, star: { file: 'icons_ui2.png', rect: [509,4,149,274] }, rad: { file: 'icons_ui2.png', rect: [662,4,246,248] }, radio: { file: 'icons_ui2.png', rect: [4,282,228,276] }, box: { file: 'icons_ui2.png', rect: [236,282,292,243] }, door: { file: 'icons_ui2.png', rect: [532,282,187,269] }, shield: { file: 'icons_ui2.png', rect: [723,282,208,289] }, bounty: { file: 'icons_ui2.png', rect: [4,575,218,264] },
+    tip: { file: 'icons_ui3.png', rect: [4,4,262,412] }, compass: { file: 'icons_ui3.png', rect: [270,4,408,404] }, swords: { file: 'icons_ui3.png', rect: [4,420,397,430] }, growth: { file: 'icons_ui3.png', rect: [405,420,307,323] },
     // v1.49.12 총기 부품 12종 (프롬프트 22)
     att_reddot: { file: 'icons_attach1.png', rect: [4, 4, 169, 164] }, att_scope2: { file: 'icons_attach1.png', rect: [177, 4, 224, 202] }, att_scope4: { file: 'icons_attach1.png', rect: [405, 4, 322, 246] }, att_suppressor: { file: 'icons_attach1.png', rect: [4, 254, 297, 246] }, att_comp: { file: 'icons_attach1.png', rect: [305, 254, 224, 172] }, att_choke: { file: 'icons_attach1.png', rect: [533, 254, 221, 172] }, att_vgrip: { file: 'icons_attach1.png', rect: [758, 254, 134, 282] }, att_agrip: { file: 'icons_attach1.png', rect: [4, 540, 259, 174] }, att_laser: { file: 'icons_attach1.png', rect: [267, 540, 233, 159] },
     att_extmag: { file: 'icons_attach2.png', rect: [4, 4, 185, 308] }, att_dualmag: { file: 'icons_attach2.png', rect: [193, 4, 259, 293] }, att_drum: { file: 'icons_attach2.png', rect: [456, 4, 241, 281] },
@@ -257,6 +261,7 @@ const ART = {
     sf_conv: { file: 'tex_shopfront1.png', rect: [3, 3, 330, 333] }, sf_pharma: { file: 'tex_shopfront1.png', rect: [346, 3, 331, 333] }, sf_bank: { file: 'tex_shopfront1.png', rect: [692, 3, 329, 334] },
     sf_cafe: { file: 'tex_shopfront1.png', rect: [3, 351, 330, 329] }, sf_hosp: { file: 'tex_shopfront1.png', rect: [347, 351, 330, 329] }, sf_mart: { file: 'tex_shopfront1.png', rect: [692, 351, 329, 329] },
     // tex_shopfront2.png (v1.31.2)
+    sf_academy: { file: 'tex_shopfront3.png', rect: [4, 4, 574, 572] }, // v1.71 학원 (프롬프트 39)
     sf_pc: { file: 'tex_shopfront2.png', rect: [3, 3, 329, 334] }, sf_police: { file: 'tex_shopfront2.png', rect: [346, 3, 332, 333] }, sf_food: { file: 'tex_shopfront2.png', rect: [692, 3, 329, 334] },
     sf_elec: { file: 'tex_shopfront2.png', rect: [3, 351, 329, 329] }, sf_books: { file: 'tex_shopfront2.png', rect: [347, 351, 331, 329] }, sf_laundry: { file: 'tex_shopfront2.png', rect: [692, 351, 329, 329] },
   },
@@ -268,7 +273,7 @@ const ART = {
     서점: { obj: 'in_books', floor: 'fl_wood', front: 'sf_books' }, 전자상가: { obj: 'in_elec', floor: 'fl_tile', front: 'sf_elec' }, 카페: { obj: 'in_cafe', floor: 'fl_wood', front: 'sf_cafe' },
     분식집: { obj: 'in_food', floor: 'fl_concrete', deco: 'in_snackbar', front: 'sf_food' }, 은행: { obj: 'in_bank', floor: 'fl_marble', deco: ['in_ticket', 'in_wait'], front: 'sf_bank' }, 병원: { obj: 'in_hosp', floor: 'fl_lino', deco: ['in_bed', 'in_wait'], front: 'sf_hosp' },
     파출소: { obj: 'in_police', floor: 'fl_marble', front: 'sf_police' }, PC방: { obj: 'in_pc', floor: 'fl_carpet', deco: 'in_pcbang', front: 'sf_pc' }, 세탁소: { obj: 'in_washer', floor: 'fl_concrete', deco: 'in_laundry', front: 'sf_laundry' },
-    노래방: { obj: 'in_karaoke', floor: 'fl_carpet', front: 'g_karaoke' }, 미용실: { obj: 'in_salon', floor: 'fl_tile', deco: 'in_wait', front: 'g_salon' }, 학원: { obj: 'in_desk', floor: 'fl_lino', deco: 'in_shoelocker' }, // v1.58 실내 3 (32절)
+    노래방: { obj: 'in_karaoke', floor: 'fl_carpet', front: 'g_karaoke' }, 미용실: { obj: 'in_salon', floor: 'fl_tile', deco: 'in_wait', front: 'g_salon' }, 학원: { obj: 'in_desk', floor: 'fl_lino', deco: 'in_shoelocker', front: 'sf_academy' }, // v1.58 실내 3 (32절)
   },
   // v1.31.1 지역마다 외벽 후보 — 그림이 없는 키는 건너뜀 (f_tile·f_villa… 는 v1.31.1 프롬프트 15-2)
   texZones: { 0: ['f_apartment', 'f_brick', 'f_apartment2', 'f_villa', 'f_tile'], // v1.58 d1_~d6_ = 지역 외벽 (26절)

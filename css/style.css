@@ -299,6 +299,8 @@ body.touch #tip { bottom: 110px; font-size: 11px; max-width: 70vw; padding: 5px 
 .pause-buttons button { width: 240px; font-size: 16px; padding: 10px; }
 #save-code { width: 100%; margin-top: 6px; background: #111; color: #ddd; border: 1px solid #444; font-size: 11px; font-family: monospace; }
 #ending-stats { color: #ffd76a; margin: 16px 0; }
+#ending-screen { background: linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.55) 45%, rgba(0,0,0,.88)), url(../assets/ending.webp) center / cover no-repeat, #000; } /* v1.71 엔딩 그림 (프롬프트 38) */
+#ending-screen .title-box { text-shadow: 0 2px 6px #000; }
 #btn-pause { font-weight: bold; }
 
 /* ================= v1.1 HUD 재구성 (콘셉트 이미지 스타일) ================= */
