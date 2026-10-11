@@ -127,7 +127,7 @@ const Bosses = {
       const d = dist(e, p);
       if (d < 380 && !p.dead) {
         const a = angleTo(e, p); for (let i = 0; i < 8; i++) World.move(p, Math.cos(a) * 18, Math.sin(a) * 18);
-        damagePlayer(e.dmg * 0.8);
+        damagePlayer(e.dmg * 0.8, e.x, e.y, e);
       }
       UI.toast(`타이탄 ${ph}페이즈`, ph === 2 ? '방사능 낙하! 바닥의 원을 피해라' : '폭주! 붉은 원이 차오르면 멀리 벗어나라');
       log(ph === 2 ? '타이탄이 포효한다! 하늘에서 방사능 덩어리가 쏟아진다!' : '타이탄이 폭주한다! 몸에서 방사능이 끓어오른다!', '#7fff6a');

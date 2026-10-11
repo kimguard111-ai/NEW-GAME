@@ -50,7 +50,7 @@ const Raid = {
   },
 
   deploy(id, diff = 0) {
-    const p = G.player;
+    const p = G.player; G.hurtLog = []; // v1.70 사망 원인 기록 초기화
     // v1.7 비상 보급: 구급상자도 돈도 없으면 2개, 예비 탄약이 바닥이면 120발 (죽음의 악순환 방지 — 봇 측정에서 발견)
     const med = p.inventory.find(i => i.key === 'medkit');
     if (!med && p.credits < 120 && addItem(makeConsumable('medkit', 2))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." (비상 구급상자 2개)', '#8cf');
@@ -166,6 +166,7 @@ const Raid = {
     $('summary-title').className = ok ? 'ok' : 'bad';
     const myth = ok ? items.filter(it => it.rarity === 5) : (this.lastDeath && this.lastDeath.kept) || [], mc = RARITIES[5].color; // v1.63 신화 확보는 결과 카드 맨 위에
     $('summary-body').innerHTML = myth.map(it => `<div class="sum-row" style="border:1px solid ${mc};padding:4px 6px;margin-bottom:6px"><span style="color:${mc}">◆ 신화 무기 ${ok ? '확보' : '지킴 (장착 중)'}</span><b style="color:${mc}">${itemName(it)}</b></div>`).join('') + `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}</b></div>`
+      + (ok ? '' : (dc => dc.length ? `<div class="sum-row"><span>쓰러뜨린 것</span><b style="color:#ff8a6a">${dc.map(([n, d], i) => i ? `<span class="muted" style="font-weight:normal">${n} ${fmt(Math.round(d))}</span>` : `${n} ${fmt(Math.round(d))}`).join(' · ')}</b></div>` : '')(deathCause())) // v1.70 사망 원인 (마지막 6초 피해)
       + `<div class="sum-row"><span>시간</span><b>${Math.floor(r.t / 60)}분 ${Math.floor(r.t % 60)}초</b></div>`
       + `<div class="sum-row"><span>처치</span><b>${r.kills || 0}</b></div>`
       + `<div class="sum-row"><span>${ok ? '확보한 크레딧' : '잃은 크레딧'}</span><b>₵${fmt(ok ? r.credits : this.lastDeath.credits)}</b></div>`

@@ -57,7 +57,7 @@ const Monsters = {
   // v1.64 색 규칙: 나쁜 것 = 빨강·주황·노랑 (테두리는 늘 빨강) · 좋은 것 = 초록·파랑 — 보스 공격이 초록이라 좋은 건 줄 알고 일부러 맞던 것
   strike(x, y, r, delay, dmg, color, pool = false) {
     if (pool || /^rgba\((1[0-4]\d|2[0-3]\d),\s*(2[0-5]\d|1[89]\d),\s*\d+,|^rgba\(230,80,255,/.test(color)) color = pool ? 'rgba(255,120,30,' : 'rgba(255,70,50,'; // 초록·보라 예고 → 주황·빨강
-    G.strikes.push({ x, y, r, t: 0, delay, dmg, color, pool });
+    G.strikes.push({ x, y, r, t: 0, delay, dmg, color, pool, by: this.actor }); // v1.70 사망 원인
     if (Math.hypot(x - G.player.x, y - G.player.y) < r + 200) SFX.play('warn', 0.7);
   },
   updateHazards(dt) {
@@ -66,19 +66,19 @@ const Monsters = {
       s.t += dt;
       if (s.t < s.delay) continue;
       s.done = true;
-      if (!p.dead && Math.hypot(p.x - s.x, p.y - s.y) < s.r + p.r) damagePlayer(s.dmg);
+      if (!p.dead && Math.hypot(p.x - s.x, p.y - s.y) < s.r + p.r) damagePlayer(s.dmg, s.x, s.y, s.by);
       G.effects.push({ type: 'boom', x: s.x, y: s.y, t: 0, life: 0.35, r: s.r });
       SFX.playAt('boom', s.x, s.y, 0.7, 1300);
       burst(s.x, s.y, s.pool ? '#ff8a30' : '#ffb040', 16, 200, 0.4, 4); // v1.64 산성도 주황
       G.shake = Math.max(G.shake, 5);
-      if (s.pool) G.pools.push({ x: s.x, y: s.y, r: s.r * 0.9, t: 0, life: 4, dps: s.dmg * 0.5 });
+      if (s.pool) G.pools.push({ x: s.x, y: s.y, r: s.r * 0.9, t: 0, life: 4, dps: s.dmg * 0.5, by: s.by && s.by.hp !== undefined ? Journal.enemyName(s.by) + '의 산성 웅덩이' : null });
     }
     G.strikes = G.strikes.filter(s => !s.done);
     let inPool = null;
     for (const pl of G.pools) { pl.t += dt; if (Math.hypot(p.x - pl.x, p.y - pl.y) < pl.r) inPool = pl; }
     G.pools = G.pools.filter(pl => pl.t < pl.life);
     p.poolT = (p.poolT || 0) - dt;
-    if (inPool && !p.dead && p.poolT <= 0 && !armorLegend('filter')) { p.poolT = 0.5; damagePlayer(inPool.dps * 0.5); }
+    if (inPool && !p.dead && p.poolT <= 0 && !armorLegend('filter')) { p.poolT = 0.5; damagePlayer(inPool.dps * 0.5, undefined, undefined, inPool.by || '산성 웅덩이'); }
   },
 
   // ---------------- 네임드 고유 패턴 ----------------
@@ -232,7 +232,7 @@ const Monsters = {
     if (e.type === 'dog' || e.def.pounce) { // 웅크림 0.45초(예고선) → 도약 (v1.6 은신 변이체도)
       if (e.leapT > 0) {
         e.leapT -= dt; tryMoveSmart(e, e.leapA, 330 * dt); // v1.33 560 → 330 (너무 빨라 정신없던 것)
-        if (!e.leapHit && dist(e, p) < e.r + p.r + 6) { e.leapHit = true; e.lastAtk = G.time; damagePlayer(e.dmg * 1.5 * b, e.x, e.y); }
+        if (!e.leapHit && dist(e, p) < e.r + p.r + 6) { e.leapHit = true; e.lastAtk = G.time; damagePlayer(e.dmg * 1.5 * b, e.x, e.y, e); }
         return true;
       }
       if (e.pounceT > 0) { e.pounceT -= dt; if (e.pounceT <= 0) { e.leapT = 0.42; e.leapHit = false; } return true; }
@@ -255,7 +255,7 @@ const Monsters = {
       e.windT -= dt;
       if (e.windT <= 0) {
         e.lastAtk = G.time;
-        if (dist(e, p) < e.r + p.r + 16) damagePlayer(e.dmg * b, e.x, e.y);
+        if (dist(e, p) < e.r + p.r + 16) damagePlayer(e.dmg * b, e.x, e.y, e);
         else if (dist(e, p) < 120) floatText(p.x, p.y - 30, '빗나감', '#aaa', 11);
       }
       return true;

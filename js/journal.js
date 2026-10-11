@@ -53,7 +53,14 @@ const Journal = {
   },
   onItem(it) {
     const p = G.player; if (!p || !it || it.kind === 'cons') return; this.ensure(p);
-    p.codex.items[it.key] = Math.max(p.codex.items[it.key] ?? -1, it.rarity || 0);
+    const prev = p.codex.items[it.key] ?? -1, r = it.rarity || 0;
+    p.codex.items[it.key] = Math.max(prev, r);
+    if (r > prev && r <= 4 && p.raid && this.gearKeys().includes(it.key)) { // v1.70 도감 새 칸 알림 (출격 중 주운 것만 · 신화는 따로 연출)
+      const n = r - prev, R = RARITIES[r]; floatText(p.x, p.y - 58, `도감 +${n}`, R.color, 13);
+      log(`${ICON('quest')} 도감 새 칸: ${R.name} ${GEAR_DEFS(it.key).name}${n > 1 ? ` (아래 등급 ${n - 1}칸 포함)` : ''}`, R.color); p.cxNew = true; this.badge();
+    }
+    if (r === 5 && p.raid && it.raid && !Object.values(p.equip).includes(it) && !p.mythTip) { p.mythTip = true; setTimeout(() => UI.toast('신화 무기 — 장착해 두세요', '무기 칸(1·2번)에 낀 신화 무기는 죽어도 잃지 않습니다. 가방에 두면 시체 가방으로'), 1500); } // v1.70 v1.69 규칙 안내 (한 번)
+    if (it.unique && !p.codex.uniq[it.unique] && p.raid) { log(`${ICON('quest')} 도감 새 칸: 고유 ${UNIQUES[it.unique].name}`, '#ff5aa0'); p.cxNew = true; this.badge(); }
     if (it.unique) p.codex.uniq[it.unique] = true;
     if (it.set) for (const [slot, key] of Object.entries(SETS[it.set].pieces)) if (key === it.key) p.codex.sets[it.set + ':' + slot] = true;
   },
@@ -105,6 +112,7 @@ const Journal = {
     const n = ACHIEVEMENTS.filter(a => p.ach[a.id]).length;
     return `<div class="jtabs">${t('quest', '임무')}${t('codex', '도감')}${t('ach', `업적 ${n}/${ACHIEVEMENTS.length}`)}${t('rec', '기록')}</div>`;
   },
+  badge() { const b = document.querySelector('#menu-buttons [data-panel="quest"]'); if (b) b.classList.toggle('new', !!(G.player && G.player.cxNew)); }, // v1.70 미션 버튼 점 = 도감에 새 칸
   gearKeys() { return [...Object.keys(WEAPONS).filter(k => !WEAPONS[k].myth), ...Object.keys(ARMORS), ...Object.keys(HELMETS)]; }, // v1.68 도감 장비 목록
   // v1.68 도감 적 목록: g = 등급 (0 일반 · 1 정예 · 2 필드 보스 · 3 어설트 보스 · 4 최종) · art = 초상화 그림 키
   foeList() {
@@ -136,14 +144,14 @@ const Journal = {
   },
   bodyHtml() {
     const p = G.player; this.ensure(p);
-    if (this.tab === 'codex') { // v1.68 도감: 장비는 등급(티어)별 · 못 찾은 것은 실루엣 · 적은 등급별 초상화
+    if (this.tab === 'codex') { if (p.cxNew) { p.cxNew = false; this.badge(); } // v1.68 도감: 장비는 등급(티어)별 · 못 찾은 것은 실루엣 · 적은 등급별 초상화
       const sub = this.cxTab || 'gear', st = (id, name) => `<button class="jtab cxsub${sub === id ? ' on' : ''}" data-cxtab="${id}">${name}</button>`;
       const tile = (on, img, name, col, tip, extra = '') => `<div class="cxt${on ? '' : ' no'}" title="${tip}" style="${on && col ? `border-color:${col}55` : ''}">${img}<span style="${on && col ? `color:${col}` : ''}">${on ? name : '???'}</span>${extra}</div>`;
       const head = (name, got, all, col, note = '') => `<div class="cxh"><b style="color:${col}">${name}</b> <span class="muted">${got} / ${all}${note ? ' · ' + note : ''}</span>${got >= all ? ' <span class="cxdone">완성</span>' : ''}</div><div class="cxbar"><i style="width:${Math.round(got / all * 100)}%;background:${col}"></i></div>`;
       const gk = this.gearKeys(), cnt = t => gk.filter(k => (p.codex.items[k] ?? -1) >= t).length;
       const fs = this.foeList(), fGot = fs.filter(f => p.codex.kills[f.name]).length;
       let h = `<div class="jtabs cxsubs">${st('gear', `장비 ${gk.reduce((a, k) => a + Math.max(0, (p.codex.items[k] ?? -1) + 1), 0)}/${gk.length * 5}`)}${st('foe', `적 ${fGot}/${fs.length}`)}</div>`;
-      if (sub === 'foe') {
+      if (sub === 'foe') { h += `<div class="muted cxnote" id="cx-tip">${IS_TOUCH ? '칸을 누르면' : '칸에 마우스를 올리면'} 처치 수 · 힌트.</div>`;
         for (const [g, gname, col] of [[0, '일반 적', '#cfcfcf'], [1, '정예', '#ffd76a'], [2, '필드 보스', '#ff9a4a'], [3, '어설트 보스', '#ff6a5a'], [4, '최종 보스', RARITIES[5].color]]) {
           const L = fs.filter(f => f.g === g); if (!L.length) continue;
           h += head(gname, L.filter(f => p.codex.kills[f.name]).length, L.length, col) + '<div class="cxg foe">';
@@ -152,7 +160,7 @@ const Journal = {
         }
         return h;
       }
-      h += '<div class="muted cxnote">같은 장비라도 더 높은 등급을 손에 넣어야 칸이 밝혀집니다. 실루엣의 정체를 찾아보세요.</div>';
+      h += `<div class="muted cxnote" id="cx-tip">같은 장비라도 더 높은 등급을 손에 넣어야 칸이 밝혀집니다. ${IS_TOUCH ? '칸을 누르면' : '칸에 마우스를 올리면'} 힌트.</div>`;
       for (let t = 0; t < 5; t++) {
         const R = RARITIES[t]; h += head(R.name, cnt(t), gk.length, R.color) + '<div class="cxg">';
         for (const k of gk) { const D = GEAR_DEFS(k), on = (p.codex.items[k] ?? -1) >= t; h += tile(on, ICON(D.icon || k), D.name, R.color, on ? `${R.name} ${D.name}` : `??? · Lv${D.lvl || 1}+ 장비`); }
@@ -190,6 +198,7 @@ const Journal = {
   },
   bind(root) {
     root.querySelectorAll('[data-jtab]').forEach(b => { b.onclick = () => { this.tab = b.dataset.jtab; SFX.play('ui'); UI.refreshQuest(); }; });
+    root.querySelectorAll('.cxt[title]').forEach(t => { t.onclick = () => { const tip = root.querySelector('#cx-tip'); if (tip) { tip.textContent = t.title; tip.classList.remove('muted'); } }; }); // v1.70 폰은 마우스 힌트가 없어서 누르면 위에 표시
     root.querySelectorAll('[data-cxtab]').forEach(b => { b.onclick = () => { this.cxTab = b.dataset.cxtab; SFX.play('ui'); UI.refreshQuest(); }; }); // v1.68 도감 장비 / 적
   },
 };

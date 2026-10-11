@@ -204,7 +204,7 @@ function startGame(save, name) {
     if (!P.hints) P.hints = P.level > 2 || (P.rec && P.rec.extracts) || P.deaths ? HINTS.map(h => h.id).concat('rules') : []; // v1.45 키 그림 안내 (이미 해 본 사람은 건너뜀)
   Bounty.refresh(); // v0.14 일일 의뢰
   Weekly.refresh(); // v1.15 주간 도전
-  Journal.ensure(P);
+  Journal.ensure(P); setTimeout(() => Journal.badge(), 0); // v1.70 도감 새 칸 점
   if (save && !save.p.skills) { // v1.16 이전 세이브: 지금 레벨로 쓰던 스킬·고른 갈래는 그대로 배운 것으로
     P.skills = {}; P.smodOwned = {};
     for (const s of SKILLS) if (P.level >= s.lvl) P.skills[s.id] = true;
@@ -613,7 +613,13 @@ function gainExp(n) {
 }
 
 const PERFECT_DODGE = 0.2; // v1.65 구르기 시작 뒤 이 시간 안에 막은 공격 = 완벽 회피
-function damagePlayer(dmg, srcX, srcY) {
+// v1.70 사망 원인: 마지막 몇 초 동안 받은 피해를 누가 줬는지 (세이브에 안 남게 G 에)
+function hurtLog(d, by) {
+  const n = !by ? '알 수 없음' : typeof by === 'string' ? by : Journal.enemyName(by), L = G.hurtLog = (G.hurtLog || []).filter(h => G.time - h.t < 8);
+  L.push({ t: G.time, d, by: n });
+}
+function deathCause() { const m = {}; for (const h of (G.hurtLog || []).filter(h => G.time - h.t < 6)) m[h.by] = (m[h.by] || 0) + h.d; return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 3); }
+function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이름) → 사망 원인
   const p = G.player;
   if (p.dead || World.inSafe(p.x, p.y)) return;
   if (p.invT > 0) return; // v1.11 두 번째 숨 무적
@@ -644,6 +650,7 @@ function damagePlayer(dmg, srcX, srcY) {
     if (d <= 0) { p.lastHurt = G.time; floatText(p.x, p.y - 20, '막음', '#7ab8ff', 12); return; }
   }
   p.hp -= d; p.hurtT = 0.15; p.lastHurt = G.time;
+  hurtLog(d, by);
   { // v1.17 맞은 방향 기록 (출처가 없으면 가장 가까운 쫓아오는 적)
     let sx = srcX, sy = srcY;
     if (sx === undefined) { let bd = 1e9; for (const e of G.enemies) { if (e.hp <= 0 || e.state !== 'chase') continue; const dd = dist(e, p); if (dd < bd) { bd = dd; sx = e.x; sy = e.y; } } }
@@ -880,7 +887,7 @@ function killEnemy(e) {
 
 function spawnEnemyBullet(e, a, speed, dmg, color = '#ff6a4a', r = 3) {
   G.bullets.push({ x: e.x + Math.cos(a) * e.r, y: e.y + Math.sin(a) * e.r, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
-    from: 'e', life: 1.6, dmg, color, r });
+    from: 'e', life: 1.6, dmg, color, r, by: e });
 }
 
 function tryMoveSmart(e, a, step) {
@@ -939,6 +946,7 @@ function updateEnemies(dt) {
     if (e.nest) { RaidEvents.nestTick(e, dt, dist(e, p)); continue; } // v1.10 변이 둥지 (움직이지 않음)
     if (e.regenMut) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.02 * dt); // v1.15 변형 규칙: 재생
     if (e.state !== 'chase' && !e.def.boss && !e.fieldBoss && !e.labBoss && Math.abs(e.x - p.x) + Math.abs(e.y - p.y) > 2200) continue; // v1.16 멀리 있는 적은 쉼 (사라지지 않음)
+    Monsters.actor = e; // v1.70 장판·폭발이 누구 것인지 (사망 원인)
     e.atkT -= dt; e.fireT -= dt; e.hitT -= dt; e.buffT = (e.buffT || 0) - dt; e.revealT = (e.revealT || 0) - dt;
     const d = dist(e, p);
     e.flinchT = (e.flinchT || 0) - dt; e.downT = (e.downT || 0) - dt; // v1.32 휘청 · 넘어짐
@@ -960,7 +968,7 @@ function updateEnemies(dt) {
       e.charge -= dt;
       if (e.charge < 0.8) {
         tryMoveSmart(e, e.chargeA, 340 * dt); // v1.33 430 → 340 (이동 감속에 맞춰)
-        if (d < e.r + p.r + 4 && e.atkT <= 0) { damagePlayer(e.dmg * 1.4); e.atkT = 0.8; }
+        if (d < e.r + p.r + 4 && e.atkT <= 0) { damagePlayer(e.dmg * 1.4, e.x, e.y, e); e.atkT = 0.8; }
       }
       continue;
     }
@@ -985,7 +993,7 @@ function updateEnemies(dt) {
       if (!hold && ta !== null && d > e.r + p.r + 2) tryMoveSmart(e, ta, spd * (e.tac === 'cover' ? 1.15 : 1) * dt);
       if (e.def.boss && d < e.r + p.r + 8 && e.atkT <= 0) {
         e.atkT = e.def.atkCd * (e.atkMul || 1); e.lastAtk = G.time;
-        damagePlayer(e.dmg * Monsters.buff(e), e.x, e.y);
+        damagePlayer(e.dmg * Monsters.buff(e), e.x, e.y, e);
       }
     } else if (!Monsters.infight(e, dt)) { // 플레이어가 없으면 다른 세력과 싸움, 아니면 배회
       e.wanderT -= dt;
@@ -1087,7 +1095,7 @@ function updateRadiation(dt) {
   const hel = p.equip.helmet, res = hel ? HELMETS[hel.key].radRes || 0 : 0; // 방독면
   const d = Math.max(1, Math.round(PlayerStats.maxHp(p) * 0.015 * (1 - res)));
   p.hp -= d;
-  floatText(p.x, p.y - 20, `방사능 -${d}`, '#ffb040', 13); // v1.66 받는 피해 = 주황
+  hurtLog(d, '방사능'); floatText(p.x, p.y - 20, `방사능 -${d}`, '#ffb040', 13); // v1.66 받는 피해 = 주황
   if (p.hp <= 0) playerDie();
 }
 
@@ -1138,7 +1146,7 @@ function updateBullets(dt) {
       } else {
         if (World.inSafe(b.x, b.y)) { b.life = 0; break; }
         if (!p.dead && (p.x - b.x) ** 2 + (p.y - b.y) ** 2 < (p.r + (b.r || 3)) ** 2) {
-          damagePlayer(b.dmg, b.x - b.vx * 0.6, b.y - b.vy * 0.6); b.life = 0; break; // v1.17 날아온 방향
+          damagePlayer(b.dmg, b.x - b.vx * 0.6, b.y - b.vy * 0.6, b.by); b.life = 0; break; // v1.17 날아온 방향
         }
       }
     }

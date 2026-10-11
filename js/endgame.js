@@ -89,7 +89,7 @@ const Bounty = {
 // v1.15 주간 도전: 주(월요일)마다 3개 — 하나마다 영웅 장비, 셋 다 끝내면 전설 장비 확정
 const WEEKLIES = {
   elite:    { text: n => `엘리트 몬스터 ${n}마리 처치`, n: [25, 35], minLv: 5 },
-  events:   { text: n => `출격 사건 ${n}개 완료 (보급·생존자·금고·둥지·발전기)`, n: [5, 7], minLv: 3 },
+  events:   { text: n => `출격 사건 ${n}개 완료 (보급·금고·둥지·맵 고유 사건)`, n: [5, 7], minLv: 3 },
   fieldBoss:{ text: n => `필드 보스 ${n}마리 처치`, n: [3, 4], minLv: 6 },
   extract:  { text: n => `출격 후 탈출 ${n}회 성공`, n: [8, 10], minLv: 1 },
   mutator:  { text: () => '위협 6 이상 어설트 클리어 (변형 규칙)', n: [1, 1], minLv: 22 },
