@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.80';
+const GAME_VERSION = 'v1.81';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -69,6 +69,8 @@ const DIFFS = [
   { name: '하드', lv: 4, hp: 1.5, dmg: 1.3, exp: 1.5, gear: 0.5, myth: 2, elite: { chance: 0.01, pity: 0.004 }, color: '#ff9a3a' },
   { name: '헬', lv: 8, hp: 2.2, dmg: 1.7, exp: 2.5, gear: 1.0, myth: 4, elite: { chance: 0.03, pity: 0.01 }, color: '#ff4a4a' },
 ];
+// v1.81 도전 던전 층 배율 (적 체력 · 피해) — 없으면 null
+function dunMul() { const p = typeof G !== 'undefined' && G.player, D = typeof World !== 'undefined' && World.def && World.def.lab && p && p.raid && p.raid.floor ? DUNGEONS[World.map] : null; return D ? { hp: D.hpM(p.raid.floor), dmg: D.dmgM(p.raid.floor) } : null; }
 function curDiff() { const p = typeof G !== 'undefined' && G.player; return p && p.raid && p.raid.diff ? DIFFS[p.raid.diff] : null; }
 function diffOpen(p) { return !p.finalEnd ? 0 : p.hellOpen ? 2 : 1; }
 const wbase = k => (WEAPONS[k] && WEAPONS[k].base) || k; // v1.52 불법 무기 → 같은 계열 총 (소리·손맛·부품)
@@ -245,7 +247,7 @@ const ZONES = [
   // v1.5 지하 연구소 (실내 던전): 방과 복도, 붉은 비상등만 켜진 어둠
   { name: '지하 연구소', maxDist: 999, lvl: [30, 31], /* v1.77 층마다 바뀜 (Raid.labFloor) */ dark: 0.82, tint: 'rgba(70,0,0,0.10)',
     spawns: [['subject', 40], ['spitter', 25], ['sentry', 15], ['drone', 20]],
-    desc: '5층 도전 · 층마다 강해짐 · 승강기로 내려가거나 비상 계단으로 탈출 · B5 키메라', packs: { subject: [2, 4] },
+    desc: '5층 도전 · 층마다 강해짐 · 승강기로 내려가거나 비상구 한 곳으로 탈출 · B5 키메라', packs: { subject: [2, 4] },
     gear: ['katana', 'lmg', 'exo', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 장비' },
   // v1.6
   { name: '강남 업무지구', maxDist: 999, lvl: [20, 25], dark: 0.55, tint: 'rgba(30,20,70,0.10)',
@@ -259,7 +261,7 @@ const ZONES = [
   // v1.78 스카이타워 (도전): 바벨이 뿌리내린 초고층 — 블랙선 잔당 · 은신 변이체 · 경비 드론
   { name: '스카이타워', maxDist: 999, lvl: [34, 35], /* 층마다 바뀜 */ dark: 0.5, tint: 'rgba(60,20,70,0.10)',
     spawns: [['merc', 25], ['stalker', 22], ['shield', 15], ['drone', 18], ['brute', 10], ['spitter', 10]],
-    desc: '5층 도전 · 계단으로 오를수록 강해짐 · 옥상에 바벨 원형체', packs: { merc: [1, 2], stalker: [1, 2] },
+    desc: '5층 도전 · 계단으로 오를수록 강해짐 · 옥상에 바벨 원형체', packs: { merc: [2, 3], stalker: [2, 3] }, /* v1.81 */
     gear: ['rifle', 'lmg', 'katana', 'exo', 'exoHelm', 'gasmask'], gearText: '돌격소총·기관총·고주파 블레이드·외골격' },
 ];
 
@@ -280,8 +282,8 @@ const MAPS = {
 const LAB_FLOORS = 5, labFloorLv = f => 28 + 2 * f;
 // v1.78 도전 던전 공통: floors 층 수 · lv 층별 적 레벨 · label 층 이름 · lift 다음 층으로 가는 것 · best 최고 기록 키
 const DUNGEONS = {
-  lab:   { floors: LAB_FLOORS, lv: labFloorLv, label: f => `B${f}`, lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
-  tower: { floors: 5, lv: f => 32 + 2 * f, label: f => f >= 5 ? '옥상' : `${f * 20}층`, lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
+  lab:   { floors: LAB_FLOORS, lv: labFloorLv, hpM: f => 1.8 + 0.3 * (f - 1), dmgM: f => 1.3 + 0.1 * (f - 1), /* v1.81 장비를 맞춘 Lv30 에겐 너무 약하던 것 */ label: f => `B${f}`, lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
+  tower: { floors: 5, lv: f => 32 + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
 };
 const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'lab', 'tower']; // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
 const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil'];      // v1.6 장 번호 → 그 장의 맵

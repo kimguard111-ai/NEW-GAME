@@ -62,6 +62,7 @@ const Raid = {
     this.resetWorld();
     const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
     G.exits = pts.filter(q => q !== start);
+    if (MAPS[id].lab) G.exits = [dunExitPick(G.exits, start)]; // v1.81 도전 던전: 탈출구 하나 (시작 자리에서 가장 먼 방)
     p.x = start.x; p.y = start.y; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 출격 때 체력을 채워 주지 않음 (의무병 · 구급상자 의미)
     p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0, diff: id === DIFF_MAP ? Math.max(0, Math.min(diff, diffOpen(p))) : 0, floor: MAPS[id].lab ? 1 : 0 }; // v1.66 잠실 난이도 · v1.77 연구소 층
     if (FirstRun.rookie()) G.fbT = 1e9; // v1.45 첫 출격엔 필드 보스 없음
@@ -81,12 +82,12 @@ const Raid = {
     if (G.grave) log(`${ICON('skull')} 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
     { const D = DIFFS[p.raid.diff]; UI.toast(MAPS[id].name + (p.raid.diff ? ` · ${D.name}` : ''), p.raid.diff ? `적 Lv+${D.lv} · 체력 ×${D.hp} · 피해 ×${D.dmg} · 경험치 ×${D.exp} · 신화 ×${D.myth} · 바벨이 스카이타워에 나타남` : `탈출구 ${G.exits.length}곳, 미니맵 초록 ◎`); } // v1.39 · v1.66 난이도
     UI.smsQ = []; if (MAP_SMS[id]) UI.sms(MAP_SMS[id], 2.5); // v1.56 출격 시작 재난문자
-    log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}.`, '#8cf'); // v1.39
+    log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? "비상구" : "끝"}.`, '#8cf'); // v1.39
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     if (World.def.lab) { this.labLiftEvent(); const D = DUNGEONS[id]; p[D.best] = Math.max(p[D.best] || 0, 1); } // v1.77 승강기
     Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
     G.fade = { t: 0, life: 1.4, text: MAPS[id].name + (p.raid.diff ? ' · ' + DIFFS[p.raid.diff].name : '') + (p.raid.floor ? ' ' + DUNGEONS[id].label(p.raid.floor) : ''), sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17
-    if (World.def.lab) log(World.def.tower ? `스카이타워 20층. 바벨의 뿌리가 벽을 타고 올라간다. 가운데 방의 위층 계단(미니맵 ▲)으로 오를수록 강해진다 · 옥상에 무언가 있다 · 어느 층이든 비상 계단으로 나갈 수 있다.` : `비상 전원만 남은 연구소 B1. 가운데 방의 승강기(미니맵 하늘색)로 내려갈수록 강해진다 · B${LAB_FLOORS} 격리실에 무언가 있다 · 어느 층이든 비상 계단으로 나갈 수 있다.`, '#ff8a8a'); // v1.77 · v1.78
+    if (World.def.lab) log(World.def.tower ? `스카이타워 20층. 바벨의 뿌리가 벽을 타고 올라간다. 가운데 방의 위층 계단(미니맵 ▲)으로 오를수록 강해진다 · 옥상에 무언가 있다 · 어느 층이든 비상구(초록 원) 한 곳으로 나갈 수 있다.` : `비상 전원만 남은 연구소 B1. 가운데 방의 승강기(미니맵 하늘색)로 내려갈수록 강해진다 · B${LAB_FLOORS} 격리실에 무언가 있다 · 어느 층이든 비상구(초록 원) 한 곳으로 나갈 수 있다.`, '#ff8a8a'); // v1.77 · v1.78
     saveGame();
   },
 
@@ -99,7 +100,7 @@ const Raid = {
     const P = World.labLiftSpot; // v1.80 뒷벽 자리 (없으면 방 가운데)
     RaidEvents.list.push({ ext: true, kind: 'lab_lift', x: P ? (P.x + P.fx) / 2 : (L.cx + 0.5) * TILE, y: P ? (P.y + P.fy) / 2 : (L.cy + 0.5) * TILE, ax: P ? P.x : null, ay: P ? P.y : null, face: P && P.face, /* [E] 는 벽 앞에서 · 그림은 벽에 */ hint: `[E] ${D.lift} — ${D.label(f + 1)}로 ${D.verb} (3초 · 적 Lv${D.lv(f + 1)})`, dur: 3, open: true,
       onFinish: e => { e.done = true; this.descend(); },
-      track: () => `${D.label(f)} · ${D.lift}(미니맵 ${D.arrow})로 ${D.label(f + 1)} · 또는 비상 계단으로 탈출`,
+      track: () => `${D.label(f)} · ${D.lift}(미니맵 ${D.arrow})로 ${D.label(f + 1)} · 또는 비상구(초록 원)로 탈출`,
       mini: (g, e, b) => { g.fillStyle = b ? D.col : '#555'; g.fillRect(e.x / TILE - 3, e.y / TILE - 3, 6, 6); },
       draw: drawLabLift });
   },
@@ -112,14 +113,14 @@ const Raid = {
     const bonus = r.floor * (id === 'tower' ? 500 : 400); r.credits += bonus; p.credits += bonus; // 층 보상 (탈출해야 확정 — 죽으면 이번 출격 크레딧처럼 잃음)
     World.generate(id); this.resetWorld();
     const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
-    G.exits = pts.filter(q => q !== start); p.x = start.x; p.y = start.y;
+    G.exits = [dunExitPick(pts.filter(q => q !== start), start)]; p.x = start.x; p.y = start.y; // v1.81 탈출구 하나
     G.grave = p.graves[id] && (p.graves[id].floor || 1) === r.floor ? p.graves[id] : null; // 이 층에서 쓰러졌던 가방
     if (G.grave) { let best = null, bd = 1e9; for (let ty = 1; ty < World.H - 1; ty++) for (let tx = 1; tx < World.W - 1; tx++) { if (World.tiles[ty * World.W + tx] !== T.LFLOOR) continue; const d = Math.hypot(tx * TILE + 16 - G.grave.x, ty * TILE + 16 - G.grave.y); if (d < bd) { bd = d; best = [tx * TILE + 16, ty * TILE + 16]; } } if (best) [G.grave.x, G.grave.y] = best; log(`${ICON('skull')} 이 층에 지난번 시체 가방이 있다. (미니맵 붉은 ✚)`, '#ff8a8a'); }
     if (G.comp && G.comp.state !== 'gone' && G.comp.state !== 'down') { G.comp.x = p.x + 30; G.comp.y = p.y + 20; }
     Scavenge.generate(); RaidEvents.generate(); this.labLiftEvent(); Pop.generate(start);
     const bossName = id === 'tower' ? '바벨 원형체' : '키메라';
     G.fade = { t: 0, life: 1.6, text: `${MAPS[id].name} ${D.label(r.floor)}`, sub: `적 Lv${ZONES[MAPS[id].zone].lvl[0]}${last() ? ` · 마지막 층 · ${D.bossRoom}에 ${bossName}` : ''} · 층 보상 ₵${fmt(bonus)} (탈출해야 내 것)` };
-    SFX.play('quest'); log(`${ICON('warn')} ${D.label(r.floor)}. ${last() ? `마지막 층 — ${D.bossRoom}(미니맵 붉은 방)에 ${bossName}가 있다.` : `적이 강해졌다.`} 비상 계단은 어느 층에나 있다.`, '#ff8a8a');
+    SFX.play('quest'); log(`${ICON('warn')} ${D.label(r.floor)}. ${last() ? `마지막 층 — ${D.bossRoom}(미니맵 붉은 방)에 ${bossName}가 있다.` : `적이 강해졌다.`} 비상구는 층마다 한 곳 (미니맵 초록 원).`, '#ff8a8a');
     saveGame();
   },
 
@@ -260,5 +261,8 @@ function drawLabLift(e) {
 // v1.79 던전 비상 계단 (탈출 지점 뒤에 세움 · 45절)
 function drawDunExit(e) {
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -90 || sx > VW + 90 || sy < -160 || sy > VH + 60) return;
-  drawPropArt(World.def && World.def.tower ? 'dx_twexit' : 'dx_labexit', sx, sy, e.face === 'w');
+  if (!drawPropArt('tw_door', sx, sy, e.face === 'w')) drawPropArt(World.def && World.def.tower ? 'dx_twexit' : 'dx_labexit', sx, sy, e.face === 'w'); // v1.81 계단 없는 비상구 문 (위층 계단과 헷갈리지 않게)
 }
+
+// v1.81 도전 던전 탈출구: 후보 중 시작 자리에서 가장 먼 하나
+function dunExitPick(list, start) { return list.slice().sort((a, b) => Math.hypot(b.x - start.x, b.y - start.y) - Math.hypot(a.x - start.x, a.y - start.y))[0]; }

@@ -79,7 +79,7 @@ const Bosses = {
       if (tx < r.x0 - 0.5 || tx > r.x1 + 1.5 || ty < r.y0 - 0.5 || ty > r.y1 + 1.5) return;
       const b = makeEnemy(BD.base, (r.cx + 0.5) * TILE, (r.cy + 0.5) * TILE, BD.level);
       b.bossName = BD.name; b.art = BD.art; b.patterns = BD.patterns; b.scale = BD.scale; b.towerBoss = T; b.expMul = 14; b.labBoss = true;
-      b.hp = b.maxHp = Math.round(b.maxHp * BD.hpMul); b.dmg *= BD.dmgMul; b.r = Math.round(b.r * BD.scale);
+      b.hp = b.maxHp = Math.round(b.maxHp * BD.hpMul / ((dunMul() || { hp: 1 }).hp) * (dunMul() ? 1.5 : 1)); // v1.81 층 배율 대신 보스는 ×1.5만 b.dmg *= BD.dmgMul; b.r = Math.round(b.r * BD.scale);
       b.weight = b.def.weight * 8; b.skillT = 2.5; b.state = 'chase';
       G.enemies.push(b); G.labBoss = b;
       G.shake = 14; SFX.play('roar', 1);
@@ -102,7 +102,7 @@ const Bosses = {
     const p = G.player;
     G.labBoss = null; G.labBossDone = true;
     if (e.towerBoss) { // v1.78 스카이타워 옥상
-      log(`${e.bossName} 처치! 타워를 뒤덮은 뿌리가 시들어 간다.`, '#ffa53a'); UI.toast('바벨 원형체 처치', '전설급 장비 · 신화 무기 기회. 비상 계단으로 탈출해야 내 것');
+      log(`${e.bossName} 처치! 타워를 뒤덮은 뿌리가 시들어 간다.`, '#ffa53a'); UI.toast('바벨 원형체 처치', '전설급 장비 · 신화 무기 기회. 비상구로 탈출해야 내 것');
       dropAt('credits', { amount: e.level * 160 });
       dropAt('item', { item: randomGear(e.level, 2.4, Math.random() < 0.45 ? 4 : 3, ZONES[8].gear) }); dropAt('item', { item: randomGear(e.level, 1.6, 3, ZONES[8].gear) }); dropAt('item', { item: makeConsumable('medkit', 3) });
       rollMyth('tower', e.level, dropAt);

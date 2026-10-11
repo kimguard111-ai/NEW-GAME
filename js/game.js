@@ -1029,7 +1029,7 @@ function spawnEnemies(dt) {
   if (G.elite && G.elite.hp <= 0) G.elite = null;
   const z = World.zoneIndex(p.x, p.y);
   const near = G.enemies.filter(e => !e.def.boss && !e.nest && dist(e, p) < 1300).length;
-  const target = Math.round((z === 0 ? 8 : 18 + Math.min(z, 4) * 4) * (1 + al * 0.15)); // v0.16 밀도 상향 (14+z·3 → 18+z·4) · v1.7 연구소·강남·잠실(z 5~7)은 여의도 밀도로 상한 (최대 46 → 34)
+  const target = Math.round((z === 0 ? 8 : 18 + Math.min(z, 4) * 4) * (1 + al * 0.15) * (World.def && World.def.lab ? 1.4 : 1)); /* v1.81 도전 던전 근처 적 수 ×1.4 */ // v0.16 밀도 상향 (14+z·3 → 18+z·4) · v1.7 연구소·강남·잠실(z 5~7)은 여의도 밀도로 상한 (최대 46 → 34)
   if (near >= target) return;
   for (let tries = 0; tries < 6; tries++) {
     const a = rand(0, TAU), r = rand(560, 950);

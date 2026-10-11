@@ -97,6 +97,7 @@ const RaidEvents = {
 
   // 특수 탈출: 맵 안쪽 (시작점에서 700~1600px). 유료 or 전원
   makeExit() {
+    if (World.def && World.def.lab) return; // v1.81 도전 던전: 탈출구는 층마다 하나뿐
     const s = this.spot(700, 1600); if (!s) return;
     const lab = World.def && World.def.lab, r = Math.random();
     if (!lab && r < 0.3) { Heli.make(s); return; } // v1.34 시간 제한 탈출 (헬기)
