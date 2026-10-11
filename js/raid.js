@@ -62,7 +62,8 @@ const Raid = {
     this.resetWorld();
     const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
     G.exits = pts.filter(q => q !== start);
-    if (MAPS[id].lab) G.exits = [dunExitPick(G.exits, start)]; // v1.81 도전 던전: 탈출구 하나 (시작 자리에서 가장 먼 방)
+    if (MAPS[id].lab) G.exits = [dunExitPick(G.exits, start)];
+    else { const n = FirstRun.rookie() ? 2 : Math.random() < 0.5 ? 1 : 2; G.exits = G.exits.sort(() => Math.random() - 0.5).slice(0, n); } // v1.82 일반 맵 탈출 지점 3 → 1~2 (첫 출격은 2) // v1.81 도전 던전: 탈출구 하나 (시작 자리에서 가장 먼 방)
     p.x = start.x; p.y = start.y; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 출격 때 체력을 채워 주지 않음 (의무병 · 구급상자 의미)
     p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0, diff: id === DIFF_MAP ? Math.max(0, Math.min(diff, diffOpen(p))) : 0, floor: MAPS[id].lab ? 1 : 0 }; // v1.66 잠실 난이도 · v1.77 연구소 층
     if (FirstRun.rookie()) G.fbT = 1e9; // v1.45 첫 출격엔 필드 보스 없음
