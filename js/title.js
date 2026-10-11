@@ -7,7 +7,7 @@ const TitleBG = {
     if (ART.title) { const im = new Image(); im.onload = () => { this.art = im; }; loadArt(im, ART.title, () => {}); } // v1.50.9 webp
     for (let i = 0; i < 70; i++) this.embers.push({ x: Math.random(), y: Math.random(), v: 0.02 + Math.random() * 0.05, s: 1 + Math.random() * 2, ph: Math.random() * 6 });
     const loop = now => {
-      if (!document.getElementById('title-screen').classList.contains('hidden')) this.draw(now / 1000);
+      if (!document.getElementById('title-screen').classList.contains('hidden')) { this.draw(now / 1000); if (typeof Music !== 'undefined') Music.titleTick(); } // v1.72 타이틀 곡
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);

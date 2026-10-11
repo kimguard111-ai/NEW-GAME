@@ -120,6 +120,7 @@ function migrateRoster(P) {
     it.name = it.unique && UNIQUES[it.unique] ? UNIQUES[it.unique].name : (it.rarity > 0 ? RARITIES[it.rarity].name + ' ' : '') + WEAPONS[m[0]].name;
     if (!WEAPONS[m[0]].melee) it.loaded = Math.min(it.loaded || 0, WEAPONS[m[0]].mag); else delete it.loaded;
   }
+  if (!P.axeNerf) { P.axeNerf = true; for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves, ...comp]) if (it && it.kind === 'weapon' && it.key === 'axe') it.dmg = Math.round(it.dmg * 42 / 55 * 10) / 10; } // v1.72 이미 가진 도끼도 같은 비율로
   if (P.ammo && P.ammo.sniper) { P.credits += Math.round(P.ammo.sniper / 15 * 50); delete P.ammo.sniper; }
   if (P.codex && P.codex.items) { delete P.codex.items.pipe; delete P.codex.items.sniper; }
   return P;
@@ -340,7 +341,7 @@ function finishReload() {
 function gunRateMul(p, w) { return wbase(w.key) === 'lmg' ? 1 - 0.25 * (p.heat || 0) : 1; }
 
 // v1.50 근접 무기 한 번에 때리는 적 수: 무기 기본 + 등급 (희귀·영웅 +1 · 전설 +2) · 3타 마무리 +1
-const MELEE_TARGETS = { pipe: 2, axe: 3, katana: 3 };
+const MELEE_TARGETS = { pipe: 2, axe: 2, katana: 3 }; // v1.72 도끼 3 → 2 (마무리 회전 베기는 +1)
 function meleeTargets(w, fin) { return (MELEE_TARGETS[w.key] || 2) + [0, 0, 1, 1, 2, 2][w.rarity || 0] + (fin ? 1 : 0); }
 function playerDamageMul(melee) {
   const p = G.player;

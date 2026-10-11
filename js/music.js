@@ -14,14 +14,46 @@ const MOODS = {
   jamsil:     { root: 43, tempo: 90, prog: [[0, 'm'], [3, 'M'], [10, 'M'], [8, 'M']], cut: 600, wave: 'sawtooth', arp: 0.4 },
 };
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+// v1.72 음악 파일 (docs/MUSIC_PROMPTS.md · Gemini): 있는 곡만 파일로, 없는 맵은 위 합성 음악 그대로
+// title = 타이틀 · camp = 캠프(바탕) · combat = 전투 층(적이 쫓아오는 만큼 커짐) · boss = 보스가 있으면 전투 층 대신
+const MUSIC_FILES = { title: 'bgm_title.mp3', camp: 'bgm_camp.mp3', combat: 'bgm_combat.mp3', boss: 'bgm_boss.mp3' };
+const MUSIC_XF = 2.5, MUSIC_FILE_VOL = 1.4; // 반복 이음매 겹침(초) · 합성 음악과 크기 맞춤
 
 const Music = {
-  gain: null, nextT: 0, step: 0, mood: null, moodId: '', intensity: 0, target: 0,
+  gain: null, nextT: 0, step: 0, mood: null, moodId: '', intensity: 0, target: 0, syn: null, tracks: {},
+
+  // ---------- v1.72 파일 곡 ----------
+  track(n) { // 처음 부를 때 받아 둠 (없거나 실패하면 합성 음악)
+    const c = SFX.ctx, T = this.tracks[n] || (this.tracks[n] = { buf: null, src: [], next: 0, on: false, lvl: 0 });
+    if (!T.loading && MUSIC_FILES[n]) { T.loading = true; fetch('assets/music/' + MUSIC_FILES[n] + '?v=' + (typeof GAME_VERSION !== 'undefined' ? GAME_VERSION : '')).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && c.decodeAudioData(a)).then(b => { if (b) T.buf = b; }).catch(() => {}); }
+    if (!T.g && this.gain) { T.g = c.createGain(); T.g.gain.value = 0; T.g.connect(this.gain); }
+    return T;
+  },
+  has(n) { const T = this.tracks[n]; return !!(T && T.buf); },
+  // 곡 크기를 v 로 (0 이면 잠시 뒤 멈춤 · 다시 켜면 처음부터) · 끝나기 MUSIC_XF초 전에 다음 바퀴를 겹쳐 틂
+  level(n, v) {
+    const c = SFX.ctx, T = this.track(n); if (!T.buf || !T.g) return;
+    if (Math.abs(v - T.lvl) > 0.001) { T.lvl = v; T.g.gain.setTargetAtTime(v * MUSIC_FILE_VOL, c.currentTime, v > 0 ? 0.6 : 0.9); }
+    if (v > 0 && !T.on) { T.on = true; T.offT = 0; T.next = c.currentTime + 0.05; }
+    if (v <= 0 && T.on && (T.offT = (T.offT || 0) + 1) > 240) { T.on = false; for (const s of T.src) try { s.stop(); } catch (e) { /* 이미 멈춤 */ } T.src = []; } // 약 4초 조용하면 멈춤
+    if (v > 0) T.offT = 0;
+    if (T.on && T.next < c.currentTime + 0.5) {
+      const s = c.createBufferSource(), g = c.createGain(), t = Math.max(T.next, c.currentTime), D = T.buf.duration;
+      s.buffer = T.buf; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(1, t + MUSIC_XF); g.gain.setValueAtTime(1, t + D - MUSIC_XF); g.gain.linearRampToValueAtTime(0.0001, t + D);
+      s.connect(g); g.connect(T.g); s.start(t); s.stop(t + D + 0.05); s.onended = () => { T.src = T.src.filter(x => x !== s); };
+      T.src.push(s); T.next = t + D - MUSIC_XF;
+    }
+  },
+  // 타이틀 화면 (게임 루프 전): title.js 가 매 프레임 부름
+  titleTick() {
+    if (!SFX.ctx || !this.ensure()) return;
+    this.level('title', Settings.bgm && Settings.sound ? 1 : 0); this.track('camp'); // 캠프 곡도 미리 받아 둠
+  },
 
   ensure() {
     const c = SFX.ctx;
     if (!c) return false;
-    if (!this.gain) { this.gain = c.createGain(); this.gain.connect(c.destination); this.nextT = c.currentTime + 0.3; }
+    if (!this.gain) { this.gain = c.createGain(); this.gain.connect(c.destination); this.nextT = c.currentTime + 0.3; this.syn = c.createGain(); this.syn.connect(this.gain); } // v1.72 syn = 합성 음악 (파일 곡이 나올 땐 줄임)
     this.gain.gain.value = Settings.bgm && Settings.sound ? (Settings.musicVol ?? 0.5) * 0.45 : 0;
     return true;
   },
@@ -37,6 +69,18 @@ const Music = {
     if (p && !p.dead) for (const e of G.enemies) { if (e.hp <= 0 || e.state !== 'chase') continue; if (Math.abs(e.x - p.x) + Math.abs(e.y - p.y) < 900) { n++; if (e.def.boss || e.fieldBoss || e.labBoss || e.bossName) boss = true; } }
     this.target = boss ? 1 : G.assault ? 0.8 : Math.min(1, n / 4);
     this.intensity += (this.target - this.intensity) * Math.min(1, dt * (this.target > this.intensity ? 1.5 : 0.35));
+    { // v1.72 파일 곡: 캠프 = 캠프 곡 · 출격 = 합성 탐색 음악 위에 전투/보스 곡
+      const inCamp = World.map === 'camp', I = this.intensity, cf = boss ? 'boss' : 'combat';
+      this.level('title', 0);
+      this.level('camp', inCamp ? 1 : 0);
+      if (!inCamp) { this.track('combat'); this.track('boss'); }
+      const fileFight = !inCamp && this.has(cf);
+      this.level('combat', fileFight && cf === 'combat' ? Math.min(1, I * 1.2) : 0);
+      this.level('boss', fileFight && cf === 'boss' ? Math.min(1, I * 1.2) : 0);
+      this.fileFight = fileFight;
+      const sv = (inCamp && this.has('camp') ? 0 : 1) * (fileFight ? 1 - 0.85 * Math.min(1, I * 1.2) : 1);
+      if (Math.abs(sv - (this.synV ?? 1)) > 0.01) { this.synV = sv; this.syn.gain.setTargetAtTime(sv, c.currentTime, 0.5); }
+    }
     const eighth = 60 / this.mood.tempo / 2;
     if (this.nextT < c.currentTime - 0.5) this.nextT = c.currentTime + 0.05; // 탭이 멈췄다 돌아오면 다시 맞춤
     while (this.nextT < c.currentTime + 0.4) { this.play(this.step, this.nextT, eighth); this.nextT += eighth; this.step++; }
@@ -59,7 +103,7 @@ const Music = {
       if (step % 8 === 0) { this.kick(t, 0.16 * T); this.kick(t + eighth * 0.45, 0.1 * T); }
       if (T > 0.55 && step % 2 === 1) this.hat(t, 0.018 * T);
     }
-    if (I < 0.05) return;
+    if (I < 0.05 || this.fileFight) return; // v1.72 전투 곡 파일이 있으면 합성 북은 안 침
     // 전투 층
     const root = ch[0] - 12;
     this.bass(mtof(step % 4 === 2 ? root + 12 : root), t, eighth * 0.9, 0.09 * I);
@@ -76,33 +120,33 @@ const Music = {
     fl.type = 'lowpass'; fl.frequency.setValueAtTime(M.cut * 0.6, t); fl.frequency.linearRampToValueAtTime(M.cut, t + dur * 0.5); fl.frequency.linearRampToValueAtTime(M.cut * 0.6, t + dur); fl.Q.value = 2;
     const v = (i === 0 ? 0.05 : 0.035);
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 1.5); g.gain.setValueAtTime(v, t + dur - 1.2); g.gain.linearRampToValueAtTime(0.0001, t + dur);
-    o.connect(fl); o2.connect(fl); fl.connect(g); g.connect(this.gain);
+    o.connect(fl); o2.connect(fl); fl.connect(g); g.connect(this.syn);
     o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
   },
   pluck(f, t, v) {
     const c = SFX.ctx, o = c.createOscillator(), g = c.createGain();
     o.type = 'triangle'; o.frequency.value = f;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
-    o.connect(g); g.connect(this.gain); o.start(t); o.stop(t + 0.65);
+    o.connect(g); g.connect(this.syn); o.start(t); o.stop(t + 0.65);
   },
   bass(f, t, dur, v) {
     const c = SFX.ctx, o = c.createOscillator(), fl = c.createBiquadFilter(), g = c.createGain();
     o.type = 'sawtooth'; o.frequency.value = f; fl.type = 'lowpass'; fl.frequency.setValueAtTime(500, t); fl.frequency.exponentialRampToValueAtTime(140, t + dur);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(fl); fl.connect(g); g.connect(this.gain); o.start(t); o.stop(t + dur + 0.02);
+    o.connect(fl); fl.connect(g); g.connect(this.syn); o.start(t); o.stop(t + dur + 0.02);
   },
   kick(t, v) {
     const c = SFX.ctx, o = c.createOscillator(), g = c.createGain();
     o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
     g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-    o.connect(g); g.connect(this.gain); o.start(t); o.stop(t + 0.25);
+    o.connect(g); g.connect(this.syn); o.start(t); o.stop(t + 0.25);
   },
   noiseHit(t, v, type, freq, dur) {
     const c = SFX.ctx; if (!SFX.noiseBuf) return;
     const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
     s.buffer = SFX.noiseBuf; f.type = type; f.frequency.value = freq;
     g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(f); f.connect(g); g.connect(this.gain); s.start(t, Math.random() * 0.3); s.stop(t + dur + 0.02);
+    s.connect(f); f.connect(g); g.connect(this.syn); s.start(t, Math.random() * 0.3); s.stop(t + dur + 0.02);
   },
   hat(t, v) { this.noiseHit(t, v, 'highpass', 7000, 0.04); },
   snare(t, v) { this.noiseHit(t, v, 'bandpass', 1800, 0.16); },
