@@ -1141,6 +1141,14 @@ Match the art style of the attached concept image. Create ONE wide 16:9 illustra
 
 ---
 
+### 39. 학원 앞모습 · `tex_shopfront3.png` (1장 · 15-3/15-4와 같은 방식)
+지금 학원은 앞모습 그림이 없어 다른 가게 외벽으로 대신 그려짐 · 📎 콘셉트 아트 + (있으면) `tex_shopfront2.png` (같은 그림체 · 같은 비율)
+```
+Match the art style of the attached concept image. Create ONE image showing a single flat shop-front texture panel for an abandoned Korean after-school academy (hagwon) on the ground floor, the panel a TALL RECTANGLE (width to height about 3:5) placed in the center with wide magenta space around it, seen perfectly FRONT-ON (orthographic, no perspective). The panel shows ONE storey of the shop front WITHOUT a door: a large window bay with a blank signboard band on top (no text), filling the panel edge to edge, left and right edges continuing seamlessly. Behind the dusty cracked glass: rows of small student desks and chairs, a green chalkboard with faint blank chalk marks, a tilted wall clock, and paper notices taped to the glass (blank). Evenly lit, no people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background around the panel. Leave the bottom-right corner empty. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panel.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
