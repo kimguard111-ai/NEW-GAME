@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.77';
+const GAME_VERSION = 'v1.78';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -60,7 +60,7 @@ const WEAPONS = {
 // v1.53 신화 무기 드랍: 확률 + 못 얻을 때마다 pity · MYTH_LIVE = false 면 아직 안 나옴 (고유 그림이 오면 켬)
 const MYTH_LIVE = true; // v1.55 고유 그림이 와서 켬
 const MYTH_TEST = false; // v1.61.2 시험 모드: 새 게임·불러오기 모두 바로 Lv26 + 신화 3종 · 이 동안 신화 레벨 제한 25 — 출시 전 false
-const MYTH_DROP = { babel: { chance: 0.06, pity: 0.02 }, titan: { chance: 0.03, pity: 0.01 }, chimera: { chance: 0.04, pity: 0.015 }, assault: { chance: 0.06, pity: 0.02, tier: 5, rank: 'A' } }; // v1.63 어설트는 위협 5+ A 등급 이상 (S만이면 최상급 장비로도 거의 못 함)
+const MYTH_DROP = { babel: { chance: 0.06, pity: 0.02 }, titan: { chance: 0.03, pity: 0.01 }, chimera: { chance: 0.04, pity: 0.015 }, tower: { chance: 0.08, pity: 0.03 }, /* v1.78 스카이타워 옥상 */ assault: { chance: 0.06, pity: 0.02, tier: 5, rank: 'A' } }; // v1.63 어설트는 위협 5+ A 등급 이상 (S만이면 최상급 장비로도 거의 못 함)
 // v1.66 마지막 맵(잠실) 난이도: 하드 = 이야기를 끝내면 · 헬 = 하드에서 바벨을 쓰러뜨리면 · 적 레벨·체력·피해 ↑ · 경험치·장비 등급·신화 확률 ↑
 // 하드·헬에서는 바벨이 출격마다 스카이타워에 나타남 (이야기 뒤에도 신화를 노릴 수 있게) · 엘리트·필드 보스도 낮은 확률로 신화
 const DIFF_MAP = 'jamsil';
@@ -256,6 +256,11 @@ const ZONES = [
     spawns: [['stalker', 25], ['zombie', 30], ['brute', 15], ['dog', 18], ['spitter', 12]], // v1.7 변이 거한 25→15 (잠실 사망 원인 2위)
     desc: '보이지 않는 포식자 · 석촌호수 물가는 발이 느려진다', packs: { zombie: [3, 5] },
     gear: ['katana', 'lmg', 'exo', 'exoHelm', 'gasmask'], gearText: '고주파 블레이드·기관총·외골격·방독면' },
+  // v1.78 스카이타워 (도전): 바벨이 뿌리내린 초고층 — 블랙선 잔당 · 은신 변이체 · 경비 드론
+  { name: '스카이타워', maxDist: 999, lvl: [34, 35], /* 층마다 바뀜 */ dark: 0.5, tint: 'rgba(60,20,70,0.10)',
+    spawns: [['merc', 25], ['stalker', 22], ['shield', 15], ['drone', 18], ['brute', 10], ['spitter', 10]],
+    desc: '5층 도전 · 계단으로 오를수록 강해짐 · 옥상에 바벨 원형체', packs: { merc: [1, 2], stalker: [1, 2] },
+    gear: ['rifle', 'lmg', 'katana', 'exo', 'exoHelm', 'gasmask'], gearText: '돌격소총·기관총·고주파 블레이드·외골격' },
 ];
 
 // v1.3 맵 (출격·탈출): 캠프(거점)에서 맵을 골라 출격하고, 맵 가장자리 탈출 지점으로 귀환
@@ -268,11 +273,17 @@ const MAPS = {
   yeouido:    { name: '여의도 방사능 지대', zone: 4, size: 108, seed: 1404, landmark: 'tower63', chapter: 3, boss: true, hazards: true },
   gangnam:    { name: '강남 업무지구', zone: 6, size: 108, seed: 1606, landmark: 'coex', chapter: 4, tall: [0.55, 6, 6] } /* v1.21 9~17층 → 6~11층 (층 높이 2.7m) */, // v1.6 유리 고층 빌딩 숲
   jamsil:     { name: '잠실 변이 지대', zone: 7, size: 108, seed: 1707, landmark: 'lotte', chapter: 5, lake: true },      // v1.6 석촌호수 (얕은 물)
+  tower:      { name: '스카이타워', zone: 8, size: 66, seed: 1808, lab: true, tower: true, minLv: 30, needLab: true, lock: '지하 연구소 B5 키메라 처치 후' }, // v1.78 두 번째 도전 (연구소와 같은 층 구조 · 위로 오름)
   lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
 };
 // v1.77 지하 연구소 = 5층 도전: B1 Lv30 → B5 Lv38 · B1~B4 는 승강기로 내려감 · B5 격리실에 키메라 · 어느 층이든 비상 계단으로 탈출
 const LAB_FLOORS = 5, labFloorLv = f => 28 + 2 * f;
-const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'lab']; // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
+// v1.78 도전 던전 공통: floors 층 수 · lv 층별 적 레벨 · label 층 이름 · lift 다음 층으로 가는 것 · best 최고 기록 키
+const DUNGEONS = {
+  lab:   { floors: LAB_FLOORS, lv: labFloorLv, label: f => `B${f}`, lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
+  tower: { floors: 5, lv: f => 32 + 2 * f, label: f => f >= 5 ? '옥상' : `${f * 20}층`, lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
+};
+const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'lab', 'tower']; // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
 const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil'];      // v1.6 장 번호 → 그 장의 맵
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상

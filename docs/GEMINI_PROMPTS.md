@@ -1191,6 +1191,32 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 
 ---
 
+## 44. 스카이타워 (v1.78 · 두 번째 도전 던전)
+지금은 코드 그림 (갈색 카펫 칸 · 푸른 유리 칸막이 · 갈색 책상 · 회색 서류장). 연구소(40~41)와 같은 방식이라 올리면 바로 바뀜.
+
+| 장 | 파일 이름 | 내용 |
+|---|---|---|
+| 44-1 ★ | `tex_tower_floor.png` (3×1) | 사무실 바닥 3종 (위에서 본 정사각) |
+| 44-2 ★ | `tex_tower_wall.png` (3×1, 16:9) | 벽 앞면 3종 (세로 3:5) |
+| 44-3 ★ | `props_tower.png` (3×3) | 사무 집기 · 뿌리 9종 |
+
+### 44-1. 사무실 바닥 · `tex_tower_floor.png`
+```
+Match the art style of the attached concept image. Create ONE wide image with 3 separate SQUARE floor texture panels side by side for an abandoned skyscraper office floor in post-apocalyptic Seoul overgrown by a purple mutant root organism, each seen from DIRECTLY ABOVE (top-down, orthographic, no perspective), placed in its own equal cell with thin magenta gaps, each tiling SEAMLESSLY on all four sides. Left to right: 1) worn grey-brown office carpet tiles with stains and scattered papers; 2) cracked polished stone lobby floor with dust and shards of glass; 3) office carpet with thin dark purple roots creeping across it and dried sap stains. Low contrast so characters stand out on top. Detailed dark pixel art, desaturated colors with cold blue light. Solid flat #FF00FF magenta background in the gaps. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 44-2. 벽 · `tex_tower_wall.png`
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 image with 3 separate TALL wall texture panels side by side (each panel width to height about 3:5), seen perfectly FRONT-ON (orthographic, no perspective), with thin magenta gaps, each panel filling its cell edge to edge with left and right edges continuing seamlessly. Interior walls of an abandoned skyscraper office floor, one storey high. Left to right: 1) a cracked blue-tinted glass office partition in a steel frame with a torn notice (blank); 2) a beige office wall with a dead ceiling light, an empty notice board and a fire extinguisher box; 3) a concrete core wall split open by thick dark purple mutant roots with a faint violet glow. Detailed dark pixel art, desaturated colors with cold blue light. Solid flat #FF00FF magenta background in the gaps. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 44-3. 사무 집기 · 뿌리 9종 · `props_tower.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate objects from an abandoned skyscraper office floor in post-apocalyptic Seoul overgrown by a purple mutant root organism, each ONE object about as wide as a person is tall, centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) an office desk with a dark monitor, keyboard and a toppled chair; 2) two grey metal filing cabinets, one drawer hanging open; 3) a meeting table with scattered documents; 4) a water cooler next to a potted plant that has died; 5) a copy machine with paper spilling out; 6) a stack of cardboard moving boxes; 7) a thick knot of dark purple mutant roots bursting through the floor with a faint violet glow; 8) an emergency stair door frame with a green-and-white running-man sign shape (no letters); 9) a broken elevator door slightly open with darkness inside. No people, no creatures. Detailed dark pixel art, desaturated colors with cold blue light. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the whole image empty except the ninth object kept small and away from the corner. No text, no letters, no numbers, no logos, no grid lines. Do not use pink or magenta on the objects.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |

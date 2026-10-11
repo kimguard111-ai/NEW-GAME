@@ -10,6 +10,8 @@ const FIELD_BOSSES = {
 };
 const FIELD_BOSS_CD = 360; // 처치 후 다음 출현까지 (초)
 // v1.5 지하 연구소 격리실 보스 (출격마다 한 번)
+// v1.78 스카이타워 옥상 보스 (바벨 그림 · 바벨 패턴 + 내려찍기 · 돌진 · 실험체 호출)
+const TOWER_BOSS = { name: '바벨 원형체 「뿌리」', art: 'babel', base: 'brute', level: 42, hpMul: 12, dmgMul: 1.4, scale: 2.1, patterns: ['babel', 'quake', 'dash', 'brood'] };
 const LAB_BOSS = { name: '최종 실험체 「키메라」', art: 'chimera', base: 'brute', level: 38, hpMul: 14, dmgMul: 1.35, /* v1.77 B5 (Lv24 → 38 · 체력 배율 20 → 14 로 맞춤) */ scale: 1.9, patterns: ['glutton', 'dash', 'brood', 'quake'] };
 
 const Bosses = {
@@ -68,21 +70,21 @@ const Bosses = {
   // ---------------- 연구소 키메라 (v1.5) ----------------
   // 격리실(미니맵 붉은 방)에 들어가면 깨어남. 체력 50% 이하에서 탈피 → 빨라지고 패턴 간격 짧아짐
   updateLab(dt) {
-    const p = G.player, r = World.labBoss;
+    const p = G.player, r = World.labBoss, BD = World.map === 'tower' ? TOWER_BOSS : LAB_BOSS, T = World.map === 'tower'; // v1.78
     if (!r || p.dead) return;
     const e = G.labBoss;
     if (!e) {
       if (G.labBossDone) return;
       const tx = p.x / TILE, ty = p.y / TILE;
       if (tx < r.x0 - 0.5 || tx > r.x1 + 1.5 || ty < r.y0 - 0.5 || ty > r.y1 + 1.5) return;
-      const b = makeEnemy(LAB_BOSS.base, (r.cx + 0.5) * TILE, (r.cy + 0.5) * TILE, LAB_BOSS.level);
-      b.bossName = LAB_BOSS.name; b.art = LAB_BOSS.art; b.patterns = LAB_BOSS.patterns; b.scale = LAB_BOSS.scale; b.expMul = 14; b.labBoss = true;
-      b.hp = b.maxHp = Math.round(b.maxHp * LAB_BOSS.hpMul); b.dmg *= LAB_BOSS.dmgMul; b.r = Math.round(b.r * LAB_BOSS.scale);
+      const b = makeEnemy(BD.base, (r.cx + 0.5) * TILE, (r.cy + 0.5) * TILE, BD.level);
+      b.bossName = BD.name; b.art = BD.art; b.patterns = BD.patterns; b.scale = BD.scale; b.towerBoss = T; b.expMul = 14; b.labBoss = true;
+      b.hp = b.maxHp = Math.round(b.maxHp * BD.hpMul); b.dmg *= BD.dmgMul; b.r = Math.round(b.r * BD.scale);
       b.weight = b.def.weight * 8; b.skillT = 2.5; b.state = 'chase';
       G.enemies.push(b); G.labBoss = b;
       G.shake = 14; SFX.play('roar', 1);
-      UI.toast('격리실 봉인 해제', `${LAB_BOSS.name}: 산성 장판, 돌진, 실험체 호출, 내려찍기`);
-      log(`${ICON('warn')} 격리 탱크가 깨졌다! ${LAB_BOSS.name}이(가) 깨어났다!`, '#ff5050');
+      UI.toast(T ? '옥상의 뿌리' : '격리실 봉인 해제', T ? `${BD.name}: 은신 변이체 호출, 내려찍기, 산성 비, 돌진` : `${BD.name}: 산성 장판, 돌진, 실험체 호출, 내려찍기`);
+      log(T ? `${ICON('warn')} 옥상을 뒤덮은 뿌리가 일어선다! ${BD.name}!` : `${ICON('warn')} 격리 탱크가 깨졌다! ${BD.name}이(가) 깨어났다!`, '#ff5050');
       return;
     }
     if (e.hp <= 0) { G.labBoss = null; return; }
@@ -91,14 +93,23 @@ const Bosses = {
       G.shake = 18; hitstop(0.15);
       G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.8, color: '#ff5050', r: 300 });
       for (let i = 0; i < 6; i++) Monsters.strike(e.x + Math.cos(i / 6 * TAU) * 140, e.y + Math.sin(i / 6 * TAU) * 140, 60, 1.0, e.dmg * 0.8, 'rgba(140,220,70,', true);
-      UI.toast('키메라 탈피', '더 빨라졌다. 장판 사이로 빠지며 거리를 벌려라');
-      log('키메라가 껍질을 찢고 나온다! 주변에 산성액이 튄다!', '#ff5050');
+      UI.toast(T ? '바벨 원형체 각성' : '키메라 탈피', '더 빨라졌다. 장판 사이로 빠지며 거리를 벌려라');
+      log(T ? '뿌리가 껍질을 찢고 솟구친다! 주변에 산성액이 튄다!' : '키메라가 껍질을 찢고 나온다! 주변에 산성액이 튄다!', '#ff5050');
     }
     if (e.molted && e.skillT > 2.5) e.skillT = 2.5; // 탈피 후 패턴 간격 단축
   },
   onLabKill(e, dropAt) {
     const p = G.player;
     G.labBoss = null; G.labBossDone = true;
+    if (e.towerBoss) { // v1.78 스카이타워 옥상
+      log(`${e.bossName} 처치! 타워를 뒤덮은 뿌리가 시들어 간다.`, '#ffa53a'); UI.toast('바벨 원형체 처치', '전설급 장비 · 신화 무기 기회. 비상 계단으로 탈출해야 내 것');
+      dropAt('credits', { amount: e.level * 160 });
+      dropAt('item', { item: randomGear(e.level, 2.4, Math.random() < 0.45 ? 4 : 3, ZONES[8].gear) }); dropAt('item', { item: randomGear(e.level, 1.6, 3, ZONES[8].gear) }); dropAt('item', { item: makeConsumable('medkit', 3) });
+      rollMyth('tower', e.level, dropAt);
+      for (const o of G.enemies) if (o.guardOf === e) o.hp = 0;
+      p.towerKills = (p.towerKills || 0) + 1; Workshop.gain(18, 8, '뿌리 표본 회수'); Bounty.on('fieldBoss'); hitstop(0.2); G.shake = Math.max(G.shake, 18);
+      return;
+    }
     log(`${e.bossName} 처치! 격리실의 연구 기록을 회수했다.`, '#ffa53a');
     UI.toast('키메라 처치', '영웅 이상 장비와 전자 부품. 탈출해야 내 것');
     dropAt('credits', { amount: e.level * 120 });

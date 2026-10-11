@@ -128,6 +128,11 @@ function drawGroundTile(tx, ty, t) {
     ctx.fillStyle = 'rgba(160,150,120,0.35)';
     if (d(0, -1)) ctx.fillRect(x, y, TILE, 3); if (d(0, 1)) ctx.fillRect(x, y + TILE - 3, TILE, 3);
     if (d(-1, 0)) ctx.fillRect(x, y, 3, TILE); if (d(1, 0)) ctx.fillRect(x + TILE - 3, y, 3, TILE);
+  } else if ((t === T.LFLOOR || t === T.LPROP) && World.def && World.def.tower) { // v1.78 스카이타워 바닥: 낡은 사무실 카펫 타일 · 얼룩 · 깨진 유리
+    ctx.fillStyle = (tx + ty) % 2 ? 'rgba(110,90,70,0.28)' : 'rgba(90,80,70,0.28)'; ctx.fillRect(x, y, TILE, TILE);
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+    if (h < 0.1) { ctx.fillStyle = 'rgba(80,20,60,0.45)'; ctx.beginPath(); ctx.ellipse(x + 16, y + 16, 7 + h * 60, 4 + h * 30, h * 20, 0, TAU); ctx.fill(); } // 뿌리 진액
+    else if (h > 0.94) { ctx.fillStyle = 'rgba(190,220,240,0.35)'; for (let i = 0; i < 3; i++) ctx.fillRect(x + 6 + i * 7, y + 8 + i * 5, 3, 2); } // 유리 조각
   } else if (t === T.LFLOOR || t === T.LPROP) { // v1.5 연구소 바닥: 금속 패널 · 배수 격자 · 얼룩
     ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
     ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(x + 2, y + 2, TILE - 4, 2);
@@ -359,6 +364,13 @@ function drawSolidTile(o) {
       else if (bd.south) poly([S(x0, y1), Y(x0, y1, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x0, y1), Y(x0, y1, z1)], '#c9a24a');
       else poly([S(x1, y0), Y(x1, y0, z0), S(x1, y1), Y(x1, y1, z0), S(x1, y1), Y(x1, y1, z1), S(x1, y0), Y(x1, y0, z1)], '#c9a24a');
     }
+  } else if (t === T.LWALL && World.def && World.def.tower) { // v1.78 스카이타워 벽: 푸른 유리 칸막이 + 금속 틀 · 가끔 보랏빛 뿌리
+    const ht = tileHeight(tx, ty), S = Iso.sx, Y = Iso.sy;
+    drawBox(x0, y0, x1, y1, ht, '#3e4a58', '#232a34', '#2e3744', tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), 0);
+    if (tileHeight(tx, ty + 1) === 0) {
+      poly([S(x0 + 2, y1), Y(x0 + 2, y1, 10), S(x1 - 2, y1), Y(x1 - 2, y1, 10), S(x1 - 2, y1), Y(x1 - 2, y1, ht - 8), S(x0 + 2, y1), Y(x0 + 2, y1, ht - 8)], h < 0.5 ? 'rgba(120,170,210,0.35)' : 'rgba(90,130,170,0.3)');
+      if (h > 0.85) poly([S(x0 + 6, y1), Y(x0 + 6, y1, 4), S(x0 + 12, y1), Y(x0 + 12, y1, 4), S(x0 + 16, y1), Y(x0 + 16, y1, ht - 10), S(x0 + 10, y1), Y(x0 + 10, y1, ht - 14)], 'rgba(110,40,100,0.75)'); // 뿌리
+    }
   } else if (t === T.LWALL) { // v1.5 연구소 벽 (콘크리트 + 아래쪽 경고 띠 + 가끔 패널 불빛)
     const ht = tileHeight(tx, ty), S = Iso.sx, Y = Iso.sy;
     drawBox(x0, y0, x1, y1, ht, '#3c4048', '#23262c', '#2d3138', tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), 0);
@@ -366,6 +378,10 @@ function drawSolidTile(o) {
       poly([S(x0, y1), Y(x0, y1, 6), S(x1, y1), Y(x1, y1, 6), S(x1, y1), Y(x1, y1, 11), S(x0, y1), Y(x0, y1, 11)], tx % 2 ? '#8a7020' : '#1a1a1a');
       if (h < 0.1) poly([S(x0 + 10, y1), Y(x0 + 10, y1, 26), S(x0 + 18, y1), Y(x0 + 18, y1, 26), S(x0 + 18, y1), Y(x0 + 18, y1, 34), S(x0 + 10, y1), Y(x0 + 10, y1, 34)], Math.sin(G.time * 3 + tx) > 0 ? '#40ff70' : '#1a4a24');
     }
+  } else if (t === T.LPROP && World.def && World.def.tower) { // v1.78 스카이타워 사무 집기: 낮은 것 = 책상 + 모니터, 높은 것 = 서류장
+    const ht = tileHeight(tx, ty);
+    if (ht < 30) { drawBox(x0 + 3, y0 + 5, x1 - 3, y1 - 5, 20, '#7a6248', '#4a3a2a', '#5e4a36', 0, 0, 0); drawBox(x0 + 10, y0 + 12, x1 - 10, y1 - 14, 30, '#2a2e34', '#16181c', '#202328', 20, 20, 0); }
+    else drawBox(x0 + 5, y0 + 5, x1 - 5, y1 - 5, ht, '#6a6e74', '#3e4246', '#52565c', 0, 0, 0);
   } else if (t === T.LPROP) { // 실험 장비: 낮은 것 = 작업대, 높은 것 = 배양 탱크 (초록 빛)
     const ht = tileHeight(tx, ty);
     if (ht < 30) {
@@ -1594,7 +1610,7 @@ function render() {
   ctx.globalAlpha = 1;
 
   // 4) 분위기 / 조명
-  if (!p.dead) addLight(psx, psy, Math.max(VW, VH) * (World.def && World.def.lab ? 0.4 : 0.62), 0.97); // 연구소는 시야가 좁음
+  if (!p.dead) addLight(psx, psy, Math.max(VW, VH) * (World.def && World.def.tower ? 0.55 : World.def && World.def.lab ? 0.4 : 0.62), 0.97); // 연구소는 시야가 좁음 · v1.78 타워는 창이 있어 조금 넓게
   if (p.recoilT > 0 && World.def && World.def.lab) addLight(psx + Math.cos(p.aim) * 20, psy - 6, 260, 0.9); // 총구 섬광이 어둠을 밝힘
   for (const a of World.alarms) { // v1.5 붉은 비상등 (격리실은 빠르게)
     const sx = Iso.sx(a.x, a.y), sy = Iso.sy(a.x, a.y, 30);

@@ -11,6 +11,7 @@ const MOODS = {
   yeouido:    { root: 42, tempo: 80, prog: [[0, 'm'], [6, 'm'], [1, 'M'], [5, 'm']], cut: 520, wave: 'sawtooth', arp: 0.3 },
   lab:        { root: 37, tempo: 76, prog: [[0, 'm'], [1, 'M'], [6, 'm'], [0, 'm']], cut: 420, wave: 'square', arp: 0.25 },
   gangnam:    { root: 47, tempo: 98, prog: [[0, 'm'], [7, 'm'], [8, 'M'], [5, 'M']], cut: 800, wave: 'sawtooth', arp: 0.5 },
+  tower:      { root: 43, tempo: 94, prog: [[0, 'm'], [3, 'M'], [10, 'M'], [8, 'M']], cut: 650, wave: 'sawtooth', arp: 0.45 }, // v1.78
   jamsil:     { root: 43, tempo: 90, prog: [[0, 'm'], [3, 'M'], [10, 'M'], [8, 'M']], cut: 600, wave: 'sawtooth', arp: 0.4 },
 };
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
@@ -19,6 +20,7 @@ const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 const MUSIC_FILES = { title: 'bgm_title.mp3', camp: 'bgm_camp.mp3', combat: 'bgm_combat.mp3', boss: 'bgm_boss.mp3', ending: 'bgm_ending.mp3', sting_extract: 'sting_extract.mp3' };
 const MUSIC_MAPS = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'lab']; // v1.76 맵별 탐색 곡 (bgm_<맵>.mp3)
 for (const k of MUSIC_MAPS) MUSIC_FILES[k] = 'bgm_' + k + '.mp3';
+MUSIC_MAPS.push('tower'); MUSIC_FILES.tower = 'bgm_jamsil.mp3'; // v1.78 스카이타워 = 잠실 곡 (전용 곡이 오기 전까지)
 const MUSIC_XF = 2.5, MUSIC_FILE_VOL = 0.5; // 반복 이음매 겹침(초) · 파일 곡 크기 (v1.74 1.4 → 0.5: 배경에 잔잔히)
 
 const Music = {
