@@ -132,7 +132,8 @@ const Raid = {
   onDeath() {
     const p = G.player, r = p.raid;
     if (!r) return '';
-    const lostItems = [];
+    const lostItems = [], kept = [];
+    for (const k of Object.keys(p.equip)) { const it = p.equip[k]; if (it && it.raid && it.rarity === 5) { delete it.raid; kept.push(it); } } // v1.69 장착한 신화 무기는 죽어도 지킴 (손에 든 채로 확보)
     for (const k of Object.keys(p.equip)) if (p.equip[k] && p.equip[k].raid) { lostItems.push(p.equip[k]); p.equip[k] = null; }
     lostItems.push(...p.inventory.filter(it => it.raid));
     p.inventory = p.inventory.filter(it => !it.raid);
@@ -143,7 +144,7 @@ const Raid = {
     for (const it of lostItems) delete it.raid;
     Scavenge.makeGrave(lostItems, lost); // v1.4: 다음 출격 때 같은 맵에서 회수
     p.raid = null;
-    this.lastDeath = { r, items: lostItems, credits: lost };
+    this.lastDeath = { r, items: lostItems, credits: lost, kept };
     return lostItems.length || lost ? `이번 출격의 장비 ${lostItems.length}개와 ₵${fmt(lost)}가 시체 가방에 남았다. 다음에 「${MAPS[r.map].name}」에 출격해 회수할 수 있다.` : '캠프로 돌아갑니다.';
   },
 
@@ -163,8 +164,8 @@ const Raid = {
     const li = items.length ? items.map(it => `<span class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</span>`).join('<br>') : '<span class="muted">없음</span>';
     $('summary-title').textContent = ok ? '탈출 성공' : '사망';
     $('summary-title').className = ok ? 'ok' : 'bad';
-    const myth = ok ? items.filter(it => it.rarity === 5) : [], mc = RARITIES[5].color; // v1.63 신화 확보는 결과 카드 맨 위에
-    $('summary-body').innerHTML = myth.map(it => `<div class="sum-row" style="border:1px solid ${mc};padding:4px 6px;margin-bottom:6px"><span style="color:${mc}">◆ 신화 무기 확보</span><b style="color:${mc}">${itemName(it)}</b></div>`).join('') + `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}</b></div>`
+    const myth = ok ? items.filter(it => it.rarity === 5) : (this.lastDeath && this.lastDeath.kept) || [], mc = RARITIES[5].color; // v1.63 신화 확보는 결과 카드 맨 위에
+    $('summary-body').innerHTML = myth.map(it => `<div class="sum-row" style="border:1px solid ${mc};padding:4px 6px;margin-bottom:6px"><span style="color:${mc}">◆ 신화 무기 ${ok ? '확보' : '지킴 (장착 중)'}</span><b style="color:${mc}">${itemName(it)}</b></div>`).join('') + `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}</b></div>`
       + `<div class="sum-row"><span>시간</span><b>${Math.floor(r.t / 60)}분 ${Math.floor(r.t % 60)}초</b></div>`
       + `<div class="sum-row"><span>처치</span><b>${r.kills || 0}</b></div>`
       + `<div class="sum-row"><span>${ok ? '확보한 크레딧' : '잃은 크레딧'}</span><b>₵${fmt(ok ? r.credits : this.lastDeath.credits)}</b></div>`

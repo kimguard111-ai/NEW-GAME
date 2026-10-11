@@ -669,7 +669,7 @@ function playerDie() {
   p.hp = 0; p.dead = true; input.down = false; p.deaths++;
   burst(p.x, p.y, '#a00', 30, 160, 0.8, 4);
   const rr = p.raid, msg = Raid.onDeath() || '캠프로 돌아갑니다.'; // v1.3: 이번 출격에서 주운 것만 잃음 · v1.4 시체 가방
-  if (rr) Raid.summary(false, rr, Raid.lastDeath.items);
+  if (rr) { Raid.summary(false, rr, Raid.lastDeath.items); Journal.onMythSecured(Raid.lastDeath.kept || []); } // v1.69 장착해서 지킨 신화도 도감 등록
   log(`사망했습니다. ${msg}`, '#f55');
   document.querySelector('#death-screen p').textContent = msg;
   UI.closeAll();
@@ -1093,6 +1093,7 @@ function updateRadiation(dt) {
 
 // ---------------- 투사체 / 수류탄 / 드랍 ----------------
 // v1.66 화면에 그려진 적 그림 사각형 (발 기준 위로 키만큼) 안에 마우스가 있으면 그 적 · 위쪽 22% = 머리
+const MOBILE_HS_T = 0.45; // v1.69 모바일 헤드샷 조준 시간(초)
 function enemyScreenH(e) { const k = e.art && ART.height[e.art] ? e.art : e.type; return (ART.height[k] || 44) * (ART.charScale || 1) * (k === e.type ? (e.scale || 1) : 1); }
 function hoverEnemy(mx, my) {
   let best = null, bd = 1e9;
@@ -1329,6 +1330,11 @@ function update(dt) {
     const hv = IS_TOUCH ? null : hoverEnemy(input.mx, input.my); // v1.66 마우스가 적 그림 위면 그 적을 조준 (머리·몸 위를 눌러도 발밑 판정에 맞게) · 위쪽 = 머리
     p.aimTarget = hv && hv.e; p.aimHead = !!(hv && hv.head);
     if (hv) aimAt = { x: hv.e.x, y: hv.e.y };
+    if (IS_TOUCH) { // v1.69 모바일 헤드샷: 멈춰 선 채 같은 적을 MOBILE_HS_T초 겨누면 머리 조준 (움직이거나 구르면 처음부터)
+      const L = Touch.lock && Touch.lock.hp > 0 ? Touch.lock : null;
+      if (L && L === p.mLock && !mv && !(p.rollT > 0)) p.mLockT = (p.mLockT || 0) + dt; else { p.mLock = L; p.mLockT = 0; }
+      p.aimTarget = L; p.aimHead = !!L && p.mLockT >= MOBILE_HS_T && enemyScreenH(L) >= 30;
+    }
     p.aim = Math.atan2(aimAt.y - p.y, aimAt.x - p.x); p.aimPt = aimAt; p.aimPtT = G.time;
     if (input.down && !(p.rollT > 0)) playerAttack();
     if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; finishReload(); } }

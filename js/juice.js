@@ -117,8 +117,20 @@ const Juice = {
       if (++n > 10) break;
     }
   },
+  // v1.69 모바일 헤드샷 표시: 겨눈 적 머리에 고리가 차오름 (주황) → 다 차면 빨강 = 헤드샷
+  drawTouchLock(p) {
+    const e = p.mLock, w = curWeapon(); if (!e || e.hp <= 0 || !w || WEAPONS[w.key].melee || p.reloadT > 0) return;
+    const H = enemyScreenH(e); if (H < 30) return;
+    const x = Iso.sx(e.x, e.y), y = Iso.sy(e.x, e.y) - H * 0.89, k = clamp((p.mLockT || 0) / MOBILE_HS_T, 0, 1), r = Math.max(9, H * 0.13);
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();
+    if (p.aimHead) { ctx.strokeStyle = '#ff4a3a'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.beginPath(); ctx.moveTo(x + dx * (r - 4), y + dy * (r - 4)); ctx.lineTo(x + dx * (r + 4), y + dy * (r + 4)); ctx.stroke(); } }
+    else if (k > 0) { ctx.strokeStyle = '#ffb27a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + TAU * k); ctx.stroke(); }
+    ctx.restore();
+  },
   drawHUD() { // 조준선 · 명중 표시 (화면 좌표 = 마우스)
     this.drawFlies(1 / 60);
+    if (IS_TOUCH && G.player && !G.player.dead && !G.paused) this.drawTouchLock(G.player); // v1.69
     if (IS_TOUCH || !G.player || G.player.dead || G.paused) return;
     const p = G.player, w = curWeapon(), b = w && WEAPONS[w.key], x = input.mx, y = input.my;
     ctx.save(); ctx.lineCap = 'round';

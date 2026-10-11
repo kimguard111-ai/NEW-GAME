@@ -121,7 +121,8 @@ const Touch = {
         if (cos > 0.77 && d < bd && World.lineOfSight(p, e)) { bd = d; best = e; }
       }
       if (best) { tx = Iso.sx(best.x, best.y); ty = Iso.sy(best.x, best.y, 20); }
-    }
+      this.lock = best; // v1.69 멈춰 서서 같은 적을 계속 겨누면 헤드샷 (game.js)
+    } else this.lock = null;
     input.mx = tx; input.my = ty;
     input.down = !!this.aim && this.aim.mag > 0.35;
   },
