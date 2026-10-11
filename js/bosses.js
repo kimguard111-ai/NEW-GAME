@@ -10,7 +10,7 @@ const FIELD_BOSSES = {
 };
 const FIELD_BOSS_CD = 360; // 처치 후 다음 출현까지 (초)
 // v1.5 지하 연구소 격리실 보스 (출격마다 한 번)
-const LAB_BOSS = { name: '최종 실험체 「키메라」', art: 'chimera', base: 'brute', level: 24, hpMul: 20, dmgMul: 1.35, scale: 1.9, patterns: ['glutton', 'dash', 'brood', 'quake'] };
+const LAB_BOSS = { name: '최종 실험체 「키메라」', art: 'chimera', base: 'brute', level: 38, hpMul: 14, dmgMul: 1.35, /* v1.77 B5 (Lv24 → 38 · 체력 배율 20 → 14 로 맞춤) */ scale: 1.9, patterns: ['glutton', 'dash', 'brood', 'quake'] };
 
 const Bosses = {
   // ---------------- 필드 보스 ----------------

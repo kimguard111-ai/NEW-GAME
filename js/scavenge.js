@@ -92,7 +92,7 @@ const Scavenge = {
   makeGrave(items, credits) {
     const p = G.player;
     if (!items.length && !credits) return;
-    p.graves[World.map] = { x: p.x, y: p.y, items, credits };
+    p.graves[World.map] = { x: p.x, y: p.y, items, credits, floor: p.raid && p.raid.floor || 0 }; // v1.77 연구소는 쓰러진 층에만
   },
   recover() {
     const p = G.player, g = p.graves[World.map];

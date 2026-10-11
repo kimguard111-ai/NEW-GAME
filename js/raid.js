@@ -18,7 +18,7 @@ const MAP_SMS = {
   lab: '[방역 당국] 지하 연구시설 격리 해제 경보. 생물학적 위험. 즉시 대피하십시오.',
 };
 const Raid = {
-  unlocked(id) { const d = MAPS[id]; return !!d && (d.chapter === undefined || G.player.quest.ch >= d.chapter); },
+  unlocked(id) { const d = MAPS[id]; return !!d && (d.chapter === undefined || G.player.quest.ch >= d.chapter) && (!d.minLv || G.player.level >= d.minLv); }, // v1.77 연구소는 Lv30부터
   inRaid() { return World.map !== 'camp'; },
 
   // 출격 지도 (작전 장교 대화)
@@ -37,7 +37,7 @@ const Raid = {
       return `<div class="map-card${ok ? ' go' : ' locked'}${id === rec && ok ? ' rec' : ''}${d.lab ? ' wide' : ''}"${ok ? ` data-map="${id}"` : ''}>`
         + (lm ? `<img class="mc-art" src="${artURL(lm.file)}" alt="">` : `<div class="mc-art ico-art">${ICON(d.lab ? 'chip' : 'map')}</div>`)
         + `<div class="mc-body"><div class="mc-name">${ok ? '' : ICON('lock') + ' '}${d.name}${id === rec && ok ? ' <span class="mc-rec">추천</span>' : ''}</div>`
-        + `<div class="mc-lv">Lv${z.lvl[0]}~${z.lvl[1]}</div><div class="mc-desc">${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</div>`
+        + `<div class="mc-lv">${d.lab ? `도전 · B1~B${LAB_FLOORS} · 적 Lv${labFloorLv(1)}~${labFloorLv(LAB_FLOORS)}${p.labBest ? ` · 최고 B${p.labBest}` : ''}${gr && gr.floor ? ` · 가방 B${gr.floor}` : ''}` : `Lv${z.lvl[0]}~${z.lvl[1]}`}</div><div class="mc-desc">${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</div>`
         + (gr ? `<div class="mc-grave">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</div>` : '') + ev
         + (ok && id === DIFF_MAP && diffOpen(p) > 0 ? `<div class="mc-diff">${DIFFS.map((D, i) => i > diffOpen(p) ? `<span class="dbtn off">${ICON('lock')} ${D.name}</span>` : `<span class="dbtn" data-diff="${i}" style="border-color:${D.color};color:${D.color}">${D.name}${i ? ` <small>경험치 ×${D.exp} · 신화 ×${D.myth}</small>` : ''}</span>`).join('')}</div>${diffOpen(p) < 2 ? '<div class="muted" style="font-size:11px">헬: 하드에서 바벨을 쓰러뜨리면</div>' : ''}` : '') // v1.66 잠실 난이도
         + (ok ? '<div class="mc-go">▶ 출격</div>' : '') + '</div></div>';
@@ -57,16 +57,18 @@ const Raid = {
     for (const t of gunAmmoTypes(p)) if ((p.ammo[t] || 0) < AMMO[t].pack / 2) { addAmmo(p, t, AMMO[t].pack); log(`작전 장교 윤씨: 비상 ${AMMO[t].name} ${AMMO[t].pack}발 지급`, '#8cf'); }
     if (Camp.medkits() && addItem(makeConsumable('medkit', Camp.medkits()))) log(`의무실: 구급상자 ${Camp.medkits()}개 지급`, '#8cf'); // v1.13
     saveGame();
+    if (MAPS[id].lab) this.labFloor(1); // v1.77 B1 부터
     World.generate(id);
     this.resetWorld();
     const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
     G.exits = pts.filter(q => q !== start);
     p.x = start.x; p.y = start.y; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 출격 때 체력을 채워 주지 않음 (의무병 · 구급상자 의미)
-    p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0, diff: id === DIFF_MAP ? Math.max(0, Math.min(diff, diffOpen(p))) : 0 }; // v1.66 잠실 난이도
+    p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0, diff: id === DIFF_MAP ? Math.max(0, Math.min(diff, diffOpen(p))) : 0, floor: MAPS[id].lab ? 1 : 0 }; // v1.66 잠실 난이도 · v1.77 연구소 층
     if (FirstRun.rookie()) G.fbT = 1e9; // v1.45 첫 출격엔 필드 보스 없음
     G.extractT = 0; G.search = null;
     Scavenge.generate(); // v1.4 뒤질 곳
     G.grave = p.graves[id] || null; // v1.4 지난번 시체 가방
+    if (G.grave && MAPS[id].lab && (G.grave.floor || 1) !== 1) G.grave = null; // v1.77 연구소: 쓰러진 층까지 내려가야 보임
     if (G.grave && World.def.lab) { // v1.5 연구소는 출격마다 구조가 바뀜 → 가장 가까운 바닥으로 옮김
       let best = null, bd = 1e9;
       for (let ty = 1; ty < World.H - 1; ty++) for (let tx = 1; tx < World.W - 1; tx++) {
@@ -81,9 +83,39 @@ const Raid = {
     UI.smsQ = []; if (MAP_SMS[id]) UI.sms(MAP_SMS[id], 2.5); // v1.56 출격 시작 재난문자
     log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? '비상 계단' : '끝'}.`, '#8cf'); // v1.39
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
+    if (World.def.lab) { this.labLiftEvent(); p.labBest = Math.max(p.labBest || 0, 1); } // v1.77 승강기
     Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
-    G.fade = { t: 0, life: 1.4, text: MAPS[id].name + (p.raid.diff ? ' · ' + DIFFS[p.raid.diff].name : ''), sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17
-    if (World.def.lab) log('비상 전원만 남은 연구소다. 붉은 비상등 아래가 그나마 밝다. 격리실(미니맵 붉은 방)에 무언가 있다.', '#ff8a8a');
+    G.fade = { t: 0, life: 1.4, text: MAPS[id].name + (p.raid.diff ? ' · ' + DIFFS[p.raid.diff].name : '') + (p.raid.floor ? ` B${p.raid.floor}` : ''), sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17
+    if (World.def.lab) log(`비상 전원만 남은 연구소 B1. 가운데 방의 승강기(미니맵 하늘색)로 내려갈수록 강해진다 · B${LAB_FLOORS} 격리실에 무언가 있다 · 어느 층이든 비상 계단으로 나갈 수 있다.`, '#ff8a8a'); // v1.77
+    saveGame();
+  },
+
+  // ---------- v1.77 지하 연구소 층 ----------
+  labFloor(f) { World.labFloor = f; const lv = labFloorLv(f); ZONES[MAPS.lab.zone].lvl = [lv, f >= LAB_FLOORS ? lv : lv + 1]; },
+  labLiftEvent() {
+    const L = World.labLift, p = G.player; if (!L || !p.raid) return;
+    const f = p.raid.floor;
+    RaidEvents.list.push({ ext: true, kind: 'lab_lift', x: (L.cx + 0.5) * TILE, y: (L.cy + 0.5) * TILE, hint: `[E] 승강기 — B${f + 1}로 내려가기 (3초 · 적 Lv${labFloorLv(f + 1)})`, dur: 3, open: true,
+      onFinish: e => { e.done = true; this.descend(); },
+      track: () => `B${f} · 승강기(미니맵 하늘색)로 B${f + 1} · 또는 비상 계단으로 탈출`,
+      mini: (g, e, b) => { g.fillStyle = b ? '#7ad0ff' : '#3a7a9a'; g.fillRect(e.x / TILE - 3, e.y / TILE - 3, 6, 6); },
+      draw: drawLabLift });
+  },
+  // 승강기: 주운 것 · 크레딧 · 체력은 그대로, 층만 새로 (더 강한 적 · 더 좋은 전리품)
+  descend() {
+    const p = G.player, r = p.raid; if (!r) return;
+    r.floor++; this.labFloor(r.floor);
+    p.labBest = Math.max(p.labBest || 0, r.floor);
+    const bonus = r.floor * 400; r.credits += bonus; p.credits += bonus; // 층 보상 (탈출해야 확정 — 죽으면 잃는 크레딧과 같은 방식)
+    World.generate('lab'); this.resetWorld();
+    const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
+    G.exits = pts.filter(q => q !== start); p.x = start.x; p.y = start.y;
+    G.grave = p.graves.lab && (p.graves.lab.floor || 1) === r.floor ? p.graves.lab : null; // 이 층에서 쓰러졌던 가방
+    if (G.grave) { let best = null, bd = 1e9; for (let ty = 1; ty < World.H - 1; ty++) for (let tx = 1; tx < World.W - 1; tx++) { if (World.tiles[ty * World.W + tx] !== T.LFLOOR) continue; const d = Math.hypot(tx * TILE + 16 - G.grave.x, ty * TILE + 16 - G.grave.y); if (d < bd) { bd = d; best = [tx * TILE + 16, ty * TILE + 16]; } } if (best) [G.grave.x, G.grave.y] = best; log(`${ICON('skull')} 이 층에 지난번 시체 가방이 있다. (미니맵 붉은 ✚)`, '#ff8a8a'); }
+    if (G.comp && G.comp.state !== 'gone' && G.comp.state !== 'down') { G.comp.x = p.x + 30; G.comp.y = p.y + 20; }
+    Scavenge.generate(); RaidEvents.generate(); this.labLiftEvent(); Pop.generate(start);
+    G.fade = { t: 0, life: 1.6, text: `지하 연구소 B${r.floor}`, sub: `적 Lv${ZONES[MAPS.lab.zone].lvl[0]}${r.floor >= LAB_FLOORS ? ' · 마지막 층 · 격리실에 키메라' : ''} · 층 보상 ₵${fmt(bonus)} (탈출해야 내 것)` };
+    SFX.play('quest'); log(`${ICON('warn')} B${r.floor}. ${r.floor >= LAB_FLOORS ? '마지막 층 — 격리실(미니맵 붉은 방)에 키메라가 있다.' : '더 깊다. 적이 강해졌다.'} 비상 계단은 어느 층에나 있다.`, '#ff8a8a');
     saveGame();
   },
 
@@ -206,3 +238,15 @@ const Stash = {
   },
   after() { this.render(); UI.refreshInventory(); saveGame(); SFX.play('ui'); },
 };
+
+// v1.77 연구소 승강기 (그림이 오기 전까지 코드 그림: 철제 문 + 노란 경고 띠 + 하늘색 불)
+function drawLabLift(e) {
+  if (e.done) return;
+  const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -80 || sx > VW + 80 || sy < -140 || sy > VH + 60) return;
+  drawBox(e.x - 22, e.y - 14, e.x + 22, e.y + 14, 56, '#5a6068', '#2e3238', '#444a52', 0, 0, 0);
+  const k = 0.5 + Math.sin(G.time * 3) * 0.5;
+  ctx.fillStyle = '#d8b030'; ctx.fillRect(sx - 18, sy - 6, 36, 4);
+  ctx.fillStyle = `rgba(122,208,255,${0.5 + k * 0.5})`; ctx.fillRect(sx - 3, sy - 62, 6, 4);
+  if (Settings.light) addLight(sx, sy - 30, 110, 0.7, 'rgba(122,208,255,A)');
+  nameTag(sx, sy - 72, `승강기 ▼ B${(G.player.raid ? G.player.raid.floor : 1) + 1}`, '#7ad0ff', 'bold 12px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif');
+}

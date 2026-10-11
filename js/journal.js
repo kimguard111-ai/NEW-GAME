@@ -23,6 +23,7 @@ const ACHIEVEMENTS = [
   { id: 'cx3',    name: '영웅 도감',       desc: '도감 영웅 등급 장비 칸 모두 밝히기', ok: p => Journal.gearKeys().every(k => (p.codex.items[k] ?? -1) >= 3), r: { credits: 10000, chip: 15 } },
   { id: 'cx4',    name: '전설 도감',       desc: '도감 전설 등급 장비 칸 모두 밝히기', ok: p => Journal.gearKeys().every(k => (p.codex.items[k] ?? -1) >= 4), r: { credits: 40000, chip: 40 } },
   { id: 'cxFoe',  name: '서울 생태 보고서', desc: '도감의 적 모두 쓰러뜨리기', ok: p => Journal.foeList().every(f => p.codex.kills[f.name]), r: { credits: 15000, chip: 15 } },
+  { id: 'labB5',  name: '심연',            desc: '지하 연구소 B5 도달',   ok: p => (p.labBest || 0) >= LAB_FLOORS, r: { credits: 10000, chip: 10 } }, // v1.77
   { id: 'uniq1',  name: '전리품',          desc: '보스 고유 장비 손에 넣기', ok: p => Object.keys(p.codex.uniq).length >= 1, r: { chip: 5 } },
   { id: 'uniqAll', name: '수집가',         desc: '보스 고유 장비 9종 모두', ok: p => Object.keys(p.codex.uniq).length >= Object.keys(UNIQUES).length, r: { credits: 30000, chip: 30 } },
   { id: 'set3',   name: '세트 완성',       desc: '세트 3부위 착용',       ok: p => Object.keys(SETS).some(k => setCount(p, k) >= 3), r: { chip: 5 } },
@@ -191,6 +192,7 @@ const Journal = {
         + row('사망', p.deaths || 0) + row('탈출 성공', r.extracts || 0) + row('가장 오래 버틴 출격', `${Math.floor((r.longRaid || 0) / 60)}분 ${(r.longRaid || 0) % 60}초`)
         + row('한 출격 최대 크레딧', `₵${fmt(r.bestRaidCr || 0)}`) + row('한 출격 최대 처치', r.bestRaidKills || 0) + row('완료한 출격 사건', r.events || 0) + row('맵 완전 소탕', r.clears || 0)
         + row('필드 보스 / 타이탄 / 키메라', `${p.fieldBossKills || 0} / ${p.bossKills || 0} / ${p.labKills || 0}`)
+        + row('지하 연구소 최고 층', p.labBest ? `B${p.labBest}${p.labBest >= LAB_FLOORS ? ' (끝까지)' : ''}` : '-') // v1.77
         + row('고유 장비', `${Object.keys(p.codex.uniq).length} / ${Object.keys(UNIQUES).length}`) + row('신화 무기', `${Object.keys(p.codex.myth || {}).length} / ${Object.keys(WEAPONS).filter(k => WEAPONS[k].myth).length}`) // v1.63
         + row('어설트 최고 위협 · S 등급', (() => { const a = Object.values(p.assaults || {}); return a.length ? `위협 ${Math.max(...a.map(x => x.tier || 1))} · S ${a.filter(x => x.best === 'S').length}곳` : '-'; })()) + row('업적', `${ACHIEVEMENTS.filter(a => p.ach[a.id]).length} / ${ACHIEVEMENTS.length}`);
     }

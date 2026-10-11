@@ -29,7 +29,8 @@ const World = {
 
   generate(mapId) {
     const def = MAPS[mapId];
-    this.map = mapId; this.def = def; this.W = this.H = def.size; this.cx = this.cy = Math.floor(def.size / 2);
+    const size = def.lab && (this.labFloor || 1) < LAB_FLOORS ? 50 : def.size; // v1.77 연구소 B1~B4 는 작게 (방 9개) · B5 는 원래 크기
+    this.map = mapId; this.def = def; this.W = this.H = size; this.cx = this.cy = Math.floor(size / 2);
     this.bossTile = def.boss ? { x: 18, y: 18 } : null;
     this.rooms = []; this.alarms = []; this.labBoss = null;
     if (def.lab) return this.generateLab(def);
@@ -265,7 +266,7 @@ const World = {
     // 시작·탈출: 네 변 가운데에 가장 가까운 방 / 보스: 가운데 방
     const pickNear = (tx, ty, used) => grid.filter(r => !used.includes(r)).sort((a, b) => Math.hypot(a.cx - tx, a.cy - ty) - Math.hypot(b.cx - tx, b.cy - ty))[0];
     const used = [], c = at(bgx, bgy); used.push(c);
-    this.labBoss = c; c.boss = true;
+    if ((this.labFloor || 1) >= LAB_FLOORS) { this.labBoss = c; c.boss = true; this.labLift = null; } else { this.labBoss = null; c.lift = true; this.labLift = c; } // v1.77 마지막 층만 격리실 · 그 위층은 가운데 방에 승강기
     this.edgePts = [];
     for (const [tx, ty, side] of [[W >> 1, 0, 'N'], [W, H >> 1, 'E'], [W >> 1, H, 'S'], [0, H >> 1, 'W']]) {
       const r = pickNear(tx, ty, used); used.push(r); r.exit = side;
