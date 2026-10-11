@@ -1149,6 +1149,48 @@ Match the art style of the attached concept image. Create ONE image showing a si
 
 ---
 
+## 40~43. 연구소 · 캠프 시설 · 캠프 바닥 (v1.76 점검)
+지금 코드 그림(회색 상자 · 단색 판)인 곳: **지하 연구소 벽 · 바닥 · 실험 장비**, **캠프 시설(사격장 · 작업대 · 의무실 · 창고 지게차)**, **캠프 바닥**.
+
+| 순서 | 절 | 파일 이름 | 내용 |
+|---|---|---|---|
+| 1 ★ | 40-1 | `tex_lab_floor.png` (3×1) | 연구소 바닥 3종 (위에서 본 정사각) |
+| 2 ★ | 40-2 | `tex_lab_wall.png` (3×1) | 연구소 벽 앞면 3종 (세로 3:5, 16:9 한 장에 나란히) |
+| 3 ★ | 41 | `props_lab.png` (3×3) | 실험 장비 9종 (지금 회색 상자) |
+| 4 ★ | 42 | `props_campfac.png` (3×3) | 캠프 시설 9종 (사격장 · 작업대 · 의무실 · 지게차) |
+| 5 | 43 | `tex_camp.png` (3×2) | 캠프 바닥 6종 |
+
+공통: 📎 콘셉트 아트 첨부 · 글자 · 숫자 · 상표 없이
+
+### 40-1. 연구소 바닥 · `tex_lab_floor.png`
+```
+Match the art style of the attached concept image. Create ONE wide image with 3 separate SQUARE floor texture panels side by side for an abandoned underground bio-research laboratory, each seen from DIRECTLY ABOVE (top-down, orthographic, no perspective), placed in its own equal cell with thin magenta gaps, each tiling SEAMLESSLY on all four sides. Left to right: 1) dark grey steel floor plates with rivets, scuffs and dried dark stains; 2) cracked white-grey lab floor tiles with grime in the joints and a few missing tiles; 3) a dark metal drainage grate floor with a faint teal glow from below. Dim emergency lighting, low contrast so characters stand out on top. Detailed dark pixel art, desaturated cold colors. Solid flat #FF00FF magenta background in the gaps. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 40-2. 연구소 벽 · `tex_lab_wall.png`
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 image with 3 separate TALL wall texture panels side by side (each panel width to height about 3:5), seen perfectly FRONT-ON (orthographic, no perspective), with thin magenta gaps, each panel filling its cell edge to edge with left and right edges continuing seamlessly. Walls of an abandoned underground bio-research laboratory, one storey high. Left to right: 1) stained concrete wall with a yellow-and-black hazard stripe band along the bottom and a dead fluorescent light; 2) white laboratory wall panels with scratches, a small dark observation window and pipes running across; 3) reinforced steel bulkhead wall with bolts, a sealed vent and a faint red emergency light. Dim cold lighting. Detailed dark pixel art, desaturated colors. Solid flat #FF00FF magenta background in the gaps. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+### 41. 실험 장비 9종 · `props_lab.png`
+지금 연구소 방마다 놓인 회색 상자(키 작은 것 · 큰 것) 자리에 섞어 놓음
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate pieces of equipment from an abandoned underground bio-research laboratory in post-apocalyptic Seoul, each ONE object about as wide as a person is tall, centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) a tall cracked glass specimen tank with murky teal liquid and a dark shape inside; 2) a steel lab bench with a microscope, test tube racks and scattered papers; 3) a tall server rack with blinking tiny lights and loose cables; 4) a frosted cryogenic sleep pod lying on a base; 5) a bent steel animal cage with its door torn open; 6) two yellow chemical drums with dents; 7) a stainless surgical table with a lamp arm above; 8) a computer terminal console with a cracked dark screen; 9) a toppled metal filing shelf with folders spilling out. No people, no creatures outside the tank. Dim cold lighting. Detailed dark pixel art, desaturated colors. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the whole image empty except the ninth object kept small and away from the corner. No text, no letters, no numbers, no logos, no grid lines. Do not use pink or magenta on the objects.
+```
+
+### 42. 캠프 시설 9종 · `props_campfac.png`
+시설 단계가 오를 때마다 하나씩 더 놓임 (1단계 → 3단계)
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate objects for a survivors' camp built in a ruined Seoul subway plaza, each centered in its own equal cell with wide empty space between them, every object standing on its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: 1) a shooting range firing line made of stacked sandbags with a wooden shelf on top; 2) a single wooden shooting target stand with a round paper target; 3) a small roofed firing booth of scrap sheet metal with a hanging work lamp; 4) a long wooden workbench with a vise, hand tools on a pegboard and a toolbox; 5) an old floor-standing drill press; 6) a small yellow chain hoist crane on an A-frame; 7) a folding army stretcher cot with a grey blanket; 8) a converted white shipping container field clinic with a red cross shape and an open side door; 9) a battered yellow forklift. No people. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the whole image empty except the ninth object kept small and away from the corner. No text, no letters, no numbers, no logos, no grid lines. Do not use pink or magenta on the objects.
+```
+
+### 43. 캠프 바닥 6종 · `tex_camp.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 2 grid of 6 separate SQUARE ground texture panels for a survivors' camp inside a ruined Seoul subway station plaza, each seen from DIRECTLY ABOVE (top-down, orthographic, no perspective, no shadows of objects), placed in its own equal cell with thin magenta gaps, each tiling SEAMLESSLY on all four sides. In order, left to right, top to bottom: 1) worn beige subway concourse floor tiles with grime and small cracks; 2) a faded blue tarpaulin laid over the ground, wrinkled and patched; 3) wooden pallet decking with gaps between the planks; 4) black anti-slip rubber floor mat with a diamond pattern, dusty; 5) grey painted concrete with faded yellow guide lines and footprints; 6) gravel and sand spilled from old sandbags. Evenly lit, low contrast so characters stand out on top. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background in the gaps. No text, no letters, no numbers, no logos, no border. Do not use pink or magenta inside the panels.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
