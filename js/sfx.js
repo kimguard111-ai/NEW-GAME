@@ -3,7 +3,11 @@
 // v1.35 소리 패스: 울림 버스(바깥 = 긴 도시 메아리 · 실내 = 짧은 방 울림) · 좌우 위치(SFX.playAt) · 바닥별 발소리 · 무기별 장전 · UI 소리
 // v1.40 녹음/AI 소리 파일: 이름 → 파일 목록 (여러 개면 무작위로 골라 반복감 줄임). 파일이 있으면 합성음 대신 재생 (docs/SOUND_PROMPTS.md)
 // 예: pistol: ['pistol_1.mp3', 'pistol_2.mp3'] · 발소리 step_asphalt … · 장전 reload_shotgun … · 환경음 amb_wind(반복) amb_gun …
-const SOUND_FILES = {};
+const SOUND_FILES = { // v1.73 첫 녹음 소리 (sound_raw/done · 자르고 크기 맞춤)
+  pistol: ['pistol_1.mp3'], smg: ['smg_1.mp3'], rifle: ['rifle_1.mp3'], shotgun: ['shotgun_1.mp3', 'shotgun_2.mp3'],
+  reload_any: ['reload_any.mp3'], // 탄창 끼우는 소리 — 산탄총 말고 모든 총 재장전 끝에
+};
+const SOUND_GAIN = { pistol: 0.7, smg: 0.55, rifle: 0.6, shotgun: 0.7, reload_any: 0.8 }; // 파일이 합성음보다 커서 맞춤
 const SFX = {
   ctx: null, master: null, bus: null, dst: null, noiseBuf: null, last: {}, sends: null, bufs: {},
 
@@ -43,7 +47,7 @@ const SFX = {
   playFile(name, k = 1, pan = 0, rate = 1, delay = 0) {
     const list = this.bufs[name]; if (!list || !list.length || !this.ctx) return false;
     const c = this.ctx, s = c.createBufferSource(), g = c.createGain(); s.buffer = list[Math.floor(Math.random() * list.length)];
-    s.playbackRate.value = rate * (0.95 + Math.random() * 0.1); g.gain.value = k;
+    s.playbackRate.value = rate * (0.95 + Math.random() * 0.1); g.gain.value = k * (SOUND_GAIN[name] ?? 1);
     let out = this.dst; if (pan && c.createStereoPanner && out === this.bus) { const pn = c.createStereoPanner(); pn.pan.value = pan; pn.connect(this.bus); out = pn; }
     s.connect(g); g.connect(out); s.start(c.currentTime + delay); return true;
   },
@@ -170,6 +174,7 @@ const SFX = {
     if (!this.ctx || !Settings.sound) return;
     const d = dur || 1.5;
     if (this.playFile('reload_' + key, 0.9, 0, (this.bufs['reload_' + key] || [{}])[0].duration ? this.bufs['reload_' + key][0].duration / d : 1)) return; // v1.40 파일 (재장전 시간에 맞춰 빠르기 조절)
+    if (key !== 'shotgun' && this.bufs.reload_any) { this.click(0.14, 0.06, 2200); this.noise(0.05, 800, 1.5, 0.06, 'bandpass', 0, 0.1); this.playFile('reload_any', 1, 0, 1, Math.max(0.15, d - 0.45)); return; } // v1.73 탄창 빼기(합성) → 끝에 끼우는 소리(파일)
     if (key === 'shotgun') { const n = Math.max(2, Math.round(d / 0.32)); for (let i = 0; i < n; i++) { this.click(0.12, 0.15 + i * (d - 0.4) / n, 1600); this.noise(0.05, 700, 1.5, 0.08, 'bandpass', 0, 0.17 + i * (d - 0.4) / n); } this.noise(0.05, 1400, 2, 0.15, 'bandpass', 0, d - 0.18); this.noise(0.06, 900, 2, 0.16, 'bandpass', 0, d - 0.08); return; } // 한 발씩 넣고 펌프
     if (key === 'sniper') { this.click(0.16, 0.05, 2400); this.click(0.14, d * 0.45, 1800); this.click(0.15, d * 0.7, 2200); this.click(0.18, d - 0.12, 3000); return; } // 노리쇠 뒤로 · 탄창 · 노리쇠 앞으로
     if (key === 'lmg') { this.click(0.16, 0.08, 1500); this.noise(0.18, 500, 1, 0.12, 'bandpass', 0.6, d * 0.35); this.noise(0.1, 1200, 1.5, 0.1, 'bandpass', 0, d * 0.65); this.click(0.2, d - 0.15, 2000); return; } // 덮개 · 탄띠 · 덮개 닫음
