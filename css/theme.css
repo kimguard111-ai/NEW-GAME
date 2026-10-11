@@ -524,3 +524,34 @@ body.touch #quest-tracker.tut.min .tut-list { display: none; } body.touch #quest
 #sms-t { font-size: 12.5px; line-height: 1.35; color: #ecebe6; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
 @keyframes smsIn { from { transform: translate(-50%, -14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 body.touch #sms { top: 48px; width: min(360px, 52vw); padding: 5px 9px 6px; } body.touch #sms-t { font-size: 11px; }
+
+/* v1.74 타이틀: 가운데 · 글자 크게 (PC) */
+#title-screen { justify-content: center !important; }
+#title-screen::after { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 46% 70% at 50% 50%, rgba(0,0,0,.55), rgba(0,0,0,0) 75%); } /* 가운데 글자 뒤 살짝 어둡게 */
+.title-main { margin: 0 auto !important; max-width: 700px !important; width: 700px; text-align: center !important; z-index: 1; }
+.logo { font-size: 128px !important; }
+.logo small { font-size: 19px !important; margin-top: 14px !important; }
+.title-main h2 { font-size: 17px !important; margin: 16px 0 10px !important; }
+.credit-line { font-size: 13px !important; margin: 0 0 18px !important; }
+.roster { text-align: left; width: 600px; margin: 0 auto 18px !important; }
+.title-main .title-buttons { width: 600px; margin: 0 auto; }
+.roster::before { font-size: 18px !important; }
+#slot-row .slot b { font-size: 15px !important; min-width: 56px !important; }
+#slot-row .slot .who { font-size: 30px !important; } #slot-row .slot .empty { font-size: 24px !important; }
+#slot-row .slot .meta { font-size: 14px !important; }
+.roster #name-input { font-size: 24px !important; }
+.title-main .title-buttons button { font-size: 26px !important; padding: 14px 0 !important; }
+.title-main .controls { font-size: 14px !important; text-align: center !important; }
+.title-main #version-label { font-size: 13px !important; }
+@media (max-height: 820px) { .logo { font-size: 104px !important; } .title-main h2 { margin: 10px 0 6px !important; } .title-main .controls { margin-top: 12px !important; } }
+/* 폰: 가운데 · 조금 크게 (화면 높이가 낮아 PC만큼은 못 키움) */
+body.touch .title-main { width: min(560px, 76vw); max-width: none !important; } body.touch .roster, body.touch .title-main .title-buttons { width: auto; } body.touch .roster { margin-bottom: 8px !important; }
+body.touch .logo { font-size: 46px !important; } body.touch .logo small { font-size: 12px !important; margin-top: 6px !important; }
+body.touch .credit-line { font-size: 11px !important; margin: 4px 0 6px !important; }
+body.touch .title-main .controls { font-size: 13px !important; margin-top: 8px !important; }
+body.touch .title-main .title-buttons button { font-size: 20px !important; padding: 8px 0 !important; }
+@media (max-height: 430px) {
+  body.touch .logo { font-size: 38px !important; } body.touch .logo small { font-size: 11px !important; letter-spacing: 3px; }
+  body.touch #slot-row .slot .who { font-size: 19px !important; } body.touch #slot-row .slot .empty { font-size: 17px !important; } body.touch #slot-row .slot b, body.touch #slot-row .slot .meta { font-size: 12px !important; }
+  body.touch .roster #name-input { font-size: 17px !important; }
+}

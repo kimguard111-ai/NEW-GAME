@@ -17,7 +17,7 @@ const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 // v1.72 음악 파일 (docs/MUSIC_PROMPTS.md · Gemini): 있는 곡만 파일로, 없는 맵은 위 합성 음악 그대로
 // title = 타이틀 · camp = 캠프(바탕) · combat = 전투 층(적이 쫓아오는 만큼 커짐) · boss = 보스가 있으면 전투 층 대신
 const MUSIC_FILES = { title: 'bgm_title.mp3', camp: 'bgm_camp.mp3', combat: 'bgm_combat.mp3', boss: 'bgm_boss.mp3' };
-const MUSIC_XF = 2.5, MUSIC_FILE_VOL = 1.4; // 반복 이음매 겹침(초) · 합성 음악과 크기 맞춤
+const MUSIC_XF = 2.5, MUSIC_FILE_VOL = 0.5; // 반복 이음매 겹침(초) · 파일 곡 크기 (v1.74 1.4 → 0.5: 배경에 잔잔히)
 
 const Music = {
   gain: null, nextT: 0, step: 0, mood: null, moodId: '', intensity: 0, target: 0, syn: null, tracks: {},
