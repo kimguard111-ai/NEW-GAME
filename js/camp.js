@@ -97,6 +97,30 @@ const Camp = {
 const CAMP_FAC_POS = { med: [-285, 45], range: [-70, 215], store: [115, -255], bench: [-235, 160], radio: [175, -120] };
 
 // 시설 그리기 (단계에 따라 커짐) — City 소품 'facility'
+// v1.79 캠프 시설 그림: 단계마다 하나씩 더 놓임 · 그림이 다 있으면 true (없으면 예전 코드 그림)
+const FAC_ART = {
+  range: l => [['cf_sandbag', 0, 0], ['cf_target', 0, -62], ...(l >= 2 ? [['cf_target', -34, -58], ['cf_target', 34, -66]] : []), ...(l >= 3 ? [['cf_booth', 70, 26]] : [])],
+  bench: l => [['cf_bench', 0, 0], ...(l >= 2 ? [['cf_drill', 46, 4]] : []), ...(l >= 3 ? [['cf_crane', -50, -34]] : [])],
+  med: l => [['cf_cot', -24, 40], ...(l >= 2 ? [['cf_clinic', 4, -14], ['cf_cot', 30, 52]] : [['cf_cot', 20, 50]])],
+  store: l => [['cf_locker', -44, -22], ...(l >= 3 ? [['cf_forklift', -64, 22]] : [])],
+};
+function drawFacilityArt(o, l) {
+  const list = FAC_ART[o.fac] && FAC_ART[o.fac](l); if (!list || !list.every(([k]) => propArt(k))) return false;
+  if (o.fac === 'store') { // 컨테이너는 원래 그림 (1 · 2단 · 3개) + 사물함 · 지게차
+    const box = (x, y, z) => drawPropArt('container', Iso.sx(x, y), Iso.sy(x, y, z));
+    if (!propArt('container')) return false;
+    for (const [k, dx, dy] of list.filter(q => q[2] < 0)) drawPropArt(k, Iso.sx(o.x + dx, o.y + dy), Iso.sy(o.x + dx, o.y + dy));
+    box(o.x, o.y, 0); if (l >= 2) box(o.x, o.y, 26); if (l >= 3) box(o.x + 60, o.y + 4, 0);
+    for (const [k, dx, dy] of list.filter(q => q[2] >= 0)) drawPropArt(k, Iso.sx(o.x + dx, o.y + dy), Iso.sy(o.x + dx, o.y + dy));
+    return true;
+  }
+  for (const [k, dx, dy] of [...list].sort((a, b) => (a[1] + a[2]) - (b[1] + b[2]))) drawPropArt(k, Iso.sx(o.x + dx, o.y + dy), Iso.sy(o.x + dx, o.y + dy), (dx + dy) % 3 === 1);
+  const S = Iso.sx, Y = Iso.sy;
+  if (o.fac === 'med' && l >= 3) { const lx = S(o.x, o.y - 8), ly = Y(o.x, o.y - 8, 44); ctx.fillStyle = Math.sin(G.time * 2) > 0 ? '#ff4040' : '#802020'; ctx.fillRect(lx - 3, ly - 3, 6, 6); if (Settings.light) addLight(lx, ly, 90, 0.5, 'rgba(255,80,80,A)'); }
+  if (o.fac === 'range' && l >= 3 && Settings.light) addLight(S(o.x + 70, o.y + 26), Y(o.x + 70, o.y + 26, 30), 120, 0.6, 'rgba(255,200,120,A)');
+  if (o.fac === 'bench' && l >= 3 && Math.sin(G.time * 7) > 0.3) { burstSpark(S(o.x, o.y), Y(o.x, o.y, 30)); if (Settings.light) addLight(S(o.x, o.y), Y(o.x, o.y, 30), 60, 0.6, 'rgba(160,200,255,A)'); }
+  return true;
+}
 function drawFacility(o) {
   const l = Camp.lv(o.fac), sx = Iso.sx(o.x, o.y), sy = Iso.sy(o.x, o.y), S = Iso.sx, Y = Iso.sy;
   if (!l && o.fac !== 'radio') { // 공사 예정 표지 · v1.64 처음 할 일 중엔 숨기고, 그 뒤엔 가까이 갔을 때만 (첫 화면이 빽빽하던 것)
@@ -106,6 +130,7 @@ function drawFacility(o) {
     ctx.strokeStyle = 'rgba(255,200,60,0.35)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.ellipse(sx, sy, 34, 17, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
     return;
   }
+  if (drawFacilityArt(o, l)) return; // v1.79 시설 그림 (42절)
   switch (o.fac) {
     case 'med': { // 1: 들것 2개 · 2: 컨테이너 진료소 · 3: + 붉은 십자 조명 · 발전기 연결
       for (let i = 0; i < 2; i++) drawBox(o.x - 34 + i * 18, o.y + 22, o.x - 22 + i * 18, o.y + 46, 8, '#d8d8d0', '#9a9a92', '#b8b8b0', 0, 0, 0);

@@ -37,9 +37,10 @@ const TILE_COLORS = {
 
 // ---------------- 바닥 ----------------
 // v1.31.2 바닥 질감 (프롬프트 16번): 있으면 바탕색 대신 그림 — 그림 하나를 4×4칸에 걸쳐 펼침. 차선·횡단보도·풀 포기 같은 코드 디테일은 그 위에 그대로
-const GROUND_TEX = { [T.ROAD]: 'gr_asphalt', [T.CAR]: 'gr_asphalt', [T.WALK]: 'gr_sidewalk', [T.GRASS]: ['gr_grass', 'gr_grass2'], [T.RUBBLE]: 'gr_dirt', [T.WATER]: 'gr_water', [T.CAMP]: 'gr_plaza', [T.BARRICADE]: 'gr_plaza', [T.LANDMARK]: 'gr_dirt' };
+const GROUND_TEX = { [T.ROAD]: 'gr_asphalt', [T.CAR]: 'gr_asphalt', [T.WALK]: 'gr_sidewalk', [T.GRASS]: ['gr_grass', 'gr_grass2'], [T.RUBBLE]: 'gr_dirt', [T.WATER]: 'gr_water', [T.CAMP]: ['cp_tile', 'cp_tile', 'cp_tile', 'cp_tile', 'cp_concrete', 'cp_concrete', 'cp_rubber', 'cp_tarp', 'cp_pallet', 'gr_plaza'], [T.BARRICADE]: ['cp_gravel', 'gr_plaza'], /* v1.79 캠프 바닥 (43절) */ [T.LANDMARK]: 'gr_dirt' };
 function groundTex(tx, ty, t, x, y) {
-  let k = GROUND_TEX[t]; if (Array.isArray(k)) { const v = k.filter(q => ART.tex[q] && ART.tex[q].ready); k = v[Math.floor(hash2(tx >> 2, ty >> 2) * v.length)]; } // 변형: 4×4칸 덩어리마다
+  let k = (t === T.LFLOOR || t === T.LPROP) && World.def ? (World.def.tower ? ['tw_f_carpet', 'tw_f_carpet', 'tw_f_lobby', 'tw_f_roots'] : ['lab_f_tile', 'lab_f_steel', 'lab_f_tile', 'lab_f_steel', 'lab_f_grate']) : GROUND_TEX[t]; // v1.79 던전 바닥
+  if (Array.isArray(k)) { const v = k.filter(q => ART.tex[q] && ART.tex[q].ready); k = v[Math.floor(hash2(tx >> 2, ty >> 2) * v.length)]; } // 변형: 4×4칸 덩어리마다
   const a = ART.tex && ART.tex[k]; if (!a || !a.ready) return false;
   const [rx, ry, rw, rh] = a.rect || [0, 0, a.img.width, a.img.height], q = 4;
   ctx.drawImage(a.img, rx + (((tx % q) + q) % q) * rw / q, ry + (((ty % q) + q) % q) * rh / q, rw / q, rh / q, x, y, TILE + 0.6, TILE + 0.6);
@@ -69,7 +70,8 @@ function groundTex2(tx, ty, t, x, y) {
 function drawGroundTile(tx, ty, t) {
   const x = tx * TILE, y = ty * TILE, h = hash2(tx, ty);
   const g2 = groundTex2(tx, ty, t, x, y); // v1.58 이 그림이 깔리면 아래 코드 보도블록으로 덮지 않음
-  if (!g2 && !groundTex(tx, ty, t, x, y)) { ctx.fillStyle = TILE_COLORS[t]; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); }
+  const g1 = !g2 && groundTex(tx, ty, t, x, y); // v1.79 그림이 깔리면 아래 코드 무늬(캠프 판자 · 던전 바닥)는 건너뜀
+  if (!g2 && !g1) { ctx.fillStyle = TILE_COLORS[t]; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); }
   if (t === T.ROAD || t === T.CAR) {
     const lx = tx % World.BLOCK, ly = ty % World.BLOCK, RW = World.ROADW;
     ctx.fillStyle = '#8a7a3a'; // 중앙선 (4차선: 2번째와 3번째 칸 사이)
@@ -112,7 +114,7 @@ function drawGroundTile(tx, ty, t) {
     for (let i = 8; i < TILE; i += 8) { ctx.beginPath(); ctx.moveTo(x, y + i); ctx.lineTo(x + TILE, y + i); ctx.stroke(); }
     if (h < 0.15) { ctx.fillStyle = 'rgba(30,25,20,0.5)'; ctx.fillRect(x + h * 100, y + 6, 10, 8); } // 얼룩·잔해
     if (t === T.DOOR) { ctx.fillStyle = '#5a5048'; ctx.fillRect(x, y, TILE, TILE); }
-  } else if (t === T.CAMP) { // v1.10 캠프 광장: 낡은 보도석 + 깔아 둔 판자·방수포
+  } else if (t === T.CAMP && !g1) { // v1.10 캠프 광장: 낡은 보도석 + 깔아 둔 판자·방수포
     const v = Math.floor((hash2(tx * 7 + 3, ty * 11 + 5) - 0.5) * 8);
     ctx.fillStyle = `rgb(${62 + v},${64 + v},${66 + v})`; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6);
     ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
@@ -128,6 +130,7 @@ function drawGroundTile(tx, ty, t) {
     ctx.fillStyle = 'rgba(160,150,120,0.35)';
     if (d(0, -1)) ctx.fillRect(x, y, TILE, 3); if (d(0, 1)) ctx.fillRect(x, y + TILE - 3, TILE, 3);
     if (d(-1, 0)) ctx.fillRect(x, y, 3, TILE); if (d(1, 0)) ctx.fillRect(x + TILE - 3, y, 3, TILE);
+  } else if ((t === T.LFLOOR || t === T.LPROP) && g1) { /* v1.79 그림 바닥 */
   } else if ((t === T.LFLOOR || t === T.LPROP) && World.def && World.def.tower) { // v1.78 스카이타워 바닥: 낡은 사무실 카펫 타일 · 얼룩 · 깨진 유리
     ctx.fillStyle = (tx + ty) % 2 ? 'rgba(110,90,70,0.28)' : 'rgba(90,80,70,0.28)'; ctx.fillRect(x, y, TILE, TILE);
     ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
@@ -367,17 +370,18 @@ function drawSolidTile(o) {
   } else if (t === T.LWALL && World.def && World.def.tower) { // v1.78 스카이타워 벽: 푸른 유리 칸막이 + 금속 틀 · 가끔 보랏빛 뿌리
     const ht = tileHeight(tx, ty), S = Iso.sx, Y = Iso.sy;
     drawBox(x0, y0, x1, y1, ht, '#3e4a58', '#232a34', '#2e3744', tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), 0);
-    if (tileHeight(tx, ty + 1) === 0) {
+    if (!dunWallTex(tx, ty, ht) && tileHeight(tx, ty + 1) === 0) {
       poly([S(x0 + 2, y1), Y(x0 + 2, y1, 10), S(x1 - 2, y1), Y(x1 - 2, y1, 10), S(x1 - 2, y1), Y(x1 - 2, y1, ht - 8), S(x0 + 2, y1), Y(x0 + 2, y1, ht - 8)], h < 0.5 ? 'rgba(120,170,210,0.35)' : 'rgba(90,130,170,0.3)');
       if (h > 0.85) poly([S(x0 + 6, y1), Y(x0 + 6, y1, 4), S(x0 + 12, y1), Y(x0 + 12, y1, 4), S(x0 + 16, y1), Y(x0 + 16, y1, ht - 10), S(x0 + 10, y1), Y(x0 + 10, y1, ht - 14)], 'rgba(110,40,100,0.75)'); // 뿌리
     }
   } else if (t === T.LWALL) { // v1.5 연구소 벽 (콘크리트 + 아래쪽 경고 띠 + 가끔 패널 불빛)
     const ht = tileHeight(tx, ty), S = Iso.sx, Y = Iso.sy;
     drawBox(x0, y0, x1, y1, ht, '#3c4048', '#23262c', '#2d3138', tileHeight(tx, ty + 1), tileHeight(tx + 1, ty), 0);
-    if (tileHeight(tx, ty + 1) === 0) {
+    if (!dunWallTex(tx, ty, ht) && tileHeight(tx, ty + 1) === 0) {
       poly([S(x0, y1), Y(x0, y1, 6), S(x1, y1), Y(x1, y1, 6), S(x1, y1), Y(x1, y1, 11), S(x0, y1), Y(x0, y1, 11)], tx % 2 ? '#8a7020' : '#1a1a1a');
       if (h < 0.1) poly([S(x0 + 10, y1), Y(x0 + 10, y1, 26), S(x0 + 18, y1), Y(x0 + 18, y1, 26), S(x0 + 18, y1), Y(x0 + 18, y1, 34), S(x0 + 10, y1), Y(x0 + 10, y1, 34)], Math.sin(G.time * 3 + tx) > 0 ? '#40ff70' : '#1a4a24');
     }
+  } else if (t === T.LPROP && dunPropArt(tx, ty, x0, y0, h)) { /* v1.79 장비 · 집기 그림 */
   } else if (t === T.LPROP && World.def && World.def.tower) { // v1.78 스카이타워 사무 집기: 낮은 것 = 책상 + 모니터, 높은 것 = 서류장
     const ht = tileHeight(tx, ty);
     if (ht < 30) { drawBox(x0 + 3, y0 + 5, x1 - 3, y1 - 5, 20, '#7a6248', '#4a3a2a', '#5e4a36', 0, 0, 0); drawBox(x0 + 10, y0 + 12, x1 - 10, y1 - 14, 30, '#2a2e34', '#16181c', '#202328', 20, 20, 0); }
@@ -994,6 +998,29 @@ function drawPropArt(key, sx, sy, flip = false, k = 1) {
   ctx.save(); ctx.translate(sx, sy + fit.y * k); if (flip !== !!a.mirror) ctx.scale(-1, 1); // v1.31 mirror: 반대 방향으로 그려진 그림
   Mip.draw(a.img, rx, ry, rw, rh, -w * (a.ax ?? 0.5), -h, w, h); // v1.49 축소 캐시 · ax = 바닥 점이 그림 가로 어디인지 (기본 가운데)
   ctx.restore();
+  return true;
+}
+
+// v1.79 던전 벽 그림 (40-2 · 44-2): 드러난 면(남 · 동)에 세로 3:5 판 하나씩 · 2×2칸마다 같은 종류
+function dunWallTex(tx, ty, ht) {
+  const keys = World.def && World.def.tower ? ['tw_w_glass', 'tw_w_office', 'tw_w_glass', 'tw_w_roots'] : ['lab_w_concrete', 'lab_w_concrete', 'lab_w_white', 'lab_w_bulk'];
+  const a = ART.tex[keys[Math.floor(hash2(tx >> 1, ty >> 1) * keys.length)]]; if (!a || !a.ready || !ht) return false;
+  const [rx, ry, rw, rh] = a.rect;
+  for (const f of ['s', 'e']) {
+    if ((f === 's' ? tileHeight(tx, ty + 1) : tileHeight(tx + 1, ty)) !== 0) continue;
+    ctx.save(); City.faceTransform(tx, ty, f, ht); if ((f === 's' ? tx : ty) & 1) { ctx.translate(TILE, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(a.img, rx, ry, rw, rh, 0, 0, TILE, ht); ctx.fillStyle = `rgba(0,0,0,${f === 's' ? 0.22 : 0.42})`; ctx.fillRect(0, 0, TILE, ht); ctx.restore();
+  }
+  return true;
+}
+// v1.79 던전 장비 그림 (41 · 44-3): 낮은 칸 = 작업대 · 책상류, 높은 칸 = 수조 · 서류장류
+function dunPropArt(tx, ty, x0, y0, h) {
+  const tall = tileHeight(tx, ty) >= 30, T2 = World.def && World.def.tower;
+  const set = T2 ? (tall ? ['tw_cabinet', 'tw_cooler', 'tw_copier', 'tw_cabinet'] : ['tw_desk', 'tw_desk', 'tw_meeting', 'tw_boxes', 'tw_plant', 'tw_roots'])
+    : (tall ? ['lab_tank', 'lab_server', 'lab_term', 'lab_term2', 'lab_cage'] : ['lab_bench', 'lab_cryo', 'lab_drums', 'lab_surgery', 'lab_shelf']);
+  const key = set[Math.floor(hash2(tx * 7 + 3, ty * 5 + 1) * set.length)], sx = Iso.sx(x0 + TILE / 2, y0 + TILE / 2), sy = Iso.sy(x0 + TILE / 2, y0 + TILE / 2);
+  if (!drawPropArt(key, sx, sy, h > 0.5)) return false;
+  if (key === 'lab_tank' && Settings.light && Light.list.length < LIGHT_CAP) addLight(sx, sy - 24, 70, 0.5, 'rgba(90,220,210,A)');
   return true;
 }
 

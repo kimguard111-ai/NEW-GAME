@@ -70,6 +70,11 @@ const ART = {
     broken: { file: 'signs/sign_broken.png', rects: [[4,98,162,102],[175,98,162,89],[346,84,162,112]], ink: ['#9a7a5a', '#8a9aa8', '#7a6a5a'] },
   },
   props: { // v1.31 Gemini 소품 8장 (64종) — 덩어리 추출로 자른 아틀라스 · mirror = 그림이 반대 방향이라 뒤집어 씀
+    // v1.79 연구소 장비 · 스카이타워 집기 · 캠프 시설 · 던전 출입구 (프롬프트 41 · 42 · 44 · 45)
+    lab_tank: { file: 'props_lab.png', rect: [4, 4, 142, 252] }, lab_bench: { file: 'props_lab.png', rect: [150, 4, 194, 189] }, lab_server: { file: 'props_lab.png', rect: [348, 4, 131, 241] }, lab_cryo: { file: 'props_lab.png', rect: [483, 4, 190, 172] }, lab_cage: { file: 'props_lab.png', rect: [677, 4, 173, 191] }, lab_drums: { file: 'props_lab.png', rect: [854, 4, 163, 160] }, lab_surgery: { file: 'props_lab.png', rect: [4, 260, 181, 219] }, lab_term: { file: 'props_lab.png', rect: [189, 260, 129, 190] }, lab_term2: { file: 'props_lab.png', rect: [322, 260, 152, 203] }, lab_shelf: { file: 'props_lab.png', rect: [478, 260, 144, 123] },
+    tw_desk: { file: 'props_tower.png', rect: [4, 4, 262, 226] }, tw_cabinet: { file: 'props_tower.png', rect: [270, 4, 206, 237] }, tw_meeting: { file: 'props_tower.png', rect: [480, 4, 297, 242] }, tw_cooler: { file: 'props_tower.png', rect: [781, 4, 91, 236] }, tw_plant: { file: 'props_tower.png', rect: [876, 4, 82, 176] }, tw_copier: { file: 'props_tower.png', rect: [4, 250, 195, 230] }, tw_boxes: { file: 'props_tower.png', rect: [203, 250, 229, 224] }, tw_roots: { file: 'props_tower.png', rect: [436, 250, 288, 236] }, tw_door: { file: 'props_tower.png', rect: [728, 250, 108, 242] }, tw_elev: { file: 'props_tower.png', rect: [840, 250, 149, 246] },
+    cf_target: { file: 'props_campfac.png', rect: [4, 4, 103, 167] }, cf_locker: { file: 'props_campfac.png', rect: [111, 4, 104, 166] }, cf_sandbag: { file: 'props_campfac.png', rect: [219, 4, 256, 172] }, cf_booth: { file: 'props_campfac.png', rect: [479, 4, 148, 181] }, cf_bench: { file: 'props_campfac.png', rect: [631, 4, 170, 181] }, cf_drill: { file: 'props_campfac.png', rect: [805, 4, 89, 181] }, cf_crane: { file: 'props_campfac.png', rect: [898, 4, 117, 183] }, cf_crane2: { file: 'props_campfac.png', rect: [4, 191, 151, 182] }, cf_cot: { file: 'props_campfac.png', rect: [159, 191, 243, 173] }, cf_clinic: { file: 'props_campfac.png', rect: [406, 191, 261, 184] }, cf_forklift: { file: 'props_campfac.png', rect: [671, 191, 178, 180] },
+    dx_lift: { file: 'props_dunexit.png', rect: [4, 4, 294, 361] }, dx_labexit: { file: 'props_dunexit.png', rect: [302, 4, 292, 367] }, dx_up: { file: 'props_dunexit.png', rect: [598, 4, 263, 365] }, dx_twexit: { file: 'props_dunexit.png', rect: [4, 375, 299, 367] },
     // props_street.png
     barrel: { file: 'props_street.png', rect: [489, 4, 84, 146] },
     bench: { file: 'props_street.png', rect: [304, 184, 168, 164], mirror: true },
@@ -179,6 +184,8 @@ const ART = {
   },
   // 소품 그림을 화면에 놓는 크기: w = 화면 가로(px, 확대 1배 기준) · y = 그림 아래쪽을 바닥 점보다 얼마나 아래에 둘지
   propFit: {
+    // v1.79
+    lab_tank: { w: 30, y: 4 }, lab_bench: { w: 44, y: 4 }, lab_server: { w: 28, y: 4 }, lab_cryo: { w: 44, y: 4 }, lab_cage: { w: 40, y: 4 }, lab_drums: { w: 32, y: 4 }, lab_surgery: { w: 44, y: 4 }, lab_term: { w: 28, y: 4 }, lab_term2: { w: 30, y: 4 }, lab_shelf: { w: 38, y: 4 }, tw_desk: { w: 46, y: 4 }, tw_cabinet: { w: 34, y: 4 }, tw_meeting: { w: 50, y: 4 }, tw_cooler: { w: 18, y: 4 }, tw_plant: { w: 16, y: 4 }, tw_copier: { w: 32, y: 4 }, tw_boxes: { w: 40, y: 4 }, tw_roots: { w: 52, y: 4 }, tw_door: { w: 28, y: 4 }, tw_elev: { w: 30, y: 4 }, cf_target: { w: 20, y: 4 }, cf_locker: { w: 24, y: 4 }, cf_sandbag: { w: 76, y: 4 }, cf_booth: { w: 58, y: 4 }, cf_bench: { w: 60, y: 4 }, cf_drill: { w: 22, y: 4 }, cf_crane: { w: 50, y: 4 }, cf_crane2: { w: 50, y: 4 }, cf_cot: { w: 54, y: 4 }, cf_clinic: { w: 92, y: 4 }, cf_forklift: { w: 48, y: 4 }, dx_lift: { w: 62, y: 4 }, dx_labexit: { w: 62, y: 4 }, dx_up: { w: 56, y: 4 }, dx_twexit: { w: 62, y: 4 },
     truck: { w: 100, y: 18 }, taxi_o: { w: 92, y: 18 }, minibus: { w: 130, y: 24 }, taxi_s: { w: 92, y: 18 }, delivery: { w: 34, y: 5 }, van: { w: 98, y: 18 }, reefer: { w: 104, y: 20 }, handcart: { w: 34, y: 5 }, bikes: { w: 46, y: 6 },
     fishcart: { w: 40, y: 6 }, recycle: { w: 40, y: 6 }, phonebooth: { w: 22, y: 4 }, mailbox: { w: 14, y: 2 }, clothesbin: { w: 22, y: 4 }, vent: { w: 40, y: 8 }, kiosk: { w: 36, y: 8 }, trashpile: { w: 40, y: 6 }, wiretree: { w: 40, y: 6 },
     gates: { w: 64, y: 8 }, ticketm: { w: 28, y: 6 }, screendoor: { w: 60, y: 8 }, linemap: { w: 52, y: 4 }, chairs: { w: 50, y: 6 }, firebox: { w: 34, y: 6 }, stationkiosk: { w: 48, y: 10 }, stairs: { w: 72, y: 12 }, sandlamp: { w: 52, y: 8 },
@@ -205,6 +212,12 @@ const ART = {
   // v1.19 건물 질감 (가공 도구의 「v1.19 건물 외벽 / 옥상 질감」). 외벽 = 건물 한 칸 × 한 층의 정면 그림, 옥상 = 위에서 본 바닥
   // 등록하면 건물 벽·옥상에 기울여 붙임 (없으면 코드로 그린 벽·창문)
   tex: { // v1.31 Gemini 질감 4장 — 외벽 6종 + 변형 5종 · 옥상 3종 · 실내 바닥 6종
+    // v1.79 연구소 · 스카이타워 · 캠프 바닥/벽 (프롬프트 40 · 43 · 44)
+    lab_f_steel: { file: 'tex_lab_floor.png', rect: [9, 94, 326, 318] }, lab_f_tile: { file: 'tex_lab_floor.png', rect: [350, 94, 324, 318] }, lab_f_grate: { file: 'tex_lab_floor.png', rect: [690, 94, 325, 318] },
+    lab_w_concrete: { file: 'tex_lab_wall.png', rect: [9, 7, 326, 558] }, lab_w_white: { file: 'tex_lab_wall.png', rect: [348, 7, 328, 558] }, lab_w_bulk: { file: 'tex_lab_wall.png', rect: [690, 7, 325, 558] },
+    tw_f_carpet: { file: 'tex_tower_floor.png', rect: [8, 40, 326, 326] }, tw_f_lobby: { file: 'tex_tower_floor.png', rect: [348, 40, 326, 326] }, tw_f_roots: { file: 'tex_tower_floor.png', rect: [690, 120, 326, 326] },
+    tw_w_glass: { file: 'tex_tower_wall.png', rect: [8, 7, 326, 561] }, tw_w_office: { file: 'tex_tower_wall.png', rect: [347, 6, 330, 561] }, tw_w_roots: { file: 'tex_tower_wall.png', rect: [690, 6, 326, 562] },
+    cp_tile: { file: 'tex_camp.png', rect: [8, 7, 326, 368] }, cp_tarp: { file: 'tex_camp.png', rect: [350, 8, 324, 367] }, cp_pallet: { file: 'tex_camp.png', rect: [690, 8, 325, 367] }, cp_rubber: { file: 'tex_camp.png', rect: [9, 390, 325, 368] }, cp_concrete: { file: 'tex_camp.png', rect: [350, 390, 325, 369] }, cp_gravel: { file: 'tex_camp.png', rect: [690, 390, 326, 369] },
     // v1.35.1 외벽은 tex_tall1~6 (세로 3:5) 로 바뀜 — 아래 키들은 그 그림을 가리킴
     // tex_facade.png
     f_apartment: { file: 'tex_tall1.png', rect: [3, 3, 332, 566] },

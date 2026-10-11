@@ -93,6 +93,7 @@ const Raid = {
   // ---------- v1.77 지하 연구소 층 · v1.78 도전 던전 공통 (연구소 ▼ · 스카이타워 ▲) ----------
   labFloor(f, id = World.map) { World.labFloor = f; const D = DUNGEONS[id], lv = D.lv(f); ZONES[MAPS[id].zone].lvl = [lv, f >= D.floors ? lv : lv + 1]; },
   labLiftEvent() {
+    for (const ex of G.exits || []) if (ex.side) RaidEvents.list.push({ ext: true, kind: 'dun_exit', x: ex.x - 40, y: ex.y - 40, draw: drawDunExit }); // v1.79 비상 계단 그림 (탈출 원 뒤)
     const L = World.labLift, p = G.player; if (!L || !p.raid) return;
     const f = p.raid.floor, D = DUNGEONS[World.map];
     RaidEvents.list.push({ ext: true, kind: 'lab_lift', x: (L.cx + 0.5) * TILE, y: (L.cy + 0.5) * TILE, hint: `[E] ${D.lift} — ${D.label(f + 1)}로 ${D.verb} (3초 · 적 Lv${D.lv(f + 1)})`, dur: 3, open: true,
@@ -245,10 +246,18 @@ const Stash = {
 function drawLabLift(e) {
   if (e.done) return;
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -80 || sx > VW + 80 || sy < -140 || sy > VH + 60) return;
-  drawBox(e.x - 22, e.y - 14, e.x + 22, e.y + 14, 56, '#5a6068', '#2e3238', '#444a52', 0, 0, 0);
-  const k = 0.5 + Math.sin(G.time * 3) * 0.5;
-  ctx.fillStyle = '#d8b030'; ctx.fillRect(sx - 18, sy - 6, 36, 4);
-  ctx.fillStyle = `rgba(122,208,255,${0.5 + k * 0.5})`; ctx.fillRect(sx - 3, sy - 62, 6, 4);
-  if (Settings.light) addLight(sx, sy - 30, 110, 0.7, 'rgba(122,208,255,A)');
+  const k = 0.5 + Math.sin(G.time * 3) * 0.5, tw = World.def && World.def.tower;
+  if (!drawPropArt(tw ? 'dx_up' : 'dx_lift', sx, sy)) { // v1.79 그림 (45절) · 없으면 코드 상자
+    drawBox(e.x - 22, e.y - 14, e.x + 22, e.y + 14, 56, '#5a6068', '#2e3238', '#444a52', 0, 0, 0);
+    ctx.fillStyle = '#d8b030'; ctx.fillRect(sx - 18, sy - 6, 36, 4);
+    ctx.fillStyle = `rgba(122,208,255,${0.5 + k * 0.5})`; ctx.fillRect(sx - 3, sy - 62, 6, 4);
+  }
+  if (Settings.light) addLight(sx, sy - 30, 110, 0.5 + k * 0.2, tw ? 'rgba(255,200,110,A)' : 'rgba(122,208,255,A)');
   { const D = DUNGEONS[World.map] || DUNGEONS.lab, f = G.player.raid ? G.player.raid.floor : 1; nameTag(sx, sy - 72, `${D.lift} ${D.arrow} ${D.label(f + 1)}`, D.col, 'bold 12px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'); }
+}
+
+// v1.79 던전 비상 계단 (탈출 지점 뒤에 세움 · 45절)
+function drawDunExit(e) {
+  const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -90 || sx > VW + 90 || sy < -160 || sy > VH + 60) return;
+  drawPropArt(World.def && World.def.tower ? 'dx_twexit' : 'dx_labexit', sx, sy);
 }
