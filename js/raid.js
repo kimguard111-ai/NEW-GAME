@@ -93,10 +93,11 @@ const Raid = {
   // ---------- v1.77 지하 연구소 층 · v1.78 도전 던전 공통 (연구소 ▼ · 스카이타워 ▲) ----------
   labFloor(f, id = World.map) { World.labFloor = f; const D = DUNGEONS[id], lv = D.lv(f); ZONES[MAPS[id].zone].lvl = [lv, f >= D.floors ? lv : lv + 1]; },
   labLiftEvent() {
-    for (const ex of G.exits || []) if (ex.side) RaidEvents.list.push({ ext: true, kind: 'dun_exit', x: ex.x - 40, y: ex.y - 40, draw: drawDunExit }); // v1.79 비상 계단 그림 (탈출 원 뒤)
+    for (const ex of G.exits || []) if (ex.side) RaidEvents.list.push({ ext: true, kind: 'dun_exit', x: ex.door ? ex.door.x : ex.x - 40, y: ex.door ? ex.door.y : ex.y - 40, face: ex.door && ex.door.face, draw: drawDunExit }); // v1.79 비상 계단 그림 · v1.80 뒷벽에 붙임
     const L = World.labLift, p = G.player; if (!L || !p.raid) return;
     const f = p.raid.floor, D = DUNGEONS[World.map];
-    RaidEvents.list.push({ ext: true, kind: 'lab_lift', x: (L.cx + 0.5) * TILE, y: (L.cy + 0.5) * TILE, hint: `[E] ${D.lift} — ${D.label(f + 1)}로 ${D.verb} (3초 · 적 Lv${D.lv(f + 1)})`, dur: 3, open: true,
+    const P = World.labLiftSpot; // v1.80 뒷벽 자리 (없으면 방 가운데)
+    RaidEvents.list.push({ ext: true, kind: 'lab_lift', x: P ? (P.x + P.fx) / 2 : (L.cx + 0.5) * TILE, y: P ? (P.y + P.fy) / 2 : (L.cy + 0.5) * TILE, ax: P ? P.x : null, ay: P ? P.y : null, face: P && P.face, /* [E] 는 벽 앞에서 · 그림은 벽에 */ hint: `[E] ${D.lift} — ${D.label(f + 1)}로 ${D.verb} (3초 · 적 Lv${D.lv(f + 1)})`, dur: 3, open: true,
       onFinish: e => { e.done = true; this.descend(); },
       track: () => `${D.label(f)} · ${D.lift}(미니맵 ${D.arrow})로 ${D.label(f + 1)} · 또는 비상 계단으로 탈출`,
       mini: (g, e, b) => { g.fillStyle = b ? D.col : '#555'; g.fillRect(e.x / TILE - 3, e.y / TILE - 3, 6, 6); },
@@ -245,10 +246,10 @@ const Stash = {
 // v1.77 연구소 승강기 (그림이 오기 전까지 코드 그림: 철제 문 + 노란 경고 띠 + 하늘색 불)
 function drawLabLift(e) {
   if (e.done) return;
-  const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -80 || sx > VW + 80 || sy < -140 || sy > VH + 60) return;
+  const ex = e.ax ?? e.x, ey = e.ay ?? e.y, sx = Iso.sx(ex, ey), sy = Iso.sy(ex, ey); if (sx < -80 || sx > VW + 80 || sy < -140 || sy > VH + 60) return;
   const k = 0.5 + Math.sin(G.time * 3) * 0.5, tw = World.def && World.def.tower;
-  if (!drawPropArt(tw ? 'dx_up' : 'dx_lift', sx, sy)) { // v1.79 그림 (45절) · 없으면 코드 상자
-    drawBox(e.x - 22, e.y - 14, e.x + 22, e.y + 14, 56, '#5a6068', '#2e3238', '#444a52', 0, 0, 0);
+  if (!drawPropArt(tw ? 'dx_up' : 'dx_lift', sx, sy, e.face === 'w')) { // 서쪽 벽이면 좌우 뒤집어 벽을 등지게 // v1.79 그림 (45절) · 없으면 코드 상자
+    drawBox(ex - 22, ey - 14, ex + 22, ey + 14, 56, '#5a6068', '#2e3238', '#444a52', 0, 0, 0);
     ctx.fillStyle = '#d8b030'; ctx.fillRect(sx - 18, sy - 6, 36, 4);
     ctx.fillStyle = `rgba(122,208,255,${0.5 + k * 0.5})`; ctx.fillRect(sx - 3, sy - 62, 6, 4);
   }
@@ -259,5 +260,5 @@ function drawLabLift(e) {
 // v1.79 던전 비상 계단 (탈출 지점 뒤에 세움 · 45절)
 function drawDunExit(e) {
   const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y); if (sx < -90 || sx > VW + 90 || sy < -160 || sy > VH + 60) return;
-  drawPropArt(World.def && World.def.tower ? 'dx_twexit' : 'dx_labexit', sx, sy);
+  drawPropArt(World.def && World.def.tower ? 'dx_twexit' : 'dx_labexit', sx, sy, e.face === 'w');
 }

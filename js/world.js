@@ -267,10 +267,16 @@ const World = {
     const pickNear = (tx, ty, used) => grid.filter(r => !used.includes(r)).sort((a, b) => Math.hypot(a.cx - tx, a.cy - ty) - Math.hypot(b.cx - tx, b.cy - ty))[0];
     const used = [], c = at(bgx, bgy); used.push(c);
     if ((this.labFloor || 1) >= DUNGEONS[this.map].floors) { this.labBoss = c; c.boss = true; this.labLift = null; } else { this.labBoss = null; c.lift = true; this.labLift = c; } // v1.77 마지막 층만 격리실 · 그 위층은 가운데 방에 승강기
+    this.labLiftSpot = this.labLift ? this.backWall(this.labLift) : null; // v1.80 승강기 · 위층 계단도 뒷벽에
     this.edgePts = [];
     for (const [tx, ty, side] of [[W >> 1, 0, 'N'], [W, H >> 1, 'E'], [W >> 1, H, 'S'], [0, H >> 1, 'W']]) {
       const r = pickNear(tx, ty, used); used.push(r); r.exit = side;
-      this.edgePts.push({ x: r.cx * TILE + 16, y: r.cy * TILE + 16, side });
+      const d = this.backWall(r); // v1.80 비상 계단 문은 뒷벽(북·서)에 붙이고, 탈출 원은 그 앞
+      this.edgePts.push(d ? { x: d.fx, y: d.fy, side, door: d } : { x: r.cx * TILE + 16, y: r.cy * TILE + 16, side });
+    }
+    for (const sp of [this.labLiftSpot, ...this.edgePts.map(q => q.door)].filter(Boolean)) { // 그 앞 2칸은 장비를 치움 (드나들 길)
+      const cx = Math.floor(sp.x / TILE), cy = Math.floor(sp.y / TILE);
+      for (let y = cy - 1; y <= cy + 3; y++) for (let x = cx - 2; x <= cx + 3; x++) { const i = y * W + x; if (this.tiles[i] === T.LPROP) { this.tiles[i] = T.LFLOOR; this.height[i] = 0; } }
     }
     // 비상등: 방마다 1~2개 (붉게 깜빡임). 보스 방은 4개
     for (const r of grid) {
@@ -281,6 +287,16 @@ const World = {
     this.buildMinimap();
   },
 
+  // v1.80 방의 뒷벽(화면에서 보이는 북쪽 · 서쪽 벽)에 붙은 자리: 벽 칸 3개가 이어진 곳 중 가운데에 가까운 곳
+  // 반환 { x, y: 물건 자리(벽 바로 앞 칸) · fx, fy: 그 앞에 서는 자리 · face: 'n' | 'w' }
+  backWall(r) {
+    const W = this.W, wall = (x, y) => this.tiles[y * W + x] === T.LWALL, cand = [];
+    for (let x = r.x0 + 1; x <= r.x1 - 1; x++) if (wall(x - 1, r.y0 - 1) && wall(x, r.y0 - 1) && wall(x + 1, r.y0 - 1)) cand.push({ tx: x, ty: r.y0, face: 'n', d: Math.abs(x - r.cx) });
+    for (let y = r.y0 + 1; y <= r.y1 - 1; y++) if (wall(r.x0 - 1, y - 1) && wall(r.x0 - 1, y) && wall(r.x0 - 1, y + 1)) cand.push({ tx: r.x0, ty: y, face: 'w', d: Math.abs(y - r.cy) + 0.5 });
+    if (!cand.length) return null;
+    const c = cand.sort((a, b) => a.d - b.d)[0], x = (c.tx + 0.5) * TILE, y = (c.ty + 0.5) * TILE;
+    return { x, y, face: c.face, fx: c.face === 'n' ? x : x + TILE * 1.6, fy: c.face === 'n' ? y + TILE * 1.6 : y };
+  },
   // 맵 네 변의 가운데 근처 길 (출격 시작점 하나 + 나머지는 탈출 지점). 주변 막힌 칸을 치움
   makeEdgePoints() {
     const W = this.W, H = this.H;
