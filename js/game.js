@@ -440,7 +440,7 @@ function playerAttack() {
     });
   }
   p.recoilT = 0.07;
-  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || wbase(w.key) === 'sniper' ? 9 : wbase(w.key) === 'lmg' || wbase(w.key) === 'smg' ? 2.2 : wbase(w.key) === 'rifle' ? 3.5 : 4.5; const kk = k * attMul(w, 'kick'); G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * kk; G.kick.y -= d.y * kk; } // v1.28 사격 반동이 화면에도 // v1.40 반동 조금 더 세게
+  if (Settings.shake) { const d = Iso.dir(aim0), k = b.pellets || wbase(w.key) === 'sniper' ? 9 : wbase(w.key) === 'lmg' || wbase(w.key) === 'smg' ? 2.2 : wbase(w.key) === 'rifle' ? 3.5 : 4.5; const kk = k * attMul(w, 'kick') * (b.pellets ? clamp(b.rate / 0.7, 0.35, 1) : 1); G.kick = G.kick || { x: 0, y: 0 }; G.kick.x -= d.x * kk; G.kick.y -= d.y * kk; } // v1.28 사격 반동이 화면에도 // v1.40 반동 조금 더 세게
   Juice.shot(p, w, mx, my, aim0); // v1.28 총구 섬광 · 탄피
   if (wbase(w.key) === 'sniper') { // v1.9 저격: 탄도가 잠깐 남음
     let ex = mx, ey = my; const c = Math.cos(aim0), sn = Math.sin(aim0);
@@ -448,7 +448,7 @@ function playerAttack() {
     G.effects.push({ type: 'tracer', x: mx, y: my, x2: ex, y2: ey, t: 0, life: 0.35, color: 'rgba(255,240,200,0.8)', w: 2.5 });
   }
   G.particles.push({ x: mx, y: my, vx: 0, vy: 0, t: 0, life: 0.06, color: '#ffe9a0', size: b.pellets ? 14 : wbase(w.key) === 'sniper' ? 12 : 8, z: 22 });
-  G.shake = Math.max(G.shake, b.pellets ? 6 : wbase(w.key) === 'sniper' ? 7 : wbase(w.key) === 'lmg' ? 2.2 : 1.5);
+  G.shake = Math.max(G.shake, b.pellets ? 6 * clamp(b.rate / 0.7, 0.35, 1) : wbase(w.key) === 'sniper' ? 7 : wbase(w.key) === 'lmg' ? 2.2 : 1.5); // v1.82.1 연사 산탄(래피드 블래스터)은 흔들림 · 반동을 발사 간격만큼 줄임 (6 → 2.1)
   if (w.loaded === 0) startReload();
 }
 
