@@ -42,7 +42,7 @@ const Raid = {
         + (ok && id === DIFF_MAP && diffOpen(p) > 0 ? `<div class="mc-diff">${DIFFS.map((D, i) => i > diffOpen(p) ? `<span class="dbtn off">${ICON('lock')} ${D.name}</span>` : `<span class="dbtn" data-diff="${i}" style="border-color:${D.color};color:${D.color}">${D.name}${i ? ` <small>경험치 ×${D.exp} · 신화 ×${D.myth}</small>` : ''}</span>`).join('')}</div>${diffOpen(p) < 2 ? '<div class="muted" style="font-size:11px">헬: 하드에서 바벨을 쓰러뜨리면</div>' : ''}` : '') // v1.66 잠실 난이도
         + (ok ? '<div class="mc-go">▶ 출격</div>' : '') + '</div></div>';
     };
-    h += `<div class="map-grid">${MAP_ORDER.filter(id => !MAPS[id].lab).map(card).join('')}</div>` + MAP_ORDER.filter(id => MAPS[id].lab).map(card).join('');
+    h += `<div class="map-grid">${MAP_ORDER.filter(id => !MAPS[id].lab).map(card).join('')}</div>` + `<div class="map-grid dun">${MAP_ORDER.filter(id => MAPS[id].lab).map(card).join('')}</div>`; // v1.83.1 도전 던전 두 장을 한 줄에
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨', h, btns); $('panel-dialog').classList.add('mapdlg');
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격

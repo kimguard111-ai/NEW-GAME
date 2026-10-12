@@ -565,7 +565,7 @@ body.touch .panel, body.touch #raid-summary > div { zoom: 1; } /* v1.67 모바�
 /* v1.67 글자 크기를 키워도 창이 화면 안에: 높이 한도를 확대 배율로 나눔 (zoom 이 vh 도 키우므로) · 넘칠 때만 안에서 스크롤 */
 body:not(.touch) .panel { max-height: calc((100vh - 110px) / var(--tsp)); overflow-y: auto; }
 body:not(.touch) #panel-dialog { bottom: calc(140px / var(--tsp)); max-height: calc((100vh - 150px) / var(--tsp)); overflow-y: visible; }
-body:not(.touch) #panel-dialog.mapdlg { max-height: calc((100vh - 16px) / var(--tsp)); }
+body:not(.touch) #panel-dialog.mapdlg { max-height: calc((100vh - 16px) / var(--tsp)); bottom: auto; } /* v1.83.1 위 규칙의 bottom 140px 이 남아 창이 화면 절반 높이로 잘리던 것 (출격 카드가 스크롤 아래로 숨음) */
 body:not(.touch) #panel-quest { top: calc(80px / var(--tsp)); max-height: calc((100vh - 96px) / var(--tsp)); }
 body:not(.touch) #panel-enhance { top: calc(80px / var(--tsp)); max-height: calc((100vh - 100px) / var(--tsp)); }
 

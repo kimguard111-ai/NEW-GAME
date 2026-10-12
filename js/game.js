@@ -1511,7 +1511,12 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
   UI.init();
   if (document.fonts) for (const f of ['12px BlackHan', '12px Typer', '12px Pen']) document.fonts.load(f); // v1.39 캔버스 글씨용 글꼴 미리 읽기
   Sprites.loadAll();
-  document.getElementById('version-label').textContent = GAME_VERSION;
+  document.getElementById('version-label').textContent = GAME_VERSION + (/\.vercel\.app$/.test(location.hostname) ? ' · ' + location.hostname : ''); // v1.83.1 접속 주소도 (기기마다 같은 주소인지 확인용)
+  // v1.83.1 저장은 「주소마다」 따로 — 배포마다 바뀌는 임시 주소(…-a1b2c3d4e-….vercel.app)로 들어오면 매 패치 저장이 비어 보임 → 알림
+  if (/\.vercel\.app$/.test(location.hostname) && !/-git-/.test(location.hostname) && /-(?=[a-z]*\d)(?=\d*[a-z])[a-z0-9]{9}-/.test(location.hostname)) {
+    const w = document.getElementById('addr-warn'); w.classList.remove('hidden');
+    w.textContent = '⚠ 지금 주소는 패치마다 바뀌는 임시 주소예요. 저장은 주소마다 따로 남아서, 다음 패치 땐 비어 보입니다. 늘 같은 주소(즐겨찾기 · 홈 화면)로 들어오고, 옮길 땐 설정 → 세이브 코드를 쓰세요.';
+  }
   { // v1.49 첫 로딩: 그림을 다 받을 때까지 진행 막대 (느린 회선에서 빈 화면처럼 보이던 것)
     const bar = document.createElement('div'); bar.id = 'load-bar'; bar.innerHTML = '<div class="lb-fill"></div><span>그림 불러오는 중…</span>';
     document.querySelector('.title-main').appendChild(bar);
@@ -1540,7 +1545,18 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     startGame(null, name);
   };
   btnC.onclick = () => save && startGame(save);
+  document.getElementById('btn-title-import').onclick = () => { // v1.83.1 다른 기기·주소의 세이브를 타이틀에서 바로 (설정 → 세이브 코드 만들기로 받은 것)
+    const code = prompt(`세이브 코드를 붙여넣으세요 (슬롯 ${SAVE_SLOT}에 들어갑니다)`); if (!code || !code.trim()) return;
+    try {
+      const raw = decodeURIComponent(escape(atob(code.trim()))), s = JSON.parse(raw);
+      if (!validSave(s)) throw new Error('bad');
+      if (save && !confirm(`슬롯 ${SAVE_SLOT}의 「${save.p.name} Lv${save.p.level}」 위에 「${s.p.name} Lv${s.p.level}」을(를) 덮어쓸까요?`)) return;
+      localStorage.setItem(slotKey(SAVE_SLOT), raw); slots(); alert(`「${s.p.name} Lv${s.p.level}」을(를) 불러왔습니다. [이어서]를 누르세요.`);
+    } catch (e) { alert('세이브 코드가 올바르지 않습니다.'); }
+  };
   document.getElementById('btn-respawn').onclick = respawn;
   window.addEventListener('beforeunload', () => saveGame());
+  window.addEventListener('pagehide', () => { if (G.running) saveGame(); }); // v1.83.1 모바일은 beforeunload 가 잘 안 옴 — 앱 전환·탭 닫기·새로고침 때 저장
+  document.addEventListener('visibilitychange', () => { if (document.hidden && G.running) saveGame(); });
   requestAnimationFrame(frame);
 })();

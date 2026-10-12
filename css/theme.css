@@ -558,3 +558,11 @@ body.touch .title-main .title-buttons button { font-size: 20px !important; paddi
 
 /* v1.83 던전 출격 카드 그림 (장면이라 꽉 채움) */
 .mc-art.scene { object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,.12); } .map-card.wide .mc-art.scene { width: 56px; height: 56px; } body.touch .map-card.wide .mc-art.scene { width: 44px; height: 44px; }
+.map-grid.dun { grid-template-columns: 1fr 1fr; margin-top: 0; } .map-grid.dun .map-card.wide { margin-bottom: 0; } /* v1.83.1 */
+/* v1.83.1 모바일 출격 창을 한 화면에: 준비 줄 한 줄로 · 「출격할 곳」 제목과 카드의 「▶ 출격」 줄 숨김 (카드 전체를 누르면 출격) · 던전 카드 설명 숨김 */
+body.touch #panel-dialog.mapdlg .prep { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; padding: 3px 8px; }
+body.touch #panel-dialog.mapdlg .sum-head, body.touch #panel-dialog.mapdlg .mc-go, body.touch .map-grid.dun .mc-desc { display: none; }
+/* v1.83.1 타이틀: 세이브 코드 붙여넣기 · 임시 주소 알림 */
+#title-save { margin: 8px 0 0; font-size: 12px; } #title-save a { color: #9a8f74; text-decoration: underline; cursor: pointer; }
+#addr-warn { margin: 10px auto 0; max-width: 520px; padding: 6px 10px; border: 1px solid #a8642c; background: rgba(60,30,10,.75); color: #ffc890; font-size: 12px; line-height: 1.5; border-radius: 4px; }
+body.touch #addr-warn { font-size: 11px; margin-top: 6px; padding: 4px 8px; line-height: 1.35; }
