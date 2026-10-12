@@ -32,10 +32,10 @@ const Raid = {
     // v1.53.1 3×2 카드 (지하 연구소는 아래 가로 한 줄) · 지금 갈 곳에 「추천」 — 한 줄 목록이라 출격 버튼을 못 찾던 것
     const story = CHAPTER_MAP[p.quest.ch], rec = story && this.unlocked(story) ? story : [...MAP_ORDER].reverse().find(id => !MAPS[id].lab && this.unlocked(id) && ZONES[MAPS[id].zone].lvl[0] <= p.level) || 'myeongdong';
     const card = id => {
-      const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id), gr = p.graves[id], lm = d.landmark && ART.landmarks[d.landmark];
+      const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id), gr = p.graves[id], lm = d.card ? { file: d.card } : d.landmark && ART.landmarks[d.landmark];
       const ev = ok && Camp.lv('radio') >= 1 ? `<div class="mc-ev">${ICON('radio')} ${Camp.planFor(id).map(k => EVENT_DEFS[k].name).join(' · ')}</div>` : ''; // v1.13 무전실 미리 보기
       return `<div class="map-card${ok ? ' go' : ' locked'}${id === rec && ok ? ' rec' : ''}${d.lab ? ' wide' : ''}"${ok ? ` data-map="${id}"` : ''}>`
-        + (lm ? `<img class="mc-art" src="${artURL(lm.file)}" alt="">` : `<div class="mc-art ico-art">${ICON(d.tower ? 'warn' : d.lab ? 'chip' : 'map')}</div>`)
+        + (lm ? `<img class="mc-art${d.card ? ' scene' : ''}" src="${artURL(lm.file)}" alt="">` : `<div class="mc-art ico-art">${ICON(d.tower ? 'warn' : d.lab ? 'chip' : 'map')}</div>`)
         + `<div class="mc-body"><div class="mc-name">${ok ? '' : ICON('lock') + ' '}${d.name}${id === rec && ok ? ' <span class="mc-rec">추천</span>' : ''}</div>`
         + `<div class="mc-lv">${d.lab ? (D => `도전 · ${D.label(1)}~${D.label(D.floors)} · 적 Lv${D.lv(1)}~${D.lv(D.floors)}${p[D.best] ? ` · 최고 ${D.label(p[D.best])}` : ''}${gr && gr.floor ? ` · 가방 ${D.label(gr.floor)}` : ''}`)(DUNGEONS[id]) : `Lv${z.lvl[0]}~${z.lvl[1]}`}</div><div class="mc-desc">${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</div>`
         + (gr ? `<div class="mc-grave">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</div>` : '') + ev
@@ -93,7 +93,7 @@ const Raid = {
   },
 
   // ---------- v1.77 지하 연구소 층 · v1.78 도전 던전 공통 (연구소 ▼ · 스카이타워 ▲) ----------
-  labFloor(f, id = World.map) { World.labFloor = f; const D = DUNGEONS[id], lv = D.lv(f); ZONES[MAPS[id].zone].lvl = [lv, f >= D.floors ? lv : lv + 1]; },
+  labFloor(f, id = World.map) { World.labFloor = f; const D = DUNGEONS[id], lv = D.lv(f), Z = ZONES[MAPS[id].zone]; Z.lvl = [lv, f >= D.floors ? lv : lv + 1]; Z.spawns0 = Z.spawns0 || Z.spawns; Z.spawns = D.extra && f >= D.extra.f ? [...Z.spawns0, D.extra.spawn] : Z.spawns0; }, // v1.83 깊은 층부터 전용 적
   labLiftEvent() {
     for (const ex of G.exits || []) if (ex.side) RaidEvents.list.push({ ext: true, kind: 'dun_exit', x: ex.door ? ex.door.x : ex.x - 40, y: ex.door ? ex.door.y : ex.y - 40, face: ex.door && ex.door.face, draw: drawDunExit }); // v1.79 비상 계단 그림 · v1.80 뒷벽에 붙임
     const L = World.labLift, p = G.player; if (!L || !p.raid) return;
@@ -210,6 +210,7 @@ const Raid = {
       + `<div class="sum-row"><span>${ok ? '확보한 크레딧' : '잃은 크레딧'}</span><b>₵${fmt(ok ? r.credits : this.lastDeath.credits)}</b></div>`
       + `<div class="sum-head">${ok ? '가져온 장비' : '시체 가방에 남은 장비'} (${items.length})</div><div class="sum-items">${li}</div>`
       + (ok ? '' : `<div class="muted">다음에 「${MAPS[r.map].name}」에 출격하면 쓰러진 자리(미니맵 붉은 ✚)에서 회수할 수 있습니다. 다시 죽으면 새 가방으로 바뀝니다.</div>`);
+    $('raid-summary').classList.toggle('ok', !!ok); $('raid-summary').classList.toggle('bad', !ok); // v1.83 50절 배경 그림
     $('raid-summary').classList.remove('hidden');
   },
 

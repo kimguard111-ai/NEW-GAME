@@ -481,7 +481,8 @@ function explode(x, y, dmg, r, opts = {}) {
     const d = Math.hypot(e.x - x, e.y - y);
     if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e)) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true, blast: true });
   }
-  G.effects.push({ type: 'boom', x, y, t: 0, life: 0.4, r });
+  G.effects.push({ type: 'boom', x, y, t: 0, life: 0.45, r });
+  if (!opts.small) { G.effects.push({ type: 'smoke', x, y, t: 0, life: 1.2, r }); G.decals.push({ x, y, r: r * 0.55, a: rand(0, TAU), scorch: true }); if (G.decals.length > 150) G.decals.shift(); } // v1.83 연기 · 그을음
   SFX.playAt('boom', x, y, opts.small ? 0.4 : 1, 1400); // v1.35 위치 소리
   burst(x, y, '#ffb040', opts.small ? 12 : 30, opts.small ? 160 : 260, 0.5, 4);
   if (!opts.small) burst(x, y, '#555', 20, 120, 0.9, 6);
@@ -712,8 +713,8 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (w && w.unique === 'viper') e.slowT = G.time + 2;
   dmg = Math.max(1, Math.round(dmg));
   // v1.6 방패병: 정면(방패가 향한 쪽)에서 맞으면 피해 감소 (v1.7 80% → 65%). 폭발·경직 중·뒤/옆은 그대로
-  if (e.def.shield && !hit.blast && angle !== undefined && e.stunT <= 0 && Math.abs(angDiff(angle, (e.face || 0) + Math.PI)) < 1.05) {
-    dmg = Math.max(1, Math.round(dmg * 0.35));
+  if ((e.def.shield || e.def.front) && !hit.blast && angle !== undefined && e.stunT <= 0 && Math.abs(angDiff(angle, (e.face || 0) + Math.PI)) < 1.05) { // v1.83 경비 로봇 정면 장갑도 같은 규칙
+    dmg = Math.max(1, Math.round(dmg * (e.def.front || 0.35)));
     if (Math.random() < 0.3) floatText(e.x, e.y - e.r - 6, '막힘', '#9fb2c8', 12);
     SFX.play('metal', 0.6); burst(e.x + Math.cos(angle + Math.PI) * 12, e.y + Math.sin(angle + Math.PI) * 12, '#ffe0a0', 3, 120, 0.15, 2);
     e.hp -= dmg; e.hitT = 0.05; e.state = 'chase';
@@ -823,6 +824,7 @@ function killEnemy(e) {
   }
   if (FACTION[e.type] !== 'machine') G.decals.push({ x: e.x, y: e.y, r: e.r * rand(1, 1.6), a: rand(0, TAU) });
   if (G.decals.length > 150) G.decals.shift();
+  if (e.def.gasDeath) { G.pools.push({ x: e.x, y: e.y, r: 58, t: 0, life: 4.5, dps: e.dmg * 0.25, gas: true, by: '변이 연구원의 독가스' }); G.effects.push({ type: 'smoke', x: e.x, y: e.y, t: 0, life: 1, r: 40 }); SFX.playAt('boom', e.x, e.y, 0.3, 900); } // v1.83 가스통 폭발
   burst(e.x, e.y, FACTION[e.type] === 'machine' ? '#aab' : '#7a0d0d', e.def.boss ? 60 : 18, e.def.boss ? 260 : 170, 0.6, 4);
   G.effects.push({ type: 'ring', x: e.x, y: e.y, t: 0, life: 0.3, color: FACTION[e.type] === 'machine' ? '#cde' : '#fff', r: e.r * 2.5 });
   if (e.type === 'brute') hitstop(0.06);

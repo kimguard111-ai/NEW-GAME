@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.82.1';
+const GAME_VERSION = 'v1.83';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -220,6 +220,10 @@ const ENEMIES = {
   merc:    { name: '블랙선 용병', hp: 110, dmg: 5, /* v1.16 6→5: 봇 측정 강남 사망률 90~100% (사망 원인 1위) */ speed: 96, r: 12, exp: 40, weight: 1.1, color: '#2a2e36', atkCd: 1.0, aggro: 500,
              ranged: true, range: 360, fireCd: 2.8, burst: 3, bulletSpeed: 480, nade: true }, // v1.7 하향: 피해 11→7 · 사격 간격 1.9→2.4 · 사거리 420→360 · 탄속 560→480  // 3점사 · 가끔 수류탄
   shield:  { name: '방패 돌격병', hp: 170, dmg: 14, speed: 78, r: 14, exp: 48, weight: 2.2, color: '#3a3e46', atkCd: 1.6, aggro: 460, shield: true }, // 정면 피해 65% 감소 · 느리게 돌아섬 · v1.7 하향 (체력 200→170 · 피해 20→14 · 공격 간격 1.3→1.6)
+  // v1.83 도전 던전 전용 (49절) — 연구소 B2 · 스카이타워 40층부터 (DUNGEONS.extra)
+  researcher: { name: '변이 연구원', hp: 95, dmg: 14, speed: 96, r: 12, exp: 36, weight: 1, color: '#d8d0c8', atkCd: 0.9, aggro: 420, gasDeath: true }, // 죽으면 등의 가스통이 터져 보라 독가스 웅덩이
+  guardbot:   { name: '경비 로봇', hp: 150, dmg: 6, speed: 72, r: 13, exp: 44, weight: 1.4, color: '#c8ccd0', atkCd: 1.0, aggro: 480,
+                ranged: true, range: 380, fireCd: 2.4, burst: 3, bulletSpeed: 500, front: 0.5 }, // 3점사 · 정면 장갑 (앞에서 맞으면 피해 절반 · 폭발·뒤·옆은 그대로)
   stalker: { name: '은신 변이체', hp: 120, dmg: 16, /* v1.7 21→16: 위협은 은신, 피해까지 최고일 필요 없음 */ speed: 150, r: 12, exp: 46, weight: 0.9, color: '#4a3a5a', atkCd: 0.9, aggro: 420, pounce: true, cloak: true }, // 가까이 오거나 맞기 전엔 거의 안 보임
   boss:   { name: '방사능 군주 타이탄', hp: 52000, /* v1.7 90000→60000: 엔딩이 6장으로 옮겨져 중간 보스, 봇 측정상 Lv20 장비로 2분+ · v1.66 → 52000 · 피해 130 → 110 (봇 완주: 장비 운 나쁜 판에 타이탄에서 12번 사망 — 장판·폭발·돌진) */ dmg: 110, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
 };
@@ -275,15 +279,15 @@ const MAPS = {
   yeouido:    { name: '여의도 방사능 지대', zone: 4, size: 108, seed: 1404, landmark: 'tower63', chapter: 3, boss: true, hazards: true },
   gangnam:    { name: '강남 업무지구', zone: 6, size: 108, seed: 1606, landmark: 'coex', chapter: 4, tall: [0.55, 6, 6] } /* v1.21 9~17층 → 6~11층 (층 높이 2.7m) */, // v1.6 유리 고층 빌딩 숲
   jamsil:     { name: '잠실 변이 지대', zone: 7, size: 108, seed: 1707, landmark: 'lotte', chapter: 5, lake: true },      // v1.6 석촌호수 (얕은 물)
-  tower:      { name: '스카이타워', zone: 8, size: 66, seed: 1808, lab: true, tower: true, minLv: 30, needLab: true, lock: '지하 연구소 B5 키메라 처치 후' }, // v1.78 두 번째 도전 (연구소와 같은 층 구조 · 위로 오름)
-  lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
+  tower:      { name: '스카이타워', zone: 8, size: 66, seed: 1808, lab: true, tower: true, card: 'card_tower.png', minLv: 30, needLab: true, lock: '지하 연구소 B5 키메라 처치 후' }, // v1.78 두 번째 도전 (연구소와 같은 층 구조 · 위로 오름)
+  lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, card: 'card_lab.png', /* v1.83 출격 카드 그림 */ minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
 };
 // v1.77 지하 연구소 = 5층 도전: B1 Lv30 → B5 Lv38 · B1~B4 는 승강기로 내려감 · B5 격리실에 키메라 · 어느 층이든 비상 계단으로 탈출
 const LAB_FLOORS = 5, labFloorLv = f => 28 + 2 * f;
 // v1.78 도전 던전 공통: floors 층 수 · lv 층별 적 레벨 · label 층 이름 · lift 다음 층으로 가는 것 · best 최고 기록 키
 const DUNGEONS = {
-  lab:   { floors: LAB_FLOORS, lv: labFloorLv, hpM: f => 1.8 + 0.3 * (f - 1), dmgM: f => 1.3 + 0.1 * (f - 1), /* v1.81 장비를 맞춘 Lv30 에겐 너무 약하던 것 */ label: f => `B${f}`, lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
-  tower: { floors: 5, lv: f => 32 + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
+  lab:   { floors: LAB_FLOORS, lv: labFloorLv, hpM: f => 1.8 + 0.3 * (f - 1), dmgM: f => 1.3 + 0.1 * (f - 1), /* v1.81 장비를 맞춘 Lv30 에겐 너무 약하던 것 */ label: f => `B${f}`, extra: { f: 2, spawn: ['researcher', 24] }, /* v1.83 */ lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
+  tower: { floors: 5, lv: f => 32 + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, extra: { f: 2, spawn: ['guardbot', 24] }, /* v1.83 */ lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
 };
 const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'lab', 'tower']; // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
 const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil'];      // v1.6 장 번호 → 그 장의 맵

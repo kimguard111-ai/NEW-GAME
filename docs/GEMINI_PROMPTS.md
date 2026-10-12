@@ -1225,7 +1225,7 @@ Match the art style of the attached concept image. Create ONE image with a 2 by 
 
 ---
 
-## 46~50. 완성도 아트 2차 (v1.82 점검)
+## 46~50. 완성도 아트 2차 (v1.82 점검) — ✅ v1.83 9장 모두 반영
 v1.82에 다시 훑어본 결과, 아직 **빌려 쓰거나 코드로 그린 것**은 아래뿐입니다. 올리면 제가 잘라서 연결합니다 (`art_raw/new/`).
 
 | 순서 | 절 | 파일 이름 | 지금 | 바뀌는 곳 |

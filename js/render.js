@@ -592,6 +592,14 @@ const Mip = {
 // v1.50.9 그림 주소: webp(약 1/8 크기)를 먼저, 못 읽으면 png · 버전을 붙여 업데이트 뒤 옛 그림이 남지 않게
 function artURL(file, png) { const f = !png && /\.png$/.test(file) ? file.slice(0, -4) + '.webp' : file; return ART.dir + f + '?v=' + (typeof GAME_VERSION !== 'undefined' ? GAME_VERSION.replace(/^v/, '') : '0'); }
 function loadArt(im, file, onFail) { im.onerror = () => { if (!im._png && /\.png$/.test(file)) { im._png = true; im.src = artURL(file, true); } else onFail(); }; im.src = artURL(file); }
+// v1.83 전투 이펙트 그림: 지면 변환 중에도 화면 좌표로 (기울지 않게) · w = 화면 폭 · ay = 기준점 높이 비율 (0.5 가운데 · 1 발밑) · 그림이 없으면 false
+function drawVfx(key, wx, wy, w, alpha, ay = 0.5, flip = false) {
+  const s = ART.vfx && ART.vfx[key]; if (!s || !s.ready || alpha <= 0) return false;
+  const [rx, ry, rw, rh] = s.rect, h = w * rh / rw, sx = Iso.sx(wx, wy), sy = Iso.sy(wx, wy);
+  ctx.save(); Iso.reset(); ctx.globalAlpha = Math.min(1, alpha);
+  if (flip) { ctx.translate(sx, 0); ctx.scale(-1, 1); ctx.translate(-sx, 0); }
+  ctx.drawImage(s.img, rx, ry, rw, rh, sx - w / 2, sy - h * ay, w, h); ctx.restore(); return true;
+}
 const Sprites = {
   total: 0, done: 0, // v1.49 첫 로딩 진행
   load() {
@@ -603,7 +611,7 @@ const Sprites = {
   },
   loadAll() { // 무기·헬멧 그림까지 포함
     const cache = {}; // 한 파일에 여러 무기·헬멧(rect)이 들어 있으면 한 번만 읽음
-    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {}), ...Object.values(ART.icons || {}), ...Object.values(ART.signs || {})]) { // v1.18 소품 · v1.19 건물 질감 · v1.35.1 아이콘 포함
+    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {}), ...Object.values(ART.icons || {}), ...Object.values(ART.signs || {}), ...Object.values(ART.vfx || {})]) { // v1.18 소품 · v1.19 건물 질감 · v1.35.1 아이콘 포함
       let im = cache[s.file];
       if (!im) {
         im = cache[s.file] = new Image(); im.users = []; Sprites.total++;
@@ -1433,6 +1441,8 @@ function render() {
   }
   Iso.groundTransform();
   for (const d of G.decals) {
+    if (d.scorch) { drawVfx('scorch', d.x, d.y, d.r * 2.9 * ISO_K, 0.85, 0.5, d.a > Math.PI); continue; } // v1.83 폭발 그을음
+    if (!d.drop && d.r > 9 && drawVfx('blood', d.x, d.y, d.r * 3.2 * ISO_K, 0.8, 0.5, d.a > Math.PI)) continue; // v1.83 쓰러진 자리 피 웅덩이 그림
     ctx.fillStyle = d.drop ? 'rgba(110,12,12,0.6)' : 'rgba(90,10,10,0.45)';
     ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r, d.r * 0.6, d.a, 0, TAU); ctx.fill();
   }
@@ -1448,10 +1458,12 @@ function render() {
     const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
     g.addColorStop(0, `rgba(255,190,70,${0.55 * a * fl})`); g.addColorStop(0.7, `rgba(240,90,30,${0.4 * a})`); g.addColorStop(1, 'rgba(120,30,10,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, TAU); ctx.fill();
+    drawVfx('fire', f.x, f.y, f.r * 1.9 * ISO_K * (0.95 + 0.08 * Math.sin(G.time * 11 + f.y)), 0.95 * a, 0.92, Math.sin(G.time * 3 + f.x) > 0); // v1.83 불길 그림
   }
   for (const pl of G.pools) { // 산성 장판
     const a = Math.min(1, (pl.life - pl.t) / 0.6);
-    ctx.fillStyle = `rgba(230,90,30,${0.38 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill(); // v1.64 초록 → 주황·빨강
+    if (pl.gas || !drawVfx('acid', pl.x, pl.y, pl.r * 2.9 * ISO_K, 0.85 * a, 0.5, pl.x % 2 > 1)) { ctx.fillStyle = pl.gas ? `rgba(150,70,200,${0.4 * a})` : `rgba(230,90,30,${0.38 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill(); } /* v1.64 초록 → 주황·빨강 · v1.83 산성은 그림 · 독가스는 보라 */
+    ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU);
     ctx.strokeStyle = `rgba(255,50,40,${(0.55 + Math.sin(G.time * 8) * 0.2) * a})`; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
   }
   for (const s of G.strikes) { // 예고 원: 테두리 + 안쪽이 차오름
@@ -1506,7 +1518,11 @@ function render() {
   for (const ef of G.effects) {
     const k = ef.t / ef.life;
     if (ef.type === 'boom') {
+      const W = ef.r * 2.9 * ISO_K; // v1.83 그림: 섬광 → 불덩이 → 연기 고리
+      if (ART.vfx && ART.vfx.ball.ready) { if (k < 0.25) drawVfx('flash', ef.x, ef.y, W * (0.55 + k * 1.4), 1 - k * 2); drawVfx('ball', ef.x, ef.y, W * (0.6 + k * 0.55), k < 0.08 ? k / 0.08 : 1 - Math.max(0, k - 0.45) / 0.55, 0.62); if (k > 0.45) drawVfx('ring', ef.x, ef.y, W * (0.8 + k * 0.4), (k - 0.45) * 2.2, 0.55); continue; }
       ctx.fillStyle = `rgba(255,170,60,${0.55 * (1 - k)})`; ctx.beginPath(); ctx.arc(ef.x, ef.y, ef.r * (0.4 + k * 0.6), 0, TAU); ctx.fill();
+    } else if (ef.type === 'smoke') { // v1.83 큰 폭발 뒤 피어오르는 연기
+      drawVfx('smoke', ef.x, ef.y - k * 30, ef.r * ISO_K * (1.6 + k * 0.9), 0.75 * Math.min(1, k * 4) * (1 - k), 0.8);
     } else if (ef.type === 'ring') {
       ctx.strokeStyle = ef.color; ctx.globalAlpha = 1 - k; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(ef.x, ef.y, ef.r * k, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1;

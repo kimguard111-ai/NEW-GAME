@@ -8,6 +8,7 @@ const [key, order, outDir, ...files] = process.argv.slice(2);
   await pg.selectOption('#key', key);
   if (order !== '-') await pg.fill('#order', order);
   if (process.env.NOWM) await pg.uncheck('#wm');
+  if (process.env.NOHW) await pg.uncheck('#hw'); // v1.83 머리 위 연기·파편 때문에 크기가 흔들릴 때
   if (process.env.WIDE) await pg.fill('#wide', process.env.WIDE);
   await pg.setInputFiles('#file', files);
   await pg.waitForTimeout(2500);

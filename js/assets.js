@@ -14,7 +14,7 @@ const ART = {
   height: { player: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44, deploy: 44, stash: 44,
     // v0.15 보스 전용 그림 (등록하면 기본 적 그림을 키워 쓰는 대신 이 그림 사용)
     glutton: 66, panther: 56, argos: 46, redfang: 50, viper: 58, goliath: 118, warden: 100, butcher: 58, cerberus: 50, colony: 118, chimera: 120, merc: 44, shield: 48, stalker: 46,
-    raven: 54, babel: 120, hawk: 54, shade: 66, anvil: 62, queen: 118,
+    raven: 54, babel: 120, root: 124, researcher: 44, guardbot: 48, /* v1.83 */ hawk: 54, shade: 66, anvil: 62, queen: 118,
     comp: 44, resident_b: 42, resident_c: 42 }, // v1.49.3 동료·캠프 주민 (resident_c 노인은 허리가 굽음)
   // 플레이어 무기 그림 (옆모습 1장, 총구/날이 오른쪽). 플레이어 몸 그림은 무기 없이 만들고 이 그림을 손에 붙임
   // 없으면 코드로 그린 총·칼을 사용
@@ -300,6 +300,10 @@ const ART = {
   groundSet: ['f_shop', 'g_shutter', 'g_glass', 'g_awning', 'g_awning2', 'g_phone', 'g_grille', 'g_salon', 'g_salon2', 'g_realty', 'g_karaoke', 'g_empty'], // v1.31 변형(…2) 섞어 반복 줄이기
 
   // 랜드마크 건물 그림 (가공 도구의 "랜드마크" 항목으로 가공). 없으면 코드로 그린 건물 사용
+  vfx: { // v1.83 48절 전투 이펙트 (vfx_1.png 가로 아틀라스 · 칸마다 자기 크기)
+    flash: { file: 'vfx_1.png', rect: [0, 0, 107, 84] }, ball: { file: 'vfx_1.png', rect: [111, 0, 230, 167] }, ring: { file: 'vfx_1.png', rect: [345, 0, 220, 166] }, scorch: { file: 'vfx_1.png', rect: [571, 0, 220, 113] },
+    acid: { file: 'vfx_1.png', rect: [795, 0, 207, 118] }, fire: { file: 'vfx_1.png', rect: [1006, 0, 171, 209] }, smoke: { file: 'vfx_1.png', rect: [1181, 0, 174, 173] }, blood: { file: 'vfx_1.png', rect: [1359, 0, 121, 65] },
+  },
   landmarks: {
     // v1.7.3 Gemini 아트 6채
     cathedral: { file: 'cathedral.png' },
@@ -413,6 +417,10 @@ const ART = {
     butcher: { file: 'butcher.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 5], attack: [2, 5], hit: [3, 2], death: [4, 5] } },
     cerberus: { file: 'cerberus.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     chimera: { file: 'chimera.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    // v1.83 46 · 49절: 스카이타워 보스 「뿌리」 · 던전 전용 적 2종
+    root: { file: 'root.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 7], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    researcher: { file: 'researcher.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
+    guardbot: { file: 'guardbot.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 7], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
     colony: { file: 'colony.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
     queen: { file: 'queen.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     shade: { file: 'shade.png', cell: 128, w: 307, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 4] } },

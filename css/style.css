@@ -568,3 +568,7 @@ body:not(.touch) #panel-dialog { bottom: calc(140px / var(--tsp)); max-height: c
 body:not(.touch) #panel-dialog.mapdlg { max-height: calc((100vh - 16px) / var(--tsp)); }
 body:not(.touch) #panel-quest { top: calc(80px / var(--tsp)); max-height: calc((100vh - 96px) / var(--tsp)); }
 body:not(.touch) #panel-enhance { top: calc(80px / var(--tsp)); max-height: calc((100vh - 100px) / var(--tsp)); }
+
+/* v1.83 출격 결과 배경 (50절) — 가운데 창 뒤로 탈출: 새벽 헬기 · 사망: 비 오는 거리 */
+#raid-summary.ok { background: linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.6)), url(../assets/bg_extract.webp) center / cover no-repeat, #000; }
+#raid-summary.bad { background: linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.6)), url(../assets/bg_death.webp) center / cover no-repeat, #000; }

@@ -555,3 +555,6 @@ body.touch .title-main .title-buttons button { font-size: 20px !important; paddi
   body.touch #slot-row .slot .who { font-size: 19px !important; } body.touch #slot-row .slot .empty { font-size: 17px !important; } body.touch #slot-row .slot b, body.touch #slot-row .slot .meta { font-size: 12px !important; }
   body.touch .roster #name-input { font-size: 17px !important; }
 }
+
+/* v1.83 던전 출격 카드 그림 (장면이라 꽉 채움) */
+.mc-art.scene { object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,.12); } .map-card.wide .mc-art.scene { width: 56px; height: 56px; } body.touch .map-card.wide .mc-art.scene { width: 44px; height: 44px; }
