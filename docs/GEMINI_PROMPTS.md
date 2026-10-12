@@ -1225,6 +1225,76 @@ Match the art style of the attached concept image. Create ONE image with a 2 by 
 
 ---
 
+## 46~50. 완성도 아트 2차 (v1.82 점검)
+v1.82에 다시 훑어본 결과, 아직 **빌려 쓰거나 코드로 그린 것**은 아래뿐입니다. 올리면 제가 잘라서 연결합니다 (`art_raw/new/`).
+
+| 순서 | 절 | 파일 이름 | 지금 | 바뀌는 곳 |
+|---|---|---|---|---|
+| 1 ★ | 46 | `root.png` (동작 시트) | 잠실 「바벨」 그림을 크게 키워 재사용 | 스카이타워 옥상 보스 「뿌리」 · 도감 |
+| 2 ★ | 47 | `card_lab.png` · `card_tower.png` (정사각 2장) | 아이콘 하나 | 출격 지도의 두 던전 카드 |
+| 3 ★ | 48 | `vfx_1.png` (4×2 격자) | 주황 원 하나 · 점 몇 개 | 폭발 (수류탄 · OX-20 · 화염병 · 보스) · 산성 · 불 · 연기 |
+| 4 | 49-1 · 49-2 | `researcher.png` · `guardbot.png` (동작 시트) | 없음 (새 적) | 연구소 · 스카이타워에만 나오는 일반 적 |
+| 5 | 50-1 · 50-2 | `bg_extract.png` · `bg_death.png` (가로 16:9) | 단색 창 | 출격 결과 창 뒤 배경 (탈출 / 사망) |
+
+- 46 · 49는 9절 · 7절과 같은 동작 시트 방식입니다. 📎 콘셉트 아트 + 비슷한 적 그림을 같이 첨부하면 크기·명암이 맞습니다.
+- 48 이펙트는 **위에서 비스듬히 본 바닥 위 효과**라 캐릭터가 없습니다. 칸마다 하나씩, 칸 사이는 넓게 띄웁니다.
+- 47 · 50은 가공 없이 그대로 씁니다 (글자는 게임이 얹음).
+
+### 46. 바벨 원형체 「뿌리」 (스카이타워 옥상 보스) · 🔧 **root** · 🔢 `idle 4, walk 6, attack 4, hit 2, death 5` · ⚠ 보라색이라 **초록 배경**
+📎 콘셉트 아트 + `babel.png` (같은 종류 괴물의 **덜 자란 첫 실험체** 느낌으로)
+> 공격 패턴: 바닥 내리찍기 · 돌진 · 새끼 뿌리 소환. 3번째 줄은 **양팔 뿌리를 바닥에 박는 동작**이면 셋 다 어울립니다.
+```
+Match the art style of the attached concept image. Create ONE sprite sheet image of a huge mutant boss three times human size, the first failed prototype of a purple mutant root organism that grew inside a skyscraper office: a hunched body made of thick twisted dark purple roots and bark-like plates fused with office debris (a broken desk chair, cables, shards of glass, a crushed computer monitor stuck in its shoulder), no real face, only a cluster of glowing violet eyes in a split in the chest, long root arms that drag on the floor ending in sharp wooden claws, root tendrils trailing behind like a cape. Rows: row 1: 4 frames of idle, the roots slowly writhing; row 2: 6 frames of a slow dragging walk; row 3: 4 frames of raising both root arms and stabbing them down into the floor; row 4: 2 frames of getting hit, bark chips flying; row 5: 5 frames of a death animation, the roots withering and the body collapsing into a heap. The same monster in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #00FF00 green background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use bright green on the character.
+```
+
+### 47. 던전 출격 카드 (정사각 2장) · 가공 없음
+📎 콘셉트 아트 · 다른 지도 카드는 8절 랜드마크 그림을 씁니다. 던전은 **건물 바깥이 아니라 입구 장면**이 더 잘 읽힙니다.
+
+#### 47-1. 지하 연구소 · `card_lab.png`
+```
+Match the art style of the attached concept image. Create ONE square image: the entrance of a secret underground bio-research laboratory beneath ruined Seoul, a massive round steel blast door half open in a concrete wall, red emergency lights flashing, a broken biohazard warning sign (symbol only), cracked containment tank glass and dried stains on the floor, cold mist pouring out of the dark opening. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with red emergency light and warm orange highlights. The door fills the center of the image. No people, no creatures, no text, no letters, no numbers, no logo, no watermark, no border.
+```
+
+#### 47-2. 스카이타워 · `card_tower.png`
+```
+Match the art style of the attached concept image. Create ONE square image looking up at a ruined glass supertall skyscraper in post-apocalyptic Seoul at night, thick dark purple mutant roots wrapping around the tower and bursting out of broken windows high up, a faint violet glow at the very top, a few floors still lit with cold blue light, smoke drifting across the tower. Dramatic low angle from the base so the tower rises to the top edge of the image. Detailed dark pixel art, gritty post-apocalyptic, desaturated colors with cold blue light and violet glow. No people, no text, no letters, no numbers, no logo, no watermark, no border.
+```
+
+### 48. 전투 이펙트 8종 · `vfx_1.png` (4×2 격자) · 마젠타 배경
+> 위험 색 규칙: **적 공격(산성 · 독)은 초록 금지** — 그래서 산성은 노란 주황입니다.
+```
+Match the art style of the attached concept image. Create ONE wide image with a 4 by 2 grid of 8 separate visual effects for a top-down isometric action game, each centered in its own equal cell with wide empty space between them, all seen from the same isometric 3/4 top-down view (camera about 35 degrees above), lying on or rising from an invisible flat floor. In order, left to right, top to bottom: 1) the first moment of a grenade explosion, a small bright white-yellow core; 2) a big round fireball explosion at full size, orange and yellow fire with dark smoke edges; 3) the explosion fading, a ring of dark smoke and a few embers; 4) a scorched black blast mark on the floor with small glowing embers (flat on the floor); 5) a splash of sizzling yellow-orange acid on the floor with bubbles (flat on the floor); 6) a patch of burning fire on the floor with tall flickering orange flames; 7) a puff of thick gray-brown smoke cloud; 8) a burst of dark red blood splatter on the floor (flat on the floor). No characters, no people, no weapons. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner of the whole image empty except the eighth effect kept small and away from the corner. No text, no letters, no numbers, no grid lines, no border. Do not use pink or magenta on the effects.
+```
+
+### 49. 던전 전용 일반 적 2종 · 🔢 모두 `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 콘셉트 아트 + 비슷한 적 그림 (49-1 → `subject.png` · 49-2 → `sentry.png`)
+> 그림이 오면 제가 새 적으로 넣습니다. 계획: **변이 연구원** — 가까이 와서 할퀴고, 죽을 때 등의 가스통이 터져 **보라색 독가스 웅덩이**를 남김 (연구소 B2부터). **경비 로봇** — 두 다리로 걷는 경비 로봇, 3점사 + 정면 장갑 (스카이타워 40층부터).
+
+#### 49-1. 변이 연구원 (연구소) · 🔧 **researcher**
+```
+Match the art style of the attached concept image. Create ONE sprite sheet image of a mutated lab researcher: a torn and stained white lab coat, an ID badge on a lanyard, a cracked gas mask with one lens broken, a dented metal gas canister strapped to the back leaking faint purple vapor, gray mottled skin with swollen purple veins on the hands and neck, hunched and twitching. Rows: row 1: 4 frames of idle twitching; row 2: 6 frames of a staggering walk; row 3: 4 frames of lunging forward and clawing with both hands; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, the gas canister bursting in a purple cloud as the body falls and lies on the ground. The same creature in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #00FF00 green background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use bright green on the character.
+```
+
+#### 49-2. 경비 로봇 (스카이타워) · 🔧 **guardbot**
+```
+Match the art style of the attached concept image. Create ONE sprite sheet image of a corporate security robot about human height walking on two digitigrade legs: a white and dark gray armored body scratched and dirty, yellow-and-black hazard stripes on the shoulders, a narrow visor head with a single red sensor line, a thick armored plate on the front of the torso, a compact gun built into the right forearm, thin purple mutant roots tangled around one leg. Rows: row 1: 4 frames of idle, the head scanning; row 2: 6 frames of a stiff mechanical walk; row 3: 4 frames of raising the arm gun and firing a short burst with recoil, no muzzle flash; row 4: 2 frames of getting hit, sparks flying; row 5: 5 frames of a death animation, sparking, the legs buckling and the robot collapsing on the ground. The same robot in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the robot.
+```
+
+### 50. 출격 결과 배경 (가로 16:9 2장) · 가공 없음
+> 가운데에 결과 창이 올라가므로 **가운데는 어둡고 단순하게**, 볼거리는 양옆 · 아래에 둡니다 (38절 엔딩과 같은 방식).
+
+#### 50-1. 탈출 성공 · `bg_extract.png`
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 cinematic image: a rescue helicopter lifting off from a ruined rooftop in post-apocalyptic Seoul at dawn, seen from a distance, the survivor's silhouette with a heavy backpack sitting in the open side door, dust blown up by the rotors, the ruined city skyline below with smoke columns, the first pale orange sunlight on the horizon. Keep the center of the image darker and simpler, put the helicopter in the upper right and the rooftop in the lower left. Detailed dark pixel art, desaturated colors with warm orange highlights. No text, no letters, no logo, no watermark, no border.
+```
+
+#### 50-2. 사망 · `bg_death.png`
+```
+Match the art style of the attached concept image. Create ONE wide 16:9 cinematic image: a dropped survivor's backpack and a cracked helmet lying on a rainy ruined street in post-apocalyptic Seoul at night, a few spent shell casings around them, a distant flickering red neon sign reflected in the puddles, dark shapes of infected wandering in the fog far behind. Cold, quiet and heavy mood. Keep the center of the image dark and simple, put the backpack and helmet in the lower left. Detailed dark pixel art, desaturated colors with cold blue light and a little red. No people in focus, no text, no letters, no logo, no watermark, no border.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
