@@ -593,8 +593,15 @@ const Mip = {
 function artURL(file, png) { const f = !png && /\.png$/.test(file) ? file.slice(0, -4) + '.webp' : file; return ART.dir + f + '?v=' + (typeof GAME_VERSION !== 'undefined' ? GAME_VERSION.replace(/^v/, '') : '0'); }
 function loadArt(im, file, onFail) { im.onerror = () => { if (!im._png && /\.png$/.test(file)) { im._png = true; im.src = artURL(file, true); } else onFail(); }; im.src = artURL(file); }
 // v1.83 전투 이펙트 그림: 지면 변환 중에도 화면 좌표로 (기울지 않게) · w = 화면 폭 · ay = 기준점 높이 비율 (0.5 가운데 · 1 발밑) · 그림이 없으면 false
-function drawVfx(key, wx, wy, w, alpha, ay = 0.5, flip = false) {
-  const s = ART.vfx && ART.vfx[key]; if (!s || !s.ready || alpha <= 0) return false;
+function vfxTint(key, color) { // v1.84 같은 그림을 색만 바꿔 (독가스 = 보라 연기) — 한 번 만들어 둠
+  const s = ART.vfx && ART.vfx[key], ck = key + color; if (!s || !s.ready) return null;
+  const T = vfxTint.c || (vfxTint.c = {}); if (T[ck]) return T[ck];
+  const [rx, ry, rw, rh] = s.rect, c = document.createElement('canvas'); c.width = rw; c.height = rh; const g = c.getContext('2d');
+  g.drawImage(s.img, rx, ry, rw, rh, 0, 0, rw, rh); g.globalCompositeOperation = 'source-atop'; g.fillStyle = color; g.fillRect(0, 0, rw, rh);
+  return (T[ck] = { img: c, rect: [0, 0, rw, rh], ready: true });
+}
+function drawVfx(key, wx, wy, w, alpha, ay = 0.5, flip = false, tint = null) {
+  const s = tint ? vfxTint(key, tint) : ART.vfx && ART.vfx[key]; if (!s || !s.ready || alpha <= 0) return false;
   const [rx, ry, rw, rh] = s.rect, h = w * rh / rw, sx = Iso.sx(wx, wy), sy = Iso.sy(wx, wy);
   ctx.save(); Iso.reset(); ctx.globalAlpha = Math.min(1, alpha);
   if (flip) { ctx.translate(sx, 0); ctx.scale(-1, 1); ctx.translate(-sx, 0); }
@@ -1462,7 +1469,8 @@ function render() {
   }
   for (const pl of G.pools) { // 산성 장판
     const a = Math.min(1, (pl.life - pl.t) / 0.6);
-    if (pl.gas || !drawVfx('acid', pl.x, pl.y, pl.r * 2.9 * ISO_K, 0.85 * a, 0.5, pl.x % 2 > 1)) { ctx.fillStyle = pl.gas ? `rgba(150,70,200,${0.4 * a})` : `rgba(230,90,30,${0.38 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill(); } /* v1.64 초록 → 주황·빨강 · v1.83 산성은 그림 · 독가스는 보라 */
+    if (pl.gas) { const fl = 1 + Math.sin(G.time * 2 + pl.x) * 0.06; drawVfx('scorch', pl.x, pl.y, pl.r * 2.6 * ISO_K, 0.35 * a, 0.5, false, 'rgba(120,50,170,0.85)'); drawVfx('smoke', pl.x, pl.y, pl.r * 2.3 * ISO_K * fl, 0.55 * a, 0.75, pl.x % 2 > 1, 'rgba(150,80,210,0.6)'); } // v1.84 독가스: 보라 연기
+    if (pl.gas ? !(ART.vfx && ART.vfx.smoke.ready) : !drawVfx('acid', pl.x, pl.y, pl.r * 2.9 * ISO_K, 0.85 * a, 0.5, pl.x % 2 > 1)) { ctx.fillStyle = pl.gas ? `rgba(150,70,200,${0.4 * a})` : `rgba(230,90,30,${0.38 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill(); } /* v1.64 초록 → 주황·빨강 · v1.83 산성은 그림 · 독가스는 보라 */
     ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU);
     ctx.strokeStyle = `rgba(255,50,40,${(0.55 + Math.sin(G.time * 8) * 0.2) * a})`; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
   }

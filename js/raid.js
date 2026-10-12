@@ -110,6 +110,7 @@ const Raid = {
     const p = G.player, r = p.raid; if (!r) return;
     const id = r.map, D = DUNGEONS[id], last = () => r.floor >= D.floors;
     r.floor++; this.labFloor(r.floor, id);
+    const rec = r.floor > (p[D.best] || 1); // v1.84 처음 오른(내려간) 층이면 신기록 알림
     p[D.best] = Math.max(p[D.best] || 0, r.floor);
     const bonus = r.floor * (id === 'tower' ? 500 : 400); r.credits += bonus; p.credits += bonus; // 층 보상 (탈출해야 확정 — 죽으면 이번 출격 크레딧처럼 잃음)
     World.generate(id); this.resetWorld();
@@ -121,6 +122,9 @@ const Raid = {
     Scavenge.generate(); RaidEvents.generate(); this.labLiftEvent(); Pop.generate(start);
     const bossName = id === 'tower' ? '바벨 원형체' : '키메라';
     G.fade = { t: 0, life: 1.6, text: `${MAPS[id].name} ${D.label(r.floor)}`, sub: `적 Lv${ZONES[MAPS[id].zone].lvl[0]}${last() ? ` · 마지막 층 · ${D.bossRoom}에 ${bossName}` : ''} · 층 보상 ₵${fmt(bonus)} (탈출해야 내 것)` };
+    if (rec) setTimeout(() => UI.toast(`신기록 · ${MAPS[id].name} ${D.label(r.floor)}`, last() ? '마지막 층' : '최고 기록 갱신'), 1700);
+    const nf = D.extra && r.floor === D.extra.f && ENEMIES[D.extra.spawn[0]]; // v1.84 전용 적이 처음 섞이는 층에서 한 줄 안내
+    if (nf) log(`${ICON('warn')} 이 층부터 「${nf.name}」 출현 — ${nf.gasDeath ? '쓰러지면 등의 가스통이 터져 보라 독가스가 남는다. 근접 처치 뒤엔 바로 물러서자.' : '정면 장갑이 두껍다. 옆이나 뒤를 노리거나 폭발물로.'}`, '#ffc890');
     SFX.play('quest'); log(`${ICON('warn')} ${D.label(r.floor)}. ${last() ? `마지막 층 — ${D.bossRoom}(미니맵 붉은 방)에 ${bossName}가 있다.` : `적이 강해졌다.`} 비상구는 층마다 한 곳 (미니맵 초록 원).`, '#ff8a8a');
     saveGame();
   },
@@ -203,7 +207,7 @@ const Raid = {
     $('summary-title').textContent = ok ? '탈출 성공' : '사망';
     $('summary-title').className = ok ? 'ok' : 'bad';
     const myth = ok ? items.filter(it => it.rarity === 5) : (this.lastDeath && this.lastDeath.kept) || [], mc = RARITIES[5].color; // v1.63 신화 확보는 결과 카드 맨 위에
-    $('summary-body').innerHTML = myth.map(it => `<div class="sum-row" style="border:1px solid ${mc};padding:4px 6px;margin-bottom:6px"><span style="color:${mc}">◆ 신화 무기 ${ok ? '확보' : '지킴 (장착 중)'}</span><b style="color:${mc}">${itemName(it)}</b></div>`).join('') + `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}</b></div>`
+    $('summary-body').innerHTML = myth.map(it => `<div class="sum-row" style="border:1px solid ${mc};padding:4px 6px;margin-bottom:6px"><span style="color:${mc}">◆ 신화 무기 ${ok ? '확보' : '지킴 (장착 중)'}</span><b style="color:${mc}">${itemName(it)}</b></div>`).join('') + `<div class="sum-row"><span>맵</span><b>${MAPS[r.map].name}${(D => D ? ` · ${D.label(r.floor || 1)}${G.player[D.best] ? ` <span class="muted" style="font-weight:normal">(최고 ${D.label(G.player[D.best])})</span>` : ''}` : '')(DUNGEONS[r.map])}</b></div>`
       + (ok ? '' : (dc => dc.length ? `<div class="sum-row"><span>쓰러뜨린 것</span><b style="color:#ff8a6a">${dc.map(([n, d], i) => i ? `<span class="muted" style="font-weight:normal">${n} ${fmt(Math.round(d))}</span>` : `${n} ${fmt(Math.round(d))}`).join(' · ')}</b></div>` : '')(deathCause())) // v1.70 사망 원인 (마지막 6초 피해)
       + `<div class="sum-row"><span>시간</span><b>${Math.floor(r.t / 60)}분 ${Math.floor(r.t % 60)}초</b></div>`
       + `<div class="sum-row"><span>처치</span><b>${r.kills || 0}</b></div>`

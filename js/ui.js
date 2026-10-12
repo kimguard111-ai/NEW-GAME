@@ -149,7 +149,7 @@ const UI = {
     if (World.inSafe(p.x, p.y)) buffs.push(`${ICON('shield')} 안전 지대 (체력 회복)`);
     UI.html('hud-buffs', buffs.join('&nbsp; '));
     const z = ZONES[G.zone];
-    UI.html('hud-zone', (G.zone === 0 ? z.name : `${z.name}  ·  Lv${z.lvl[0]}~${z.lvl[1]}<div class="zone-sub">${z.desc} · 특산 ${z.gearText}</div>`)
+    UI.html('hud-zone', (G.zone === 0 ? z.name : `${z.name}${World.def && World.def.lab && DUNGEONS[World.map] ? ' ' + DUNGEONS[World.map].label(World.labFloor || 1) : ''}  ·  Lv${z.lvl[0]}~${z.lvl[1]}<div class="zone-sub">${World.def && World.def.lab ? z.desc : `${z.desc} · 특산 ${z.gearText}`}</div>`)
       + (p.inRad ? `<div class="zone-rad">${ICON('rad')} 방사능 피폭 중! 웅덩이에서 벗어나세요</div>` : ''));
 
     const w = curWeapon();
