@@ -6,7 +6,7 @@ const MATS = {
   chip:  { name: '전자 부품', icon: 'chip' },
 };
 // 등급별 분해 결과 (일반 · 고급 · 희귀 · 영웅 · 전설)
-const SALVAGE = { scrap: [2, 4, 7, 12, 20], chip: [0, 0, 1, 3, 6] };
+const SALVAGE = { scrap: [2, 4, 7, 12, 20, 40], chip: [0, 0, 1, 3, 6, 15] }; // v1.84.3 신화(5) 칸이 없어 분해하면 재료가 NaN 이 되던 것
 // 소모품 제작
 const CRAFTS = {
   medkit: { scrap: 4 },
@@ -23,7 +23,7 @@ const Workshop = {
   mode: 'enhance', sel: null,
 
   salvageYield(it) {
-    const r = it.rarity || 0, plus = it.plus || 0;
+    const r = clamp(it.rarity || 0, 0, SALVAGE.scrap.length - 1), plus = it.plus || 0;
     const m = Camp.salvageMul(); // v1.13 작업대 2단계
     return { scrap: Math.round((SALVAGE.scrap[r] + plus * 2) * m), chip: Math.round((SALVAGE.chip[r] + Math.floor(plus / 3)) * m) };
   },
@@ -42,7 +42,7 @@ const Workshop = {
   },
   gain(scrap, chip, why) {
     const p = G.player;
-    p.mats.scrap += scrap; p.mats.chip += chip;
+    p.mats.scrap = (Number.isFinite(p.mats.scrap) ? p.mats.scrap : 0) + (Number.isFinite(scrap) ? scrap : 0); p.mats.chip = (Number.isFinite(p.mats.chip) ? p.mats.chip : 0) + (Number.isFinite(chip) ? chip : 0); // v1.84.3 NaN 이 섞여도 재료가 망가지지 않게
     if (why) log(`${why}: ${ICON('scrap')} 고철 +${scrap}${chip ? `, ${ICON('chip')} 전자 부품 +${chip}` : ''}`, '#9fd');
   },
   matsText() { const m = G.player.mats; return `${ICON('scrap')} 고철 ${m.scrap} · ${ICON('chip')} 전자 부품 ${m.chip}`; },
@@ -113,7 +113,7 @@ const Workshop = {
     const p = G.player;
     if (Object.values(p.equip).includes(it)) return;
     if (it.locked) { log('잠긴 장비는 분해할 수 없습니다. (가방에서 잠금 해제)', '#f88'); return; } // v1.15
-    if ((it.rarity >= 3 || it.plus >= 3) && !confirm(`${itemName(it)}을(를) 분해할까요? 되돌릴 수 없습니다.`)) return;
+    if ((it.rarity >= 3 || it.plus >= 3) && !confirm(it.rarity >= 5 ? `신화 장비 ${itemName(it)}을(를) 정말 분해할까요? 다시 얻기 매우 어렵습니다.` : `${itemName(it)}을(를) 분해할까요? 되돌릴 수 없습니다.`)) return;
     const y = this.salvageYield(it);
     removeItem(it); this.gain(y.scrap, y.chip, `분해: ${itemName(it)}`);
     this.sel = null; this.after();

@@ -119,6 +119,7 @@ function sanitizeSave(v) {
   if (P.graves && typeof P.graves === 'object') { for (const k of Object.keys(P.graves)) { const g = P.graves[k]; if (!g || typeof g !== 'object' || !Array.isArray(g.items)) delete P.graves[k]; else g.items = g.items.filter(okItem); } } else P.graves = {};
   if (P.compData && typeof P.compData === 'object') { for (const k of Object.keys(P.compData)) { const c = P.compData[k]; if (!c || typeof c !== 'object') delete P.compData[k]; else if (c.gun && !okItem(c.gun)) c.gun = null; } }
   if (typeof P.name !== 'string' || !P.name.trim()) P.name = '생존자';
+  if (P.mats) for (const k of ['scrap', 'chip']) if (!Number.isFinite(P.mats[k])) P.mats[k] = 0; // v1.84.3 신화 분해로 NaN 이 된 재료 복구
   return v;
 }
 function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(str) : str; return !!(s && s.p && typeof s.p === 'object' && s.p.name !== undefined && Array.isArray(s.p.inventory) && s.p.equip && typeof s.p.equip === 'object' && !Array.isArray(s.p.equip) && s.p.stats && typeof s.p.stats === 'object'); } catch (e) { return false; } }
@@ -580,10 +581,17 @@ function addItem(it) {
   UI.refreshInventory();
   return true;
 }
+// v1.84.3 외부 점검: 가방이 꽉 차 있으면 넘치는 것은 창고(캠프) → 그래도 없으면 발밑에 떨굼 (부품 반환 · 동료 총 교환이 가방 칸을 넘기던 것)
+function stowItem(it) {
+  const p = G.player;
+  if (p.inventory.length < Camp.bagSize()) { p.inventory.push(it); return 'bag'; }
+  if (World.map === 'camp' && p.stash.length < Camp.stashSize()) { p.stash.push(it); return 'stash'; }
+  G.drops.push({ x: p.x + rand(-20, 20), y: p.y + rand(-20, 20), kind: 'item', t: 0, item: it }); return 'floor';
+}
 function removeItem(it) {
   const inv = G.player.inventory, i = inv.indexOf(it);
   if (i >= 0) inv.splice(i, 1);
-  if (i >= 0 && it.att) { const back = Object.values(it.att).filter(Boolean); if (back.length) { inv.push(...back); it.att = null; log(`끼워 둔 부품 ${back.length}개는 가방으로 돌아왔다.`, '#9fd0ff'); } } // v1.50 총을 팔거나 분해해도 부품은 남김
+  if (i >= 0 && it.att) { const back = Object.values(it.att).filter(Boolean); it.att = null; if (back.length) { const w = back.map(stowItem); const nS = w.filter(x => x === 'stash').length, nF = w.filter(x => x === 'floor').length; log(`끼워 둔 부품 ${back.length}개는 가방으로 돌아왔다.${nS ? ` (가방이 차서 ${nS}개는 창고로)` : ''}${nF ? ` (${nF}개는 발밑에)` : ''}`, '#9fd0ff'); } }
 }
 
 function interact() {

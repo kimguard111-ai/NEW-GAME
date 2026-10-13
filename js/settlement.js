@@ -58,19 +58,19 @@ const Settlement = {
   near(p) { if (World.map !== 'camp' || !(p.campGifts && p.campGifts.length)) return null; const k = this.crate(); return Math.hypot(p.x - k.x, p.y - k.y) < 50 ? k : null; },
   hint() { return `[E] 캠프 사람들이 모아 둔 것 챙기기 (${G.player.campGifts.length})`; },
   take() {
-    const p = G.player, got = {};
+    const p = G.player, got = {}, left = []; // v1.84.3 가방이 차서 못 챙긴 소모품 선물은 남겨 둠 (전엔 사라짐)
     for (const job of p.campGifts) {
-      if (job === 'farmer') addItem(makeConsumable('medkit', 1)) && (got.medkit = (got.medkit || 0) + 1);
+      if (job === 'farmer') { if (addItem(makeConsumable('medkit', 1))) got.medkit = (got.medkit || 0) + 1; else left.push(job); }
       else if (job === 'scav') { Workshop.gain(2, 0, ''); got.scrap = (got.scrap || 0) + 2; }
       else if (job === 'hunter') { const [t, n] = giveAmmoUnits(p, 60); got[AMMO[t].name] = (got[AMMO[t].name] || 0) + n; }
       else if (job === 'trader') { const cr = Math.round(p.level * 15); p.credits += cr; got.cr = (got.cr || 0) + cr; }
       else if (job === 'tinker') { Workshop.gain(0, 1, ''); got.chip = (got.chip || 0) + 1; }
-      else if (job === 'cook') addItem(makeConsumable('stim', 1)) && (got.stim = (got.stim || 0) + 1);
+      else if (job === 'cook') { if (addItem(makeConsumable('stim', 1))) got.stim = (got.stim || 0) + 1; else left.push(job); }
     }
-    p.campGifts = [];
+    p.campGifts = left;
     const names = { medkit: '구급상자', scrap: '고철', cr: '크레딧', chip: '전자 부품', stim: '자극제' };
     const txt = Object.entries(got).map(([k, v]) => `${names[k] || k} ${k === 'cr' ? '₵' + fmt(v) : v}`).join(', ');
-    UI.toast('캠프 사람들 몫', txt || '가방이 꽉 차서 못 챙겼다'); SFX.play('item', 2); UI.refreshInventory(); saveGame();
+    UI.toast('캠프 사람들 몫', (txt || '가방이 꽉 차서 못 챙겼다') + (left.length && txt ? ` · 가방이 차서 ${left.length}개는 상자에 남김` : '')); SFX.play('item', 2); UI.refreshInventory(); saveGame();
   },
   open() { // 한씨 대화: 캠프 사람들
     const rs = this.residents(), p = G.player, next = CAMP_GROWTH.find(g => g.n > rs.length);

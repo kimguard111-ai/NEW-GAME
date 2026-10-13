@@ -39,7 +39,7 @@ const MUTATORS = {
   dark:     { name: '암흑', desc: '시야가 크게 어두워짐' },
   frenzy:   { name: '광분', desc: '적 피해 +20%' },
 };
-const weekNo = () => Math.floor((Date.now() / 864e5 + 3) / 7); // 월요일 기준 주 번호
+const weekNo = () => Math.floor(((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5 + 3) / 7); // 월요일 기준 주 번호 · v1.84.3 기기 현지 자정 기준 (일일 의뢰와 같게 — 한국은 월요일 오전 9시에 바뀌던 것)
 function weekMutators() {
   const rng = mulberry32(weekNo() * 7919), keys = Object.keys(MUTATORS);
   for (let i = keys.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [keys[i], keys[j]] = [keys[j], keys[i]]; }

@@ -57,7 +57,7 @@ const Companion = {
   give(it) {
     const p = G.player, d = this.def(), cd = this.data(); if (!this.canGive(it)) return;
     if (it.locked) return log('잠긴 장비는 넘길 수 없습니다.', '#f88');
-    removeItem(it); if (cd.gun) p.inventory.push(cd.gun);
+    removeItem(it); if (cd.gun) stowItem(cd.gun); // v1.84.3 가방이 차 있으면 창고로
     cd.gun = it; it.isNew = false; SFX.play('equip');
     log(`${d.name}에게 ${itemName(it)}을(를) 넘겼다.`, '#9fd0ff'); this.bark('"좋은 총이군요. 아껴 쓰겠습니다."');
     UI.selected = null; UI.refreshInventory(); saveGame();
