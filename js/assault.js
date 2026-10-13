@@ -105,7 +105,7 @@ const Assault = {
       if (i >= 0) { s.qT = 0.5; this.spawnOne(s.queue.splice(i, 1)[0]); }
     }
     this.unstick(dt);
-    if (s.phase === 'fight' && alive === 0 && !(s.queue && s.queue.length)) {
+    if (s.phase === 'fight' && !G.enemies.some(e => e.assault && e.hp > 0) && !(s.queue && s.queue.length)) { // v1.84.2 외부 점검: 마지막 대기 적을 방금 낸 프레임에 (스폰 전 수로) 웨이브 끝으로 보던 것
       if (s.wave === a.waves.length) return this.clear();
       s.phase = 'ready'; s.wait = 2.5;
       floatText(p.x, p.y - 40, '웨이브 정리!', '#9fd', 16);
@@ -171,7 +171,7 @@ const Assault = {
   },
 
   spawnBoss(a) {
-    const b = a.boss, at = this.spot(ASSAULT_R * 0.35, ASSAULT_R * 0.7, ENEMIES[b.base].r * b.scale + 4) || { x: G.assault.l.x, y: G.assault.l.y + G.assault.l.size * TILE };
+    const b = a.boss, br = ENEMIES[b.base].r * b.scale + 4, at = this.spot(ASSAULT_R * 0.35, ASSAULT_R * 0.7, br) || this.spot(60, ASSAULT_R, br) || this.spot(0, ASSAULT_R * 1.2, Math.min(br, 24)) || { x: G.assault.l.x, y: G.assault.l.y + G.assault.l.size * TILE }; // v1.84.2 외부 점검: 자리를 못 찾으면 범위를 넓혀 다시 (벽 속 고정 좌표는 마지막 수단)
     const e = makeEnemy(b.base, at.x, at.y, a.level + 1 + tierLvl(G.assault.tier));
     e.bossName = b.name; e.art = b.art; e.patterns = b.patterns; e.scale = b.scale; e.expMul = 6;
     e.hp = e.maxHp = Math.round(e.maxHp * b.hpMul); e.dmg *= b.dmgMul;

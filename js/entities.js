@@ -36,6 +36,7 @@ function rollAffixes(kind, key, rarity, ilvl) {
 
 function makeWeapon(key, ilvl, rarity) {
   const b = WEAPONS[key], r = RARITIES[rarity];
+  ilvl = Math.max(ilvl, b.lvl || 1); // v1.84.2 외부 점검: 표시 레벨(ilvl)과 능력치 계산 레벨을 같게
   const scale = r.mul * (1 + (ilvl - 1) * 0.07);
   const it = {
     id: nextItemId++, kind: 'weapon', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0, v181: true, v127: true, v1402: true, // v181: 근접 피해 보정이 이미 반영된 새 수치
@@ -54,6 +55,7 @@ function makeWeapon(key, ilvl, rarity) {
 
 function makeArmor(key, ilvl, rarity) {
   const b = ARMORS[key], r = RARITIES[rarity];
+  ilvl = Math.max(ilvl, b.lvl || 1); // v1.84.2 표시 레벨과 계산 레벨을 같게
   const affixes = rollAffixes('armor', key, rarity, ilvl);
   return {
     id: nextItemId++, kind: 'armor', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
@@ -66,6 +68,7 @@ function makeArmor(key, ilvl, rarity) {
 
 function makeHelmet(key, ilvl, rarity) {
   const b = HELMETS[key], r = RARITIES[rarity];
+  ilvl = Math.max(ilvl, b.lvl || 1); // v1.84.2 표시 레벨과 계산 레벨을 같게
   const affixes = rollAffixes('helmet', key, rarity, ilvl);
   return {
     id: nextItemId++, kind: 'helmet', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,

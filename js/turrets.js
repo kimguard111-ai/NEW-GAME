@@ -40,7 +40,7 @@ const Turrets = {
       if (t.mod === 'a') { // 화염: 앞쪽 60° 안의 적 모두
         t.cd = TURRET.flameRate;
         for (const e of G.enemies) {
-          if (e.hp <= 0 || Math.hypot(e.x - t.x, e.y - t.y) > R + e.r) continue;
+          if (e.hp <= 0 || Math.hypot(e.x - t.x, e.y - t.y) > R + e.r || !World.lineOfSight(t, e)) continue; // v1.84.2 외부 점검: 벽 너머로 불길이 닿던 것 (수류탄 폭발과 같은 규칙)
           const da = Math.abs(((Math.atan2(e.y - t.y, e.x - t.x) - a + Math.PI * 3) % TAU) - Math.PI);
           if (da < 0.55) damageEnemy(e, dmg * 0.55, false, a, { knock: 1, noProc: true, fire: true });
         }

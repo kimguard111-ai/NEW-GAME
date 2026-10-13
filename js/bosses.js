@@ -79,7 +79,8 @@ const Bosses = {
       if (tx < r.x0 - 0.5 || tx > r.x1 + 1.5 || ty < r.y0 - 0.5 || ty > r.y1 + 1.5) return;
       const b = makeEnemy(BD.base, (r.cx + 0.5) * TILE, (r.cy + 0.5) * TILE, BD.level);
       b.bossName = BD.name; b.art = BD.art; b.patterns = BD.patterns; b.scale = BD.scale; b.towerBoss = T; b.expMul = 14; b.labBoss = true;
-      b.hp = b.maxHp = Math.round(b.maxHp * BD.hpMul / ((dunMul() || { hp: 1 }).hp) * (dunMul() ? 1.5 : 1)); // v1.81 층 배율 대신 보스는 ×1.5만 b.dmg *= BD.dmgMul; b.r = Math.round(b.r * BD.scale);
+      b.hp = b.maxHp = Math.round(b.maxHp * BD.hpMul / ((dunMul() || { hp: 1 }).hp) * (dunMul() ? 1.5 : 1)); /* v1.81 층 배율 대신 보스는 ×1.5만 */
+      b.dmg *= BD.dmgMul; b.r = Math.round(b.r * BD.scale); // v1.84.2 외부 점검: 위 줄 주석에 묻혀 v1.81부터 실행되지 않던 것 (보스 피해 배율 · 몸 충돌 크기)
       b.weight = b.def.weight * 8; b.skillT = 2.5; b.state = 'chase';
       G.enemies.push(b); G.labBoss = b;
       G.shake = 14; SFX.play('roar', 1);
@@ -88,6 +89,7 @@ const Bosses = {
       return;
     }
     if (e.hp <= 0) { G.labBoss = null; return; }
+    Monsters.actor = e; // v1.84.2 외부 점검: 적 갱신 루프 밖에서 불려서 장판 주인이 마지막에 움직인 다른 적으로 찍히던 것 (사망 원인)
     if (!e.molted && e.hp < e.maxHp * 0.5) { // 탈피
       e.molted = true; e.speed *= 1.35; e.skillT = 0.8;
       G.shake = 18; hitstop(0.15);

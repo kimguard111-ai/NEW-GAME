@@ -65,7 +65,7 @@ const Gadgets = {
       const R = 170;
       for (const e of G.enemies) {
         if (e.hp <= 0 || Math.hypot(e.x - g.x, e.y - g.y) > R + e.r || !World.lineOfSight(g, e)) continue;
-        const t = e.def.boss || e.fieldBoss || e.labBoss ? 0.6 : e.nest ? 0 : 2.5;
+        const t = e.def.boss || e.fieldBoss || e.labBoss || e.bossName ? 0.6 : e.nest ? 0 : 2.5; // v1.84.2 외부 점검: 거점·네임드 보스(bossName)도 0.6초
         if (!t) continue;
         e.stunT = Math.max(e.stunT || 0, t); e.state = 'chase'; e.revealT = 4; Monsters.interrupt(e);
         floatText(e.x, e.y - e.r - 14, '기절', '#fff3a0', 12);
