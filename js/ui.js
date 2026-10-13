@@ -122,8 +122,8 @@ const UI = {
   },
 
   updateHUD(dt) {
-    UI.hudT -= dt;
-    UI.drawMinimap();
+    UI.hudT -= dt; UI.mapT = (UI.mapT || 0) - dt;
+    if (UI.mapT <= 0) { UI.mapT = 0.066; UI.drawMinimap(); } // v1.84.1 외부 점검: 미니맵은 초당 15번만 (매 프레임 다시 그리던 것)
     if (UI.hudT > 0) return;
     UI.hudT = 0.08;
     const p = G.player, mh = PlayerStats.maxHp(p), next = PlayerStats.expNext(p.level);
@@ -167,7 +167,7 @@ const UI = {
       const el = $('cd' + i);
       if (el) el.style.height = (100 * p.skillCd[i] / ((p.skillCdMax && p.skillCdMax[i]) || s.cd)) + '%';
     });
-    const prog = G.search ? [G.search.t / G.search.dur, G.search.target.grave ? '시체 가방 회수 중…' : '뒤지는 중…'] : G.extractT > 0 ? [G.extractT / EXTRACT_TIME, '탈출 중…'] : null; // 진행 바
+    const prog = G.search ? [G.search.t / G.search.dur, G.search.target.grave ? '시체 가방 회수 중…' : '뒤지는 중…'] : G.extractT > 0 ? [Math.min(1, G.extractT / (G.extractNeed || EXTRACT_TIME)), '탈출 중…'] : null; // 진행 바
     $('extract-bar').classList.toggle('hidden', !prog);
     if (prog) { $('extract-fill').style.width = (100 * prog[0]) + '%'; $('extract-label').textContent = prog[1]; }
     if ($('cdroll')) $('cdroll').style.height = (100 * Math.max(0, p.rollCd || 0) / (p.rollCdMax || ROLL.cd)) + '%'; // v1.33 회피 재사용
@@ -489,9 +489,10 @@ const UI = {
       if (ta.classList.contains('hidden') || !ta.value.trim()) { ta.value = ''; ta.classList.remove('hidden'); ta.placeholder = '여기에 세이브 코드를 붙여넣고 다시 [불러오기]'; ta.focus(); return; }
       try {
         const raw = decodeURIComponent(escape(atob(ta.value.trim()))), s = JSON.parse(raw);
-        if (!s || !s.p || !s.p.name) throw new Error('bad');
+        if (!validSave(s)) throw new Error('bad'); // v1.84.1 외부 점검: 타이틀 불러오기와 같은 검사 + 고쳐 씀
+        sanitizeSave(s);
         if (!confirm(`${s.p.name} Lv${s.p.level} 세이브를 지금 슬롯(${SAVE_SLOT})에 불러올까요? 이 슬롯의 진행은 덮어씌워집니다.`)) return;
-        G.running = false; localStorage.setItem(saveKey(), raw); location.reload();
+        G.running = false; localStorage.setItem(saveKey(), JSON.stringify(s)); location.reload();
       } catch (e) { log('세이브 코드가 올바르지 않습니다.', '#f66'); }
     };
     $('zoom-range').oninput = e => { setZoom(+e.target.value); $('zoom-val').textContent = ZOOM.toFixed(1) + '배'; };

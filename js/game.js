@@ -101,12 +101,27 @@ function saveGame(silent = true) {
     const str = JSON.stringify({ ver: 2, p, nextItemId, bossT: G.bossT, savedAt: Date.now() });
     // v1.49 백업: 2분마다 직전 저장을 「-bak」에 남김 (저장이 깨져도 그 전으로 돌아갈 수 있게)
     const old = localStorage.getItem(key);
-    if (old && Date.now() - (G.bakT || 0) > 120000 && validSave(old)) { localStorage.setItem(key + '-bak', old); G.bakT = Date.now(); }
+    if (old && Date.now() - (G.bakT || 0) > 120000 && validSave(old)) { try { localStorage.setItem(key + '-bak', old); G.bakT = Date.now(); } catch (e) { /* v1.84.1 백업이 실패해도 본 저장은 시도 */ } }
     localStorage.setItem(key, str);
     if (!silent) log('게임이 저장되었습니다.', '#8f8');
   } catch (e) { if (!G.saveWarned) { G.saveWarned = true; log('저장하지 못했다. 브라우저 저장 공간이 꽉 찼거나 막혀 있다. 설정 → 세이브 코드 만들기로 따로 보관해 두자.', '#f88'); } }
 }
-function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(str) : str; return !!(s && s.p && s.p.name !== undefined && Array.isArray(s.p.inventory) && s.p.equip && s.p.stats); } catch (e) { return false; } }
+// v1.84.1 외부 점검: 불러온 세이브를 고쳐 씀 — 없는 무기·장비 키는 버리고 · 깨진 가방·동료 칸 정리 · 모든 글자에서 < > 제거 (세이브 코드로 HTML 이 끼어들지 않게)
+const ITEM_DEFS = { weapon: () => WEAPONS, armor: () => ARMORS, helmet: () => HELMETS, cons: () => CONSUMABLES, att: () => (typeof ATTACHMENTS !== 'undefined' ? ATTACHMENTS : null) };
+function okItem(it) { if (!it || typeof it !== 'object' || typeof it.kind !== 'string') return false; const D = ITEM_DEFS[it.kind] && ITEM_DEFS[it.kind](); return !D || !!D[it.key]; }
+function stripTags(o, d = 0) { if (d > 12 || !o || typeof o !== 'object') return; for (const k in o) { const v = o[k]; if (typeof v === 'string') { if (/[<>]/.test(v)) o[k] = v.replace(/[<>]/g, ''); } else if (v && typeof v === 'object') stripTags(v, d + 1); } }
+function sanitizeSave(v) {
+  const P = v && v.p; if (!P) return v;
+  stripTags(P);
+  P.inventory = P.inventory.filter(okItem);
+  for (const k of Object.keys(P.equip)) if (P.equip[k] && !okItem(P.equip[k])) P.equip[k] = null;
+  P.stash = Array.isArray(P.stash) ? P.stash.filter(okItem) : [];
+  if (P.graves && typeof P.graves === 'object') { for (const k of Object.keys(P.graves)) { const g = P.graves[k]; if (!g || typeof g !== 'object' || !Array.isArray(g.items)) delete P.graves[k]; else g.items = g.items.filter(okItem); } } else P.graves = {};
+  if (P.compData && typeof P.compData === 'object') { for (const k of Object.keys(P.compData)) { const c = P.compData[k]; if (!c || typeof c !== 'object') delete P.compData[k]; else if (c.gun && !okItem(c.gun)) c.gun = null; } }
+  if (typeof P.name !== 'string' || !P.name.trim()) P.name = '생존자';
+  return v;
+}
+function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(str) : str; return !!(s && s.p && typeof s.p === 'object' && s.p.name !== undefined && Array.isArray(s.p.inventory) && s.p.equip && typeof s.p.equip === 'object' && !Array.isArray(s.p.equip) && s.p.stats && typeof s.p.stats === 'object'); } catch (e) { return false; } }
 // v1.51 실제 총 이름 → 가상 이름 (예전 세이브의 장비 이름도 바꿈)
 const LEGACY_NAMES = [['M1911 권총', 'P-45 권총'], ['MP5 기관단총', 'SP-9 기관단총'], ['M870 산탄총', 'R-12 산탄총'], ['K2 돌격소총', 'KR-49 돌격소총'], ['K14 저격소총', 'SR-49 저격소총'], ['K3 기관총', 'LM-49 기관총']];
 function renameLegacy(str) { for (const [a, b] of LEGACY_NAMES) str = str.split(a).join(b); return str; }
@@ -128,10 +143,9 @@ function migrateRoster(P) {
 function loadSave(n = SAVE_SLOT) {
   try {
     const s = localStorage.getItem(slotKey(n));
-    if (!s) return null;
-    if (validSave(s)) { const v = JSON.parse(renameLegacy(s)); migrateRoster(v.p); return v; }
-    const b = localStorage.getItem(slotKey(n) + '-bak'); // v1.49 깨진 저장 → 백업으로
-    if (b && validSave(b)) { const v = JSON.parse(renameLegacy(b)); migrateRoster(v.p); v.fromBak = true; return v; }
+    if (s && validSave(s)) { const v = sanitizeSave(JSON.parse(renameLegacy(s))); migrateRoster(v.p); return v; }
+    const b = localStorage.getItem(slotKey(n) + '-bak'); // v1.49 깨진 저장 → 백업으로 · v1.84.1 본 저장이 아예 없어도 백업 확인
+    if (b && validSave(b)) { const v = sanitizeSave(JSON.parse(renameLegacy(b))); migrateRoster(v.p); v.fromBak = true; return v; }
     return null;
   } catch (e) { return null; }
 }
@@ -1541,7 +1555,7 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
   slots();
   document.getElementById('btn-new').onclick = () => {
     if (save && !confirm(`슬롯 ${SAVE_SLOT}의 「${save.p.name} Lv${save.p.level}」 저장이 지워집니다. 새로 시작할까요?`)) return;
-    const name = document.getElementById('name-input').value.trim() || '생존자';
+    const name = document.getElementById('name-input').value.replace(/[<>]/g, '').trim() || '생존자'; // v1.84.1 이름에 HTML 글자 금지
     startGame(null, name);
   };
   btnC.onclick = () => save && startGame(save);
@@ -1550,8 +1564,9 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     try {
       const raw = decodeURIComponent(escape(atob(code.trim()))), s = JSON.parse(raw);
       if (!validSave(s)) throw new Error('bad');
+      sanitizeSave(s);
       if (save && !confirm(`슬롯 ${SAVE_SLOT}의 「${save.p.name} Lv${save.p.level}」 위에 「${s.p.name} Lv${s.p.level}」을(를) 덮어쓸까요?`)) return;
-      localStorage.setItem(slotKey(SAVE_SLOT), raw); slots(); alert(`「${s.p.name} Lv${s.p.level}」을(를) 불러왔습니다. [이어서]를 누르세요.`);
+      localStorage.setItem(slotKey(SAVE_SLOT), JSON.stringify(s)); slots(); alert(`「${s.p.name} Lv${s.p.level}」을(를) 불러왔습니다. [이어서]를 누르세요.`);
     } catch (e) { alert('세이브 코드가 올바르지 않습니다.'); }
   };
   document.getElementById('btn-respawn').onclick = respawn;

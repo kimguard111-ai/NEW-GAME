@@ -133,7 +133,7 @@ const Raid = {
   resetWorld() {
     G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.turrets = []; G.corpses = []; Juice.reset(); G.camF = null;
     G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
-    G.labBoss = null; G.labBossDone = false; // v1.5
+    G.labBoss = null; G.labBossDone = false; G.grave = null; // v1.5 · v1.84.1 캠프로 돌아와도 지난 출격의 가방 표시가 남던 것 (출격·층 이동 땐 이 뒤에 다시 연결)
     G.exits = []; Pop.cells = []; RaidEvents.list = []; RaidEvents.alert = 0; G.extractT = 0; G.zone = World.zoneIndex(); G.bossT = Math.min(G.bossT, 0);
     if (World.map === 'camp') setupCampNpcs(); else G.npcs = [];
     GroundCache.clear(); Nav.dist = null; Nav.t = 0;
