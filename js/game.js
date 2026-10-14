@@ -497,7 +497,7 @@ function explode(x, y, dmg, r, opts = {}) {
     if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e)) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true, blast: true });
   }
   G.effects.push({ type: 'boom', x, y, t: 0, life: 0.45, r });
-  if (!opts.small) { G.effects.push({ type: 'smoke', x, y, t: 0, life: 1.2, r }); G.decals.push({ x, y, r: r * 0.55, a: rand(0, TAU), scorch: true }); if (G.decals.length > 150) G.decals.shift(); } // v1.83 연기 · 그을음
+  if (!opts.small) { G.effects.push({ type: 'smoke', x, y, t: 0, life: 1.2, r }); G.decals.push({ x, y, r: r * 0.42, a: rand(0, TAU), scorch: true }); if (G.decals.length > 150) G.decals.shift(); } // v1.83 연기 · 그을음
   SFX.playAt('boom', x, y, opts.small ? 0.4 : 1, 1400); // v1.35 위치 소리
   burst(x, y, '#ffb040', opts.small ? 12 : 30, opts.small ? 160 : 260, 0.5, 4);
   if (!opts.small) burst(x, y, '#555', 20, 120, 0.9, 6);

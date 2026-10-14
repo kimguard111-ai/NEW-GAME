@@ -1465,7 +1465,7 @@ function render() {
     const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
     g.addColorStop(0, `rgba(255,190,70,${0.55 * a * fl})`); g.addColorStop(0.7, `rgba(240,90,30,${0.4 * a})`); g.addColorStop(1, 'rgba(120,30,10,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, TAU); ctx.fill();
-    drawVfx('fire', f.x, f.y, f.r * 1.9 * ISO_K * (0.95 + 0.08 * Math.sin(G.time * 11 + f.y)), 0.95 * a, 0.92, Math.sin(G.time * 3 + f.x) > 0); // v1.83 불길 그림
+    for (let i = 0; i < 6; i++) { const q = i * 2.4 + f.x * 0.013, rr = f.r * (i ? 0.55 : 0) * (0.5 + (i % 3) * 0.25), fx = f.x + Math.cos(q) * rr, fy = f.y + Math.sin(q) * rr; drawVfx('fire', fx, fy, (i ? 34 : 46) * ISO_K * (0.9 + 0.12 * Math.sin(G.time * 11 + i * 1.7)), 0.85 * a, 0.92, (i + Math.floor(G.time * 4)) % 2 === 0); } // v1.83 불길 그림 · v1.84.6 한 장을 크게 늘이던 것 → 작은 불꽃 여러 개 (너무 크고 뭉개져 보이던 것)
   }
   for (const pl of G.pools) { // 산성 장판
     const a = Math.min(1, (pl.life - pl.t) / 0.6);
@@ -1526,11 +1526,11 @@ function render() {
   for (const ef of G.effects) {
     const k = ef.t / ef.life;
     if (ef.type === 'boom') {
-      const W = ef.r * 2.9 * ISO_K; // v1.83 그림: 섬광 → 불덩이 → 연기 고리
-      if (ART.vfx && ART.vfx.ball.ready) { if (k < 0.25) drawVfx('flash', ef.x, ef.y, W * (0.55 + k * 1.4), 1 - k * 2); drawVfx('ball', ef.x, ef.y, W * (0.6 + k * 0.55), k < 0.08 ? k / 0.08 : 1 - Math.max(0, k - 0.45) / 0.55, 0.62); if (k > 0.45) drawVfx('ring', ef.x, ef.y, W * (0.8 + k * 0.4), (k - 0.45) * 2.2, 0.55); continue; }
+      const W = ef.r * 1.8 * ISO_K; // v1.83 그림: 섬광 → 불덩이 → 연기 고리 · v1.84.6 2.9 → 1.8 (과하던 것)
+      if (ART.vfx && ART.vfx.ball.ready) { if (k < 0.25) drawVfx('flash', ef.x, ef.y, W * (0.55 + k * 1.4), 1 - k * 2); drawVfx('ball', ef.x, ef.y, W * (0.6 + k * 0.55), k < 0.08 ? k / 0.08 : 1 - Math.max(0, k - 0.45) / 0.55, 0.62); if (k > 0.45) drawVfx('ring', ef.x, ef.y, W * (0.8 + k * 0.4), Math.min(0.7, (k - 0.45) * 2.2), 0.55); continue; }
       ctx.fillStyle = `rgba(255,170,60,${0.55 * (1 - k)})`; ctx.beginPath(); ctx.arc(ef.x, ef.y, ef.r * (0.4 + k * 0.6), 0, TAU); ctx.fill();
     } else if (ef.type === 'smoke') { // v1.83 큰 폭발 뒤 피어오르는 연기
-      drawVfx('smoke', ef.x, ef.y - k * 30, ef.r * ISO_K * (1.6 + k * 0.9), 0.75 * Math.min(1, k * 4) * (1 - k), 0.8);
+      drawVfx('smoke', ef.x, ef.y - k * 24, ef.r * ISO_K * (0.9 + k * 0.5), 0.5 * Math.min(1, k * 4) * (1 - k), 0.8); // v1.84.6 1.6 → 0.9 · 진하기 0.75 → 0.5
     } else if (ef.type === 'ring') {
       ctx.strokeStyle = ef.color; ctx.globalAlpha = 1 - k; ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(ef.x, ef.y, ef.r * k, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1;
