@@ -2,7 +2,7 @@
 const TILE = 32;
 
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
-const GAME_VERSION = 'v1.84.4';
+const GAME_VERSION = 'v1.84.5';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -53,7 +53,7 @@ const WEAPONS = {
   blaster: { ammo: 'shell', base: 'shotgun', myth: true, name: '래피드 블래스터', icon: 'blaster', dmg: 7, pellets: 6, rate: 0.25, mag: 20, reload: 3.2, spread: 0.34, speed: 800, range: 230, falloff: true, knock: 5, stagger: 0.12, move: 0.95,
              lvl: 26, price: 2400, role: '연사 산탄총 · 드럼 탄창 20발 · 근거리를 갈아버림, 멀리선 약함' },
   f20:     { ammo: 'auto', base: 'rifle', myth: true, name: 'F-20 불펍 소총', icon: 'f20', dmg: 19, rate: 0.12, mag: 40, reload: 2.1, spread: 0.035, speed: 1150, range: 680, knock: 3, stagger: 0.04, move: 1.0,
-             built: { adsSpread: 0.7, adsLead: 1.35 }, fixed: ['scope'], lvl: 28, price: 3200, hsMul: 2, role: '가장 빠른 소총 · 헤드샷 피해 2배 · 2배 조준경 일체형 (조준경 칸 없음) · 탄창 40발' }, // v1.68 hsMul = 헤드샷 배율 추가
+             built: { adsSpread: 0.7, adsLead: 1.35 }, fixed: ['scope'], lvl: 28, price: 3200, pierce: 1, role: '가장 빠른 소총 · 관통 (한 발이 적 2명까지) · 2배 조준경 일체형 (조준경 칸 없음) · 탄창 40발' }, // v1.68 헤드샷 2배 → v1.84.5 관통 1 (모바일에선 헤드샷 2배를 거의 못 씀) · 관통 옵션도 F-20에만
   ox20:    { ammo: 'auto', base: 'rifle', myth: true, name: 'OX-20 복합소총', icon: 'ox20', dmg: 27, rate: 0.2, mag: 30, reload: 2.0, spread: 0.045, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 0.95,
              gl: { cd: 5, mul: 4, r: 85, range: 430 }, lvl: 30, price: 4600, role: '돌격소총 + 공중폭발 유탄 (G · 모바일 유탄 버튼) · 유탄은 탄 수 없이 5초마다 한 발' }, // v1.62 4발 충전식 → 쿨타임 5초
 };
@@ -96,7 +96,7 @@ const AFFIXES = {
   reload:  { name: '재장전 속도', slot: 'gun',    min: 0.10, max: 0.25, pct: true },
   // 무기 계열 전용 (v0.4 장비 2.0 마무리): weapons 에 적힌 무기에만 붙음
   pellets: { name: '산탄 펠릿',   slot: 'weapon', min: 1, max: 3, int: true, unit: '발', weapons: ['shotgun'] },
-  pierce:  { name: '관통',        slot: 'weapon', min: 1, max: 2, int: true, unit: '명', weapons: ['sniper'] },
+  pierce:  { name: '관통',        slot: 'weapon', min: 1, max: 2, int: true, unit: '명', weapons: ['f20'] }, /* v1.84.5 없어진 저격총 전용이라 아무 데도 안 붙던 것 → F-20 신화에만 (기본 관통 1 + 옵션 1~2) */
   reach:   { name: '공격 범위',   slot: 'weapon', min: 0.10, max: 0.25, pct: true, weapons: ['pipe', 'axe', 'katana'] },
   accuracy:{ name: '정확도',      slot: 'weapon', min: 0.15, max: 0.35, pct: true, weapons: ['pistol', 'smg', 'rifle', 'lmg'] },
   hp:      { name: '최대 체력',   slot: 'armor',  min: 0.05, max: 0.15, pct: true },

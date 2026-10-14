@@ -10,7 +10,7 @@ function affixPool(kind, key) {
   const melee = kind === 'weapon' && WEAPONS[key].melee;
   return Object.keys(AFFIXES).filter(k => {
     const sl = AFFIXES[k].slot;
-    if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(wbase(key))) return false; // 계열 전용 옵션
+    if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(wbase(key)) && !AFFIXES[k].weapons.includes(key)) return false; // 계열 전용 옵션
     if (kind === 'belt') return sl === 'belt'; // v1.25
     return kind !== 'weapon' ? sl === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee); // 헬멧은 방어구 옵션
   });
