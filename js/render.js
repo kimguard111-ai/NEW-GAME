@@ -1911,6 +1911,7 @@ function drawCorpse(c) {
   if (c.kind === 'blast' && c.z > 0) { const py = Iso.sy(c.x, c.y, c.z); ctx.translate(sx, py - 14); ctx.rotate(t * c.spin); ctx.translate(-sx, -(py - 14)); Sprites.draw(c.key, 'hit', 0, sx, py, c.face, false); }
   else Sprites.draw(c.key, 'death', at, sx, Iso.sy(c.x, c.y, c.z || 0), c.face, false);
   ctx.restore();
+  if (c.kind === 'burn' && t < 2.2) drawVfx('fire', c.x, c.y, 30 * ISO_K * (1 - t / 2.2 * 0.5), Math.min(1, (2.2 - t) * 1.2) * 0.9, 0.9, Math.floor(G.time * 5) % 2 === 0); // v1.84.7 불탄 시체 위 작은 불꽃
   if (c.kind === 'burn' && t < 2.2 && !G.paused && G.particles.length < 600 && Math.random() < 0.35) G.particles.push({ x: c.x + rand(-6, 6), y: c.y + rand(-6, 6), vx: 0, vy: 0, t: 0, life: 0.6, color: Math.random() < 0.5 ? '#ff8a2a' : '#555', size: rand(2, 4), z: rand(4, 14), vz: 40 });
 }
 // v1.32 던진 수류탄: 포물선으로 날아감 (떨어질 자리엔 이미 주황 원 예고)

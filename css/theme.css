@@ -570,3 +570,6 @@ body.touch #addr-warn { font-size: 11px; margin-top: 6px; padding: 4px 8px; line
 #hud-zone .zone-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 560px; margin: 2px auto 0; }
 #toast.mini { top: 58px !important; }
 #btn-summary-ok { margin-top: 12px; } /* v1.84 확인 버튼이 위 안내 글과 붙어 있던 것 */
+/* v1.84.7 가방·창고 칸: 이름 한 줄(넘치면 …) · 개수는 오른쪽 위 (이름과 겹치던 것) */
+.inv-cell .nm { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.inv-cell .cnt { top: 15px; bottom: auto !important; right: 3px; font-weight: bold; text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000; }

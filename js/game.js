@@ -845,6 +845,7 @@ function killEnemy(e) {
     if (G.corpses.length > 30) G.corpses.shift();
   }
   if (FACTION[e.type] !== 'machine') G.decals.push({ x: e.x, y: e.y, r: e.r * rand(1, 1.6), a: rand(0, TAU) });
+  else G.decals.push({ x: e.x, y: e.y, r: e.r * rand(0.9, 1.2), a: rand(0, TAU), scorch: true }); // v1.84.7 기계는 피 대신 그을음
   if (G.decals.length > 150) G.decals.shift();
   if (e.def.gasDeath) { G.pools.push({ x: e.x, y: e.y, r: 58, t: 0, life: 4.5, dps: e.dmg * 0.25, gas: true, by: '변이 연구원의 독가스' }); G.effects.push({ type: 'smoke', x: e.x, y: e.y, t: 0, life: 1, r: 40 }); SFX.playAt('boom', e.x, e.y, 0.3, 900); } // v1.83 가스통 폭발
   burst(e.x, e.y, FACTION[e.type] === 'machine' ? '#aab' : '#7a0d0d', e.def.boss ? 60 : 18, e.def.boss ? 260 : 170, 0.6, 4);
