@@ -54,7 +54,7 @@ const RaidEvents = {
     const z = ZONES[World.zoneIndex()];
     for (let i = 0; i < n; i++) {
       for (let k = 0; k < 8; k++) {
-        const a = rand(0, TAU), r = rand(opts.r0 || 60, opts.r1 || 160), ex = x + Math.cos(a) * r, ey = y + Math.sin(a) * r;
+        const a = rand(0, TAU), r = rand(opts.r0 ?? 60, opts.r1 ?? 160) /* v1.84.4 r0: 0 이 60으로 바뀌던 것 */, ex = x + Math.cos(a) * r, ey = y + Math.sin(a) * r;
         if (World.circleBlocked(ex, ey, 22) || World.buildingAt(ex, ey)) continue;
         const e = makeEnemy(weighted(z.spawns), ex, ey, this.lvl());
         e.evGuard = true; if (opts.chase) { e.state = 'chase'; e.heard = true; }
@@ -105,7 +105,10 @@ const RaidEvents = {
       const cost = Math.round(this.maxLvl() * 30);
       G.exits.push({ ...s, special: 'pay', locked: true, cost, time: 2, label: `유료 탈출 (₵${fmt(cost)})` });
     } else {
-      const g = this.spot(500); if (!g) return;
+      let g = null; // v1.84.4 외부 점검: 발전기를 탈출 지점 근처(1000 안)에서 · 몇 번 뽑아 가장 가까운 것
+      for (let k = 0; k < 12; k++) { const c = this.spot(500); if (c && (!g || Math.hypot(c.x - s.x, c.y - s.y) < Math.hypot(g.x - s.x, g.y - s.y))) g = c; }
+      if (!g) return;
+      if (Math.hypot(g.x - s.x, g.y - s.y) > 1000) { const cost = Math.round(this.maxLvl() * 30); G.exits.push({ ...s, special: 'pay', locked: true, cost, time: 2, label: `유료 탈출 (₵${fmt(cost)})` }); return; } // 가까운 자리가 없으면 유료 탈출로
       const ex = { ...s, special: 'power', locked: true, time: 3, label: '전원 탈출 (발전기 필요)' };
       G.exits.push(ex);
       this.list.push({ kind: 'generator', ...g, state: 'off', exit: ex, exitPart: true, hint: '[E] 발전기 켜기 (4초 · 시끄러움)', dur: 4 });

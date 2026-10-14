@@ -186,12 +186,13 @@ const MapEvents = {
           else { Workshop.gain(1, 3, '서버'); drop(e, 'item', { item: randomGear(lvl, 1.4, 2, bias) }); drop(e, 'credits', { amount: lvl * 80 }); done(e, '서버 탈취', '전자 부품 · 희귀 이상 장비'); } } };
       if (!yeo) for (const k of [0, 1]) { const m = makeEnemy('merc', s.x + rand(-80, 80), s.y + rand(-80, 80), lvl); if (!World.circleBlocked(m.x, m.y, 14)) { m.evGuard = true; G.enemies.push(m); } } }
     else if (id === 'jamsil') { const eggs = [];
-      for (let i = 0; i < 3; i++) { const a = i / 3 * TAU, x = s.x + Math.cos(a) * 70, y = s.y + Math.sin(a) * 70; if (World.circleBlocked(x, y, 20)) continue;
+      for (let i = 0; i < 3; i++) { let x = 0, y = 0, okp = false; for (let k = 0; k < 10 && !okp; k++) { const a = i / 3 * TAU + k * 0.6, rr = 70 + (k >> 1) * 22; x = s.x + Math.cos(a) * rr; y = s.y + Math.sin(a) * rr; okp = !World.circleBlocked(x, y, 20); } if (!okp) continue; /* v1.84.4 외부 점검: 막힌 자리면 각도·거리를 바꿔 다시 (알이 3개보다 적게 생기던 것) */
         const g = makeEnemy('brute', x, y, lvl); g.type = 'nest'; g.nest = true; g.egg = true; g.evGuard = true; g.weight = 0; g.r = 20; g.def = { ...ENEMIES.brute, name: '변이 알', speed: 0, aggro: 0, weight: 0, exp: ENEMIES.brute.exp }; g.hp = g.maxHp = Math.round(g.maxHp * 1.2); G.enemies.push(g); eggs.push(g); }
+      if (!eggs.length) return; // v1.84.4 알이 하나도 못 놓이면 사건을 만들지 않음 (깨지도 않고 보상이 나오던 것)
       e = { ...base, eggs, state: 'idle', t: 60,
         tick: (e, dt) => { if (e.done) return; const alive = e.eggs.filter(g => g.hp > 0);
           if (!alive.length) { drop(e, 'item', { item: randomGear(lvl, 1.3, 2, bias) }); drop(e, 'credits', { amount: lvl * 60 }); Workshop.gain(2, 1, '변이 알'); done(e, '변이 알 제거', '부화 전에 모두 깼다'); return; }
-          if (e.state === 'idle' && dist(p, e) < 520) { e.state = 'count'; UI.toast('변이 알 무더기', '60초 안에 알 3개를 깨라. 못 깨면 부화한다'); log('알이 꿈틀거린다… 60초 뒤 부화한다!', '#ff8a5a'); }
+          if (e.state === 'idle' && dist(p, e) < 520) { e.state = 'count'; UI.toast('변이 알 무더기', `60초 안에 알 ${e.eggs.length}개를 깨라. 못 깨면 부화한다`); log('알이 꿈틀거린다… 60초 뒤 부화한다!', '#ff8a5a'); }
           if (e.state === 'count' && (e.t -= dt) <= 0) { e.done = true; e.failed = true; for (const g of alive) { for (let k = 0; k < 3; k++) { const n = makeEnemy(Math.random() < 0.5 ? 'stalker' : 'subject', g.x + rand(-20, 20), g.y + rand(-20, 20), lvl); n.state = 'chase'; n.heard = true; G.enemies.push(n); } g.hp = 0; burst(g.x, g.y, '#6a1a2a', 14, 140, 0.5); } UI.toast('부화', '알에서 변이체가 쏟아져 나왔다!'); } },
         track: e => e.state === 'count' ? `변이 알: ${Math.ceil(e.t)}초 · ${e.eggs.filter(g => g.hp > 0).length}개 남음` : '변이 알 무더기 (미니맵 주황 ◆)' }; }
     if (!e) return;

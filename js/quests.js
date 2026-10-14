@@ -99,7 +99,12 @@ const Story = {
 
   // v0.6 이전 세이브: 6개 단일 임무 번호 → 장·단계
   migrate(q) {
-    if (q && 'ch' in q) return q;
+    if (q && 'ch' in q) { // v1.84.4 외부 점검: 장·단계 번호를 범위 안으로 (깨진 세이브 대비)
+      q.ch = clamp(Math.floor(+q.ch || 0), 0, CHAPTERS.length);
+      const ch = CHAPTERS[q.ch]; q.step = ch ? clamp(Math.floor(+q.step || 0), 0, ch.steps.length - 1) : 0;
+      q.active = !!q.active && q.ch < CHAPTERS.length; q.progress = Math.max(0, +q.progress || 0);
+      return q;
+    }
     const map = [[0, 0], [1, 0], [1, 1], [2, 0], [2, 1], [3, 2], [4, 0]];
     const [ch, step] = map[Math.min(q ? q.idx || 0 : 0, 6)];
     return { ch, step, active: !!(q && q.active) && ch < CHAPTERS.length, progress: 0 };
@@ -181,8 +186,8 @@ const Story = {
   grant(r, level) {
     const p = G.player;
     const cr = Math.round(r.credits * ECON.cr); p.credits += cr; // v1.25 이야기 보상 크레딧도 절반
-    if (r.items) for (const [k, n] of r.items) addItem(makeConsumable(k, n));
     const give = it => { if (!addItem(it)) G.drops.push({ x: p.x, y: p.y + 20, kind: 'item', item: it, t: 0 }); return it; };
+    if (r.items) for (const [k, n] of r.items) give(makeConsumable(k, n)); // v1.84.4 외부 점검: 가방이 차면 아이템 보상이 사라지던 것 → 발밑에
     if (r.equip) { const it = give(makeGear(r.equip, Math.max(p.level, 1), 0)); log(`보상 장비: ${it.name}. 인벤토리(I)에서 장착`, '#8cf'); }
     if (r.gear) { let g = null; for (let k = 0; k < 8 && (!g || (g.kind === 'weapon' && WEAPONS[g.key].melee) || [...p.inventory, ...Object.values(p.equip)].some(o => o && o.key === g.key && o.rarity >= g.rarity)); k++) g = randomGear(Math.max(p.level, level), r.gear); // v1.57 이미 가진 것(도끼 등)·근접은 피해서
       const it = give(g); log(`보상 장비: ${itemName(it)}`, RARITIES[it.rarity].color); }

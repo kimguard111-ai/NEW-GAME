@@ -83,7 +83,7 @@ const Pop = {
         const pk = zone.packs && zone.packs[type]; // 무리 (예산에서 함께 뺌)
         if (pk) for (let i = 1, n = randInt(pk[0], pk[1]); i < n && c.n > 0; i++) {
           const ox = x + rand(-70, 70), oy = y + rand(-70, 70);
-          if (!World.circleBlocked(ox, oy, e.r) && !World.inSafe(ox, oy)) { const m = makeEnemy(type, ox, oy, lvl); m.popCell = c; c.alive++; G.enemies.push(m); c.n--; near++; }
+          if (!World.circleBlocked(ox, oy, e.r) && !World.buildingAt(ox, oy) && !World.inSafe(ox, oy)) { /* v1.84.4 무리도 건물 안에는 안 생기게 (첫 적과 같은 검사) */ const m = makeEnemy(type, ox, oy, lvl); m.popCell = c; c.alive++; G.enemies.push(m); c.n--; near++; }
         }
       }
     }
