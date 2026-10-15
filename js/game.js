@@ -1490,6 +1490,7 @@ function frame(now) {
       render();
       UI.updateHUD(dt);
       FpsWatch.tick(dt);
+      if (Settings.fps) { const M = frame.m || (frame.m = { n: 0, t: 0, el: null }); M.n++; M.t += now - (M.last || now); M.last = now; if (M.t >= 500) { if (!M.el) { M.el = document.createElement('div'); M.el.id = 'fps-meter'; document.body.appendChild(M.el); } M.el.textContent = Math.round(M.n * 1000 / M.t) + ' FPS'; M.el.style.display = ''; M.n = 0; M.t = 0; } } else if (frame.m && frame.m.el) frame.m.el.style.display = 'none'; // v1.85 프레임 표시
     } catch (e) { ErrNote.show(e); }
   }
 }
@@ -1580,7 +1581,24 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
   };
   document.getElementById('btn-respawn').onclick = respawn;
   window.addEventListener('beforeunload', () => saveGame());
-  window.addEventListener('pagehide', () => { if (G.running) saveGame(); }); // v1.83.1 모바일은 beforeunload 가 잘 안 옴 — 앱 전환·탭 닫기·새로고침 때 저장
+  window.addEventListener('pagehide', () => { if (G.running) saveGame(); });
+  // v1.85 안드로이드 뒤로 가기 (앱 · 브라우저 공통): 열린 창 닫기 → 게임 중이면 일시정지 → 일시정지·타이틀에서 2초 안에 한 번 더 누르면 저장하고 나감
+  if (history.pushState) {
+    history.pushState({ s2049: 1 }, '');
+    let lastBack = 0;
+    const hint = txt => { let h = document.getElementById('back-hint'); if (!h) { h = document.createElement('div'); h.id = 'back-hint'; document.body.appendChild(h); } h.textContent = txt; h.classList.remove('hidden'); clearTimeout(hint.t); hint.t = setTimeout(() => h.classList.add('hidden'), 2000); };
+    window.addEventListener('popstate', () => {
+      const vis = id => { const el = document.getElementById(id); return !!el && !el.classList.contains('hidden'); };
+      if (vis('raid-summary')) document.getElementById('btn-summary-ok').click();
+      else if (G.running && UI.anyOpen()) UI.closeAll();
+      else if (G.running && !G.paused && !(G.player && G.player.dead) && !vis('title-screen')) Pause.toggle();
+      else if (Date.now() - lastBack < 2000) { if (G.running) saveGame(); history.back(); return; }
+      else { lastBack = Date.now(); hint('뒤로 가기를 한 번 더 누르면 나갑니다 (저장됨)'); if (G.running) saveGame(); }
+      history.pushState({ s2049: 1 }, '');
+    });
+  }
+  // v1.85 서비스 워커: 한 번 켠 뒤로는 오프라인에서도 실행 (https · localhost 에서만)
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); // v1.83.1 모바일은 beforeunload 가 잘 안 옴 — 앱 전환·탭 닫기·새로고침 때 저장
   document.addEventListener('visibilitychange', () => { if (document.hidden && G.running) saveGame(); });
   requestAnimationFrame(frame);
 })();

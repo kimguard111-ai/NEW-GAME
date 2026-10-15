@@ -4,4 +4,5 @@
 V="$1"; [ -z "$V" ] && { echo "사용: sh tools/bump-cache.sh <버전>"; exit 1; }
 sed -i -E "s#(src=\"js/[A-Za-z0-9_-]+\.js)(\?v=[A-Za-z0-9.]+)?\"#\1?v=$V\"#g; s#(href=\"css/[A-Za-z0-9_-]+\.css)(\?v=[A-Za-z0-9.]+)?\"#\1?v=$V\"#g" index.html
 grep -c "?v=$V" index.html
+sed -i -E "s#^const VERSION = '[^']*';#const VERSION = '$V';#" "$(dirname "$0")/../sw.js" # v1.85 서비스 워커 버전 (바뀌면 옛 화면 틀 저장본을 지움)
 sh "$(dirname "$0")/webp.sh" # v1.50.9 그림 webp 도 같이

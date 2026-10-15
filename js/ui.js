@@ -470,13 +470,14 @@ const UI = {
       + opt('ambient', '환경음', '바람 · 먼 총성 · 사이렌 같은 맵 분위기 소리')
       + opt('xray', '가려진 적 윤곽', '건물 뒤에 있는 적을 붉은 윤곽으로 보여 줌')
       + opt('outline', '적 테두리', '적 둘레에 붉은 테두리 · 발밑 고리 (어두운 곳에서도 잘 보이게)')
+      + opt('fps', '프레임 표시', '화면 왼쪽 아래에 초당 프레임 (폰이 버벅이는지 잴 때)')
       + (IS_TOUCH ? opt('fullscreen', '전체 화면', '화면을 누르면 주소창 없이 전체 화면으로 (아이폰은 「홈 화면에 추가」로 열어야 전체 화면)') : '')
       + `<div class="set-row"><button id="btn-lowspec">저사양 모드 (한 번에 가볍게)</button> <span class="muted">조명 · 세부 묘사 · 울림 · 환경음 끔</span></div>`
       + (IS_TOUCH ? '' : `<hr style="border-color:#333"><b>조작 키</b> <span class="muted">누르고 새 키 입력. 겹치면 서로 바뀜, ESC는 고정</span><div class="key-grid">${Object.keys(KEY_DEFAULTS).map(a => `<span class="key-row">${KEY_NAMES[a]} <button class="key-btn" data-key="${a}">${keyLabel(keyOf(a))}</button></span>`).join('')}</div><button id="btn-keyreset">기본 키로</button>`)
       + `<hr style="border-color:#333"><b>세이브 백업</b> <span class="muted">다른 기기·브라우저로 옮길 때</span><br>`
       + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
-      + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION}</div>`;
+      + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`;
     $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
     $('settings-body').querySelectorAll('.ts-btn').forEach(b => { b.onclick = () => { Settings.textScale = +b.dataset.ts; Settings.save(); applyTextScale(); UI.refreshSettings(); }; }); // v1.64
     $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };

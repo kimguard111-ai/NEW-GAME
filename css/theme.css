@@ -577,3 +577,7 @@ body.touch #addr-warn { font-size: 11px; margin-top: 6px; padding: 4px 8px; line
 body.touch #touch-side { flex-direction: row-reverse; gap: 6px; }
 /* v1.84.9 보스 체력바가 위쪽 알림(지역 안내 · 업적)과 겹치던 것 → 알림 아래로 */
 #boss-bar { top: 112px; } body.touch #boss-bar { top: 50px; }
+/* v1.85 뒤로 가기 안내 */
+#back-hint { position: fixed; left: 50%; bottom: 22%; transform: translateX(-50%); z-index: 200; background: rgba(16,15,12,.92); border: 2px solid var(--acc, #e0b23a); color: #f0e6cc; padding: 8px 18px; font-size: 14px; pointer-events: none; }
+#back-hint.hidden { display: none; }
+#fps-meter { position: fixed; left: 6px; bottom: 4px; z-index: 150; font: bold 12px monospace; color: #9fe08a; background: rgba(0,0,0,.6); padding: 1px 6px; pointer-events: none; } /* v1.85 */
