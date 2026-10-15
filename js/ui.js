@@ -123,7 +123,8 @@ const UI = {
 
   updateHUD(dt) {
     UI.hudT -= dt; UI.mapT = (UI.mapT || 0) - dt;
-    if (UI.mapT <= 0) { UI.mapT = 0.066; UI.drawMinimap(); } // v1.84.1 외부 점검: 미니맵은 초당 15번만 (매 프레임 다시 그리던 것)
+    if (UI.mapT <= 0) { UI.mapT = 0.066; UI.drawMinimap(); }
+    if (IS_TOUCH && (UI.sideT = (UI.sideT || 0) - dt) <= 0) { UI.sideT = 0.5; const wp = $('hud-weapon'), sd = $('touch-side'); if (wp && sd && wp.offsetParent) { const W = wp.getBoundingClientRect(), sk = [...document.querySelectorAll('#touch-skills .tsk')].map(e => e.getBoundingClientRect().top).filter(t => t > 0), skTop = sk.length ? Math.min(...sk) : innerHeight, under = W.bottom + 6 + 40 < skTop - 4; const t = Math.round(under ? W.bottom + 6 : W.bottom - 36) + 'px', r = under ? '' : Math.round(innerWidth - W.left + 6) + 'px'; if (sd.style.top !== t) sd.style.top = t; if (sd.style.right !== r) sd.style.right = r; } } // 아래 자리가 스킬과 겹치면 무기 창 왼쪽에 // v1.84.8 E·Q·R 은 무기 창 바로 아래 (글자 크기를 키우면 무기 창이 커져 겹치던 것) // v1.84.1 외부 점검: 미니맵은 초당 15번만 (매 프레임 다시 그리던 것)
     if (UI.hudT > 0) return;
     UI.hudT = 0.08;
     const p = G.player, mh = PlayerStats.maxHp(p), next = PlayerStats.expNext(p.level);

@@ -573,3 +573,5 @@ body.touch #addr-warn { font-size: 11px; margin-top: 6px; padding: 4px 8px; line
 /* v1.84.7 가방·창고 칸: 이름 한 줄(넘치면 …) · 개수는 오른쪽 위 (이름과 겹치던 것) */
 .inv-cell .nm { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .inv-cell .cnt { top: 15px; bottom: auto !important; right: 3px; font-weight: bold; text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000; }
+/* v1.84.8 E·Q·R 을 무기 창 아래 가로 한 줄로 — 세로로 쌓이면 화면이 낮은 폰에서 오른쪽 위 스킬(3번 자리)과 겹치던 것 */
+body.touch #touch-side { flex-direction: row-reverse; gap: 6px; }
