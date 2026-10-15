@@ -56,8 +56,7 @@ const Ambience = {
   gap: { gun: [10, 26], siren: [25, 50], crow: [12, 30], moan: [9, 22], creak: [12, 28], dog: [14, 30], geiger: [1.5, 5], drip: [1.5, 5], alarm: [16, 34], heli: [30, 60], glass: [14, 30], water: [3, 7], insects: [6, 12], roar: [18, 36], fire: [0.3, 1.2], radio: [10, 24] },
   // 좌우 위치 정해서 SFX 합성 함수로 그리기 (SFX.dst 를 잠깐 바꿈)
   with(pan, fn) {
-    const c = SFX.ctx, pn = c.createStereoPanner ? c.createStereoPanner() : null;
-    if (pn) { pn.pan.value = pan; pn.connect(this.out); SFX.dst = pn; } else SFX.dst = this.out;
+    SFX.dst = SFX.panNode(pan, this.out); // v1.84.10 패너 돌려씀 (먼 소리마다 새로 만들던 것)
     try { fn(); } finally { SFX.dst = SFX.bus; }
   },
   // ---------- 먼 소리 ----------

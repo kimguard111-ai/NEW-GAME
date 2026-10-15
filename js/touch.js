@@ -10,6 +10,7 @@ const Touch = {
   R: 56,        // 조이스틱 반지름 (px)
 
   init() {
+    if (this._inited) return; this._inited = true; // v1.84.10 외부 점검: 두 번 불려도 타이머·이벤트가 겹치지 않게
     if (!IS_TOUCH) return;
     document.body.classList.add('touch');
     const c = document.getElementById('game');

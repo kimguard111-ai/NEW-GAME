@@ -43,12 +43,19 @@ const SFX = {
       fetch('assets/sfx/' + f).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && this.ctx.decodeAudioData(a)).then(b => { if (b) (this.bufs[name] = this.bufs[name] || []).push(b); }).catch(() => { /* 없으면 합성음 */ });
     }
   },
+  // v1.84.10 외부 점검: 좌우 위치용 패너를 소리마다 새로 만들던 것 → 9단계(-1~1, 0.25 간격)로 미리 만든 것을 돌려씀 (오디오 노드가 쌓이지 않게)
+  panNode(pan, out) {
+    const c = this.ctx; if (!c || !c.createStereoPanner) return out;
+    const P = out.__pans || (out.__pans = {}), k = Math.round(clamp(pan, -1, 1) * 4);
+    if (!P[k]) { const pn = c.createStereoPanner(); pn.pan.value = k / 4; pn.connect(out); P[k] = pn; }
+    return P[k];
+  },
   // 파일 소리 재생 (있으면 true): 세기 · 좌우 · 음높이 살짝 흔들기
   playFile(name, k = 1, pan = 0, rate = 1, delay = 0) {
     const list = this.bufs[name]; if (!list || !list.length || !this.ctx) return false;
     const c = this.ctx, s = c.createBufferSource(), g = c.createGain(); s.buffer = list[Math.floor(Math.random() * list.length)];
     s.playbackRate.value = rate * (0.95 + Math.random() * 0.1); g.gain.value = k * (SOUND_GAIN[name] ?? 1);
-    let out = this.dst; if (pan && c.createStereoPanner && out === this.bus) { const pn = c.createStereoPanner(); pn.pan.value = pan; pn.connect(this.bus); out = pn; }
+    let out = this.dst; if (pan && out === this.bus) out = this.panNode(pan, this.bus);
     s.connect(g); g.connect(out); s.start(c.currentTime + delay); return true;
   },
   setVolume() { if (this.master) this.master.gain.value = Settings.sound ? Settings.volume * 0.5 : 0; },
@@ -96,8 +103,7 @@ const SFX = {
     if (now - (this.last[name] || 0) < gap) return;
     this.last[name] = now;
     if (this.playFile(name, name === 'item' ? 1 : k, pan)) return; // v1.40 파일이 있으면 그 소리
-    let pn = null;
-    if (pan && this.ctx.createStereoPanner) { pn = this.ctx.createStereoPanner(); pn.pan.value = pan; pn.connect(this.bus); this.dst = pn; }
+    if (pan) this.dst = this.panNode(pan, this.bus); // v1.84.10 패너 돌려씀
     try { this.sound(name, k); } finally { this.dst = this.bus; }
   },
   sound(name, k) {
@@ -187,8 +193,7 @@ const SFX = {
   step(surf, k = 1, pan = 0) {
     if (!this.ctx || !Settings.sound) return;
     if (this.playFile('step_' + surf, k * 0.8, pan)) return; // v1.40 파일
-    let pn = null;
-    if (pan && this.ctx.createStereoPanner) { pn = this.ctx.createStereoPanner(); pn.pan.value = pan; pn.connect(this.bus); this.dst = pn; }
+    if (pan) this.dst = this.panNode(pan, this.bus); // v1.84.10 패너 돌려씀
     const v = k * (0.85 + Math.random() * 0.3), f = 0.9 + Math.random() * 0.2;
     try {
       switch (surf) {
