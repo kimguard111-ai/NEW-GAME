@@ -124,6 +124,7 @@ const UI = {
   updateHUD(dt) {
     UI.hudT -= dt; UI.mapT = (UI.mapT || 0) - dt;
     if (UI.mapT <= 0) { UI.mapT = 0.066; UI.drawMinimap(); }
+    if (!IS_TOUCH && (UI.topT = (UI.topT || 0) - dt) <= 0) { UI.topT = 0.5; const z = $('hud-zone'), zb = z && z.offsetParent ? z.getBoundingClientRect().bottom : 10, ts = parseFloat(getComputedStyle(document.body).getPropertyValue('--ts')) || 1, tt = Math.round(zb + 6) + 'px', bt = Math.round(zb + 6 + 52 * ts + 8) + 'px', T = $('toast'), B = $('boss-bar'); if (T.style.top !== tt) T.style.setProperty('--mtop', tt); if (B.style.top !== bt) B.style.top = bt; } // v1.84.9 PC: 업적 알림 · 보스 체력바를 지역 띠의 실제 아래 끝부터 차례로 (화면이 크면 띠가 커져 겹치던 것)
     if (IS_TOUCH && (UI.sideT = (UI.sideT || 0) - dt) <= 0) { UI.sideT = 0.5; const wp = $('hud-weapon'), sd = $('touch-side'); if (wp && sd && wp.offsetParent) { const W = wp.getBoundingClientRect(), sk = [...document.querySelectorAll('#touch-skills .tsk')].map(e => e.getBoundingClientRect().top).filter(t => t > 0), skTop = sk.length ? Math.min(...sk) : innerHeight, under = W.bottom + 6 + 40 < skTop - 4; const t = Math.round(under ? W.bottom + 6 : W.bottom - 36) + 'px', r = under ? '' : Math.round(innerWidth - W.left + 6) + 'px'; if (sd.style.top !== t) sd.style.top = t; if (sd.style.right !== r) sd.style.right = r; } } // 아래 자리가 스킬과 겹치면 무기 창 왼쪽에 // v1.84.8 E·Q·R 은 무기 창 바로 아래 (글자 크기를 키우면 무기 창이 커져 겹치던 것) // v1.84.1 외부 점검: 미니맵은 초당 15번만 (매 프레임 다시 그리던 것)
     if (UI.hudT > 0) return;
     UI.hudT = 0.08;
