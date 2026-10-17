@@ -581,3 +581,23 @@ body.touch #touch-side { flex-direction: row-reverse; gap: 6px; }
 #back-hint { position: fixed; left: 50%; bottom: 22%; transform: translateX(-50%); z-index: 200; background: rgba(16,15,12,.92); border: 2px solid var(--acc, #e0b23a); color: #f0e6cc; padding: 8px 18px; font-size: 14px; pointer-events: none; }
 #back-hint.hidden { display: none; }
 #fps-meter { position: fixed; left: 6px; bottom: 4px; z-index: 150; font: bold 12px monospace; color: #9fe08a; background: rgba(0,0,0,.6); padding: 1px 6px; pointer-events: none; } /* v1.85 */
+/* v1.87 가방 칸 격자 (디아블로식) — 가로 8칸 · 아이템이 여러 칸을 차지 */
+.bag-grid { display: grid !important; grid-template-columns: repeat(8, var(--bag-cell, 42px)) !important; grid-template-rows: repeat(var(--bag-rows, 5), var(--bag-cell, 42px)); gap: 2px !important; position: relative; justify-content: start; align-content: start; }
+.bag-grid .bag-slot { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06); border-radius: 2px; }
+.bag-grid .bag-item { height: auto !important; min-height: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1px 2px !important; font-size: 9px; user-select: none; touch-action: none; }
+.bag-grid .bag-item .icon { font-size: 16px; }
+.bag-grid .bag-item.wide .icon .ico, .bag-grid .bag-item.tall .icon .ico { width: 2.2em; height: 2.2em; }
+.bag-grid .bag-item.wide.tall .icon .ico { width: 3em; height: 3em; }
+.bag-grid .bag-item.dragging { opacity: .3; }
+.bag-ghost { position: fixed; z-index: 500; pointer-events: none; opacity: .85; box-shadow: 0 4px 14px rgba(0,0,0,.7); }
+.bag-hint { z-index: 2; pointer-events: none; border: 2px dashed #7fe08a; background: rgba(127,224,138,.15); border-radius: 3px; }
+.bag-hint.bad { border-color: #ff6a5a; background: rgba(255,90,80,.15); }
+#stash-bag.bag-grid { --bag-cell: 36px; }
+body.touch .bag-grid { --bag-cell: 30px; gap: 1px !important; }
+body.touch .bag-grid .bag-item { font-size: 7px; }
+body.touch .bag-grid .bag-item .nm { display: none; } body.touch .bag-grid .bag-item.wide .nm { display: block; }
+body #inv-grid.bag-grid, body #stash-bag.bag-grid, body.touch #inv-grid.bag-grid, body.touch.shop-open #inv-grid.bag-grid { grid-template-columns: repeat(8, var(--bag-cell, 42px)) !important; grid-template-rows: repeat(var(--bag-rows, 5), var(--bag-cell, 42px)) !important; }
+body #inv-grid.bag-grid .bag-item, body.touch #inv-grid.bag-grid .bag-item, body #stash-bag.bag-grid .bag-item { height: auto !important; padding-top: 0 !important; }
+body:not(.touch) .bag-grid .bag-item.wide:not(.tall) { flex-direction: row; gap: 6px; justify-content: flex-start; padding-left: 8px !important; font-size: 10px; }
+body:not(.touch) .bag-grid .bag-item.wide:not(.tall) .icon .ico { width: 2.6em; height: 1.6em; }
+body:not(.touch) .bag-grid .bag-item .nm { max-width: 100%; }

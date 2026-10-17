@@ -90,7 +90,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       if (World.map === 'camp') { if (B.cur) B.endRaid(true); return B.deploy(); }
       const c = B.cur, mh = PlayerStats.maxHp(p);
       const med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
-      let leave = G.time - c.t0 > c.plan || p.inventory.length >= 22 || (med === 0 && p.hp < mh * 0.5);
+      let leave = G.time - c.t0 > c.plan || Bag.used() >= Bag.cells() - 4 || (med === 0 && p.hp < mh * 0.5);
       if (AS) leave = !G.assault && c.asDone; // v1.51 어설트 측정: 어설트 끝나면 바로 탈출
       if (G.assault) B.asMin = Math.min(B.asMin, p.hp / mh);
       if (G.assault && p.hp < mh * 0.45 && med > 0 && !(p.medT > 0)) quickMedkit();

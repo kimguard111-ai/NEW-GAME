@@ -178,6 +178,7 @@ function startGame(save, name) {
     G.player.found = G.player.found || [];
     G.player.mats = G.player.mats || { scrap: 0, chip: 0 }; // v0.12 재료
     G.player.quest = Story.migrate(G.player.quest); // v0.7: 단일 임무 → 챕터
+    Bag.normalize(); // v1.87 가방 칸 격자: 자리 잡기 (옛 세이브는 못 들어가는 것을 창고로)
     if (!('helmet' in G.player.equip)) G.player.equip.helmet = null; // v0.6.2 헬멧 칸
     for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
     G.bossT = save.bossT || 0;
@@ -575,7 +576,7 @@ function addItem(it) {
     const ex = inv.find(i => i && i.kind === 'cons' && i.key === it.key);
     if (ex) { ex.count += it.count; UI.refreshInventory(); if (it.key !== 'ammo' && G.player.hotbar) Hotbar.autoAdd(it.key); return true; }
   }
-  if (inv.length >= Camp.bagSize()) return false;
+  if (!Bag.place(it, inv)) return false; // v1.87 칸 격자
   inv.push(it); Journal.onItem(it); // v1.15 도감
   if (it.kind === 'cons' && it.key !== 'ammo' && G.player.hotbar) Hotbar.autoAdd(it.key); // v1.50 새 소모품은 빈 벨트 칸에
   UI.refreshInventory();
@@ -584,7 +585,7 @@ function addItem(it) {
 // v1.84.3 외부 점검: 가방이 꽉 차 있으면 넘치는 것은 창고(캠프) → 그래도 없으면 발밑에 떨굼 (부품 반환 · 동료 총 교환이 가방 칸을 넘기던 것)
 function stowItem(it) {
   const p = G.player;
-  if (p.inventory.length < Camp.bagSize()) { p.inventory.push(it); return 'bag'; }
+  if (Bag.place(it)) { p.inventory.push(it); return 'bag'; }
   if (World.map === 'camp' && p.stash.length < Camp.stashSize()) { p.stash.push(it); return 'stash'; }
   G.drops.push({ x: p.x + rand(-20, 20), y: p.y + rand(-20, 20), kind: 'item', t: 0, item: it }); return 'floor';
 }
@@ -1220,7 +1221,7 @@ function mythTestGrant(P) {
   if (P.level < 26) { const n = 26 - P.level; P.level = 26; P.exp = 0; P.statPoints = (P.statPoints || 0) + n * 3; P.sp = (P.sp || 0) + n; P.hp = PlayerStats.maxHp(P); }
   if (P.mythTestGot) return false;
   P.mythTestGot = true; P.stash = P.stash || [];
-  for (const k of Object.keys(WEAPONS).filter(k => WEAPONS[k].myth)) { const w = makeMyth(k, P.level); w.isNew = true; if (P.inventory.length < Camp.bagSize()) P.inventory.push(w); else P.stash.push(w); }
+  for (const k of Object.keys(WEAPONS).filter(k => WEAPONS[k].myth)) { const w = makeMyth(k, P.level); w.isNew = true; if (Bag.place(w, P.inventory)) P.inventory.push(w); else P.stash.push(w); }
   setTimeout(() => { if (G.player !== P) return; UI.toast('시험 모드: Lv26 · 신화 무기 3종', '가방(꽉 차면 창고)에 래피드 블래스터 · F-20 · OX-20 · 능력치(C)·스킬(K) 포인트도 같이'); log('시험 모드: Lv26 · 신화 무기 3종을 받았다.', '#ff8a3d'); UI.refreshInventory(); }, 2000);
   return true;
 }

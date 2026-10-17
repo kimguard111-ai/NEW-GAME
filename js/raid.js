@@ -25,7 +25,7 @@ const Raid = {
   openMap() {
     const p = G.player, btns = [], med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
     let h = '<div class="mc-intro">"어디로 나갈 건가? 뭘 줍든 살아서 돌아와야 네 거야." <span class="muted">카드를 누르면 바로 나간다</span></div>'
-      + `<div class="prep">출격 준비: 체력 <b style="color:${p.hp < PlayerStats.maxHp(p) * 0.7 ? '#ff8a8a' : 'inherit'}">${Math.round(p.hp)}/${PlayerStats.maxHp(p)}</b>${p.hp < PlayerStats.maxHp(p) * 0.7 ? ' <span style="color:#ff8a8a">(의무병 이씨에게 치료부터)</span>' : ''} · ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${p.inventory.length}/${Camp.bagSize()}</b> · ₵${fmt(p.credits)}</div>`;
+      + `<div class="prep">출격 준비: 체력 <b style="color:${p.hp < PlayerStats.maxHp(p) * 0.7 ? '#ff8a8a' : 'inherit'}">${Math.round(p.hp)}/${PlayerStats.maxHp(p)}</b>${p.hp < PlayerStats.maxHp(p) * 0.7 ? ' <span style="color:#ff8a8a">(의무병 이씨에게 치료부터)</span>' : ''} · ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${Bag.used()}/${Bag.cells()}칸</b> · ₵${fmt(p.credits)}</div>`;
     btns.push([`${ICON('medkit')} +3 (120₵)`, () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
     for (const [k, a] of Object.entries(AMMO)) btns.push([`${ICON('ammo_' + k)} ${a.name} +${a.pack} (${a.price}₵)`, () => { if (p.credits < a.price) return log('크레딧이 부족합니다.', '#f88'); addAmmo(p, k, a.pack); p.credits -= a.price; SFX.play('ammo'); this.openMap(); }]); // v1.33 탄약 4종
     h += `<div class="sum-head">${ICON('map')} 출격할 곳</div>`; // v1.45.2 맵 목록을 먼저 · 계약은 그 아래
@@ -243,9 +243,9 @@ const Stash = {
         el.appendChild(c);
       }
     };
-    $('stash-bag-n').textContent = `${p.inventory.length} / ${Camp.bagSize()}`; $('stash-n').textContent = `${p.stash.length} / ${Camp.stashSize()}`;
-    grid($('stash-bag'), p.inventory, Camp.bagSize(), it => { if (p.stash.length >= Camp.stashSize()) return log('창고가 가득 찼습니다.', '#f88'); removeItem(it); p.stash.push(it); this.after(); });
-    grid($('stash-grid'), p.stash, Camp.stashSize(), it => { if (p.inventory.length >= Camp.bagSize()) return log('가방이 가득 찼습니다.', '#f88'); p.stash.splice(p.stash.indexOf(it), 1); p.inventory.push(it); this.after(); });
+    $('stash-bag-n').textContent = `${Bag.used()} / ${Bag.cells()}칸`; $('stash-n').textContent = `${p.stash.length} / ${Camp.stashSize()}`;
+    Bag.render($('stash-bag'), it => { if (p.stash.length >= Camp.stashSize()) return log('창고가 가득 찼습니다.', '#f88'); removeItem(it); delete it.gx; delete it.gy; p.stash.push(it); this.after(); }, { drag: true }); // v1.87 가방은 칸 격자 (PC 끌어 놓기 · 누르면 창고로)
+    grid($('stash-grid'), p.stash, Camp.stashSize(), it => { if (!Bag.place(it)) return log('가방에 자리가 없습니다.', '#f88'); p.stash.splice(p.stash.indexOf(it), 1); p.inventory.push(it); this.after(); });
   },
   after() { this.render(); UI.refreshInventory(); saveGame(); SFX.play('ui'); },
 };

@@ -265,18 +265,10 @@ const UI = {
       $('doll-stats').innerHTML = `<b>Lv.${p.level}</b> ${p.name}<br><span class="muted">체력</span> ${Math.ceil(p.hp)} / ${PlayerStats.maxHp(p)}`
         + `<br><span class="muted">방어</span> ${PlayerStats.def(p)} (-${Math.round(PlayerStats.dmgReduce(p) * 100)}%)<br><span class="muted">DPS</span> ${w ? Math.round(weaponDps(p, w)) : 0}`
         + `<br><span class="muted">₵</span> ${fmt(p.credits)} · ${ICON('scrap')}${p.mats.scrap} ${ICON('chip')}${p.mats.chip}`;
-      $('bag-count').textContent = `${p.inventory.length} / ${Camp.bagSize()}`;
+      $('bag-count').textContent = `${Bag.used()} / ${Bag.cells()}칸`; // v1.87
       $('btn-sort').onclick = () => UI.sortBag(); // v1.15
     }
-    const grid = $('inv-grid');
-    grid.innerHTML = '';
-    for (let i = 0; i < Camp.bagSize(); i++) {
-      const it = p.inventory[i];
-      const c = document.createElement('div');
-      c.className = 'inv-cell' + (it ? ' bc' + (it.rarity || 0) : '') + (it && UI.selected === it ? ' sel' : '');
-      if (it) { c.innerHTML = UI.itemCell(it); c.onclick = () => { ItemTip.hide(); UI.selected = it; it.isNew = false; UI.refreshInventory(); }; if (!IS_TOUCH) ItemTip.attach(c, it); } // v1.47 PC 툴팁
-      grid.appendChild(c);
-    }
+    Bag.render($('inv-grid'), it => { UI.selected = it; it.isNew = false; UI.refreshInventory(); }, { drag: true, sel: UI.selected }); // v1.87 칸 격자 (PC: 끌어 놓기)
     if (UI.selected && !p.inventory.includes(UI.selected) && !Object.values(p.equip).includes(UI.selected)) UI.selected = null;
     UI.renderDetail();
   },
@@ -285,6 +277,7 @@ const UI = {
   sortBag() {
     const p = G.player, ord = { cons: 0, weapon: 1, armor: 2, helmet: 3, belt: 4, att: 5 };
     p.inventory.sort((a, b) => (ord[a.kind] - ord[b.kind]) || ((b.unique ? 2 : b.set ? 1 : 0) - (a.unique ? 2 : a.set ? 1 : 0)) || ((b.rarity || 0) - (a.rarity || 0)) || ((b.plus || 0) - (a.plus || 0)) || ((b.ilvl || 0) - (a.ilvl || 0)) || String(a.key).localeCompare(String(b.key)));
+    Bag.sortPack(p.inventory); // v1.87 정렬 순서대로 격자에 다시
     SFX.play('ui'); UI.refreshInventory();
   },
 
@@ -347,8 +340,12 @@ const UI = {
     const p = G.player;
     if (p.level < itemReqLevel(it)) { log(`레벨이 부족합니다. (요구 Lv${itemReqLevel(it)})`, '#f88'); return; }
     const idx = p.inventory.indexOf(it);
-    SFX.play('equip'); // v1.35
     const old = p.equip[slot];
+    if (old && idx >= 0) { // v1.87 칸 격자: 벗은 장비가 들어갈 자리 (새 장비 자리 먼저 · 없으면 아무 데나)
+      const rest = p.inventory.filter(o => o !== it); old.gx = it.gx; old.gy = it.gy;
+      if (!Bag.fitsAt(old, old.gx, old.gy, Bag.occ(rest)) && !Bag.place(old, rest)) { log('가방에 벗은 장비를 넣을 자리가 없습니다.', '#f88'); return; }
+    }
+    SFX.play('equip'); // v1.35
     p.equip[slot] = it;
     if (old) p.inventory[idx] = old; else p.inventory.splice(idx, 1);
     if (p.active === slot) p.reloadT = 0;
@@ -363,7 +360,7 @@ const UI = {
 
   unequip(slot) {
     const p = G.player;
-    if (p.inventory.length >= Camp.bagSize()) { log('인벤토리가 가득 찼습니다.', '#f88'); return; }
+    if (!Bag.place(p.equip[slot])) { log('가방에 자리가 없습니다.', '#f88'); return; } // v1.87
     p.inventory.push(p.equip[slot]);
     p.equip[slot] = null;
     if (slot === p.active) { const o = slot === 'w1' ? 'w2' : 'w1'; if (p.equip[o]) p.active = o; }

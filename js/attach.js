@@ -49,7 +49,7 @@ const Attach = {
     const slot = ATTACHMENTS[part.key].slot, old = w.att && w.att[slot];
     const idx = p.inventory.indexOf(part); if (idx < 0) return false;
     p.inventory.splice(idx, 1);
-    if (old) p.inventory.push(old);
+    if (old) { old.gx = part.gx; old.gy = part.gy; p.inventory.push(old); } // v1.87 부품은 1칸 — 빠진 부품 자리에
     w.att = w.att || {}; w.att[slot] = part; part.isNew = false;
     this.fixMag(w);
     SFX.play('equip'); log(`${itemName(w)}에 ${part.name}을(를) 끼웠다.`, '#9fd0ff'); return true;
@@ -58,7 +58,7 @@ const Attach = {
   take(w, slot) {
     const p = G.player, part = w.att && w.att[slot];
     if (!part) return false;
-    if (p.inventory.length >= Camp.bagSize()) { log('가방이 꽉 찼다.', '#f88'); return false; }
+    if (!Bag.place(part)) { log('가방이 꽉 찼다.', '#f88'); return false; } // v1.87
     w.att[slot] = null; p.inventory.push(part);
     this.fixMag(w);
     SFX.play('ui'); return true;

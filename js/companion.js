@@ -64,7 +64,7 @@ const Companion = {
   },
   takeBack(id) {
     const p = G.player, cd = this.data(id); if (!cd.gun) return;
-    if (p.inventory.length >= Camp.bagSize()) return log('가방이 가득 찼습니다.', '#f88');
+    if (!Bag.place(cd.gun)) return log('가방에 자리가 없습니다.', '#f88'); // v1.87
     p.inventory.push(cd.gun); log(`${itemName(cd.gun)}을(를) 돌려받았다.`, '#9fd0ff'); cd.gun = null; SFX.play('equip'); saveGame();
   },
   gunStats(p, d) {
