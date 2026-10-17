@@ -586,8 +586,6 @@ body.touch #touch-side { flex-direction: row-reverse; gap: 6px; }
 .bag-grid .bag-slot { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06); border-radius: 2px; }
 .bag-grid .bag-item { height: auto !important; min-height: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1px 2px !important; font-size: 9px; user-select: none; touch-action: none; }
 .bag-grid .bag-item .icon { font-size: 16px; }
-.bag-grid .bag-item.wide .icon .ico, .bag-grid .bag-item.tall .icon .ico { width: 2.2em; height: 2.2em; }
-.bag-grid .bag-item.wide.tall .icon .ico { width: 3em; height: 3em; }
 .bag-grid .bag-item.dragging { opacity: .3; }
 .bag-ghost { position: fixed; z-index: 500; pointer-events: none; opacity: .85; box-shadow: 0 4px 14px rgba(0,0,0,.7); }
 .bag-hint { z-index: 2; pointer-events: none; border: 2px dashed #7fe08a; background: rgba(127,224,138,.15); border-radius: 3px; }
@@ -598,6 +596,11 @@ body.touch .bag-grid .bag-item { font-size: 7px; }
 body.touch .bag-grid .bag-item .nm { display: none; } body.touch .bag-grid .bag-item.wide .nm { display: block; }
 body #inv-grid.bag-grid, body #stash-bag.bag-grid, body.touch #inv-grid.bag-grid, body.touch.shop-open #inv-grid.bag-grid { grid-template-columns: repeat(8, var(--bag-cell, 42px)) !important; grid-template-rows: repeat(var(--bag-rows, 5), var(--bag-cell, 42px)) !important; }
 body #inv-grid.bag-grid .bag-item, body.touch #inv-grid.bag-grid .bag-item, body #stash-bag.bag-grid .bag-item { height: auto !important; padding-top: 0 !important; }
-body:not(.touch) .bag-grid .bag-item.wide:not(.tall) { flex-direction: row; gap: 6px; justify-content: flex-start; padding-left: 8px !important; font-size: 10px; }
-body:not(.touch) .bag-grid .bag-item.wide:not(.tall) .icon .ico { width: 2.6em; height: 1.6em; }
 body:not(.touch) .bag-grid .bag-item .nm { max-width: 100%; }
+/* v1.87.1 가방 칸: 그림이 칸을 꽉 채움 (이름은 아래 한 줄) */
+.bag-grid .bag-item { justify-content: flex-start !important; }
+.bag-grid .bag-item .icon { flex: 1 1 auto; min-height: 0; width: 100%; display: flex !important; align-items: center; justify-content: center; padding: 2px 3px 0; box-sizing: border-box; }
+.bag-grid .bag-item .icon .ico { width: 100% !important; height: 100% !important; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0,0,0,.8)); }
+.bag-grid .bag-item .nm { flex: 0 0 auto; line-height: 1.15; padding: 0 2px 1px; }
+.bag-grid .bag-item .mark { z-index: 2; }
+body:not(.touch) .bag-grid .bag-item:not(.wide):not(.tall) .nm { display: none; } /* 1칸짜리는 그림만 (이름은 마우스를 올리면) */

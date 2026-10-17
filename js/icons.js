@@ -37,6 +37,15 @@ const Icons = {
     }
     return (this.urls[key] = { u, art: c.art }).u;
   },
+  // v1.87.1 가방 칸 격자용: 무기 그림을 눕힌 채 가로로 긴 그림 (기울인 정사각 아이콘은 넓은 칸에서 손톱만 해 보이던 것) — 그림이 없으면 null
+  flatUrl(key) {
+    const art = typeof ART !== 'undefined' && ART.weapons[key]; if (!art || !art.ready || this.noExport) return null;
+    const F = this.flat || (this.flat = {}); if (F[key]) return F[key];
+    const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height], H = 72, W = Math.round(Math.min(288, H * rw / rh));
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), sc = Math.min(W * 0.96 / rw, H * 0.92 / rh);
+    g.drawImage(art.img, rx, ry, rw, rh, (W - rw * sc) / 2, (H - rh * sc) / 2, rw * sc, rh * sc);
+    try { return (F[key] = c.toDataURL()); } catch (e) { this.noExport = true; return null; }
+  },
   codeCv(key) { // 코드로 그린 아이콘만 (그림 무시)
     if (this.code[key]) return this.code[key];
     const c = document.createElement('canvas'); c.width = c.height = ICON_PX; c.art = false;
