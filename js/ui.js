@@ -191,7 +191,7 @@ const UI = {
 
     const npc = !p.dead && nearestNpc();
     const gift = !npc && Settlement.near(p), crate = !npc && !gift && Interiors.nearCrate(), sc = !npc && !gift && !crate && Raid.inRaid() && !G.search && Scavenge.near(), asl = !npc && !gift && !crate && !sc && Assault.available();
-    if (npc || gift || crate || sc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : gift ? Settlement.hint() : crate ? '[E] 보급 상자 열기' : sc ? Scavenge.hint(sc) : Assault.hint(asl); }
+    if (npc || gift || crate || sc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = (npc ? `[${keyLabel(keyOf('interact'))}] ${npc.name}와(과) 대화` : gift ? Settlement.hint() : crate ? `[${keyLabel(keyOf('interact'))}] 보급 상자 열기` : sc ? Scavenge.hint(sc) : Assault.hint(asl)).replace('[E]', `[${keyLabel(keyOf('interact'))}]`); }
     else $('interact-hint').classList.add('hidden');
     BagSwap.update(dt); // v1.88 꽉 찬 가방 「바꾸기」 카드
 
@@ -455,7 +455,7 @@ const UI = {
     $('settings-body').innerHTML = opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
       + opt('detail', '세부 묘사', '옥상·1층·도로·차 디테일 (끄면 가벼워짐)')
       + `<div class="set-row"><b>화면 흔들림</b> <span id="shk-val">${Math.round(Settings.shakeAmt * 100)}%</span> <span class="muted">타격 · 폭발 · 사격 반동 (0% = 끔)</span><br><input type="range" id="shk-range" min="0" max="1" step="0.1" value="${Settings.shakeAmt}"></div>`
-      + (IS_TOUCH && typeof navigator.vibrate === 'function' ? opt('vibrate', '진동', '맞을 때 · 보스 큰 공격 · 전설 획득 · 쓰러질 때 (v1.90)') : '')
+      + ((IS_TOUCH && typeof navigator.vibrate === 'function') || Pad.on ? opt('vibrate', '진동', '맞을 때 · 보스 큰 공격 · 전설 획득 · 쓰러질 때 (v1.90)') : '')
       + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 회피)'))
       + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
@@ -474,6 +474,7 @@ const UI = {
       + (IS_TOUCH ? opt('fullscreen', '전체 화면', '화면을 누르면 주소창 없이 전체 화면으로 (아이폰은 「홈 화면에 추가」로 열어야 전체 화면)') : '')
       + `<div class="set-row"><button id="btn-lowspec">저사양 모드 (한 번에 가볍게)</button> <span class="muted">조명 · 세부 묘사 · 울림 · 환경음 끔</span></div>`
       + (IS_TOUCH ? '' : `<hr style="border-color:#333"><b>조작 키</b> <span class="muted">누르고 새 키 입력. 겹치면 서로 바뀜, ESC는 고정</span><div class="key-grid">${Object.keys(KEY_DEFAULTS).map(a => `<span class="key-row">${KEY_NAMES[a]} <button class="key-btn" data-key="${a}">${keyLabel(keyOf(a))}</button></span>`).join('')}</div><button id="btn-keyreset">기본 키로</button>`)
+      + `<hr style="border-color:#333"><b>게임패드</b> <span class="muted">${Pad.get() ? '연결됨' : '연결하고 아무 버튼이나 누르면 켜짐'}</span><div class="muted" style="line-height:1.6">왼쪽 스틱 이동 · 오른쪽 스틱 조준 · ${Pad.label('fire')} 사격 · ${Pad.label('aim')} 정밀 조준 · ${Pad.label('dodge')} 회피 · ${Pad.label('interact')} 상호작용 · ${Pad.label('reload')} 재장전 · ${Pad.label('swap')} 무기 교체 · ${Pad.label('useMed')} 구급상자 · ${Pad.label('throw')} 투척물 · 십자키 스킬 1~4 · L3 유탄 · R3 동료 명령 · ${Pad.label('settings')} 일시정지 · ${Pad.label('inventory')} 가방<br>창에서는 커서: 왼쪽 스틱으로 옮기고 ${Pad.label('dodge')} 누르기 · 오른쪽 스틱 스크롤 · ${Pad.label('interact')} 닫기</div>`
       + `<hr style="border-color:#333"><b>세이브 백업</b> <span class="muted">다른 기기·브라우저로 옮길 때</span><br>`
       + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
       + `<hr style="border-color:#333"><b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`

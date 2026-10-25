@@ -172,7 +172,7 @@ const BagSwap = {
     if (key === this.key) return;
     this.key = key;
     const el = document.getElementById('bag-swap'), it = d.item, cell = x => `₵${fmt(this.perCell(x))}/칸`;
-    const row = (x, i) => `<button data-i="${i}">${itemIcon(x)}<span class="r${x.rarity || 0}">${itemName(x)}</span><small>${Bag.shape(x).join('×')} · ${cell(x)}</small>${i === 0 && !IS_TOUCH ? '<i>E</i>' : ''}</button>`;
+    const row = (x, i) => `<button data-i="${i}">${itemIcon(x)}<span class="r${x.rarity || 0}">${itemName(x)}</span><small>${Bag.shape(x).join('×')} · ${cell(x)}</small>${i === 0 && (!IS_TOUCH || Pad.on) ? `<i>${keyLabel(keyOf('interact'))}</i>` : ''}</button>`;
     el.innerHTML = `<div class="bs-head">가방이 꽉 찼다 · <span class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</span> <small>${Bag.shape(it).join('×')} · ${cell(it)}</small></div>`
       + (this.cand.length ? `<div class="bs-sub">하나 내려놓고 줍기</div><div class="bs-list">${this.cand.map(row).join('')}</div>` : '<div class="bs-sub">하나만 빼서는 자리가 안 난다</div>')
       + `<div class="bs-list"><button data-open="1">가방 열기</button></div>`;

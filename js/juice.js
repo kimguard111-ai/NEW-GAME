@@ -168,13 +168,14 @@ const Juice = {
 // 맞을 때 (세게 맞을수록 길게) · 큰 순간 (보스 내려찍기 · 전설 획득 · 큰 폭발 = 긴 타격 정지) · 쓰러질 때
 const Haptic = {
   last: 0,
-  ok() { return Settings.vibrate && IS_TOUCH && typeof navigator.vibrate === 'function'; },
+  ok() { return Settings.vibrate && (Pad.on || (IS_TOUCH && typeof navigator.vibrate === 'function')); }, // v1.91 패드면 패드 진동
   pulse(ms, gap = 0.12) {
     if (!this.ok()) return; const now = performance.now() / 1000;
     if (now - this.last < gap) return; this.last = now;
+    if (Pad.on) { Pad.rumble(ms, clamp(ms / 90, 0.2, 1)); return; }
     try { navigator.vibrate(ms); } catch (e) { /* 막힘 */ }
   },
   hit(frac) { this.pulse(frac >= 0.15 ? 55 : frac >= 0.06 ? 30 : 15, 0.18); }, // 연타에 계속 떨리지 않게 0.18초 간격
   big(t) { if (t >= 0.12) this.pulse(t >= 0.2 ? 90 : 60, 0.3); },
-  die() { if (this.ok()) try { navigator.vibrate([80, 60, 160]); } catch (e) { /* 막힘 */ } },
+  die() { if (!this.ok()) return; if (Pad.on) { Pad.rumble(300, 1); return; } try { navigator.vibrate([80, 60, 160]); } catch (e) { /* 막힘 */ } },
 };

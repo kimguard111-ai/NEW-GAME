@@ -85,7 +85,7 @@ function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
 }
 function curWeapon() { const p = G.player; return p.equip[p.active]; }
 // v1.49.9 조준 (PC 오른쪽 클릭 누르는 동안): 퍼짐 ↓ · 이동 60% · 시야를 커서 쪽으로 더. 0~1 (부드럽게 들어감)
-function adsOn() { const p = G.player, w = p && curWeapon(); return !IS_TOUCH && !!input.aim && !!w && !WEAPONS[w.key].melee && !p.dead && !UI.anyOpen(); }
+function adsOn() { const p = G.player, w = p && curWeapon(); return (!IS_TOUCH || Pad.on) && !!input.aim && !!w && !WEAPONS[w.key].melee && !p.dead && !UI.anyOpen(); }
 function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.spread[wbase(w.key)] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
 const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
@@ -305,6 +305,7 @@ function moveInput() {
   if (input.keys[keyOf('left')] || input.keys['arrowleft']) mx -= 1;
   if (input.keys[keyOf('right')] || input.keys['arrowright']) mx += 1;
   if (Touch.move) { mx = Touch.move.x; my = Touch.move.y; amt = Math.min(1, Touch.move.mag); } // 모바일 왼쪽 조이스틱
+  if (Pad.move) { mx = Pad.move.x; my = Pad.move.y; amt = Pad.move.mag; } // v1.91 게임패드 왼쪽 스틱
   if (!mx && !my) return null;
   // 화면 기준 방향 → 월드 방향 (쿼터뷰)
   return { wx: (mx + 2 * my) / 2, wy: (2 * my - mx) / 2, amt };
@@ -1368,12 +1369,13 @@ function update(dt) {
     }
     Ambience.playerStep(p, dt, !!mv && !(p.rollT > 0)); // v1.35 바닥별 발소리
     if (IS_TOUCH) Touch.aimUpdate(p); // 모바일 오른쪽 조이스틱 → 조준점·사격
+    Pad.aimUpdate(p); // v1.91 게임패드 오른쪽 스틱 → 조준점 · RT 사격
     let aimAt = Iso.toWorld(input.mx, input.my, 20); // 가슴 높이 조준
     const hv = IS_TOUCH ? null : hoverEnemy(input.mx, input.my); // v1.66 마우스가 적 그림 위면 그 적을 조준 (머리·몸 위를 눌러도 발밑 판정에 맞게) · 위쪽 = 머리
     p.aimTarget = hv && hv.e; p.aimHead = !!(hv && hv.head);
     if (hv) aimAt = { x: hv.e.x, y: hv.e.y };
     if (IS_TOUCH) { // v1.69 모바일 헤드샷: 멈춰 선 채 같은 적을 MOBILE_HS_T초 겨누면 머리 조준 (움직이거나 구르면 처음부터)
-      const L = Touch.lock && Touch.lock.hp > 0 ? Touch.lock : null;
+      const TL = Pad.on ? Pad.lock : Touch.lock, L = TL && TL.hp > 0 ? TL : null;
       if (L && L === p.mLock && !mv && !(p.rollT > 0)) p.mLockT = (p.mLockT || 0) + dt; else { p.mLock = L; p.mLockT = 0; }
       p.aimTarget = L; p.aimHead = !!L && p.mLockT >= MOBILE_HS_T && enemyScreenH(L) >= 30;
     }
@@ -1491,6 +1493,7 @@ function frame(now) {
   requestAnimationFrame(frame); // v1.49 먼저 다음 프레임을 예약 — 오류가 나도 게임이 멈추지 않게
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
+  try { Pad.poll(dt); } catch (e) { ErrNote.show(e); } // v1.91 게임패드 (타이틀 · 일시정지에서도)
   if (G.running) {
     try {
       if (G.paused) { /* 일시정지: 그리기만 */ }

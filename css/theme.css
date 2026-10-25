@@ -623,3 +623,8 @@ body.touch #bag-swap button small { display: none; }
 .bag-ghost.out { outline: 2px dashed #f0a080; opacity: .6; }
 .bag-ghost.out::after { content: '내려놓기'; position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); color: #f0a080; font-size: 12px; white-space: nowrap; text-shadow: 1px 1px 1px #000; }
 #item-tip .tip-cell { margin-top: 4px; padding-top: 3px; border-top: 1px solid #3a352a; color: #b8b09a; font-size: 12px; }
+
+/* v1.91 게임패드 커서 (창 · 타이틀 · 일시정지) */
+#pad-cursor { position: fixed; left: 0; top: 0; width: 22px; height: 22px; margin: -3px 0 0 -3px; z-index: 9999; pointer-events: none; display: none;
+  background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M3 3 L19 11 L12 12.5 L9 19 Z' fill='%23e0b23a' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.8)); }
