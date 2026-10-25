@@ -29,7 +29,7 @@ const Feedback = {
       `[서울 2049 피드백] ${GAME_VERSION}`,
       `기기: ${this.device()}`,
       `프레임: ${fps}`,
-      `설정: 조명 ${on(S.light)} · 세부 ${on(S.detail)} · 흔들림 ${on(S.shake)} · 글자 ${S.textScale || 1}${(() => { try { return localStorage.getItem('seoul2049-autolow') ? ' · 자동 저사양 켜진 적 있음' : ''; } catch (e) { return ''; } })()}`,
+      `설정: 조명 ${on(S.light)} · 세부 ${on(S.detail)} · 흔들림 ${Math.round(S.shakeAmt * 100)}% · 진동 ${on(S.vibrate)} · 글자 ${S.textScale || 1}${(() => { try { return localStorage.getItem('seoul2049-autolow') ? ' · 자동 저사양 켜진 적 있음' : ''; } catch (e) { return ''; } })()}`,
       `진행: ${prog}`,
       `오류: ${this.errs.length ? this.errs.map((e, i) => `${i + 1}) ${e}`).join(' / ') : '없음'}`,
       '하고 싶은 말: ',

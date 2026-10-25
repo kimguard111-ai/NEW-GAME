@@ -89,7 +89,7 @@ function adsOn() { const p = G.player, w = p && curWeapon(); return !IS_TOUCH &&
 function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.spread[wbase(w.key)] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
 const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
-function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); }
+function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); Haptic.big(t); } // v1.90 큰 순간엔 폰 진동
 const MIN_FIRE = 0.06; // v1.50.7 총 연사 하한 (초)
 const KB_RATE = 18; // v1.49.7 밀려나는 속도가 줄어드는 빠르기 (총 거리 = 처음 속도 / KB_RATE)
 
@@ -464,6 +464,7 @@ function playerAttack() {
     G.effects.push({ type: 'tracer', x: mx, y: my, x2: ex, y2: ey, t: 0, life: 0.35, color: 'rgba(255,240,200,0.8)', w: 2.5 });
   }
   G.particles.push({ x: mx, y: my, vx: 0, vy: 0, t: 0, life: 0.06, color: '#ffe9a0', size: b.pellets ? 14 : wbase(w.key) === 'sniper' ? 12 : 8, z: 22 });
+  if (b.pellets || wbase(w.key) === 'sniper') Haptic.pulse(b.pellets && b.rate < 0.4 ? 10 : 22, 0.25); // v1.90 묵직한 총(산탄 · 저격)만 손에 한 번 — 연사 총은 안 떨림
   G.shake = Math.max(G.shake, b.pellets ? 6 * clamp(b.rate / 0.7, 0.35, 1) : wbase(w.key) === 'sniper' ? 7 : wbase(w.key) === 'lmg' ? 2.2 : 1.5); // v1.82.1 연사 산탄(래피드 블래스터)은 흔들림 · 반동을 발사 간격만큼 줄임 (6 → 2.1)
   if (w.loaded === 0) startReload();
 }
@@ -694,12 +695,13 @@ function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이
   }
   floatText(p.x, p.y - 20, '-' + d, '#ff5050', 14);
   G.shake = Math.max(G.shake, 4);
+  Haptic.hit(d / PlayerStats.maxHp(p)); // v1.90
   if (p.hp <= 0) playerDie();
 }
 
 function playerDie() {
   const p = G.player;
-  p.hp = 0; p.dead = true; input.down = false; p.deaths++;
+  p.hp = 0; p.dead = true; input.down = false; p.deaths++; Haptic.die(); // v1.90
   burst(p.x, p.y, '#a00', 30, 160, 0.8, 4);
   const rr = p.raid, msg = Raid.onDeath() || '캠프로 돌아갑니다.'; // v1.3: 이번 출격에서 주운 것만 잃음 · v1.4 시체 가방
   if (rr) { Raid.summary(false, rr, Raid.lastDeath.items); Journal.onMythSecured(Raid.lastDeath.kept || []); } // v1.69 장착해서 지킨 신화도 도감 등록
@@ -1461,8 +1463,9 @@ function update(dt) {
   const lx = lead || ADS.k > 0 ? clamp((input.mx - VW / 2) * lm, -lcx, lcx) : 0, ly = lead || ADS.k > 0 ? clamp((input.my - VH / 2) * lm, -lcy, lcy) : 0, kl = 1 - Math.pow(0.02, dt);
   L.x += (lx - L.x) * kl; L.y += (ly - L.y) * kl;
   const kd = Math.pow(0.0005, dt); KK.x *= kd; KK.y *= kd;
-  G.cam.x = F.x + L.x + KK.x + rand(-G.shake, G.shake);
-  G.cam.y = F.y + L.y + KK.y + rand(-G.shake, G.shake);
+  const SA = Settings.shakeAmt; // v1.90 흔들림 세기 0~100% (반동 · 흔들림 둘 다)
+  G.cam.x = F.x + L.x + (KK.x + rand(-G.shake, G.shake)) * SA;
+  G.cam.y = F.y + L.y + (KK.y + rand(-G.shake, G.shake)) * SA;
 
   G.saveT += dt;
   if (G.saveT > 20) { G.saveT = 0; Bounty.refresh(); Weekly.refresh(); saveGame(); } // 자정이 지나면 의뢰 갱신

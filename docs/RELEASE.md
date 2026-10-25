@@ -3,7 +3,7 @@
 순서: **① 웹 주소로 한국 커뮤니티 공개 테스트** → (동시에) **② 구글 플레이 준비 · 비공개 테스트 12명 14일** → ③ 정식 출시 · itch는 덤.
 
 - 게임 주소: `https://seoul2049.vercel.app`
-- 개인정보처리방침: `https://seoul2049.vercel.app/privacy.html` (**`CONTACT_EMAIL` 칸을 채운 뒤** 씀)
+- 개인정보처리방침: `https://seoul2049.vercel.app/privacy.html` (문의 kimguard111@gmail.com)
 - 스크린샷 8장: `docs/store/screens/` (1920×1080 가로 · 플레이 스토어 규격 맞음)
 - 스토어 큰 그림: `docs/store/feature_1024x500.png` · 앱 아이콘: `docs/store/app_icon_1024.png` (스토어용은 512×512 — `assets/app/icon512.png`)
 
@@ -135,6 +135,6 @@
 - 페이지 언어: 한국어 · 영어 소개 같이, 태그 `korean`, 「Korean only」 명시
 
 ## 남은 결정 · 받을 것
-- [ ] 개인정보처리방침 문의 이메일 (`privacy.html` 의 `CONTACT_EMAIL`)
+- [x] 개인정보처리방침 문의 이메일 (kimguard111@gmail.com)
 - [ ] Package ID 확정 (`com.guardk111.seoul2049` 추천)
 - [ ] PWABuilder 에서 받은 `assetlinks.json` (+ Play 앱 서명 SHA-256)

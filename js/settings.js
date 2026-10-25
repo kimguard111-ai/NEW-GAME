@@ -1,7 +1,9 @@
 // 설정 (v0.15): 기기 저장, 저사양·모바일용 옵션
 const Settings = {
   light: true,   // 조명 효과 (끄면 단순 어둠 — 가벼움)
-  shake: true,   // 화면 흔들림
+  shake: true,   // 화면 흔들림 (v1.90부터 shakeAmt > 0 과 같음)
+  shakeAmt: IS_TOUCH ? 0.7 : 1, // v1.90 흔들림 세기 0~1 (폰은 작은 화면이라 기본 70%)
+  vibrate: true, // v1.90 폰 진동
   camLead: true, // v1.28 조준 방향으로 시야 내밀기
   rmbAim: true,  // v1.49.9 PC 오른쪽 클릭 = 조준 (끄면 예전처럼 회피)
   dmgNum: true,  // 피해 숫자
@@ -32,9 +34,11 @@ const Settings = {
         else if (typeof d === 'number') { if (Number.isFinite(+v)) this[k] = /vol/i.test(k) ? clamp(+v, 0, 1) : +v; }
         else if (d === null || typeof d === typeof v) this[k] = v;
       }
+      if (s.shake === false && s.shakeAmt === undefined) this.shakeAmt = 0; // 예전에 흔들림을 끈 사람은 0%
+      this.shakeAmt = clamp(+this.shakeAmt || 0, 0, 1); this.shake = this.shakeAmt > 0;
     } catch (e) { /* 저장 불가 */ }
   },
-  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ fps: this.fps, light: this.light, shake: this.shake, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, outline: this.outline, keys: this.keys, fullscreen: this.fullscreen, textScale: this.textScale, camLead: this.camLead, rmbAim: this.rmbAim, mip: this.mip })); } catch (e) { /* 저장 불가 */ } },
+  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ fps: this.fps, light: this.light, shake: this.shake, shakeAmt: this.shakeAmt, vibrate: this.vibrate, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, outline: this.outline, keys: this.keys, fullscreen: this.fullscreen, textScale: this.textScale, camLead: this.camLead, rmbAim: this.rmbAim, mip: this.mip })); } catch (e) { /* 저장 불가 */ } },
 };
 // v1.37 키 바꾸기: 행동 → 키 (소문자 e.key). 벨트 1~8 · ESC 는 고정
 const KEY_DEFAULTS = { up: 'w', left: 'a', down: 's', right: 'd', dodge: ' ', reload: 'r', swap: 'q', interact: 'e', inventory: 'i', stats: 'c', skills: 'k', quest: 'j', settings: 'o', belt: 'b', compCmd: 'f', useMed: 'x', gl: 'g' };

@@ -454,7 +454,8 @@ const UI = {
     const opt = (k, label, desc) => `<label class="set-row"><input type="checkbox" data-set="${k}" ${Settings[k] ? 'checked' : ''}> <b>${label}</b> <span class="muted">${desc}</span></label>`;
     $('settings-body').innerHTML = opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
       + opt('detail', '세부 묘사', '옥상·1층·도로·차 디테일 (끄면 가벼워짐)')
-      + opt('shake', '화면 흔들림', '타격·폭발 시 화면 흔들림')
+      + `<div class="set-row"><b>화면 흔들림</b> <span id="shk-val">${Math.round(Settings.shakeAmt * 100)}%</span> <span class="muted">타격 · 폭발 · 사격 반동 (0% = 끔)</span><br><input type="range" id="shk-range" min="0" max="1" step="0.1" value="${Settings.shakeAmt}"></div>`
+      + (IS_TOUCH && typeof navigator.vibrate === 'function' ? opt('vibrate', '진동', '맞을 때 · 보스 큰 공격 · 전설 획득 · 쓰러질 때 (v1.90)') : '')
       + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 회피)'))
       + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
@@ -478,8 +479,9 @@ const UI = {
       + `<hr style="border-color:#333"><b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`;
-    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
+    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); if (el.dataset.set === 'vibrate' && el.checked) Haptic.pulse(40, 0); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
     $('settings-body').querySelectorAll('.ts-btn').forEach(b => { b.onclick = () => { Settings.textScale = +b.dataset.ts; Settings.save(); applyTextScale(); UI.refreshSettings(); }; }); // v1.64
+    $('shk-range').oninput = e => { Settings.shakeAmt = +e.target.value; Settings.shake = Settings.shakeAmt > 0; Settings.save(); $('shk-val').textContent = Math.round(Settings.shakeAmt * 100) + '%'; G.shake = Math.max(G.shake, 8); }; // v1.90 움직이면 바로 흔들어 보여 줌
     $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };
     $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
     $('btn-feedback').onclick = () => Feedback.copy($('save-code')); // v1.89
