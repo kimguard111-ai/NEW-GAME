@@ -94,7 +94,7 @@ const FirstRun = {
     el.classList.remove('hidden', 'out'); this.paint(); SFX.play('ui', 0.6);
     $('tip').classList.add('hidden'); // v1.47.1 한 번에 한 가지 말만
   },
-  paint() { const c = this.cur, s = this.html(c.h); if (s !== c.last) { $('keyhint').innerHTML = s + '<span class="kh-x" title="닫기">✕</span>'; c.last = s; } }, // v1.48.1 눌러서 바로 닫기
+  paint() { const c = this.cur, s = cbText(this.html(c.h)); if (s !== c.last) { $('keyhint').innerHTML = s + '<span class="kh-x" title="닫기">✕</span>'; c.last = s; } }, // v1.48.1 눌러서 바로 닫기
   finish(ok) {
     const p = G.player, c = this.cur; if (!c) return;
     if (!p.hints.includes(c.h.id)) p.hints.push(c.h.id);

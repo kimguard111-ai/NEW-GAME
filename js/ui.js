@@ -65,10 +65,10 @@ const UI = {
   refreshAll() { UI.refreshInventory(); UI.refreshStats(); UI.refreshQuest(); },
 
   // 내용이 바뀔 때만 innerHTML 교체 (아이콘 이미지 다시 읽기·깜빡임 방지)
-  html(id, h) { const el = $(id); if (el._h !== h) { el._h = h; el.innerHTML = h; } },
+  html(id, h) { const el = $(id); if (el._h !== h) { el._h = h; el.innerHTML = cbText(h); } },
   log(msg, color) {
     const el = document.createElement('div');
-    el.innerHTML = msg; el.style.color = color; // v1.5.1 아이콘(<img>) 포함 가능
+    el.innerHTML = cbText(msg); el.style.color = color; // v1.5.1 아이콘(<img>) 포함 가능
     const box = $('log');
     box.appendChild(el);
     while (box.children.length > 8) box.removeChild(box.firstChild);
@@ -225,6 +225,7 @@ const UI = {
   },
   // v1.49.4 출격 중엔 작은 띠로 위쪽 빈 곳에 · 싸우는 중엔 미뤘다가 싸움이 끝나면 차례로 (업적·장 완료가 전투를 가리던 것)
   toast(title, sub) {
+    sub = cbText(sub);
     const raid = !!(G.player && G.player.raid);
     if (raid && G.combat) { UI.toastQ = (UI.toastQ || []).filter(q => q[0] !== title).concat([[title, sub]]).slice(-4); return; }
     $('toast-title').textContent = title; $('toast-sub').textContent = sub || '';
@@ -247,8 +248,9 @@ const UI = {
     }
     const nc = it.unique ? ' style="color:#ff5aa0"' : it.set ? ` style="color:${SETS[it.set].color}"` : ''; // v1.12 고유 · 세트
     if (it.locked) mark += `<span class="mark lock">${ICON('lock')}</span>`; // v1.15
-    const short = r > 0 && RARITIES[r] ? itemName(it).replace(RARITIES[r].name + ' ', '') : itemName(it); // v1.84.7 칸 안에선 등급 글자 빼고 (색이 등급) — 이름이 두 줄 중간에서 잘리던 것
-    return `${mark}<span class="icon">${itemIcon(it)}</span><span class="nm r${r}"${nc}>${short}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
+    const short = r > 0 && RARITIES[r] && !Settings.cb ? itemName(it).replace(RARITIES[r].name + ' ', '') : itemName(it); // v1.92 색약 모드는 등급 글자를 남김 // v1.84.7 칸 안에선 등급 글자 빼고 (색이 등급) — 이름이 두 줄 중간에서 잘리던 것
+    const pip = r > 0 && it.kind !== 'cons' ? `<span class="rpip r${r}" title="${RARITIES[r].name}">${'▮'.repeat(r)}</span>` : ''; // v1.92 등급 눈금 (색 말고도 구분)
+    return `${mark}${pip}<span class="icon">${itemIcon(it)}</span><span class="nm r${r}"${nc}>${short}</span>` + (it.count > 1 ? `<span class="cnt">${it.count}</span>` : '');
   },
 
   refreshInventory() {
@@ -287,14 +289,12 @@ const UI = {
     if (it) { UI.selected = it; UI.refreshInventory(); }
   },
 
-  renderDetail() {
-    const box = $('item-detail'), it = UI.selected, p = G.player;
-    if (!it) { box.innerHTML = '<span class="muted">아이템을 선택하세요. ▲ = 지금 장비보다 좋음</span>'; return; }
-    const equippedSlot = Object.keys(p.equip).find(k => p.equip[k] === it);
-    const sellPrice = itemSellPrice(it);
+  // 지금 장비와 비교 (DPS · 방어력) — 선택 창 · 아이템 설명 공용
+  cmpHtml(it, equippedSlot) {
+    const p = G.player;
     const diffSpan = (a, b, unit = '') => {
       const d = b - a, pct = a > 0 ? ` (${d >= 0 ? '+' : ''}${Math.round(d / a * 100)}%)` : '';
-      return `<span style="color:${d >= 0 ? '#6f6' : '#f66'}">${d >= 0 ? '+' : ''}${Math.round(d)}${unit}${pct}</span>`;
+      return `<span style="color:${d >= 0 ? (Settings.cb ? '#6cf' : '#6f6') : (Settings.cb ? '#fa4' : '#f66')}">${d >= 0 ? '▲ +' : '▼ '}${Math.round(d)}${unit}${pct}</span>`;
     };
     let cmp = '';
     if (it.kind === 'weapon') {
@@ -313,6 +313,15 @@ const UI = {
       if (cur && cur.affixes.length) cmp += `<br><span class="muted">장착 중 옵션: ${cur.affixes.map(affixText).join(', ')}</span>`;
       cmp += '</div>';
     }
+    return cmp;
+  },
+
+  renderDetail() {
+    const box = $('item-detail'), it = UI.selected, p = G.player;
+    if (!it) { box.innerHTML = '<span class="muted">아이템을 선택하세요. ▲ = 지금 장비보다 좋음</span>'; return; }
+    const equippedSlot = Object.keys(p.equip).find(k => p.equip[k] === it);
+    const sellPrice = itemSellPrice(it);
+    const cmp = UI.cmpHtml(it, equippedSlot); // v1.92 PC 마우스 설명에도 같이
     const req = itemReqLevel(it);
     box.innerHTML = `<b class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</b> ${it.ilvl ? `<span class="muted">(아이템 Lv${it.ilvl})</span>` : ''}`
       + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + `<br>${itemHtml(it, true)}${cmp}<div class="btns"></div>`; // v1.50 부품은 아래 부품 칸에서
@@ -459,6 +468,7 @@ const UI = {
       + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 회피)'))
       + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
+      + opt('cb', '색약 모드', '탈출 지점 초록 → 하늘색 · 위험 원에 흰 테두리 · 비교 파랑/주황 · 칸에 등급 이름 (v1.92)')
       + opt('sound', '효과음', '총소리·타격·획득 소리')
       + opt('bgm', '배경 음악', '맵 분위기 음악 · 적이 쫓아오면 전투 음악 (v1.17)')
       + `<div class="set-row"><b>음악 음량</b> <span id="mus-val">${Math.round((Settings.musicVol ?? 0.5) * 100)}%</span><br><input type="range" id="mus-range" min="0" max="1" step="0.05" value="${Settings.musicVol ?? 0.5}"></div>`
@@ -480,7 +490,7 @@ const UI = {
       + `<hr style="border-color:#333"><b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`;
-    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); if (el.dataset.set === 'vibrate' && el.checked) Haptic.pulse(40, 0); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
+    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); if (el.dataset.set === 'cb') { document.body.classList.toggle('cb', Settings.cb); UI.refreshInventory(); } if (el.dataset.set === 'vibrate' && el.checked) Haptic.pulse(40, 0); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
     $('settings-body').querySelectorAll('.ts-btn').forEach(b => { b.onclick = () => { Settings.textScale = +b.dataset.ts; Settings.save(); applyTextScale(); UI.refreshSettings(); }; }); // v1.64
     $('shk-range').oninput = e => { Settings.shakeAmt = +e.target.value; Settings.shake = Settings.shakeAmt > 0; Settings.save(); $('shk-val').textContent = Math.round(Settings.shakeAmt * 100) + '%'; G.shake = Math.max(G.shake, 8); }; // v1.90 움직이면 바로 흔들어 보여 줌
     $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };
@@ -909,7 +919,7 @@ const ItemTip = {
   show(it, anchor) {
     if (!this.el) { this.el = document.createElement('div'); this.el.id = 'item-tip'; document.body.appendChild(this.el); }
     const p = G.player, req = itemReqLevel(it);
-    this.el.innerHTML = `<b class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</b>${req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : ''}<br>${itemHtml(it)}<div class="tip-cell">${Bag.shape(it).join('×')}칸 · 판매 ₵${fmt(itemSellPrice(it))} · <b>칸당 ₵${fmt(BagSwap.perCell(it))}</b></div>`; // v1.88 칸당 값
+    this.el.innerHTML = `<b class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</b>${req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : ''}<br>${itemHtml(it)}${UI.cmpHtml(it, Object.keys(p.equip).find(k => p.equip[k] === it))}<div class="tip-cell">${Bag.shape(it).join('×')}칸 · 판매 ₵${fmt(itemSellPrice(it))} · <b>칸당 ₵${fmt(BagSwap.perCell(it))}</b></div>`; // v1.88 칸당 값
     this.el.style.display = 'block';
     const r = anchor.getBoundingClientRect(), w = this.el.offsetWidth, h = this.el.offsetHeight;
     let x = r.right + 6, y = r.top; if (x + w > innerWidth - 4) x = r.left - w - 6; if (x < 4) x = 4; if (y + h > innerHeight - 4) y = innerHeight - h - 4;

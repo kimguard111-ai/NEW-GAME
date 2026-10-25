@@ -628,3 +628,9 @@ body.touch #bag-swap button small { display: none; }
 #pad-cursor { position: fixed; left: 0; top: 0; width: 22px; height: 22px; margin: -3px 0 0 -3px; z-index: 9999; pointer-events: none; display: none;
   background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M3 3 L19 11 L12 12.5 L9 19 Z' fill='%23e0b23a' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
   filter: drop-shadow(0 1px 2px rgba(0,0,0,.8)); }
+
+/* v1.92 등급 눈금 (색 말고 개수로도) · 색약 모드 */
+.inv-cell .rpip { position: absolute; left: 3px; bottom: 1px; font-size: 7px; letter-spacing: -1px; line-height: 1; opacity: .9; text-shadow: 0 0 2px #000; pointer-events: none; z-index: 2; }
+.bag-grid .bag-item .rpip { bottom: auto; top: 14px; }
+body.cb .inv-cell .rpip { font-size: 9px; opacity: 1; }
+#item-tip .cmp { margin-top: 4px; }

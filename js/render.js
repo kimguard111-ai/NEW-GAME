@@ -1478,6 +1478,7 @@ function render() {
     const k = Math.min(1, s.t / s.delay);
     ctx.strokeStyle = `rgba(255,40,30,${0.6 + Math.sin(G.time * 20) * 0.25})`; ctx.lineWidth = 3.5; // v1.64 테두리는 늘 빨강 (안쪽만 공격 색)
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+    if (Settings.cb) { ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 2; ctx.setLineDash([10, 7]); ctx.beginPath(); ctx.arc(s.x, s.y, s.r + 4, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1; } // v1.92 색약 모드: 밝은 점선 테두리 (색 말고 밝기로)
     ctx.fillStyle = s.color + '0.32)'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * k, 0, TAU); ctx.fill();
     ctx.strokeStyle = 'rgba(255,40,30,0.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x - s.r * 0.25, s.y - s.r * 0.25); ctx.lineTo(s.x + s.r * 0.25, s.y + s.r * 0.25); ctx.moveTo(s.x + s.r * 0.25, s.y - s.r * 0.25); ctx.lineTo(s.x - s.r * 0.25, s.y + s.r * 0.25); ctx.stroke(); ctx.lineWidth = 1; // ✕ 표시
   }
@@ -1498,9 +1499,10 @@ function render() {
       ctx.fillStyle = 'rgba(255,170,60,0.08)'; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.fill();
       continue;
     }
-    ctx.strokeStyle = 'rgba(110,240,130,0.7)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.stroke();
-    ctx.strokeStyle = `rgba(110,240,130,${0.6 * (1 - k)})`; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R * k, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
-    ctx.fillStyle = 'rgba(110,240,130,0.12)'; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.fill();
+    const SC = Settings.cb ? '80,200,255' : '110,240,130'; // v1.92 색약 모드: 탈출은 하늘색 (빨강 위험 원과 헷갈리지 않게)
+    ctx.strokeStyle = `rgba(${SC},0.7)`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = `rgba(${SC},${0.6 * (1 - k)})`; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R * k, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = `rgba(${SC},0.12)`; ctx.beginPath(); ctx.arc(e.x, e.y, EXTRACT_R, 0, TAU); ctx.fill();
   }
   // 근접 공격 궤적
   const w = curWeapon();
@@ -1672,7 +1674,7 @@ function render() {
   if (p.recoilT > 0) addLight(psx + Math.cos(p.aim) * 20, psy - 6, 150, 0.9, 'rgba(255,200,110,A)');
   const cc = World.campCenter();
   if (World.map === 'camp') addLight(Iso.sx(cc.x, cc.y), Iso.sy(cc.x, cc.y), 420, 0.8); // 캠프 조명 (넓어서 색 번짐은 생략)
-  for (const e of G.exits || []) if (!e.locked) addLight(Iso.sx(e.x, e.y), Iso.sy(e.x, e.y), 160, 0.9, 'rgba(110,240,130,A)'); // 탈출 지점
+  for (const e of G.exits || []) if (!e.locked) addLight(Iso.sx(e.x, e.y), Iso.sy(e.x, e.y), 160, 0.9, Settings.cb ? 'rgba(80,200,255,A)' : 'rgba(110,240,130,A)'); // 탈출 지점
   for (const f of G.fires) addLight(Iso.sx(f.x, f.y), Iso.sy(f.x, f.y), f.r * 2.2, 0.8, 'rgba(255,130,50,A)'); // v1.11 불길
   for (const ef of G.effects) if (ef.type === 'boom') addLight(Iso.sx(ef.x, ef.y), Iso.sy(ef.x, ef.y), ef.r * 2.4 * (1 - ef.t / ef.life), 1, 'rgba(255,150,50,A)');
   for (const b of G.bullets) if (b.from === 'e') addLight(Iso.sx(b.x, b.y), Iso.sy(b.x, b.y, 22), 36, 0.6, b.r > 4 ? 'rgba(255,150,50,A)' : 'rgba(255,90,60,A)');
@@ -1972,7 +1974,7 @@ function drawMinimapIso(mm) {
   if (G.grave && Math.sin(G.time * 5) > -0.3) { g.fillStyle = '#ff3030'; g.fillRect(G.grave.x / TILE - 0.6, G.grave.y / TILE - 2.5, 1.2, 5); g.fillRect(G.grave.x / TILE - 2.5, G.grave.y / TILE - 0.6, 5, 1.2); } // 시체 가방
   RaidEvents.minimap(g); // v1.10 사건
   Pop.minimap(g); // v1.17 마지막 적들
-  if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = e.locked ? '#ffaa3c' : '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
+  if (Math.sin(G.time * 4) > -0.5) for (const e of G.exits || []) { g.strokeStyle = e.locked ? '#ffaa3c' : Settings.cb ? '#50c8ff' : '#6ef082'; g.lineWidth = 1; g.beginPath(); g.arc(e.x / TILE, e.y / TILE, 3, 0, TAU); g.stroke(); } // 탈출 지점
   for (const h of World.hazards) dot(h.x, h.y, 'rgba(255,190,50,0.7)', 3); // v1.64 방사능 = 노랑
   for (const l of World.landmarks) dot(l.x, l.y, p.found.includes(l.id) ? '#ffd76a' : '#888', 5);
   const tg = Story.target(p); // 현재 목표 (깜빡임)
