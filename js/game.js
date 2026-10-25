@@ -1496,6 +1496,7 @@ function frame(now) {
       render();
       UI.updateHUD(dt);
       FpsWatch.tick(dt);
+      Feedback.tick(dt); // v1.89 피드백 코드용 프레임
       if (Settings.fps) { const M = frame.m || (frame.m = { n: 0, t: 0, el: null }); M.n++; M.t += now - (M.last || now); M.last = now; if (M.t >= 500) { if (!M.el) { M.el = document.createElement('div'); M.el.id = 'fps-meter'; document.body.appendChild(M.el); } M.el.textContent = Math.round(M.n * 1000 / M.t) + ' FPS'; M.el.style.display = ''; M.n = 0; M.t = 0; } } else if (frame.m && frame.m.el) frame.m.el.style.display = 'none'; // v1.85 프레임 표시
     } catch (e) { ErrNote.show(e); }
   }
@@ -1522,11 +1523,12 @@ const ErrNote = {
   seen: new Set(), n: 0,
   show(e) {
     const msg = String(e && (e.message || e.reason || e)).slice(0, 160), where = e && e.stack ? String(e.stack).split('\n')[1] || '' : '';
+    if (!this.seen.has(msg)) Feedback.err(msg, where.trim()); // v1.89 피드백 코드에 같이
     if (this.seen.has(msg) || this.n >= 3) return; this.seen.add(msg); this.n++;
     try { saveGame(); } catch (er) { /* 무시 */ }
     let el = document.getElementById('err-note');
     if (!el) { el = document.createElement('div'); el.id = 'err-note'; document.body.appendChild(el); }
-    el.innerHTML = `<b>문제가 생겼다.</b> 진행은 저장했고 게임은 계속된다. 계속 이상하면 새로고침.  <br><span class="muted">${msg.replace(/</g, '&lt;')} ${where.trim().replace(/</g, '&lt;').slice(0, 90)}</span> <button id="err-copy">내용 복사</button> <button id="err-close">닫기</button>`;
+    el.innerHTML = `<b>문제가 생겼다.</b> 진행은 저장했고 게임은 계속된다. 계속 이상하면 새로고침. 설정 → 「피드백 복사」로 알려 주면 바로 고친다.  <br><span class="muted">${msg.replace(/</g, '&lt;')} ${where.trim().replace(/</g, '&lt;').slice(0, 90)}</span> <button id="err-copy">내용 복사</button> <button id="err-close">닫기</button>`;
     el.classList.remove('hidden');
     document.getElementById('err-close').onclick = () => el.classList.add('hidden');
     document.getElementById('err-copy').onclick = () => { try { navigator.clipboard.writeText(`${GAME_VERSION} ${msg} ${where}`); } catch (er) { /* 무시 */ } };
