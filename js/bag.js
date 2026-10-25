@@ -102,12 +102,16 @@ const Bag = {
     c.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
       const sx = e.clientX, sy = e.clientY, r0 = c.getBoundingClientRect(), offX = e.clientX - r0.left, offY = e.clientY - r0.top;
-      let ghost = null, hint = null, tgt = null;
+      let ghost = null, hint = null, tgt = null, out = false;
+      const box = el.closest('.panel') || el, canDrop = Raid.inRaid() && !it.locked && !G.player.dead; // v1.88 출격 중엔 가방 창 밖으로 끌면 발밑에 내려놓기
       const cellAt = (cx, cy) => { const g = el.getBoundingClientRect(), cw = g.width / BAG_COLS, ch = g.height / this.rows(); return { x: Math.round((cx - offX - g.left) / cw), y: Math.round((cy - offY - g.top) / ch), cw, ch, g }; };
       const move = ev => {
         if (!ghost && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
         if (!ghost) { ItemTip.hide(); ghost = c.cloneNode(true); ghost.classList.add('bag-ghost'); ghost.style.width = r0.width + 'px'; ghost.style.height = r0.height + 'px'; document.body.appendChild(ghost); c.classList.add('dragging'); hint = document.createElement('div'); hint.className = 'bag-hint'; el.appendChild(hint); }
         ghost.style.left = (ev.clientX - offX) + 'px'; ghost.style.top = (ev.clientY - offY) + 'px';
+        const b = box.getBoundingClientRect(); out = canDrop && (ev.clientX < b.left || ev.clientX > b.right || ev.clientY < b.top || ev.clientY > b.bottom);
+        ghost.classList.toggle('out', out); hint.style.display = out ? 'none' : '';
+        if (out) { tgt = null; return; }
         const q = cellAt(ev.clientX, ev.clientY), [w, h] = this.shape(it); q.x = clamp(q.x, 0, BAG_COLS - w); q.y = clamp(q.y, 0, this.rows() - h); // 가장자리 밖으로 끌면 안쪽 끝으로
         const ok = this.fitsAt(it, q.x, q.y, this.occ(G.player.inventory, it));
         tgt = ok ? q : null; hint.classList.toggle('bad', !ok);
@@ -117,10 +121,65 @@ const Bag = {
         window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
         if (!ghost) { ItemTip.hide(); onClick(it); return; } // 끌지 않았으면 누르기
         ghost.remove(); if (hint) hint.remove(); c.classList.remove('dragging');
-        if (tgt && this.moveTo(it, tgt.x, tgt.y)) SFX.play('ui');
+        if (out) { BagSwap.putDown(it); UI.selected = null; }
+        else if (tgt && this.moveTo(it, tgt.x, tgt.y)) SFX.play('ui');
         UI.refreshInventory(); if (UI.isOpen('stash')) Stash.render();
       };
       window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
     });
+  },
+};
+
+// v1.88 꽉 찬 가방: 바닥 아이템 위에 서 있으면 「바꾸기」 카드 — 가방에서 칸당 값이 낮은 것부터 후보 3개 · 누르면 그걸 발밑에 내려놓고 주움
+// 내려놓은 것은 다시 주울 수 있음 (한 번 떨어졌다 와야 · 2분 뒤 사라짐) · PC 는 [E] = 첫 후보
+const BagSwap = {
+  d: null, cand: [], key: '', t: 0,
+  perCell(it) { return itemSellPrice(it) / Bag.area(it); },
+  offer(d) {
+    if (this.d === d) return;
+    this.d = d; this.t = 0; this.cand = this.pick(d.item); this.key = '';
+    if (!d.told) { d.told = true; SFX.play('ui'); }
+  },
+  // 하나만 빼면 들어가는 것들 (잠금 · 장착 제외) — 칸당 값 낮은 순
+  pick(it) {
+    const inv = G.player.inventory;
+    return inv.filter(c => !c.locked && Bag.plan([...inv.filter(o => o !== c), it]))
+      .sort((a, b) => this.perCell(a) - this.perCell(b)).slice(0, 3);
+  },
+  // 가방 → 발밑 (출격 중 「버리기」 · PC 가방 밖으로 끌기도 이것)
+  putDown(it) {
+    const p = G.player; if (!p.inventory.includes(it)) return false;
+    removeItem(it); delete it.gx; delete it.gy;
+    G.drops.push({ x: p.x + rand(-8, 8), y: p.y + rand(-8, 8), kind: 'item', t: 0, item: it, landed: true, seen: true, noPick: true, own: !it.raid });
+    SFX.play('ui'); log(`${itemName(it)}을(를) 발밑에 내려놓았다. (다시 주울 수 있음 · 2분 뒤 사라짐)`, '#aaa');
+    return true;
+  },
+  swap(c) {
+    const d = this.d; if (!d || d.gone || !c || !G.player.inventory.includes(c)) return this.hide();
+    this.putDown(c);
+    if (!pickupItem(d)) log('그래도 자리가 모자라다. 가방을 열어 더 정리하자.', '#f88');
+    this.hide(); UI.refreshInventory();
+  },
+  key1() { if (this.d && this.cand[0]) { this.swap(this.cand[0]); return true; } return false; }, // PC [E]
+  hide() { this.d = null; this.cand = []; this.key = ''; const el = document.getElementById('bag-swap'); if (el) el.classList.add('hidden'); },
+  // 매 프레임 (HUD) — 멀어지거나 주웠으면 닫기
+  update(dt) {
+    const d = this.d, p = G.player;
+    if (!d) return;
+    if (d.gone || p.dead || dist(p, d) > 40 || !G.drops.includes(d)) return this.hide();
+    if ((this.t += dt) > 0.5) { this.t = 0; this.cand = this.pick(d.item); } // 가방이 바뀌었을 수 있음
+    const key = this.cand.map(c => G.player.inventory.indexOf(c)).join(',') + '|' + G.player.inventory.length;
+    if (key === this.key) return;
+    this.key = key;
+    const el = document.getElementById('bag-swap'), it = d.item, cell = x => `₵${fmt(this.perCell(x))}/칸`;
+    const row = (x, i) => `<button data-i="${i}">${itemIcon(x)}<span class="r${x.rarity || 0}">${itemName(x)}</span><small>${Bag.shape(x).join('×')} · ${cell(x)}</small>${i === 0 && !IS_TOUCH ? '<i>E</i>' : ''}</button>`;
+    el.innerHTML = `<div class="bs-head">가방이 꽉 찼다 · <span class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</span> <small>${Bag.shape(it).join('×')} · ${cell(it)}</small></div>`
+      + (this.cand.length ? `<div class="bs-sub">하나 내려놓고 줍기</div><div class="bs-list">${this.cand.map(row).join('')}</div>` : '<div class="bs-sub">하나만 빼서는 자리가 안 난다</div>')
+      + `<div class="bs-list"><button data-open="1">가방 열기</button></div>`;
+    el.querySelectorAll('button').forEach(b => {
+      const act = () => { if (b.dataset.open) UI.toggle('inventory'); else this.swap(this.cand[+b.dataset.i]); };
+      b.onclick = act; b.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); act(); }, { passive: false });
+    });
+    el.classList.remove('hidden');
   },
 };

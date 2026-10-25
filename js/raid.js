@@ -223,8 +223,8 @@ const Raid = {
   trackerLine() {
     const p = G.player;
     if (!p.raid) return '';
-    const n = this.allItems().filter(it => it.raid).length, ex = G.extractT > 0 ? ` · <b style="color:#7fe08a">탈출 ${Math.ceil((G.extractNeed || EXTRACT_TIME) - G.extractT)}초</b>` : '';
-    return `<br><span class="muted">${ICON('box')} 미확정 장비 ${n} · ₵${fmt(p.raid.credits)}, 탈출 지점 ◎${ex}</span>`
+    const loot = this.allItems().filter(it => it.raid), n = loot.length, val = loot.reduce((v, it) => v + itemSellPrice(it), 0), ex = G.extractT > 0 ? ` · <b style="color:#7fe08a">탈출 ${Math.ceil((G.extractNeed || EXTRACT_TIME) - G.extractT)}초</b>` : '';
+    return `<br><span class="muted">${ICON('box')} 미확정 장비 ${n}개 (₵${fmt(val)}) · 크레딧 ₵${fmt(p.raid.credits)} — 탈출 지점 ◎${ex}</span>`
       + (Pop.total ? `<br><span class="muted">${ICON('skull')} 남은 적 약 ${Pop.remaining()} / ${Pop.total}</span>` : ''); // v1.16
   },
 };

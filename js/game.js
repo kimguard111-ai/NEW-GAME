@@ -603,6 +603,7 @@ function interact() {
   if (crate) { Interiors.openCrate(crate); return; }
   const sc = Raid.inRaid() && Scavenge.near(); // v1.4 뒤지기 · 시체 가방
   if (sc) { Scavenge.start(sc); return; }
+  if (BagSwap.key1()) return; // v1.88 꽉 찬 가방: 첫 후보와 바꾸기
   const l = Assault.available();
   if (l) Assault.choose(l);
 }
@@ -1245,6 +1246,21 @@ function rollUnique(from, level, dropAt) {
   else p.uniqPity[uid] = (p.uniqPity[uid] || 0) + 1;
 }
 
+// 바닥 아이템 줍기 (v1.88 「바꾸기」 카드도 이것) — 가방에 들어가면 true
+function pickupItem(d) {
+  const p = G.player, it = d.item;
+  if (!addItem(it)) return false;
+  if (p.raid && it.kind !== 'cons' && !it.raid && !d.own) it.raid = true; // 이번 출격에서 주운 것 (가져온 장비를 잠깐 내려놨다 주운 것은 아님)
+  const r = it.rarity || 0, up = isUpgrade(p, it);
+  SFX.play('item', Math.min(4, r)); Juice.loot(it, d.x, d.y); // v1.29 알림 카드 · 가방으로 날아가는 아이콘
+  log(`획득: ${itemName(it)}${it.count > 1 ? ' x' + it.count : ''}${up ? '  ▲ 장착 장비보다 좋음!' : ''}`, RARITIES[r].color);
+  if (r >= 2) {
+    floatText(p.x, p.y - 30, `${RARITIES[r].name} 장비!`, RARITIES[r].color, 16 + r * 2);
+    G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.7, color: RARITIES[r].color, r: 60 + r * 15 });
+  }
+  d.gone = true;
+  return true;
+}
 function dropReveal(d, r) {
   const c = RARITIES[r].color, p = G.player;
   if (d.kind === 'item' && d.item.rarity === 5) { // v1.53 신화: 붉은 금빛 기둥 · 가장 긴 멈춤
@@ -1307,23 +1323,12 @@ function updateDrops(dt) {
     if (dd < 90 && d.kind !== 'item') { // 자석 효과
       const a = angleTo(d, p); d.x += Math.cos(a) * 260 * dt; d.y += Math.sin(a) * 260 * dt;
     }
-    if (dd < 24) {
+    if (d.noPick && dd > 40) d.noPick = false; // v1.88 내려놓은 것: 한 번 떨어졌다 와야 다시 주움
+    if (dd < 24 && !d.noPick) {
       if (d.kind === 'credits' && p.raid) p.raid.credits += d.amount; // 탈출해야 확정
-      if (d.kind === 'item' && p.raid && d.item.kind !== 'cons' && !d.item.raid) d.item.raid = true;
       if (d.kind === 'credits') { p.credits += d.amount; floatText(p.x, p.y - 26, `+${d.amount}₵`, '#ffd76a', 12); d.gone = true; SFX.play('coin'); }
       else if (d.kind === 'ammo') { const t = d.ammo || ammoPick(p), n = addAmmo(p, t, d.amount * AMMO[t].k); floatText(p.x, p.y - 26, `${AMMO[t].name} +${n}`, AMMO[t].color, 12); d.gone = true; SFX.play('ammo'); }
-      else if (d.kind === 'item') {
-        if (addItem(d.item)) {
-          const r = d.item.rarity || 0, up = isUpgrade(p, d.item);
-          SFX.play('item', Math.min(4, r)); Juice.loot(d.item, d.x, d.y); // v1.29 알림 카드 · 가방으로 날아가는 아이콘
-          log(`획득: ${itemName(d.item)}${d.item.count > 1 ? ' x' + d.item.count : ''}${up ? '  ▲ 장착 장비보다 좋음!' : ''}`, RARITIES[r].color);
-          if (r >= 2) {
-            floatText(p.x, p.y - 30, `${RARITIES[r].name} 장비!`, RARITIES[r].color, 16 + r * 2);
-            G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.7, color: RARITIES[r].color, r: 60 + r * 15 });
-          }
-          d.gone = true;
-        } else if (!d.warned) { log('인벤토리가 가득 찼습니다.', '#f88'); d.warned = true; }
-      }
+      else if (d.kind === 'item' && !pickupItem(d)) BagSwap.offer(d); // v1.88 꽉 찼으면 「바꾸기」 카드 (예전: 「인벤토리가 가득 찼습니다」 한 줄)
     }
     if (d.t > 120) d.gone = true;
   }

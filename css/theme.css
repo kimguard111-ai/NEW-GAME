@@ -604,3 +604,22 @@ body:not(.touch) .bag-grid .bag-item .nm { max-width: 100%; }
 .bag-grid .bag-item .nm { flex: 0 0 auto; line-height: 1.15; padding: 0 2px 1px; }
 .bag-grid .bag-item .mark { z-index: 2; }
 body:not(.touch) .bag-grid .bag-item:not(.wide):not(.tall) .nm { display: none; } /* 1칸짜리는 그림만 (이름은 마우스를 올리면) */
+
+/* v1.88 꽉 찬 가방: 바꾸기 카드 · 가방 밖으로 끌기 · 칸당 값 */
+#bag-swap { position: absolute; left: 50%; bottom: 122px; transform: translateX(-50%); zoom: var(--ts); width: max-content; max-width: min(92vw, 460px); background: rgba(16,15,12,.92); border: 2px solid #c8573e; box-shadow: 3px 3px 0 rgba(0,0,0,.6); padding: 6px 8px 7px; pointer-events: auto; z-index: 30; font-size: 13px; color: #ddd6c4; }
+#bag-swap .bs-head { white-space: nowrap; } #bag-swap .bs-head .ico { width: 20px; height: 20px; vertical-align: -5px; }
+#bag-swap small { color: #8f8875; margin-left: 4px; }
+#bag-swap .bs-sub { color: #f0a080; font-size: 12px; margin: 4px 0 3px; }
+#bag-swap .bs-list { display: flex; gap: 5px; flex-wrap: wrap; } #bag-swap .bs-list + .bs-list { margin-top: 5px; }
+#bag-swap button { display: flex; align-items: center; gap: 4px; padding: 3px 8px; font-size: 12px; position: relative; }
+#bag-swap button .ico { width: 22px; height: 22px; }
+#bag-swap button i { font-style: normal; font-size: 10px; border: 1px solid #8f8875; padding: 0 3px; margin-left: 3px; color: #e0b23a; }
+body.touch #bag-swap { zoom: 1; bottom: 96px; font-size: 11px; padding: 4px 6px 5px; max-width: 58vw; }
+body.touch #bag-swap .bs-sub { display: none; }
+body.touch #bag-swap .bs-head { overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+body.touch #bag-swap .bs-list { flex-wrap: nowrap; display: inline-flex; vertical-align: top; } body.touch #bag-swap .bs-list + .bs-list { margin: 0 0 0 4px; }
+body.touch #bag-swap button { padding: 4px 6px; font-size: 11px; white-space: nowrap; } body.touch #bag-swap button .ico { width: 18px; height: 18px; }
+body.touch #bag-swap button small { display: none; }
+.bag-ghost.out { outline: 2px dashed #f0a080; opacity: .6; }
+.bag-ghost.out::after { content: '내려놓기'; position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); color: #f0a080; font-size: 12px; white-space: nowrap; text-shadow: 1px 1px 1px #000; }
+#item-tip .tip-cell { margin-top: 4px; padding-top: 3px; border-top: 1px solid #3a352a; color: #b8b09a; font-size: 12px; }

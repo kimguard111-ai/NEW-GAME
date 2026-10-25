@@ -193,6 +193,7 @@ const UI = {
     const gift = !npc && Settlement.near(p), crate = !npc && !gift && Interiors.nearCrate(), sc = !npc && !gift && !crate && Raid.inRaid() && !G.search && Scavenge.near(), asl = !npc && !gift && !crate && !sc && Assault.available();
     if (npc || gift || crate || sc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = npc ? `[E] ${npc.name}와(과) 대화` : gift ? Settlement.hint() : crate ? '[E] 보급 상자 열기' : sc ? Scavenge.hint(sc) : Assault.hint(asl); }
     else $('interact-hint').classList.add('hidden');
+    BagSwap.update(dt); // v1.88 꽉 찬 가방 「바꾸기」 카드
 
     // 임무 추적 (챕터)
     const tut = Tut.on() && Tut.html(); // v1.54 처음 할 일이 끝날 때까지는 그것만
@@ -333,7 +334,8 @@ const UI = {
     if (it.kind === 'att') Attach.partButtons(add, it); // v1.50
     if (it.locked) return; // 잠긴 장비는 판매·버리기 버튼 없음
     if (UI.shopOpen) add(`판매 (${fmt(sellPrice)}₵)`, () => UI.sell(it, sellPrice));
-    add('버리기', () => { if (confirm(`${itemName(it)}을(를) 버릴까요?`)) { removeItem(it); UI.selected = null; UI.refreshInventory(); } });
+    if (Raid.inRaid() && !G.player.dead) add('내려놓기', () => { BagSwap.putDown(it); UI.selected = null; UI.refreshInventory(); }); // v1.88 출격 중엔 발밑에 (다시 주울 수 있어서 확인 없이)
+    else add('버리기', () => { if (confirm(`${itemName(it)}을(를) 버릴까요?`)) { removeItem(it); UI.selected = null; UI.refreshInventory(); } });
   },
 
   equip(it, slot) {
@@ -902,7 +904,7 @@ const ItemTip = {
   show(it, anchor) {
     if (!this.el) { this.el = document.createElement('div'); this.el.id = 'item-tip'; document.body.appendChild(this.el); }
     const p = G.player, req = itemReqLevel(it);
-    this.el.innerHTML = `<b class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</b>${req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : ''}<br>${itemHtml(it)}`;
+    this.el.innerHTML = `<b class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</b>${req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : ''}<br>${itemHtml(it)}<div class="tip-cell">${Bag.shape(it).join('×')}칸 · 판매 ₵${fmt(itemSellPrice(it))} · <b>칸당 ₵${fmt(BagSwap.perCell(it))}</b></div>`; // v1.88 칸당 값
     this.el.style.display = 'block';
     const r = anchor.getBoundingClientRect(), w = this.el.offsetWidth, h = this.el.offsetHeight;
     let x = r.right + 6, y = r.top; if (x + w > innerWidth - 4) x = r.left - w - 6; if (x < 4) x = 4; if (y + h > innerHeight - 4) y = innerHeight - h - 4;
