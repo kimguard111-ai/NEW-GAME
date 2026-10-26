@@ -475,6 +475,7 @@ const UI = {
       + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
       + `<div class="set-row"><b>글자 크기</b> <span class="muted">화면 글씨 · 창 글씨</span><br>${[[1, '보통'], [1.15, '크게'], [1.3, '아주 크게']].map(([v, n]) => `<button class="ts-btn${Math.abs(textScale() - v) < 0.01 ? ' on' : ''}" data-ts="${v}">${n}</button>`).join(' ')}</div>` // v1.64
       + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="${ZOOM_MAX}" step="0.1" value="${ZOOM}"></div>`
+      + `<div class="set-row"><b>화면 해상도</b> <span class="muted">낮추면 덜 선명하고 훨씬 가벼움 · 자동 = 버벅이면 알아서 내림 (지금 ${['높음', '보통', '낮음'][resLevel()]})</span><br>${[['auto', '자동'], ['0', '높음'], ['1', '보통'], ['2', '낮음']].map(([v, n]) => `<button class="res-btn${Settings.resMode === v ? ' on' : ''}" data-res="${v}">${n}</button>`).join(' ')}</div>`
       + opt('tips', '도움말 팁', '처음 겪는 상황에서 한 번씩 안내')
       + opt('reverb', '울림', '바깥 메아리 · 실내 울림 (끄면 가벼워짐, 모바일은 기본 끔)')
       + opt('ambient', '환경음', '바람 · 먼 총성 · 사이렌 같은 맵 분위기 소리')
@@ -491,6 +492,7 @@ const UI = {
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`;
     $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); if (el.dataset.set === 'cb') { document.body.classList.toggle('cb', Settings.cb); UI.refreshInventory(); } if (el.dataset.set === 'vibrate' && el.checked) Haptic.pulse(40, 0); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
+    $('settings-body').querySelectorAll('.res-btn').forEach(b => { b.onclick = () => { Settings.resMode = b.dataset.res; Settings.save(); applyRes(); UI.refreshSettings(); }; }); // v1.93
     $('settings-body').querySelectorAll('.ts-btn').forEach(b => { b.onclick = () => { Settings.textScale = +b.dataset.ts; Settings.save(); applyTextScale(); UI.refreshSettings(); }; }); // v1.64
     $('shk-range').oninput = e => { Settings.shakeAmt = +e.target.value; Settings.shake = Settings.shakeAmt > 0; Settings.save(); $('shk-val').textContent = Math.round(Settings.shakeAmt * 100) + '%'; G.shake = Math.max(G.shake, 8); }; // v1.90 움직이면 바로 흔들어 보여 줌
     $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };

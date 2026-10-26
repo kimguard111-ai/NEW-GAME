@@ -634,3 +634,4 @@ body.touch #bag-swap button small { display: none; }
 .bag-grid .bag-item .rpip { bottom: auto; top: 14px; }
 body.cb .inv-cell .rpip { font-size: 9px; opacity: 1; }
 #item-tip .cmp { margin-top: 4px; }
+.res-btn.on { border-color: #e0b23a; color: #e0b23a; } /* v1.93 */

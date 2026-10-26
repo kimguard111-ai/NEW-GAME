@@ -5,7 +5,19 @@ const ISO_K = 0.9;
 // 모바일은 화면이 작아 기본값을 화면 높이에 맞춤 (가로 390px 폰 ≈ 0.7)
 const ZOOM_MIN = IS_TOUCH ? 0.6 : 1;
 // 고해상도 화면(폰) 선명하게: 캔버스를 기기 픽셀 비율로 그림 (모바일 성능을 위해 최대 1.5배, PC는 기존과 같은 1배)
-const RES = IS_TOUCH ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
+const RES_MAX = IS_TOUCH ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
+// v1.93 해상도 단계: 0 높음(RES_MAX) · 1 보통(×0.8) · 2 낮음(×0.67) — 그리는 픽셀 수가 0.64 · 0.45배
+// 측정(헤드리스 · CPU 4배 느리게): 프레임 시간의 대부분이 픽셀 채우기 (바닥 · 조명 · 그림) · 게임 계산은 몇 %뿐 → 버벅이면 해상도부터 내리는 게 가장 큼
+// 설정 「화면 해상도」 자동이면 출격 중 FpsWatch 가 내리고 (기기에 기억) · 넉넉하면 다시 올려 봄
+const RES_STEPS = [1, 0.8, 0.67];
+let RES = RES_MAX;
+function resLevel() { try { const m = Settings.resMode; if (m !== 'auto') return clamp(+m || 0, 0, 2); return clamp(+localStorage.getItem('seoul2049-reslv') || 0, 0, 2); } catch (e) { return 0; } }
+function applyRes() {
+  const r = Math.max(0.6, Math.round(RES_MAX * RES_STEPS[resLevel()] * 100) / 100); if (r === RES) return false;
+  RES = r; if (typeof resize === 'function') { resize(); GroundCache.clear(); } return true;
+}
+const partCap = () => [500, 360, 240][resLevel()]; // 입자 상한도 단계에 맞춰
+applyRes();
 const ZOOM_MAX = 2.6; // v1.50.10 최대 확대 2.2 → 2.6
 let ZOOM = IS_TOUCH ? clamp(Math.round(Math.min(window.innerWidth, window.innerHeight) / 560 * 1.75 * 10) / 10, 0.9, 2.1) : 1.9; // v1.50.10 기본 확대 ↑ (PC 1.6 → 1.9 · 모바일 ×1.5 → ×1.75) // v1.45.2 모바일 기본 확대 ×1.15 → ×1.5 (캐릭터가 너무 작게 보이던 것) // v1.21 캐릭터가 작아진 만큼 기본 확대 ↑
 try { const z = +localStorage.getItem('seoul2049-zoom'); if (z) ZOOM = clamp(localStorage.getItem('seoul2049-zoom121') ? z : z * 1.15, ZOOM_MIN, ZOOM_MAX); localStorage.setItem('seoul2049-zoom121', '1'); if (IS_TOUCH && z && !localStorage.getItem('seoul2049-zoom1452')) ZOOM = clamp(ZOOM * 1.3, ZOOM_MIN, ZOOM_MAX); localStorage.setItem('seoul2049-zoom1452', '1'); if (z && !localStorage.getItem('seoul2049-zoom1510')) ZOOM = clamp(ZOOM * 1.2, ZOOM_MIN, ZOOM_MAX); localStorage.setItem('seoul2049-zoom1510', '1'); /* v1.50.10 저장된 확대도 한 번 ×1.2 */ } catch (e) { /* 저장 불가 */ } // v1.21 저장된 확대도 한 번 ×1.15
@@ -1375,7 +1387,7 @@ function renderLighting(dark) {
 function burnFx(tx, ty) {
   const x = tx * TILE + 16, y = ty * TILE + 16, fl = 0.85 + Math.sin(G.time * 13 + tx) * 0.08 + Math.sin(G.time * 7.3 + ty) * 0.07;
   addLight(Iso.sx(x, y), Iso.sy(x, y, 18), 170 * fl, 0.85, 'rgba(255,140,40,A)');
-  if (G.hitstop > 0 || G.particles.length > 500) return;
+  if (G.hitstop > 0 || G.particles.length > partCap()) return;
   if (Math.random() < 0.5) G.particles.push({ x: x + rand(-8, 8), y: y + rand(-8, 8), vx: rand(-8, 8), vy: rand(-8, 8), z: 16, vz: rand(30, 60), t: 0, life: rand(0.35, 0.7), color: pick(['#ff9a30', '#ffcf5a', '#ff6a20']), size: rand(3, 6) });
   if (Math.random() < 0.12) G.particles.push({ x: x + rand(-6, 6), y: y + rand(-6, 6), vx: rand(-5, 5), vy: rand(-5, 5), z: 30, vz: rand(20, 32), t: 0, life: rand(1.2, 2), color: 'rgba(55,55,60,0.55)', size: rand(8, 13) });
 }
@@ -1821,7 +1833,7 @@ function drawLandmark(l) {
 function drawDropBeams() {
   for (const d of G.drops) {
     if (d.kind !== 'item' || d.item.kind === 'cons' || !d.landed) continue; // v1.29 장비가 귀해진 만큼 일반·고급도 낮은 빛기둥
-    if (d.item.rarity >= 4 && G.hitstop <= 0 && G.particles.length < 500 && Math.random() < 0.5) // 전설: 빛 입자가 계속 솟아오름
+    if (d.item.rarity >= 4 && G.hitstop <= 0 && G.particles.length < partCap() && Math.random() < 0.5) // 전설: 빛 입자가 계속 솟아오름
       G.particles.push({ x: d.x + rand(-10, 10), y: d.y + rand(-10, 10), vx: 0, vy: 0, z: 6, vz: rand(50, 90), t: 0, life: rand(0.8, 1.4), color: pick(['#ffa53a', '#ffd76a', '#fff3c0']), size: rand(2, 4) });
     const r = d.item.rarity || 0, sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y), h = r < 2 ? 28 + r * 14 : 60 + r * 30, pul = (0.7 + Math.sin(G.time * 4 + d.x) * 0.3) * (r < 2 ? 0.5 : 1);
     const g = ctx.createLinearGradient(0, sy, 0, sy - h);
@@ -1914,7 +1926,7 @@ function drawCorpse(c) {
   else Sprites.draw(c.key, 'death', at, sx, Iso.sy(c.x, c.y, c.z || 0), c.face, false);
   ctx.restore();
   if (c.kind === 'burn' && t < 2.2) drawVfx('fire', c.x, c.y, 30 * ISO_K * (1 - t / 2.2 * 0.5), Math.min(1, (2.2 - t) * 1.2) * 0.9, 0.9, Math.floor(G.time * 5) % 2 === 0); // v1.84.7 불탄 시체 위 작은 불꽃
-  if (c.kind === 'burn' && t < 2.2 && !G.paused && G.particles.length < 600 && Math.random() < 0.35) G.particles.push({ x: c.x + rand(-6, 6), y: c.y + rand(-6, 6), vx: 0, vy: 0, t: 0, life: 0.6, color: Math.random() < 0.5 ? '#ff8a2a' : '#555', size: rand(2, 4), z: rand(4, 14), vz: 40 });
+  if (c.kind === 'burn' && t < 2.2 && !G.paused && G.particles.length < partCap() + 100 && Math.random() < 0.35) G.particles.push({ x: c.x + rand(-6, 6), y: c.y + rand(-6, 6), vx: 0, vy: 0, t: 0, life: 0.6, color: Math.random() < 0.5 ? '#ff8a2a' : '#555', size: rand(2, 4), z: rand(4, 14), vz: 40 });
 }
 // v1.32 던진 수류탄: 포물선으로 날아감 (떨어질 자리엔 이미 주황 원 예고)
 function drawThrown() {

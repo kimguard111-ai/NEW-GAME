@@ -1508,19 +1508,39 @@ function frame(now) {
   }
 }
 
-// v1.49 버벅임 감지: 출격 중 8초 평균이 초당 24프레임 아래면 저사양 모드를 한 번 켜 줌 (설정에서 다시 켤 수 있음)
+// v1.49 버벅임 감지 → v1.93 단계로: 출격 중 6초 평균이 초당 26프레임 아래면
+//   ① 해상도 한 단계 내림 (높음 → 보통 → 낮음 · 설정이 「자동」일 때 · 기기에 기억)  ② 그래도면 저사양 모드 (조명 · 세부 · 울림 · 환경음 끔 · 한 번)
+//   넉넉하면 (30초 동안 55프레임 이상) 해상도를 한 단계 올려 봄 — 올렸다가 다시 버벅이면 그 단계에서 멈춤 (오르락내리락 안 하게)
 const FpsWatch = {
-  acc: 0, n: 0, done: false,
+  acc: 0, n: 0, good: 0, capped: -1,
   tick(dt) {
-    if (this.done || !G.player || !G.player.raid || G.paused || !Settings.light) return;
+    if (!G.player || !G.player.raid || G.paused || dt <= 0) { this.acc = this.n = 0; return; }
     this.acc += dt; this.n++;
-    if (this.acc < 8) return;
+    if (this.acc < 6) return;
     const fps = this.n / this.acc; this.acc = 0; this.n = 0;
-    if (fps >= 24) return;
-    this.done = true;
-    try { if (localStorage.getItem('seoul2049-autolow')) return; localStorage.setItem('seoul2049-autolow', '1'); } catch (e) { /* 무시 */ }
-    Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.clear();
-    UI.toast('화면이 버벅여서 저사양 모드를 켰다', `초당 ${Math.round(fps)}프레임이라 그래픽을 낮췄다. 설정에서 조명·세부 묘사를 다시 켤 수 있다`);
+    const auto = Settings.resMode === 'auto', lv = resLevel();
+    if (fps < 26) {
+      this.good = 0;
+      if (auto && lv < 2) {
+        try { localStorage.setItem('seoul2049-reslv', lv + 1); } catch (e) { /* 무시 */ }
+        if (this.capped < 0 || lv + 1 > this.capped) this.capped = lv + 1; // 여기서 버벅였으니 이 위로는 다시 안 올림
+        applyRes(); Feedback.note(`해상도 ${['높음', '보통', '낮음'][lv + 1]} (${Math.round(fps)}fps)`);
+        if (!this.toldRes) { this.toldRes = true; UI.toast('화면을 조금 낮췄다', `초당 ${Math.round(fps)}프레임이라 해상도를 한 단계 내렸다 (설정 → 화면 해상도)`); }
+        return;
+      }
+      if (Settings.light) {
+        try { if (localStorage.getItem('seoul2049-autolow')) return; localStorage.setItem('seoul2049-autolow', '1'); } catch (e) { /* 무시 */ }
+        Object.assign(Settings, { light: false, detail: false, reverb: false, ambient: false }); Settings.save(); GroundCache.clear(); Feedback.note(`저사양 모드 (${Math.round(fps)}fps)`);
+        UI.toast('화면이 버벅여서 저사양 모드를 켰다', `초당 ${Math.round(fps)}프레임이라 그래픽을 낮췄다. 설정에서 조명·세부 묘사를 다시 켤 수 있다`);
+      }
+      return;
+    }
+    if (fps >= 55 && auto && lv > 0 && (this.good += 6) >= 30) {
+      this.good = 0;
+      if (this.capped >= 0 && lv - 1 < this.capped) return; // 이번에 버벅였던 단계보다 위로는 안 감
+      try { localStorage.setItem('seoul2049-reslv', lv - 1); } catch (e) { /* 무시 */ }
+      applyRes(); Feedback.note(`해상도 ${['높음', '보통', '낮음'][lv - 1]} (넉넉)`);
+    } else if (fps < 55) this.good = 0;
   },
 };
 

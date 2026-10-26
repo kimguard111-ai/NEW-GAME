@@ -9,6 +9,7 @@ const Feedback = {
     const w = this.win; w.n++; w.t += dt;
     if (w.t >= 1) { const v = w.n / w.t; if (F.t > 5 && (this.low === null || v < this.low)) this.low = v; w.n = w.t = 0; } // 출격 첫 5초(불러오기)는 빼고
   },
+  notes: [], note(t) { this.notes.push(t); if (this.notes.length > 6) this.notes.shift(); }, // v1.93 자동으로 바꾼 그래픽 단계
   err(msg, where) { this.errs.push(`${msg} ${where || ''}`.trim().slice(0, 200)); if (this.errs.length > 5) this.errs.shift(); },
   device() {
     const ua = navigator.userAgent, m = s => (ua.match(s) || [])[1];
@@ -30,6 +31,7 @@ const Feedback = {
       `기기: ${this.device()}`,
       `프레임: ${fps}`,
       `설정: 조명 ${on(S.light)} · 세부 ${on(S.detail)} · 흔들림 ${Math.round(S.shakeAmt * 100)}% · 진동 ${on(S.vibrate)} · 글자 ${S.textScale || 1}${(() => { try { return localStorage.getItem('seoul2049-autolow') ? ' · 자동 저사양 켜진 적 있음' : ''; } catch (e) { return ''; } })()}`,
+      `화면: 해상도 ${Settings.resMode === 'auto' ? '자동 ' : ''}${['높음', '보통', '낮음'][resLevel()]} (캔버스 ${canvas.width}×${canvas.height})${this.notes.length ? ' · 바뀜: ' + this.notes.join(' → ') : ''}`,
       `진행: ${prog}`,
       `오류: ${this.errs.length ? this.errs.map((e, i) => `${i + 1}) ${e}`).join(' / ') : '없음'}`,
       '하고 싶은 말: ',
