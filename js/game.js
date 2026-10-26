@@ -1597,6 +1597,7 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     btnC.disabled = !save; btnC.textContent = '이어서';
   };
   slots();
+  if (TESTERS.length) document.getElementById('title-testers').textContent = ` · 테스트 도움 ${TESTERS.length <= 3 ? TESTERS.join(' · ') : TESTERS.length + '분'}`; // v1.95.1
   document.getElementById('btn-new').onclick = () => {
     if (save && !confirm(`슬롯 ${SAVE_SLOT}의 「${save.p.name} Lv${save.p.level}」 저장이 지워집니다. 새로 시작할까요?`)) return;
     const name = document.getElementById('name-input').value.replace(/[<>]/g, '').trim() || '생존자'; // v1.84.1 이름에 HTML 글자 금지

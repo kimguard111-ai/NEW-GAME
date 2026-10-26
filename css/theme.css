@@ -648,3 +648,4 @@ body.cb .inv-cell .rpip { font-size: 9px; opacity: 1; }
   #summary-body > .muted { font-size: 11px; line-height: 1.35; }
   #btn-summary-ok { position: sticky; bottom: 0; margin: 6px 0 6px !important; box-shadow: 0 -8px 10px rgba(0,0,0,.55); }
 }
+.set-thanks { margin: 8px 0 4px; padding: 6px 8px; border: 1px solid #3a352a; color: #e0b23a; font-size: 12px; line-height: 1.5; } /* v1.95.1 도움 주신 분 */
