@@ -21,6 +21,7 @@ const Settings = {
   keys: null,    // v1.37 조작 키 (null = 기본)
   textScale: null, // v1.64 글자 크기 (null = 기본: PC 1.15 · 모바일 1.0) — 「글자가 너무 작다」 피드백
   cb: false, // v1.92 색약 모드
+  nearHud: true, // v1.94 캐릭터 옆 상태 (체력 · 회피 · 탄 · 버프)
   resMode: 'auto', // v1.93 화면 해상도: 'auto' · '0' 높음 · '1' 보통 · '2' 낮음
   fps: false, // v1.85 프레임 표시 (저가폰 측정)
   fullscreen: true, // v1.45.2 모바일: 화면을 처음 누르면 전체 화면 (나갔다가도 다시 누르면 돌아감)
@@ -40,7 +41,7 @@ const Settings = {
       this.shakeAmt = clamp(+this.shakeAmt || 0, 0, 1); this.shake = this.shakeAmt > 0;
     } catch (e) { /* 저장 불가 */ }
   },
-  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ fps: this.fps, light: this.light, shake: this.shake, shakeAmt: this.shakeAmt, cb: this.cb, resMode: this.resMode, vibrate: this.vibrate, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, outline: this.outline, keys: this.keys, fullscreen: this.fullscreen, textScale: this.textScale, camLead: this.camLead, rmbAim: this.rmbAim, mip: this.mip })); } catch (e) { /* 저장 불가 */ } },
+  save() { try { localStorage.setItem('seoul2049-settings', JSON.stringify({ fps: this.fps, light: this.light, shake: this.shake, shakeAmt: this.shakeAmt, cb: this.cb, nearHud: this.nearHud, resMode: this.resMode, vibrate: this.vibrate, dmgNum: this.dmgNum, detail: this.detail, sound: this.sound, bgm: this.bgm, musicVol: this.musicVol, volume: this.volume, tips: this.tips, reverb: this.reverb, ambient: this.ambient, xray: this.xray, outline: this.outline, keys: this.keys, fullscreen: this.fullscreen, textScale: this.textScale, camLead: this.camLead, rmbAim: this.rmbAim, mip: this.mip })); } catch (e) { /* 저장 불가 */ } },
 };
 // v1.37 키 바꾸기: 행동 → 키 (소문자 e.key). 벨트 1~8 · ESC 는 고정
 const KEY_DEFAULTS = { up: 'w', left: 'a', down: 's', right: 'd', dodge: ' ', reload: 'r', swap: 'q', interact: 'e', inventory: 'i', stats: 'c', skills: 'k', quest: 'j', settings: 'o', belt: 'b', compCmd: 'f', useMed: 'x', gl: 'g' };

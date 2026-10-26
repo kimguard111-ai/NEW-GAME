@@ -863,6 +863,64 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   }
 }
 
+// v1.94 캐릭터 옆 상태 표시 (테스터 피드백: 싸울 땐 캐릭터만 보니 왼쪽 위 막대를 안 봄) — 평소엔 숨고 필요할 때만 뜸
+//   머리 위: 체력 (맞은 뒤 3초 · 절반 아래면 계속) · 그 위: 버프 남은 초 / 발밑: 회피 대기 (차는 동안 · 다 차면 한 번 반짝하고 사라짐)
+//   옆: 탄 (25% 아래 · 비면 「R 장전」) — 설정 「캐릭터 옆 상태」로 끔
+const PST = { hp: -1, hurtAt: -9, aHp: 0, aRoll: 0, readyAt: -9, wasCd: false };
+function drawPlayerStatus() {
+  const p = G.player; if (!Settings.nearHud || !p || p.dead || UI.anyOpen() || G.paused) return;
+  const S = PST, dt = 1 / 60, mh = PlayerStats.maxHp(p), sx = Iso.sx(p.x, p.y), sy = Iso.sy(p.x, p.y, 0), top = sy - 48 * (ART.charScale / 0.8);
+  if (S.hp >= 0 && p.hp < S.hp - 0.5) S.hurtAt = G.time; S.hp = p.hp;
+  const fade = (a, on) => clamp(a + (on ? dt * 6 : -dt * 3), 0, 1);
+  // 체력
+  const low = p.hp < mh * 0.5;
+  S.aHp = fade(S.aHp, low || G.time - S.hurtAt < 3 || p.plate > 0 && G.time - S.hurtAt < 5);
+  if (S.aHp > 0) {
+    const W = 46, x = sx - W / 2, y = top, k = clamp(p.hp / mh, 0, 1);
+    ctx.globalAlpha = S.aHp;
+    ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(x - 1, y - 1, W + 2, 6);
+    ctx.fillStyle = k < 0.3 ? (Math.sin(G.time * 10) > 0 ? '#ff3b30' : '#b8261e') : k < 0.5 ? '#e0662f' : '#d8443a'; ctx.fillRect(x, y, W * k, 4);
+    if (p.plate > 0) { ctx.fillStyle = '#8fc6ff'; ctx.fillRect(x, y - 3, W * clamp(p.plate / mh, 0, 1), 2); } // 방탄판 보호막
+    ctx.globalAlpha = 1;
+  }
+  // 버프 (남은 초)
+  const B = p.buffs || {}, tags = [];
+  if (B.stim > 0) tags.push(['자극', B.stim, '#3ad8a0']);
+  if (B.adren > 0) tags.push(['아드', B.adren, '#ff8a3a']);
+  if (B.rapid > 0) tags.push(['속사', B.rapid, '#7fe8d8']);
+  if (B.shield > 0) tags.push(['방어', B.shield, '#8fc6ff']);
+  if (B.regen > 0) tags.push(['회복', B.regen, '#9fe08a']);
+  if (tags.length) {
+    ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = 30, gap = 2, x0 = sx - (tags.length * (tw + gap) - gap) / 2, y = top - (S.aHp > 0.05 ? 11 : 4);
+    tags.forEach(([n, t, c], i) => { const x = x0 + i * (tw + gap); ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(x, y - 5, tw, 10); ctx.fillStyle = c; ctx.fillText(`${n} ${Math.ceil(t)}`, x + tw / 2, y + 0.5); });
+  }
+  // 회피 대기 (발밑)
+  const cd = Math.max(0, p.rollCd || 0), mx = p.rollCdMax || ROLL.cd;
+  if (cd > 0) S.wasCd = true; else if (S.wasCd) { S.wasCd = false; S.readyAt = G.time; }
+  const flash = G.time - S.readyAt < 0.35;
+  S.aRoll = fade(S.aRoll, cd > 0 || flash);
+  if (S.aRoll > 0) {
+    const W = 34, x = sx - W / 2, y = sy + (p.reloadT > 0 ? 17 : 9), k = 1 - cd / mx;
+    ctx.globalAlpha = S.aRoll;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(x - 1, y - 1, W + 2, 5);
+    ctx.fillStyle = flash ? '#ffffff' : '#6fb8e8'; ctx.fillRect(x, y, W * k, 3);
+    ctx.globalAlpha = 1;
+  }
+  // 탄 (적거나 없을 때만)
+  const w = curWeapon(), b = w && WEAPONS[w.key];
+  if (b && !b.melee && !b.infinite && p.reloadT <= 0) {
+    const cap = magSize(w), n = w.loaded || 0;
+    if (n <= Math.max(1, Math.floor(cap * 0.25))) {
+      ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      const none = n <= 0, txt = none ? (IS_TOUCH && !Pad.on ? '탄 없음 · 장전' : `탄 없음 · ${keyLabel(keyOf('reload'))}`) : `${n}/${cap}`;
+      const x = sx + 16, y = sy - 22; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.strokeText(txt, x, y);
+      ctx.fillStyle = none ? (Math.sin(G.time * 8) > 0 ? '#ff5a4a' : '#ffb0a0') : '#ffd76a'; ctx.fillText(txt, x, y); ctx.lineWidth = 1;
+    }
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+
 // HUD 초상화 · 장비창 인물 (v1.1): 플레이어를 작은 캔버스에 그림 (발 위치 footY, 배율 sc)
 function drawPlayerInto(cv, sc, footY, aim = 0.6) {
   const cs0 = ART.charScale; ART.charScale = 1; try { drawPlayerIntoInner(cv, sc, footY, aim); } finally { ART.charScale = cs0; } // 초상화·장비창은 원래 크기
@@ -1700,6 +1758,7 @@ function render() {
   for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 2) addLight(Iso.sx(d.x, d.y), Iso.sy(d.x, d.y), 70, 0.8, RARITIES[d.item.rarity].color.replace(/^#(..)(..)(..)$/, (m, r, g, b) => `rgba(${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},A)`));
   renderLighting(Math.min(0.9, G.darkness + 0.32));
   if (!(World.def && World.def.lab)) Ash.draw(); // v1.2 재 날림 (지하는 없음)
+  drawPlayerStatus(); // v1.94 캐릭터 옆 상태 (조명 위에 — 어두운 맵에서도 보이게)
   const tint = ZONES[G.zone].tint;
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }
   if (p.hurtT > 0) { ctx.fillStyle = `rgba(200,0,0,${p.hurtT})`; ctx.fillRect(0, 0, VW, VH); }
