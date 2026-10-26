@@ -469,6 +469,8 @@ const UI = {
       + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 회피)'))
       + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
       + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
+      + opt('bagPause', '창 열면 멈춤', '출격 중 가방 · 능력치 · 스킬 · 임무 · 설정 창을 열면 게임이 멈춤 (v1.96)')
+      + (IS_TOUCH ? opt('autoFire', '자동 공격', '쫓아오는 적 · 가까운 적을 알아서 쏨 (화면 오른쪽 「자동」 버튼과 같음 · 탄을 쓰니 주의)') : '')
       + opt('nearHud', '캐릭터 옆 상태', '맞으면 머리 위 체력 · 구르면 발밑 회피 막대 · 탄이 적으면 옆에 숫자 · 버프 남은 초 (필요할 때만 뜸)')
       + opt('cb', '색약 모드', '탈출 지점 초록 → 하늘색 · 위험 원에 흰 테두리 · 비교 파랑/주황 · 칸에 등급 이름 (v1.92)')
       + opt('sound', '효과음', '총소리·타격·획득 소리')
@@ -494,7 +496,7 @@ const UI = {
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
       + (TESTERS.length ? `<div class="set-thanks">${testersText()}</div>` : '') // v1.95.1 도움 주신 분
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`;
-    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); if (el.dataset.set === 'cb') { document.body.classList.toggle('cb', Settings.cb); UI.refreshInventory(); } if (el.dataset.set === 'vibrate' && el.checked) Haptic.pulse(40, 0); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
+    $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); if (el.dataset.set === 'autoFire') Touch.autoBtn(); if (el.dataset.set === 'cb') { document.body.classList.toggle('cb', Settings.cb); UI.refreshInventory(); } if (el.dataset.set === 'vibrate' && el.checked) Haptic.pulse(40, 0); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
     $('settings-body').querySelectorAll('.res-btn').forEach(b => { b.onclick = () => { Settings.resMode = b.dataset.res; Settings.save(); applyRes(); UI.refreshSettings(); }; }); // v1.93
     $('settings-body').querySelectorAll('.ts-btn').forEach(b => { b.onclick = () => { Settings.textScale = +b.dataset.ts; Settings.save(); applyTextScale(); UI.refreshSettings(); }; }); // v1.64
     $('shk-range').oninput = e => { Settings.shakeAmt = +e.target.value; Settings.shake = Settings.shakeAmt > 0; Settings.save(); $('shk-val').textContent = Math.round(Settings.shakeAmt * 100) + '%'; G.shake = Math.max(G.shake, 8); }; // v1.90 움직이면 바로 흔들어 보여 줌

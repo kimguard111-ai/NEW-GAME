@@ -89,6 +89,8 @@ function adsOn() { const p = G.player, w = p && curWeapon(); return (!IS_TOUCH |
 function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.spread[wbase(w.key)] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
 const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
+// v1.96 보스와 싸우는 중 (타이탄 · 장 보스 · 필드 보스가 가까이) — 이때는 새 적 · 증원이 안 옴 (테스터: 10렙 보스 잡는데 잡몹이 30마리씩)
+function bossFight() { const p = G.player; return [G.boss, G.elite, G.fieldBoss].find(b => b && b.hp > 0 && dist(b, p) < 1100) || null; }
 function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); Haptic.big(t); } // v1.90 큰 순간엔 폰 진동
 const MIN_FIRE = 0.06; // v1.50.7 총 연사 하한 (초)
 const KB_RATE = 18; // v1.49.7 밀려나는 속도가 줄어드는 빠르기 (총 거리 = 처음 속도 / KB_RATE)
@@ -1497,6 +1499,7 @@ function frame(now) {
   if (G.running) {
     try {
       if (G.paused) { /* 일시정지: 그리기만 */ }
+      else if (Settings.bagPause && UI.anyOpen() && G.player && !G.player.dead) { input.down = false; } // v1.96 창을 연 동안 멈춤 (테스터: 가방 열면 일시정지) · 그리기만
       else if (G.hitstop > 0) G.hitstop -= dt; // 타격 정지 중에는 월드 정지
       else { if (G.slowT > 0) G.slowT -= dt; update(G.slowT > 0 ? dt * 0.35 : dt); } // v1.65 완벽 회피 슬로모
       render();

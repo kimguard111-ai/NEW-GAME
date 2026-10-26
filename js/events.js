@@ -188,7 +188,8 @@ const RaidEvents = {
       this.huntT = 8;
     }
     // v1.16 맵 인구는 정해져 있고(js/pop.js) 증원은 경보 때만: 1단계 120초마다 2명 · 2단계 75초 3명 · 3단계 50초 4명, 바로 추격
-    if (this.alert >= 1 && !this.cleared && (this.huntT -= dt) <= 0) { // v1.17 맵을 다 비우면 증원 없음
+    if (this.alert >= 1 && !this.cleared && bossFight()) this.huntT = Math.max(this.huntT, 15); // v1.96 보스전 동안 증원 미룸 (끝나고 15초 뒤)
+    else if (this.alert >= 1 && !this.cleared && (this.huntT -= dt) <= 0) { // v1.17 맵을 다 비우면 증원 없음
       this.huntT = [0, 120, 75, 50][this.alert];
       for (let i = 0; i < 16; i++) { // 막히지 않은 방향을 찾아서
         const ang = rand(0, TAU), r = rand(560, 720), hx = p.x + Math.cos(ang) * r, hy = p.y + Math.sin(ang) * r;

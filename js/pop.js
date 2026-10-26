@@ -63,7 +63,7 @@ const Pop = {
     if (World.map === 'camp' || G.assault || (this.t -= dt) > 0) return;
     this.t = 0.4;
     const p = G.player;
-    if (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 1100) return; // 타이탄과 싸우는 중엔 나타나지 않음 (v1.7)
+    if (bossFight()) return; // 보스와 싸우는 중엔 나타나지 않음 (v1.7 타이탄 · v1.96 장 보스 · 필드 보스도)
     const z = World.zoneIndex(), zone = ZONES[z];
     // 근처에 이미 이만큼 있으면 남은 적은 구역에서 대기 (한꺼번에 몰리지 않게 — 예전 밀도 상한과 같음, 봇 측정에서 강남 사망률 90%)
     const cap = 18 + Math.min(z, 4) * 4;

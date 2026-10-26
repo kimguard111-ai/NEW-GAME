@@ -6,7 +6,7 @@ const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
 const TESTERS = [];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.95.1';
+const GAME_VERSION = 'v1.96';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [
@@ -245,7 +245,7 @@ const ZONES = [
     desc: '약탈자들이 무리 지어 매복한다', packs: { raider: [1, 2], dog: [2, 3] },
     gear: ['shotgun', 'axe', 'tactical', 'tacHelmet'], gearText: '산탄총·소방 도끼·전술 조끼·전술 헬멧' },
   { name: '용산 군사구역', maxDist: 58, lvl: [10, 15], dark: 0.52, tint: 'rgba(40,20,10,0.12)',
-    spawns: [['raider', 35], ['brute', 25], ['drone', 25], ['dog', 15]],
+    spawns: [['raider', 25], ['brute', 30], ['drone', 20], ['dog', 25]], // v1.96 원거리(약탈자 · 드론) 60% → 45% (테스터: 3스테이지 원거리 잡몹이 너무 많음)
     desc: '경비 드론 편대가 순찰한다', packs: { drone: [2, 3] },
     gear: ['rifle', 'lmg', 'military'], gearText: '돌격소총·기관총·군용 강화복' },
   { name: '여의도 방사능 지대', maxDist: 999, lvl: [16, 20], dark: 0.6, tint: 'rgba(40,120,30,0.12)',

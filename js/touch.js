@@ -37,6 +37,8 @@ const Touch = {
     document.getElementById('hud').appendChild(bar);
     const side = document.createElement('div'); side.id = 'touch-side';
     btn('E', () => interact(), 'e', side); btn('Q', () => swapWeapon(), '', side); btn('R', () => startReload(), '', side);
+    btn('자동', () => { Settings.autoFire = !Settings.autoFire; Settings.save(); this.autoBtn(); log(Settings.autoFire ? '자동 공격 켬: 쫓아오는 적 · 가까운 적을 알아서 쏜다 (오른쪽 조이스틱을 쓰면 그쪽이 먼저)' : '자동 공격 끔', '#9fd0ff'); }, 'auto', side); // v1.96
+    this.autoBtn();
     document.getElementById('hud').appendChild(side);
     const wp = document.getElementById('hud-weapon'); wp.addEventListener('touchstart', e => { e.preventDefault(); if (G.running && !G.player.dead) swapWeapon(); }, opts); // 무기 창을 눌러도 교체
     const ih = document.getElementById('interact-hint'); ih.addEventListener('touchstart', e => { e.preventDefault(); if (G.running && !G.player.dead) interact(); }, opts); // 「[E] …」 안내를 눌러도 상호작용
@@ -109,6 +111,7 @@ const Touch = {
   },
 
   // 매 프레임: 조준점(input.mx/my, 가상 화면 좌표)을 플레이어 기준으로 갱신, 당기면 사격
+  autoBtn() { const b = document.querySelector('#touch-side .auto'); if (b) b.classList.toggle('on', !!Settings.autoFire); },
   aimUpdate(p) {
     const sx = Iso.sx(p.x, p.y), sy = Iso.sy(p.x, p.y, 20), a = this.aim || this.lastAim;
     let tx = sx + a.x * 160, ty = sy + a.y * 160;
@@ -124,8 +127,22 @@ const Touch = {
       if (best) { tx = Iso.sx(best.x, best.y); ty = Iso.sy(best.x, best.y, 20); }
       this.lock = best; // v1.69 멈춰 서서 같은 적을 계속 겨누면 헤드샷 (game.js)
     } else this.lock = null;
+    let auto = false;
+    if (!this.aim && Settings.autoFire && !G.player.dead && !(p.rollT > 0)) { // v1.96 자동 공격 (폰 · 「자동」 버튼) — 탄을 아끼려고 나를 쫓는 적 · 가까이 온 적만, 사거리 85% 안 · 벽 너머는 안 쏨
+      const w = curWeapon(), b = w && WEAPONS[w.key];
+      if (b) {
+        const reach = b.melee ? meleeReach(w).range + 14 : b.range * 0.85;
+        let best = null, bd = reach;
+        for (const e of G.enemies) {
+          if (e.hp <= 0 || e.state === 'idle' && dist(p, e) > 220 || (typeof enemyCloaked === 'function' && enemyCloaked(e))) continue;
+          const d = dist(p, e) - (b.melee ? e.r : 0);
+          if (d < bd && World.lineOfSight(p, e)) { bd = d; best = e; }
+        }
+        if (best) { tx = Iso.sx(best.x, best.y); ty = Iso.sy(best.x, best.y, 20); this.lock = best; auto = true; const ax = tx - sx, ay = ty - sy, al = Math.hypot(ax, ay) || 1; this.lastAim = { x: ax / al, y: ay / al }; }
+      }
+    }
     input.mx = tx; input.my = ty;
-    input.down = !!this.aim && this.aim.mag > 0.35;
+    input.down = auto || (!!this.aim && this.aim.mag > 0.35);
   },
 };
 Touch.init();
