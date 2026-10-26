@@ -635,3 +635,16 @@ body.touch #bag-swap button small { display: none; }
 body.cb .inv-cell .rpip { font-size: 9px; opacity: 1; }
 #item-tip .cmp { margin-top: 4px; }
 .res-btn.on { border-color: #e0b23a; color: #e0b23a; } /* v1.93 */
+
+/* v1.94.2 결과 창이 낮은 화면(폰 가로 · 갤럭시 S25+ 등)에서 위아래가 잘리던 것: 화면 높이 안으로 · 장비는 두 줄 · 확인 버튼은 늘 보이게 */
+#raid-summary .summary-box { max-height: calc(100vh - 12px); max-height: calc(100dvh - 12px); overflow-y: auto; box-sizing: border-box; }
+@media (max-height: 560px) {
+  #raid-summary .summary-box { width: min(94vw, 760px); min-width: 0; padding: 6px 18px 0; }
+  #summary-title { font-size: 24px !important; margin: 2px 0 4px !important; }
+  #summary-body .sum-row { padding: 1px 0; font-size: 13px; }
+  #summary-body .sum-head { margin-top: 4px; font-size: 13px; }
+  #summary-body .sum-items { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; max-height: none; line-height: 1.45; margin-bottom: 4px; }
+  #summary-body .sum-items > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #summary-body > .muted { font-size: 11px; line-height: 1.35; }
+  #btn-summary-ok { position: sticky; bottom: 0; margin: 6px 0 6px !important; box-shadow: 0 -8px 10px rgba(0,0,0,.55); }
+}

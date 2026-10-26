@@ -57,6 +57,7 @@ const Monsters = {
   // v1.64 색 규칙: 나쁜 것 = 빨강·주황·노랑 (테두리는 늘 빨강) · 좋은 것 = 초록·파랑 — 보스 공격이 초록이라 좋은 건 줄 알고 일부러 맞던 것
   strike(x, y, r, delay, dmg, color, pool = false) {
     if (pool || /^rgba\((1[0-4]\d|2[0-3]\d),\s*(2[0-5]\d|1[89]\d),\s*\d+,|^rgba\(230,80,255,/.test(color)) color = pool ? 'rgba(255,120,30,' : 'rgba(255,70,50,'; // 초록·보라 예고 → 주황·빨강
+    if (IS_TOUCH && !Pad.on) delay *= 1.15; // v1.94.2 폰 터치는 피하기가 늦음 (테스터 「모바일은 보스가 빡셈」) — 예고 원 15% 더 길게
     G.strikes.push({ x, y, r, t: 0, delay, dmg, color, pool, by: this.actor }); // v1.70 사망 원인
     if (Math.hypot(x - G.player.x, y - G.player.y) < r + 200) SFX.play('warn', 0.7);
   },
@@ -103,7 +104,7 @@ const Monsters = {
       floatText(e.x, e.y - 44, '받아라!', '#ffb050', 15);
     } else if (id === 'glutton') { // 산성 토사물: 플레이어 주변 3곳에 장판
       e.skillT = e.phase2 ? 3.5 : 5.5; e.lastAtk = G.time;
-      for (let i = 0; i < (e.phase2 ? 5 : 3); i++) this.strike(p.x + rand(-70, 70), p.y + rand(-70, 70), 55, 0.9, e.dmg * 0.6, 'rgba(140,220,70,', true);
+      for (let i = 0; i < (e.phase2 ? 4 : 3); i++) this.strike(p.x + rand(-70, 70), p.y + rand(-70, 70), 55, 1.05, e.dmg * 0.6, 'rgba(140,220,70,', true); // v1.94.2 2단계 5곳 → 4곳 · 예고 0.9 → 1.05초
       floatText(e.x, e.y - 50, '우웨엑!', '#8fd14a', 18);
     } else if (id === 'panther') { // 호위병 호출 (최대 4)
       e.skillT = 11; e.lastAtk = G.time;

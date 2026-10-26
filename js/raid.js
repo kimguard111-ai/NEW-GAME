@@ -203,7 +203,7 @@ const Raid = {
 
   // 출격 결과 (탈출 성공 / 사망)
   summary(ok, r, items) {
-    const li = items.length ? items.map(it => `<span class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</span>`).join('<br>') : '<span class="muted">없음</span>';
+    const li = items.length ? items.map(it => `<div class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</div>`).join('') : '<span class="muted">없음</span>';
     $('summary-title').textContent = ok ? '탈출 성공' : '사망';
     $('summary-title').className = ok ? 'ok' : 'bad';
     const myth = ok ? items.filter(it => it.rarity === 5) : (this.lastDeath && this.lastDeath.kept) || [], mc = RARITIES[5].color; // v1.63 신화 확보는 결과 카드 맨 위에
