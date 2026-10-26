@@ -126,7 +126,7 @@ function drawCache(c) {
   else if (c.type === 'locker') drawBox(c.x - 8, c.y - 8, c.x + 8, c.y + 8, 34, c.looted ? '#3a3e34' : '#55603f', '#353d27', '#454f33', 0, 0, 0);
   else if (c.type === 'bag') { ctx.fillStyle = c.looted ? '#2a2620' : '#5a4a2e'; ctx.beginPath(); ctx.ellipse(sx, sy - 5, 8, 6, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#3a2e1c'; ctx.fillRect(sx - 3, sy - 12, 6, 4); }
   // 트렁크는 차 위에 표시만
-  if (!c.looted) { // 반짝임
+  if (false && !c.looted) { // 반짝임 → v1.95 drawLootGlints (조명 위 · 크게)
     const k = 0.5 + Math.sin(G.time * 4 + c.x) * 0.5;
     ctx.fillStyle = `rgba(255,220,120,${0.35 + k * 0.5})`;
     ctx.beginPath(); ctx.arc(sx, sy - (c.type === 'locker' ? 40 : c.type === 'trunk' || c.type === 'labcase' ? 32 : 22), 2.5 + k, 0, TAU); ctx.fill();

@@ -863,6 +863,34 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   }
 }
 
+// v1.95 반짝임 (테스터: 「필드에 주울 수 있는 가방이나 아이템은 반짝거려야 할 듯 · 생각보다 잘 안 보임」)
+// 바닥 아이템 · 안 뒤진 가방 · 상자 · 시체 가방 위에 네 갈래 별빛 — 2초쯤마다 크게 번쩍 (자리마다 박자가 달라 한꺼번에 깜빡이지 않음)
+// 조명 · 어둠 위에 그려서 어두운 맵 · 차 뒤에서도 보임 · 가까우면(주울 거리 근처) 늘 밝게
+function glint(sx, sy, color, seed, near) {
+  const ph = (G.time * 0.55 + seed) % 1, flash = ph < 0.16 ? Math.sin(ph / 0.16 * Math.PI) : 0, tw = 0.5 + Math.sin(G.time * 5 + seed * 20) * 0.5;
+  const s = 3 + tw * 1.5 + flash * 8 + (near ? 2 : 0), a = Math.min(1, 0.45 + tw * 0.25 + flash * 0.6 + (near ? 0.3 : 0));
+  ctx.globalAlpha = a * 0.35; ctx.fillStyle = color; ctx.beginPath(); ctx.arc(sx, sy, s * 1.3, 0, TAU); ctx.fill();
+  ctx.globalAlpha = a; ctx.fillStyle = '#fffbe8';
+  ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.6); ctx.lineTo(sx + s * 0.28, sy); ctx.lineTo(sx, sy + s * 1.6); ctx.lineTo(sx - s * 0.28, sy); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(sx - s * 1.6, sy); ctx.lineTo(sx, sy - s * 0.28); ctx.lineTo(sx + s * 1.6, sy); ctx.lineTo(sx, sy + s * 0.28); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+function drawLootGlints() {
+  const p = G.player; if (!p || World.map === 'camp') return;
+  const on = (sx, sy) => sx > -20 && sx < VW + 20 && sy > -20 && sy < VH + 20;
+  for (const d of G.drops) {
+    if (d.kind !== 'item' || !d.landed) continue;
+    const sx = Iso.sx(d.x, d.y), sy = Iso.sy(d.x, d.y, 14); if (!on(sx, sy)) continue;
+    const r = d.item.rarity || 0; glint(sx + 9, sy - 6, d.item.kind === 'cons' ? '#ffe7a0' : RARITIES[r].color, (d.x * 0.013 + d.y * 0.007) % 1, dist(p, d) < 60);
+  }
+  for (const c of Scavenge.list) {
+    if (c.looted) continue;
+    const h = c.type === 'locker' ? 40 : c.type === 'trunk' || c.type === 'labcase' ? 32 : 22, sx = Iso.sx(c.x, c.y), sy = Iso.sy(c.x, c.y) - h; if (!on(sx, sy)) continue;
+    glint(sx, sy, '#ffd27a', (c.x * 0.011 + c.y * 0.017) % 1, dist(p, c) < 70);
+  }
+  if (G.grave) { const g = G.grave, sx = Iso.sx(g.x, g.y), sy = Iso.sy(g.x, g.y) - 18; if (on(sx, sy)) glint(sx, sy, '#ff6a5a', 0.37, dist(p, g) < 70); }
+}
+
 // v1.94 캐릭터 옆 상태 표시 (테스터 피드백: 싸울 땐 캐릭터만 보니 왼쪽 위 막대를 안 봄) — 평소엔 숨고 필요할 때만 뜸
 //   머리 위: 체력 (맞은 뒤 3초 · 절반 아래면 계속) · 그 위: 버프 남은 초 / 발밑: 회피 대기 (차는 동안 · 다 차면 한 번 반짝하고 사라짐)
 //   옆: 탄 (25% 아래 · 비면 「R 장전」) — 설정 「캐릭터 옆 상태」로 끔
@@ -1758,6 +1786,7 @@ function render() {
   for (const d of G.drops) if (d.kind === 'item' && (d.item.rarity || 0) >= 2) addLight(Iso.sx(d.x, d.y), Iso.sy(d.x, d.y), 70, 0.8, RARITIES[d.item.rarity].color.replace(/^#(..)(..)(..)$/, (m, r, g, b) => `rgba(${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},A)`));
   renderLighting(Math.min(0.9, G.darkness + 0.32));
   if (!(World.def && World.def.lab)) Ash.draw(); // v1.2 재 날림 (지하는 없음)
+  drawLootGlints(); // v1.95 주울 것 · 뒤질 곳 반짝임 (조명 위 — 어두운 데서도)
   drawPlayerStatus(); // v1.94 캐릭터 옆 상태 (조명 위에 — 어두운 맵에서도 보이게)
   const tint = ZONES[G.zone].tint;
   if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, VW, VH); }

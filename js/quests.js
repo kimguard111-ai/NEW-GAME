@@ -5,7 +5,7 @@
 // 네임드 적: 랜드마크 근처에 나타나는 강한 개체
 const ELITES = {
   glutton: { name: '거대 감염체 「먹보」', base: 'zombie', level: 5, at: 'cathedral', hpMul: 8, dmgMul: 1.35, scale: 1.45, speedMul: 0.85 }, // v1.94.2 첫 보스가 빡세다는 피드백 2건: 체력 ×9 → ×8 · 피해 ×1.6 → ×1.35
-  panther: { name: '약탈자 두목 「흑표」', base: 'raider', level: 10, at: 'bosingak', hpMul: 8, dmgMul: 1.4, scale: 1.25, fireMul: 0.45 },
+  panther: { name: '약탈자 두목 「흑표」', base: 'raider', level: 10, at: 'bosingak', hpMul: 8, dmgMul: 1.25, scale: 1.25, fireMul: 0.45 }, // v1.95 피해 ×1.4 → ×1.25 (「1장부터 보스들이 너무 셈」)
   argos:   { name: '자율 전투 드론 「아르고스」', base: 'drone', level: 13, at: 'base', hpMul: 9, dmgMul: 1.3, scale: 1.7, fireMul: 0.65 }, // v1.62 Lv15 → 13 (3장에 오는 Lv10~12가 봇 기준 8번 연속 사망) · v1.63 쏘는 간격 ×0.4 → ×0.65 (Lv12 봇 6연속 사망)
   raven:   { name: '블랙선 용병대장 「레이븐」', base: 'merc', level: 25, at: 'coex', hpMul: 12, dmgMul: 1.3, scale: 1.3, fireMul: 0.5 }, // v1.6
   babel:   { name: '변이 군주 「바벨」', base: 'brute', level: 30, at: 'lotte', hpMul: 20, dmgMul: 1.4, scale: 1.8, speedMul: 1.15 }, // v1.63 체력 ×16 → ×20 (봇 완주 2번 모두 Lv26~28 첫 시도에 쓰러짐 — 최종 보스답게)
