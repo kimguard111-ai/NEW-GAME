@@ -68,7 +68,10 @@ const Scavenge = {
     const C = CACHES[c.type], z = ZONES[World.zoneIndex()], p = G.player;
     c.looted = true;
     const lvl = randInt(z.lvl[0], z.lvl[1]);
-    const drop = (kind, extra) => G.drops.push({ x: c.x + rand(-16, 16), y: c.y + rand(-16, 16), kind, t: 0, ...extra });
+    // v1.96.2 플레이어 쪽으로 떨굼 + 차 · 상자 몸체(막힌 곳) 안이면 밖으로 (테스터: 자동차 반짝이에서 나온 소모품이 안 먹어질 때가 있음 — 차 안에 떨어져 손이 안 닿던 것)
+    const toP = Math.atan2(p.y - c.y, p.x - c.x);
+    const spot = () => { for (let i = 0; i < 12; i++) { const a = toP + rand(-0.9, 0.9), r = 22 + i * 6, x = c.x + Math.cos(a) * r, y = c.y + Math.sin(a) * r; if (!World.circleBlocked(x, y, 8)) return { x, y }; } return { x: p.x + rand(-10, 10), y: p.y + rand(-10, 10) }; };
+    const drop = (kind, extra) => G.drops.push({ ...spot(), kind, t: 0, ...extra });
     drop('credits', { amount: Math.round(lvl * C.cr * rand(0.6, 1.4) * (perk('scavenger') ? 1.5 : 1)) });
     if (Math.random() < C.ammo) drop('ammo', { amount: randInt(15, 40) });
     if (Math.random() < C.med) drop('item', { item: makeConsumable('medkit', 1) });

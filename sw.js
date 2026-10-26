@@ -2,7 +2,7 @@
 // - 화면 틀(index.html · js · css · manifest): 네트워크 먼저 → 실패하면 저장본 (온라인이면 늘 최신 패치)
 // - 그림 · 소리 · 글꼴(assets/): 저장본 먼저 → 뒤에서 새로 받아 다음 실행 때 반영 (주소의 ?v= 는 무시하고 같은 파일로 봄)
 // VERSION 은 tools/bump-cache.sh 가 바꿈 — 바뀌면 옛 화면 틀 저장본을 지움 (그림 저장본은 그대로 · 바뀐 그림은 뒤에서 갱신)
-const VERSION = 'v1.96.1';
+const VERSION = 'v1.96.2';
 const CORE = 'seoul2049-core-' + VERSION, ART = 'seoul2049-art';
 
 self.addEventListener('install', e => {

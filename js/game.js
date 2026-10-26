@@ -1314,7 +1314,7 @@ function updateDrops(dt) {
     if (!d.landed) {
       d.vz -= 560 * dt; d.z += d.vz * dt;
       const nx = d.x + d.vx * dt, ny = d.y + d.vy * dt;
-      if (!World.solidAt(nx, ny)) { d.x = nx; d.y = ny; }
+      if (!World.solidAt(nx, ny) && !(d.kind === 'item' && World.circleBlocked(nx, ny, 6))) { d.x = nx; d.y = ny; } // v1.96.2 아이템은 차 · 상자 몸체 안으로도 튀어 들어가지 않게
       if (d.z <= 0 && d.vz < 0) {
         d.z = 0;
         if (d.bounce++ === 0 && d.vz < -90) { d.vz = -d.vz * 0.32; d.vx *= 0.4; d.vy *= 0.4; }
@@ -1328,6 +1328,7 @@ function updateDrops(dt) {
     if (dd < 90 && d.kind !== 'item') { // 자석 효과
       const a = angleTo(d, p); d.x += Math.cos(a) * 260 * dt; d.y += Math.sin(a) * 260 * dt;
     }
+    if (d.kind === 'item' && !d.noPick && dd < 90 && dd > 20 && World.circleBlocked(d.x, d.y, 6)) { const a = angleTo(d, p); d.x += Math.cos(a) * 200 * dt; d.y += Math.sin(a) * 200 * dt; } // v1.96.2 막힌 곳(차 · 벽 안)에 떨어진 아이템은 가까이 가면 끌려옴
     if (d.noPick && dd > 40) d.noPick = false; // v1.88 내려놓은 것: 한 번 떨어졌다 와야 다시 주움
     if (dd < 24 && !d.noPick) {
       if (d.kind === 'credits' && p.raid) p.raid.credits += d.amount; // 탈출해야 확정
