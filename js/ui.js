@@ -194,6 +194,7 @@ const UI = {
     const gift = !npc && Settlement.near(p), crate = !npc && !gift && Interiors.nearCrate(), sc = !npc && !gift && !crate && Raid.inRaid() && !G.search && Scavenge.near(), asl = !npc && !gift && !crate && !sc && Assault.available();
     if (npc || gift || crate || sc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = (npc ? `[${keyLabel(keyOf('interact'))}] ${npc.name}와(과) 대화` : gift ? Settlement.hint() : crate ? `[${keyLabel(keyOf('interact'))}] 보급 상자 열기` : sc ? Scavenge.hint(sc) : Assault.hint(asl)).replace('[E]', `[${keyLabel(keyOf('interact'))}]`); }
     else $('interact-hint').classList.add('hidden');
+    if (UI.shopOpen) UI.html('shop-cr', `내 돈 ₵${fmt(p.credits)}`); // v1.96.1 상점에 내 돈 (테스터: 거래 눌렀을 때 가진 돈이 안 보임)
     BagSwap.update(dt); // v1.88 꽉 찬 가방 「바꾸기」 카드
 
     // 임무 추적 (챕터)
@@ -345,7 +346,7 @@ const UI = {
     if (it.locked) return; // 잠긴 장비는 판매·버리기 버튼 없음
     if (UI.shopOpen) add(`판매 (${fmt(sellPrice)}₵)`, () => UI.sell(it, sellPrice));
     if (Raid.inRaid() && !G.player.dead) add('내려놓기', () => { BagSwap.putDown(it); UI.selected = null; UI.refreshInventory(); }); // v1.88 출격 중엔 발밑에 (다시 주울 수 있어서 확인 없이)
-    else add('버리기', () => { if (confirm(`${itemName(it)}을(를) 버릴까요?`)) { removeItem(it); UI.selected = null; UI.refreshInventory(); } });
+    else add('버리기', () => Ask.show(`${itemName(it)}을(를) 버릴까요?`, () => { removeItem(it); UI.selected = null; UI.refreshInventory(); }));
   },
 
   equip(it, slot) {
@@ -516,7 +517,7 @@ const UI = {
         const raw = decodeURIComponent(escape(atob(ta.value.trim()))), s = JSON.parse(raw);
         if (!validSave(s)) throw new Error('bad'); // v1.84.1 외부 점검: 타이틀 불러오기와 같은 검사 + 고쳐 씀
         sanitizeSave(s);
-        if (!confirm(`${s.p.name} Lv${s.p.level} 세이브를 지금 슬롯(${SAVE_SLOT})에 불러올까요? 이 슬롯의 진행은 덮어씌워집니다.`)) return;
+        if (!Ask.ok(`${s.p.name} Lv${s.p.level} 세이브를 지금 슬롯(${SAVE_SLOT})에 불러올까요? 이 슬롯의 진행은 덮어씌워집니다.`, () => $('btn-import').onclick())) return;
         G.running = false; localStorage.setItem(saveKey(), JSON.stringify(s)); location.reload();
       } catch (e) { log('세이브 코드가 올바르지 않습니다.', '#f66'); }
     };
@@ -671,7 +672,7 @@ const UI = {
     const spent = Object.values(p.stats).reduce((a, v) => a + Math.max(0, v - 5), 0), np = p.perks.filter(Boolean).length;
     if (!spent && !np) { log('초기화할 능력치·특성이 없습니다.', '#aaa'); return; }
     if (p.credits < cost) { log('크레딧이 부족합니다.', '#f88'); return; }
-    if (!confirm(`능력치 ${spent}포인트와 특성 ${np}개를 모두 돌려받습니다.${cost ? ` 비용 ${fmt(cost)}₵` : ''} 진행할까요?`)) return;
+    if (!Ask.ok(`능력치 ${spent}포인트와 특성 ${np}개를 모두 돌려받습니다.${cost ? ` 비용 ${fmt(cost)}₵` : ''} 진행할까요?`, () => this.respec())) return;
     p.credits -= cost; p.respecs++; p.perks = []; // v1.11 특성도 초기화
     for (const k of Object.keys(p.stats)) p.stats[k] = Math.min(p.stats[k], 5);
     p.statPoints += spent;
@@ -747,7 +748,7 @@ const UI = {
   resetSkills() {
     const p = G.player, cost = skillResetCost(p);
     if (p.credits < cost) { log('크레딧이 부족합니다.', '#f88'); SFX.play('empty'); return; }
-    if (!confirm(`스킬을 모두 초기화하고 스킬 포인트를 돌려받을까요? (₵${fmt(cost)})`)) return;
+    if (!Ask.ok(`스킬을 모두 초기화하고 스킬 포인트를 돌려받을까요? (₵${fmt(cost)})`, () => this.resetSkills())) return;
     const back = spSpent(p);
     p.credits -= cost; p.sp = (p.sp || 0) + back; p.skills = {}; p.srank = {}; p.smodOwned = {}; p.skillMods = {}; p.stree = {};
     p.skillbar = [null, null, null, null]; // v1.50 스킬 퀵바
@@ -1010,4 +1011,22 @@ const Hotbar = {
       const next = bar.slice(0, n).indexOf(null); this.edit(el.dataset.act && next >= 0 ? next : sel, mode); // 채우면 다음 빈 칸으로
     }; });
   },
+};
+
+// v1.96.1 게임 안 확인 창 (브라우저 confirm 대신) — 폰 가로 전체 화면에서 브라우저 확인 창이 뜨면 전체 화면이 풀리고 세로로 돌아가던 것 (테스터: 무기 분해 누르면 세로 모드로 바뀜)
+// Ask.show(글, 예) · Ask.ok(글, 다시부르기): 처음엔 창을 띄우고 false → 「예」면 다시부르기를 한 번 통과(true)시켜 원래 함수가 이어서 진행
+const Ask = {
+  pass: false,
+  ok(msg, again) { if (this.pass) { this.pass = false; return true; } this.show(msg, () => { this.pass = true; try { again(); } finally { this.pass = false; } }); return false; },
+  show(msg, yes, no) {
+    let el = document.getElementById('ask');
+    if (!el) { el = document.createElement('div'); el.id = 'ask'; el.innerHTML = '<div class="ask-box"><div class="ask-msg"></div><div class="ask-btns"><button class="ask-yes">확인</button><button class="ask-no">취소</button></div></div>'; document.body.appendChild(el); }
+    el.querySelector('.ask-msg').textContent = msg; el.classList.remove('hidden'); el.style.display = 'flex';
+    const close = () => { el.style.display = 'none'; window.removeEventListener('keydown', key, true); };
+    const key = e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); close(); yes && yes(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); no && no(); } };
+    el.querySelector('.ask-yes').onclick = () => { close(); SFX.play('ui'); yes && yes(); };
+    el.querySelector('.ask-no').onclick = () => { close(); no && no(); };
+    window.addEventListener('keydown', key, true);
+  },
+  open() { const el = document.getElementById('ask'); return !!el && el.style.display === 'flex'; },
 };

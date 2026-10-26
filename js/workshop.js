@@ -113,7 +113,7 @@ const Workshop = {
     const p = G.player;
     if (Object.values(p.equip).includes(it)) return;
     if (it.locked) { log('잠긴 장비는 분해할 수 없습니다. (가방에서 잠금 해제)', '#f88'); return; } // v1.15
-    if ((it.rarity >= 3 || it.plus >= 3) && !confirm(it.rarity >= 5 ? `신화 장비 ${itemName(it)}을(를) 정말 분해할까요? 다시 얻기 매우 어렵습니다.` : `${itemName(it)}을(를) 분해할까요? 되돌릴 수 없습니다.`)) return;
+    if ((it.rarity >= 3 || it.plus >= 3) && !Ask.ok(it.rarity >= 5 ? `신화 장비 ${itemName(it)}을(를) 정말 분해할까요? 다시 얻기 매우 어렵습니다.` : `${itemName(it)}을(를) 분해할까요? 되돌릴 수 없습니다.`, () => this.salvage(it))) return;
     const y = this.salvageYield(it);
     removeItem(it); this.gain(y.scrap, y.chip, `분해: ${itemName(it)}`);
     this.sel = null; this.after();

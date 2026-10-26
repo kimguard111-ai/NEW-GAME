@@ -651,3 +651,10 @@ body.cb .inv-cell .rpip { font-size: 9px; opacity: 1; }
 .set-thanks { margin: 8px 0 4px; padding: 6px 8px; border: 1px solid #3a352a; color: #e0b23a; font-size: 12px; line-height: 1.5; } /* v1.95.1 도움 주신 분 */
 body.touch #touch-side button.auto { font-size: 10px; letter-spacing: -0.5px; } /* v1.96 자동 공격 */
 body.touch #touch-side button.auto.on { border-color: #7fe08a; color: #0b0c0e; background: rgba(127,224,138,.9); }
+/* v1.96.1 게임 안 확인 창 */
+#ask { position: fixed; inset: 0; z-index: 9000; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.55); }
+#ask .ask-box { max-width: min(88vw, 420px); padding: 14px 18px 12px; background: var(--grain), var(--steel); border: 2px solid #000; box-shadow: 0 0 0 1px #e0b23a55, 6px 6px 0 rgba(0,0,0,.6); color: #ddd6c4; text-align: center; }
+#ask .ask-msg { font-size: 15px; line-height: 1.5; margin-bottom: 12px; white-space: pre-line; }
+#ask .ask-btns { display: flex; gap: 10px; justify-content: center; } #ask button { min-width: 90px; padding: 8px 14px; }
+#ask .ask-yes { border-color: #e0b23a; color: #e0b23a; }
+.panel-head .shop-cr { margin-left: 10px; color: #ffd76a; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; font-size: 14px; letter-spacing: 0; } /* v1.96.1 */

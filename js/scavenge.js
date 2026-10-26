@@ -3,11 +3,12 @@
 // 출격 중 죽으면 이번에 주운 것이 그 자리의 "시체 가방"에 남음 → 다음에 같은 맵에 출격해서 회수 (한 맵에 하나, 다시 죽으면 새것으로 바뀜)
 
 const CACHES = {
-  dumpster: { name: '쓰레기 수거함', dur: 1.4, gear: 0.03, med: 0.10, ammo: 0.5, scrap: [1, 3], cr: 4 },
-  trunk:    { name: '차 트렁크',     dur: 1.6, gad: 0.2, gear: 0.04, med: 0.30, ammo: 0.6, scrap: [0, 2], cr: 6 },
-  bag:      { name: '버려진 배낭',   dur: 0.9, gear: 0.07, med: 0.25, ammo: 0.3, scrap: [0, 1], cr: 8 },
-  locker:   { name: '군용 보관함',   dur: 2.2, gad: 0.4, gear: 0.10, med: 0.20, ammo: 0.8, scrap: [1, 3], cr: 10, chip: 0.25, bonus: 0.6 },
-  labcase:  { name: '연구 장비함',   dur: 1.8, gad: 0.3, gear: 0.08, med: 0.35, ammo: 0.4, scrap: [1, 2], cr: 12, chip: 0.4, bonus: 0.8 }, // v1.5 연구소
+  // v1.96.1 구급상자(med) ×0.6 (테스터: 주운 구급상자만 60개 — 너무 자주 나옴)
+  dumpster: { name: '쓰레기 수거함', dur: 1.4, gear: 0.03, med: 0.06, ammo: 0.5, scrap: [1, 3], cr: 4 },
+  trunk:    { name: '차 트렁크',     dur: 1.6, gad: 0.2, gear: 0.04, med: 0.18, ammo: 0.6, scrap: [0, 2], cr: 6 },
+  bag:      { name: '버려진 배낭',   dur: 0.9, gear: 0.07, med: 0.15, ammo: 0.3, scrap: [0, 1], cr: 8 },
+  locker:   { name: '군용 보관함',   dur: 2.2, gad: 0.4, gear: 0.10, med: 0.12, ammo: 0.8, scrap: [1, 3], cr: 10, chip: 0.25, bonus: 0.6 },
+  labcase:  { name: '연구 장비함',   dur: 1.8, gad: 0.3, gear: 0.08, med: 0.20, ammo: 0.4, scrap: [1, 2], cr: 12, chip: 0.4, bonus: 0.8 }, // v1.5 연구소
 };
 const GRAVE_DUR = 2.0;
 

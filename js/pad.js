@@ -15,7 +15,7 @@ const Pad = {
   get() { try { for (const g of navigator.getGamepads ? navigator.getGamepads() : []) if (g && g.connected && g.mapping === 'standard') return g; for (const g of navigator.getGamepads ? navigator.getGamepads() : []) if (g && g.connected) return g; } catch (e) { /* 막힘 */ } return null; },
   stick(g, i) { const x = g.axes[i] || 0, y = g.axes[i + 1] || 0, m = Math.hypot(x, y); if (m < PAD_DEAD) return null; const k = Math.min(1, (m - PAD_DEAD) / (1 - PAD_DEAD)); return { x: x / m, y: y / m, mag: k }; },
   btn(g, i) { const b = g.buttons[i]; return !!b && (b.pressed || b.value > 0.4); },
-  uiMode() { return !G.running || G.paused || !G.player || G.player.dead || UI.anyOpen() || !!document.querySelector('.overlay:not(.hidden)'); },
+  uiMode() { return (typeof Ask !== 'undefined' && Ask.open()) || !G.running || G.paused || !G.player || G.player.dead || UI.anyOpen() || !!document.querySelector('.overlay:not(.hidden)'); },
   setOn(v) {
     if (this.on === v) return; this.on = v;
     if (!v) { this.move = this.aim = this.lock = null; if (this.rt) input.down = false; if (this.lt) input.aim = false; this.rt = this.lt = false; }
@@ -78,6 +78,7 @@ const Pad = {
     this.hoverTo(el);
     if (R && Math.abs(R.y) > 0.3 && el) { let s = el; while (s && s !== document.body && !(s.scrollHeight > s.clientHeight + 4 && /auto|scroll/.test(getComputedStyle(s).overflowY))) s = s.parentElement; if (s && s !== document.body) s.scrollTop += R.y * R.mag * 900 * dt; }
     if (hit(0) && el) this.click(el, c.x, c.y);
+    if (hit(1) && Ask.open()) { document.querySelector('#ask .ask-no').click(); return; } // v1.96.1 확인 창 취소
     if (hit(1)) { if (UI.anyOpen()) UI.closeAll(); else if (G.paused) Pause.toggle(); }
     if (hit(9)) { if (UI.anyOpen()) UI.closeAll(); else if (G.running && G.player && !G.player.dead) Pause.toggle(); }
     if (hit(8) && G.running && G.player && !G.player.dead && !G.paused) UI.toggle('inventory');

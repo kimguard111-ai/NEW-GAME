@@ -906,7 +906,7 @@ function killEnemy(e) {
   }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.34) dropAt('ammo', { amount: randInt(15, 35) }); // v1.33 0.28 → 0.34 (탄약이 4종으로 나뉘어 권총도 탄이 필요)
-  if (Math.random() < 0.05) dropAt('item', { item: makeConsumable('medkit', 1) });
+  if (Math.random() < 0.025) dropAt('item', { item: makeConsumable('medkit', 1) }); // v1.96.1 5% → 2.5% (구급상자가 너무 많이 쌓임)
   if (Math.random() < (e.affix ? 0.025 : e.type === 'brute' ? 0.008 : 0.002)) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 · v1.51 낮춤 (엘리트 6→2.5% · 거구 2→0.8% · 보통 0.6→0.2%)
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
   const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)
@@ -1602,7 +1602,7 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
   slots();
   if (TESTERS.length) document.getElementById('title-testers').textContent = ` · 테스트 도움 ${TESTERS.length <= 3 ? TESTERS.join(' · ') : TESTERS.length + '분'}`; // v1.95.1
   document.getElementById('btn-new').onclick = () => {
-    if (save && !confirm(`슬롯 ${SAVE_SLOT}의 「${save.p.name} Lv${save.p.level}」 저장이 지워집니다. 새로 시작할까요?`)) return;
+    if (save && !Ask.ok(`슬롯 ${SAVE_SLOT}의 「${save.p.name} Lv${save.p.level}」 저장이 지워집니다. 새로 시작할까요?`, () => document.getElementById('btn-new').onclick())) return;
     const name = document.getElementById('name-input').value.replace(/[<>]/g, '').trim() || '생존자'; // v1.84.1 이름에 HTML 글자 금지
     startGame(null, name);
   };
