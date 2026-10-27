@@ -2,7 +2,7 @@
 
 순서: **① 웹 주소로 한국 커뮤니티 공개 테스트** → (동시에) **② 구글 플레이 준비 · 비공개 테스트 12명 14일** → ③ 정식 출시 · itch는 덤.
 
-- 게임 주소: `https://seoul2049.vercel.app` → **새 이름 주소로 옮기기 추천** (Vercel 프로젝트 이름을 `cityofruins` 로 바꾸면 `https://cityofruins.vercel.app` · 옛 주소의 세이브는 「세이브 코드」로 옮겨야 함 — 브라우저 저장은 주소마다 따로). 아래 글의 주소는 옮긴 뒤 바꿔 쓰기
+- 게임 주소: `https://seoul2049.vercel.app` → **새 이름 주소로 옮기기 추천** (Vercel → Settings → Domains 에 `cityofruins.vercel.app` **추가** · 옛 주소는 **지우지 말고 둠** — v1.98.3부터 옛 주소 타이틀에 「세이브 들고 새 주소로 가기」 버튼이 떠서 세이브가 한 번에 넘어감). 아래 글의 주소는 옮긴 뒤 바꿔 쓰기
 - 개인정보처리방침: `https://seoul2049.vercel.app/privacy.html` (문의 kimguard111@gmail.com)
 - 스크린샷 8장: `docs/store/screens/` (1920×1080 가로 · 플레이 스토어 규격 맞음)
 - 스토어 큰 그림: `docs/store/feature_1024x500.png` · 앱 아이콘: `docs/store/app_icon_1024.png` (스토어용은 512×512 — `assets/app/icon512.png`)

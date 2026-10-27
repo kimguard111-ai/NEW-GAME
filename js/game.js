@@ -1609,6 +1609,33 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     btnC.disabled = !save; btnC.textContent = '이어서';
   };
   slots();
+  // v1.98.3 주소 이사 (이름이 「폐허의 도시」로 바뀜): 브라우저 저장은 주소마다 따로라서, 옛 주소에선 「세이브 들고 새 주소로」 한 번에
+  //   옛 주소: 세이브 3칸 · 설정 · 확대를 한 덩어리로 묶어 새 주소 뒤(#move=…)에 붙여 엶 (서버로 보내는 것 없음 — 주소창 안에서만)
+  //   새 주소: #move= 를 읽어 빈 칸엔 바로 넣고, 이미 저장이 있는 칸은 물어봄 → 주소창에서 지움
+  const MOVE = { from: ['seoul2049.vercel.app'], to: 'https://cityofruins.vercel.app/' };
+  if (MOVE.from.includes(location.hostname)) {
+    const w = document.getElementById('addr-warn'); w.classList.remove('hidden'); w.classList.add('move');
+    w.innerHTML = '게임 이름이 <b>「폐허의 도시」</b>로 바뀌면서 주소를 옮겼어요. <button id="btn-move">세이브 들고 새 주소로 가기</button>';
+    document.getElementById('btn-move').onclick = () => {
+      const pack = { v: 1, slots: {}, settings: null, zoom: null };
+      try { for (const n of [1, 2, 3]) { const r = localStorage.getItem(slotKey(n)); if (r) pack.slots[n] = r; } pack.settings = localStorage.getItem('seoul2049-settings'); pack.zoom = localStorage.getItem('seoul2049-zoom'); } catch (e) { /* 저장 불가 */ }
+      location.href = MOVE.to + '#move=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(pack)))));
+    };
+  }
+  if (location.hash.startsWith('#move=')) {
+    let pack = null; try { pack = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(location.hash.slice(6)))))); } catch (e) { pack = null; }
+    history.replaceState(null, '', location.pathname + location.search);
+    if (pack && pack.slots) {
+      const put = [], ask = [];
+      for (const [n, raw] of Object.entries(pack.slots)) { let sv = null; try { sv = JSON.parse(raw); } catch (e) { /* 깨진 칸 */ } if (!validSave(sv)) continue; sanitizeSave(sv); (loadSave(+n) ? ask : put).push([+n, sv]); }
+      const write = ([n, sv]) => { try { localStorage.setItem(slotKey(n), JSON.stringify(sv)); } catch (e) { /* 저장 불가 */ } };
+      put.forEach(write);
+      try { if (pack.settings && !localStorage.getItem('seoul2049-settings')) localStorage.setItem('seoul2049-settings', pack.settings); if (pack.zoom && !localStorage.getItem('seoul2049-zoom')) localStorage.setItem('seoul2049-zoom', pack.zoom); } catch (e) { /* 저장 불가 */ }
+      const done = () => { slots(); const w = document.getElementById('addr-warn'); w.classList.remove('hidden'); w.textContent = `옛 주소의 세이브를 가져왔어요 (${put.length}칸). [이어서]를 누르세요. 이제 이 주소를 즐겨찾기 · 홈 화면에 추가해 주세요.`; };
+      const next = () => { const c = ask.shift(); if (!c) return done(); Ask.show(`슬롯 ${c[0]}에 이미 저장이 있어요 (이 주소). 옛 주소의 「${c[1].p.name} Lv${c[1].p.level}」로 바꿀까요?`, () => { write(c); put.push(c); next(); }, next); };
+      next();
+    }
+  }
   // v1.98.1 크레딧은 타이틀 「크레딧」에서 (설정 화면 맨 아래에 있던 것)
   document.getElementById('btn-credits').onclick = () => {
     const row = (k, v) => `<div class="cr-row"><span>${k}</span><b>${v}</b></div>`;
