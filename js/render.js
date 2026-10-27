@@ -1246,12 +1246,10 @@ function enemyCloaked(e) {
     && dist(e, G.player) > 150;
 }
 // v1.32 맞은 반응: 휘청(맞은 쪽 반대로 기울었다 돌아옴) · 넘어짐(쓰러졌다가 일어남)
-// v1.46 적 표시: 발밑 붉은 고리(쫓아올 때 진하게) + 작은 빛 (어두운 곳·어지러운 바닥에서도 보이게)
+// v1.46 적 표시: 작은 빛 (어두운 곳·어지러운 바닥에서도 보이게) · v1.98.8 발밑 붉은 고리는 뺌 (붉은 윤곽선과 겹쳐 오히려 바닥이 지저분해 보임 — 테스터 의견)
 function enemyMark(e, sx, sy, k, hz) {
   if (Settings.outline === false) return;
-  const ch = e.state === 'chase', rx = e.r * 1.25 / k, ry = e.r * 0.62 / k;
-  ctx.strokeStyle = ch ? 'rgba(235,60,40,0.75)' : 'rgba(220,70,50,0.38)'; ctx.lineWidth = ch ? 2 : 1.4;
-  ctx.beginPath(); ctx.ellipse(sx, sy, rx, ry, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+  const ch = e.state === 'chase';
   if (Light.list.length < 90) addLight(sx, sy - 14 - (hz || 0), 52, ch ? 0.5 : 0.35);
 }
 function drawEnemy(e) {
