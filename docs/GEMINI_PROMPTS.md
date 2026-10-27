@@ -21,6 +21,18 @@
 | 오른쪽을 봄, 전신, 프레임 사이 넓은 간격 | 왼쪽은 게임이 뒤집어 만듦. 도구가 발 기준으로 정렬 |
 | 오른쪽 아래 비우기 | Gemini ✦ 표시 자리 (도구가 지움) |
 
+### 가로세로 비율 (v1.98.8 · Gemini 비율 설정)
+| 그림 종류 | 비율 |
+|---|---|
+| 캐릭터 · 보스 시트 (줄마다 동작) | **16:9** |
+| 소품 3×3 · 질감 3×2 격자 | **16:9** |
+| 가로로 늘어선 소품 (아치 3종 등) | **16:9** |
+| 랜드마크 건물 (보통) | **1:1** |
+| 아주 높은 건물 (타워) | **9:16** |
+| 아이콘 한 장 · 던전 카드 | **1:1** |
+| 타이틀 · 엔딩 · 결과 배경 | **16:9** |
+앞으로 새 프롬프트 제목에 📐 비율을 같이 적음.
+
 ### 순서
 1. 회색 상자 복사 → Gemini (📎 표시가 있으면 그 그림도 첨부)
 2. `tools/sprite-tool.html` 열기 → **🔧 도구 이름** 선택 → 그림 끌어다 놓기
@@ -1343,7 +1355,7 @@ Match the art style of the attached concept image. Create ONE image with 6 separ
 Match the art style of the attached concept image. Create ONE image with 9 separate isometric game props arranged in a 3 by 3 grid with wide empty gaps between them, every prop on a square diamond-shaped footprint viewed from the south corner: 1. a tall rusty steel arch truss segment of a large river bridge, rising high, 2. the same steel arch truss segment but broken and bent, 3. a thick concrete bridge pier rising out of the water with water stains, 4. a tall double-arm bridge street lamp with a warm orange light, 5. the same street lamp bent and dark, 6. a steel bridge guardrail section with a small rusty sign plate (no text), 7. a bridge observation deck bench with a broken coin binocular viewer, 8. a toll-booth-like small bridge control booth, windows broken, 9. a hanging cable stay anchor with snapped steel cables. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. No people, no shadow, no ground, no water, no text, no logos, no brand names. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the props.
 ```
 
-#### 51-5c · 대교 옆 아치 (측면 트러스) 3종 · `props_arch.png` (가로로 3개) — v1.98.8 아치 다시
+#### 51-5c · 대교 옆 아치 (측면 트러스) 3종 · `props_arch.png` (가로로 3개) · 📐 **16:9** — v1.98.8 아치 다시
 51-5b 의 아치는 **바닥까지 있는 작은 다리**라 난간에 세우면 옆에 다리가 또 붙은 것처럼 보였음 → **한쪽 난간에 세우는 아치 한 줄만** (바닥 · 도로 없음). 게임이 다리 양옆에 이어 붙여 긴 아치교를 만듦.
 ```
 Match the art style of the attached concept image. Create ONE wide image with 3 separate pieces side by side with wide empty gaps between them, all drawn in the same isometric 3/4 top-down view, each piece running diagonally from the bottom-left to the top-right of its own area (like a fence seen from the south corner): 1. ONE side of a steel arch bridge: a single tall curved steel arch rib made of riveted dark rusty steel lattice beams, with thin vertical steel hanger rods dropping from the arch down to a straight horizontal steel bottom beam, both ends resting on small square concrete bases; 2. the same single arch side but broken in the middle, the arch rib snapped and bent down, some hanger rods hanging loose; 3. a short square steel end post with a warm orange warning lamp on top. Only the thin side structure: no bridge deck, no road surface, no floor, no ground, no water, no second parallel arch, no shadow, no text, no logos. Detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the structure.
