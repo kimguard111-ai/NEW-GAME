@@ -18,6 +18,7 @@ const ACHIEVEMENTS = [
   { id: 'chimera', name: '격리 해제',      desc: '키메라 처치',           ok: p => (p.labKills || 0) >= 1, r: { credits: 3000, chip: 4 } },
   { id: 'story',  name: '서울의 영웅',     desc: '이야기 6장 완료',       ok: p => p.quest && p.quest.ch >= 6, r: { credits: 10000, chip: 10 } }, // v2.0 7장이 생겨도 6장 기준
   { id: 'lv30',   name: '정점',            desc: 'Lv30 달성',             ok: p => p.level >= 30, r: { chip: 10 } },
+  { id: 'seoulEnd', name: '강 너머',       desc: '제7장 완료 · 서울 편 끝 (v2.0)', ok: p => !!p.seoulEnd, r: { chip: 20 } },
   { id: 'lv40',   name: '정점 너머',       desc: 'Lv40 달성 (v2.0)',      ok: p => p.level >= 40, r: { chip: 20 } },
   { id: 'leg1',   name: '빛나는 것',       desc: '전설 장비 손에 넣기',   ok: p => Object.values(p.codex.items).some(r => r >= 4), r: { credits: 1000 } },
   { id: 'cx2',    name: '희귀 도감',       desc: '도감 희귀 등급 장비 칸 모두 밝히기', ok: p => Journal.gearKeys().every(k => (p.codex.items[k] ?? -1) >= 2), r: { credits: 3000, chip: 5 } }, // v1.68 도감 등급 완성
@@ -38,7 +39,7 @@ const ACHIEVEMENTS = [
   { id: 'clear1', name: '완전 소탕',       desc: '출격 맵의 적을 모두 처치', ok: p => (p.rec.clears || 0) >= 1, r: { credits: 3000, chip: 4 } },
   { id: 'perk6',  name: '완성된 생존자',   desc: '특성 6개 모두 선택',    ok: p => p.perks.filter(Boolean).length >= 6, r: { chip: 6 } },
 ];
-if (!V2_OPEN) ACHIEVEMENTS.splice(ACHIEVEMENTS.findIndex(a => a.id === 'lv40'), 1); // v2.0 잠금
+if (!V2_OPEN) for (const id of ['lv40', 'seoulEnd']) ACHIEVEMENTS.splice(ACHIEVEMENTS.findIndex(a => a.id === id), 1); // v2.0 잠금
 
 const Journal = {
   t: 0, tab: 'quest',

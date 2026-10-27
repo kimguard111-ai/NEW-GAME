@@ -6,7 +6,7 @@ const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
 const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.98.8 · 한강 테스트';
+const GAME_VERSION = 'v1.98.9 · 한강 테스트';
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
@@ -387,6 +387,15 @@ const PERK_TIERS = [
     { id: 'ghost', name: '그림자 걸음', desc: '회피 재사용 -40% · 회피 후 1초 동안 받는 피해 -50%' },
     { id: 'warlord', name: '전쟁군주', desc: '모든 스킬 재사용 대기 -25%' } ] },
 ];
+if (V2_OPEN) PERK_TIERS.push( // v2.x 최대 레벨 40 → 특성 두 단계 더
+  { lvl: 35, perks: [
+    { id: 'reaper', name: '사신의 연쇄', desc: '처치할 때마다 4초 동안 주는 피해 +5% (최대 5번 겹침)' },
+    { id: 'supplyLine', name: '보급선', desc: '출격할 때 탄약을 가득 채우고 구급상자 +2' },
+    { id: 'ironWill', name: '강철 의지', desc: '받는 피해 -12%' } ] },
+  { lvl: 40, perks: [
+    { id: 'deadeye', name: '명사수', desc: '헤드샷 피해 +30%' },
+    { id: 'overclock', name: '과부하', desc: '스킬을 쓰면 4초 동안 공격 속도 +20%' },
+    { id: 'undying', name: '불굴', desc: '출격마다 한 번, 쓰러질 피해를 받으면 체력 40%로 버팀 (두 번째 숨과 따로)' } ] });
 
 // v1.24 벨트 (장구류): 차는 벨트 등급만큼 핫바 칸 (2 · 4 · 6 · 8). 칸에는 배운 스킬 · 구급상자 · 투척물 · 보조를 직접 등록
 // 등급 = rarity (0 일반 ~ 3 영웅). 벨트가 없어도 기본 2칸
@@ -403,7 +412,7 @@ const HOT_MAX = 6;
 // 같은 갈래 특성을 3개 이상 고르면 갈래 보너스
 const PERK_BRANCH = { rollStrike: 'atk', scavenger: 'tac', thickSkin: 'sur', lastRounds: 'atk', runner: 'tac', brawler: 'sur',
   executioner: 'atk', steadyAim: 'tac', fieldMedic: 'sur', killStreak: 'atk', demolition: 'tac', lastStand: 'sur',
-  bulletStorm: 'atk', treasure: 'tac', secondWind: 'sur', apex: 'atk', warlord: 'tac', ghost: 'sur' };
+  bulletStorm: 'atk', treasure: 'tac', secondWind: 'sur', apex: 'atk', warlord: 'tac', ghost: 'sur', reaper: 'atk', supplyLine: 'tac', ironWill: 'sur', deadeye: 'atk', overclock: 'tac', undying: 'sur' };
 const PASSIVE_BRANCHES = {
   atk: { name: '공격', color: '#ff8a6a', bonus: '모든 피해 +8%' },
   tac: { name: '전술', color: '#6ab4ff', bonus: '스킬 재사용 대기 -10% · 회피 재사용 -20%' },

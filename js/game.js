@@ -376,6 +376,7 @@ function playerDamageMul(melee) {
   if (perk('rollStrike') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1.5) m *= 1.3;
   if (!melee && perk('steadyAim') && G.time - (p.lastHurt || -9) > 2) m *= 1.15;
   if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) m *= 1.25;
+  if (perk('reaper') && G.time < (p.reapT || 0)) m *= 1 + 0.05 * (p.reapN || 0); // v2.x 사신의 연쇄
   if (pas('a5')) m *= 1.05; if (branchOn('atk')) m *= 1.08; // v1.23 패시브 트리
   if (!melee) { const cw = curWeapon(); if (cw && cw.arBoost) m *= 1.2; } // v1.65 완벽 장전한 탄창
   if (p.buffs.perfect > 0) m *= 1.3; // v1.65 완벽 회피 뒤 3초
@@ -549,6 +550,7 @@ function useSkill(i) {
       G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.4, color: '#ff8844', r: 180 }); G.shake = Math.max(G.shake, 6);
     }
     p.buffs.adren = SkillCalc.adrenDur(p); p.adrenExt = 0; floatText(p.x, p.y - 30, m === 'a' ? '광폭!' : m === 'b' ? '진통제!' : '아드레날린!', '#f84'); }
+  if (perk('overclock')) p.ocT = G.time + 4; // v2.x 과부하
   p.skillCd[i] = s.cd * SkillCalc.cdMul(s.id) * (perk('warlord') ? 0.75 : 1) * (s.id === 'heal' && perk('fieldMedic') ? 0.7 : 1) * (armorLegend('focus') ? 0.82 : 1);
   (p.skillCdMax = p.skillCdMax || [])[i] = p.skillCd[i]; // v1.22 줄어든 재사용 대기 기준으로 칸 표시
 }
@@ -675,6 +677,7 @@ function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이
   let tk = 1;
   if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) tk *= 0.85;
   if (perk('ghost') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1) tk *= 0.5;
+  if (perk('ironWill')) tk *= 0.88; // v2.x 강철 의지
   if (p.buffs.shield > 0) tk *= 0.6;
   if (p.buffs.adren > 0 && smod('adren') === 'b') tk *= 0.7;
   if (pas('s5')) tk *= 0.95; // v1.23 철벽
@@ -702,6 +705,12 @@ function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이
     p.raid.sw = true; p.hp = Math.round(PlayerStats.maxHp(p) * 0.3); p.invT = 2;
     floatText(p.x, p.y - 40, '두 번째 숨!', '#9fe0ff', 18); SFX.play('levelup'); G.flash = 0.3; hitstop(0.15);
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.5, color: '#9fe0ff', r: 120 });
+    return;
+  }
+  if (p.hp <= 0 && perk('undying') && p.raid && !p.raid.und) { // v2.x 불굴: 두 번째 숨과 따로 출격마다 한 번
+    p.raid.und = true; p.hp = Math.round(PlayerStats.maxHp(p) * 0.4); p.invT = 2;
+    floatText(p.x, p.y - 40, '불굴!', '#ffd76a', 18); SFX.play('levelup'); G.flash = 0.3; hitstop(0.15);
+    G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 0.5, color: '#ffd76a', r: 120 });
     return;
   }
   floatText(p.x, p.y - 20, '-' + d, '#ff5050', 14);
@@ -825,6 +834,7 @@ function killEnemy(e) {
   // 보스 소환수는 경험치 20%, 드랍 없음 (보스 옆 무한 파밍 방지)
   // 연속 처치 콤보 (v0.16): 3초 안에 이어 잡으면 경험치 +5%씩 (최대 +50%)
   if (p.raid && !e.minion) p.raid.kills++;
+  if (perk('reaper') && !e.minion) { p.reapN = G.time < (p.reapT || 0) ? Math.min(5, (p.reapN || 0) + 1) : 1; p.reapT = G.time + 4; } // v2.x 사신의 연쇄
   Companion.onKill(e); // v1.44 동료 레벨
   if (!e.minion) {
     G.combo = G.time - (G.comboT || -9) < 3 ? (G.combo || 0) + 1 : 1; G.comboT = G.time;
@@ -1176,7 +1186,7 @@ function updateBullets(dt) {
             // v1.9 산탄총 코앞 사격: 크게 밀치고 경직
             const pb = wb && wb.pellets && b.maxLife - b.life < 0.1;
             Juice.impact(e, b, Math.atan2(b.vy, b.vx), b.crit); // v1.40 타격감
-            let hs = 1; if (b.headOf === e) { hs = (e.def.boss || e.elite || e.fieldBoss || e.labBoss) ? 1.25 : 1.5; if (G.time - (e.hsTxt || -9) > 0.35) { e.hsTxt = G.time; floatText(e.x, e.y - (ART.height[e.art || e.type] || 44) - 8, '헤드샷!', '#ff5a4a', 15); SFX.play('headshot'); } if (b.w && WEAPONS[b.w.key] && WEAPONS[b.w.key].hsMul) hs *= WEAPONS[b.w.key].hsMul; } // v1.66 헤드샷 (보스 ×1.25) · v1.68 F-20 ×2
+            let hs = 1; if (b.headOf === e) { hs = (e.def.boss || e.elite || e.fieldBoss || e.labBoss) ? 1.25 : 1.5; if (perk('deadeye')) hs *= 1.3; /* v2.x 명사수 */ if (G.time - (e.hsTxt || -9) > 0.35) { e.hsTxt = G.time; floatText(e.x, e.y - (ART.height[e.art || e.type] || 44) - 8, '헤드샷!', '#ff5a4a', 15); SFX.play('headshot'); } if (b.w && WEAPONS[b.w.key] && WEAPONS[b.w.key].hsMul) hs *= WEAPONS[b.w.key].hsMul; } // v1.66 헤드샷 (보스 ×1.25) · v1.68 F-20 ×2
             damageEnemy(e, b.dmg * fall * hs, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb, ally: b.ally });
             if (b.mark) e.markT = G.time + 5; // v1.44 윤 저격수 전용: 표적 지정
             if (wb && wbase(wb.key) === 'sniper') hitstop(0.045);

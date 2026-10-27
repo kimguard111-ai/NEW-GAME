@@ -56,6 +56,7 @@ const Raid = {
     if (!med && p.credits < 120 && addItem(makeConsumable('medkit', 2))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." (비상 구급상자 2개)', '#8cf');
     for (const t of gunAmmoTypes(p)) if ((p.ammo[t] || 0) < AMMO[t].pack / 2) { addAmmo(p, t, AMMO[t].pack); log(`작전 장교 윤씨: 비상 ${AMMO[t].name} ${AMMO[t].pack}발 지급`, '#8cf'); }
     if (Camp.medkits() && addItem(makeConsumable('medkit', Camp.medkits()))) log(`의무실: 구급상자 ${Camp.medkits()}개 지급`, '#8cf'); // v1.13
+    if (perk('supplyLine')) { for (const t of Object.keys(AMMO)) p.ammo[t] = Math.max(p.ammo[t] || 0, ammoCap(p, t)); if (addItem(makeConsumable('medkit', 2))) log('보급선: 탄약 가득 · 구급상자 2개', '#8cf'); } // v2.x
     saveGame();
     if (MAPS[id].lab) this.labFloor(1, id); // v1.77 첫 층부터 (v1.78 타워 포함)
     World.generate(id);
