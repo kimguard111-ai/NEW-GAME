@@ -219,7 +219,8 @@ function startGame(save, name) {
     P.contract = null; P.cboard = null; // v1.47.1 출격 계약 게시판 삭제 (받아 둔 계약도 정리)
     mythTestGrant(P); // v1.61.2 시험 모드: Lv26 + 신화 3종
     Tut.init(P); // v1.54
-    for (const k of ['lastAtk', 'lastShot', 'lastRoll', 'lastHurt', 'mLast', 'rollAtk', 'aimPtT', 'medCd']) P[k] = -9; // v1.57 시각 기록은 새 시계(G.time=0) 기준으로 — 예전 시각이 남아 이어하기 직후 몸이 안 보이던 것
+    for (const k of ['lastAtk', 'lastShot', 'lastRoll', 'lastHurt', 'mLast', 'rollAtk', 'aimPtT', 'medCd']) P[k] = -9;
+    for (const k of ['gadgetCd', 'aegisCd', 'survCd', 'thornCd', 'bsT', 'vigilT']) P[k] = 0; // v1.96.3 이것도 옛 시계 기준으로 저장돼 있어서, 다시 켜면 벨트 투척물 · 자극제 · 방탄판이 한참 안 써지던 것 (테스터: 갑자기 방탄판 · 자극제 사용 안 됨) // v1.57 시각 기록은 새 시계(G.time=0) 기준으로 — 예전 시각이 남아 이어하기 직후 몸이 안 보이던 것
     if (!P.hints) P.hints = P.level > 2 || (P.rec && P.rec.extracts) || P.deaths ? HINTS.map(h => h.id).concat('rules') : []; // v1.45 키 그림 안내 (이미 해 본 사람은 건너뜀)
   Bounty.refresh(); // v0.14 일일 의뢰
   Weekly.refresh(); // v1.15 주간 도전

@@ -156,7 +156,7 @@ const UI = {
       + (p.inRad ? `<div class="zone-rad">${ICON('rad')} 방사능 피폭 중! 웅덩이에서 벗어나세요</div>` : ''));
 
     const w = curWeapon();
-    if (IS_TOUCH) { const gb = document.querySelector('#touch-buttons .gl'), L = glOf(w); if (gb) { gb.classList.toggle('hidden', !L); if (L) { $('gl-n').textContent = w.glCd > 0 ? Math.ceil(w.glCd) : '●'; gb.classList.toggle('off', glLeft(w) < 1); } } } // v1.52 OX-20 유탄 버튼
+    if (IS_TOUCH) { const gb = document.querySelector('#touch-side .gl'), L = glOf(w); if (gb) { gb.classList.toggle('hidden', !L); if (L) { $('gl-n').textContent = w.glCd > 0 ? Math.ceil(w.glCd) : '●'; gb.classList.toggle('off', glLeft(w) < 1); } } } // v1.52 OX-20 유탄 버튼
     if (w) {
       const b = WEAPONS[w.key];
       $('weapon-name').innerHTML = `<span style="color:${RARITIES[w.rarity].color}">${itemName(w)}</span>`;
@@ -353,6 +353,7 @@ const UI = {
     const p = G.player;
     if (p.level < itemReqLevel(it)) { log(`레벨이 부족합니다. (요구 Lv${itemReqLevel(it)})`, '#f88'); return; }
     const idx = p.inventory.indexOf(it);
+    if (idx < 0) return; // v1.96.3 이미 장착했거나 가방에 없는 것 (두 번 눌림)
     const old = p.equip[slot];
     if (old && idx >= 0) { // v1.87 칸 격자: 벗은 장비가 들어갈 자리 (새 장비 자리 먼저 · 없으면 아무 데나)
       const rest = p.inventory.filter(o => o !== it); old.gx = it.gx; old.gy = it.gy;
@@ -372,7 +373,7 @@ const UI = {
   },
 
   unequip(slot) {
-    const p = G.player;
+    const p = G.player; if (!p.equip[slot]) return; // v1.96.3 두 번 눌림
     if (!Bag.place(p.equip[slot])) { log('가방에 자리가 없습니다.', '#f88'); return; } // v1.87
     p.inventory.push(p.equip[slot]);
     p.equip[slot] = null;

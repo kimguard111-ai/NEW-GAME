@@ -68,7 +68,7 @@ const Workshop = {
     if (this.mode === 'enhance') return UI.renderEnhance();
     const p = G.player, list = $('enh-list'), box = $('enh-detail');
     const items = this.mode === 'salvage' ? p.inventory.filter(i => i.kind !== 'cons')
-      : UI.enhanceList().filter(i => i.affixes && i.affixes.length);
+      : [...UI.enhanceList(), p.equip.belt, ...p.inventory.filter(i => i.kind === 'belt')].filter(i => i && i.affixes && i.affixes.length); // v1.96.3 벨트도 옵션 조정 (강화는 그대로 없음)
     if (!items.includes(this.sel)) this.sel = items[0] || null;
     list.innerHTML = '';
     for (const it of items) {

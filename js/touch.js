@@ -37,6 +37,7 @@ const Touch = {
     document.getElementById('hud').appendChild(bar);
     const side = document.createElement('div'); side.id = 'touch-side';
     btn('E', () => interact(), 'e', side); btn('Q', () => swapWeapon(), '', side); btn('R', () => startReload(), '', side);
+    side.appendChild(bar.querySelector('.gl')); // v1.96.3 유탄 버튼은 E · Q · R 줄로 (회피 버튼 옆에 끼어 회피를 밀어내 스킬 버튼과 겹치던 것)
     btn('자동', () => { Settings.autoFire = !Settings.autoFire; Settings.save(); this.autoBtn(); log(Settings.autoFire ? '자동 공격 켬: 쫓아오는 적 · 가까운 적을 알아서 쏜다 (오른쪽 조이스틱을 쓰면 그쪽이 먼저)' : '자동 공격 끔', '#9fd0ff'); }, 'auto', side); // v1.96
     this.autoBtn();
     document.getElementById('hud').appendChild(side);
@@ -138,6 +139,7 @@ const Touch = {
           const d = dist(p, e) - (b.melee ? e.r : 0);
           if (d < bd && World.lineOfSight(p, e)) { bd = d; best = e; }
         }
+        if (best && b.gl && glOf(w) && glLeft(w) >= 1 && dist(p, best) > 110 && !(G.time - (this.glT || -9) < 1)) { this.glT = G.time; p.aim = Math.atan2(best.y - p.y, best.x - p.x); fireGL(); } // v1.96.3 자동 공격 때 OX-20 유탄도 (가까이 붙은 적엔 안 쏨 — 내 폭발에 휘말리지 않게)
         if (best) { tx = Iso.sx(best.x, best.y); ty = Iso.sy(best.x, best.y, 20); this.lock = best; auto = true; const ax = tx - sx, ay = ty - sy, al = Math.hypot(ax, ay) || 1; this.lastAim = { x: ax / al, y: ay / al }; }
       }
     }

@@ -62,7 +62,16 @@ const Bag = {
     this.apply(pos);
   },
   // 자리 검사: 자리가 없거나 겹친 아이템은 다시 놓고, 그래도 안 들어가는 것은 창고(캠프) · 발밑으로 — 옛 세이브(24칸 목록)를 처음 불러올 때도 이것
+  // v1.96.3 같은 아이템이 장착 칸 · 가방 · 창고에 겹쳐 있으면 하나만 남김 (테스터: 장착 중인 기관총이 가방에도 그대로 — 빠르게 두 번 눌러 옮기기가 두 번 되던 것)
+  dedupe() {
+    const p = G.player, seen = new Set(Object.values(p.equip || {}).filter(Boolean));
+    const keep = list => list.filter(it => it && !seen.has(it) && (seen.add(it), true));
+    const n0 = p.inventory.length + (p.stash || []).length;
+    p.inventory = keep(p.inventory); if (p.stash) p.stash = keep(p.stash);
+    return n0 - p.inventory.length - (p.stash || []).length;
+  },
   normalize(quiet) {
+    this.dedupe();
     const p = G.player, inv = p.inventory; if (!inv) return;
     const m = Array.from({ length: this.rows() }, () => new Array(BAG_COLS).fill(null)), loose = [];
     for (const it of inv) {

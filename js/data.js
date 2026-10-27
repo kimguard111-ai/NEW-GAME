@@ -4,9 +4,9 @@ const TILE = 32;
 const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1.33 0.6 (플레이어 125 → 88, -30%에 맞춰)
 // v1.95.1 테스트에 도움 주신 분 (공개 테스트 · 닉네임은 본인 허락을 받은 분만) — 설정 맨 아래 · 엔딩 크레딧 · 타이틀에 나옴. 비어 있으면 칸이 안 보임
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
-const TESTERS = [];
+const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.96.2';
+const GAME_VERSION = 'v1.96.3';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [

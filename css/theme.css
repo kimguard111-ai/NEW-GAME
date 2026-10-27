@@ -658,3 +658,5 @@ body.touch #touch-side button.auto.on { border-color: #7fe08a; color: #0b0c0e; b
 #ask .ask-btns { display: flex; gap: 10px; justify-content: center; } #ask button { min-width: 90px; padding: 8px 14px; }
 #ask .ask-yes { border-color: #e0b23a; color: #e0b23a; }
 .panel-head .shop-cr { margin-left: 10px; color: #ffd76a; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; font-size: 14px; letter-spacing: 0; } /* v1.96.1 */
+body.touch #touch-side button.gl { font-size: 10px; letter-spacing: -0.5px; border-color: #ff8a3a; color: #ffb070; line-height: 1; } /* v1.96.3 유탄 (E·Q·R 줄) */
+body.touch #touch-side button.gl i { display: block; font-style: normal; font-size: 9px; color: #ffd76a; }

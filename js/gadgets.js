@@ -32,6 +32,7 @@ const Gadgets = {
     const p = G.player, k = this.sel(slot);
     if (p.dead) return;
     if (!this.count(k)) { log(`${CONSUMABLES[k].name}이(가) 없습니다. 뒤지기·상인·작업대 제작으로 얻을 수 있습니다.`, '#aaa'); SFX.play('empty'); return; }
+    if ((p.gadgetCd || 0) > G.time + 1) p.gadgetCd = 0; // v1.96.3 옛 시계 값이면 풀어 줌
     if ((p.gadgetCd || 0) > G.time) return;
     if (World.map === 'camp' && slot === 'throw') { log('캠프에서는 쓸 수 없습니다.', '#aaa'); return; }
     p.gadgetCd = G.time + 0.4;

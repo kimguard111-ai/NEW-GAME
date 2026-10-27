@@ -244,8 +244,8 @@ const Stash = {
       }
     };
     $('stash-bag-n').textContent = `${Bag.used()} / ${Bag.cells()}칸`; $('stash-n').textContent = `${p.stash.length} / ${Camp.stashSize()}`;
-    Bag.render($('stash-bag'), it => { if (p.stash.length >= Camp.stashSize()) return log('창고가 가득 찼습니다.', '#f88'); removeItem(it); delete it.gx; delete it.gy; p.stash.push(it); this.after(); }, { drag: true }); // v1.87 가방은 칸 격자 (PC 끌어 놓기 · 누르면 창고로)
-    grid($('stash-grid'), p.stash, Camp.stashSize(), it => { if (!Bag.place(it)) return log('가방에 자리가 없습니다.', '#f88'); p.stash.splice(p.stash.indexOf(it), 1); p.inventory.push(it); this.after(); });
+    Bag.render($('stash-bag'), it => { if (!p.inventory.includes(it)) return; if (p.stash.length >= Camp.stashSize()) return log('창고가 가득 찼습니다.', '#f88'); removeItem(it); delete it.gx; delete it.gy; p.stash.push(it); this.after(); }, { drag: true }); // v1.87 가방은 칸 격자 (PC 끌어 놓기 · 누르면 창고로)
+    grid($('stash-grid'), p.stash, Camp.stashSize(), it => { if (!p.stash.includes(it) || p.inventory.includes(it)) return; /* v1.96.3 두 번 눌림 */ if (!Bag.place(it)) return log('가방에 자리가 없습니다.', '#f88'); p.stash.splice(p.stash.indexOf(it), 1); p.inventory.push(it); this.after(); });
   },
   after() { this.render(); UI.refreshInventory(); saveGame(); SFX.play('ui'); },
 };
