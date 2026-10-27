@@ -841,9 +841,9 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   const moving = !!moveInput(); // v1.37 바꾼 키도
   // 장비 외형: 방어구 → 옷 색, 헬멧 → 머리 장비 (그림이 없을 때의 코드 그래픽)
   const arm = p.equip.armor, hel = p.equip.helmet;
-  const LOOK = { vest: ['#3e5f3a', '#2c3a2c'], tactical: ['#6b6447', '#3e3a2a'], military: ['#3d4a5c', '#262e3a'], exo: ['#7d848c', '#4a4f55'] };
+  const LOOK = { vest: ['#3e5f3a', '#2c3a2c'], tactical: ['#6b6447', '#3e3a2a'], military: ['#3d4a5c', '#262e3a'], exo: ['#7d848c', '#4a4f55'], hazmat: ['#b89a3a', '#6a5a24'], bsuit: ['#26282c', '#141518'], eod: ['#5a6a4a', '#33402a'] };
   const look = arm ? LOOK[arm.key] : ['#5a5048', '#3a332c'];
-  const HEL = { cap: '#3b4a32', tacHelmet: '#26292c', gasmask: '#4a5a3a', exoHelm: '#9aa2aa' };
+  const HEL = { cap: '#3b4a32', tacHelmet: '#26292c', gasmask: '#4a5a3a', exoHelm: '#9aa2aa', hazHood: '#a8902e', bvisor: '#1c1e22', eodHelm: '#4e5c40' };
   const o = { s: 1.05, body: look[0], skin: '#d9b48f', helmet: hel ? HEL[hel.key] : null, legs: look[1], aim: p.aim, flash: p.hurtT > 0, walk: moving ? G.time : 0,
     eyes: hel && hel.key === 'gasmask' ? '#7fff6a' : hel && hel.key === 'exoHelm' ? '#6cf' : null, hair: '#2a2420' };
   // 고강화(+7) 장비가 있으면 발밑에 빛

@@ -1369,6 +1369,22 @@ Match the art style of the attached concept image. Create ONE image with 9 separ
 
 ---
 
+## 52. v2.0 장비 단계 — Lv30 화생방 방호복 (몸 12장 + 헬멧 · 아이콘)
+장비 단계: 방탄 조끼 Lv1 → 전술 조끼 10 → 군용 강화복 20 → **화생방 방호복 30** → 블랙선 전투복 40 → 처리반 중장갑 50 → 외골격 60 (최종). 그림이 오기 전엔 군용 강화복 몸에 색만 바꿔 씀.
+📎 **군용 강화복 몸 시트(`assets/player_military*.png`)를 마젠타 배경에 깐 것을 그대로 첨부** → 같은 동작 · 같은 칸에 옷만 바꿔 그림 (가공이 쉬움). 장마다 새 대화.
+
+### 52-1 · 몸 시트 12장 · 📐 **16:9** · 🔧 player_hazmat · player_hazmat_long · _pistol · _smg · _shotgun · _lmg · _heavy · _blade · _back · _blaster · _f20 · _ox20
+```
+Redraw the attached sprite sheet exactly: keep the same character, the same number of rows and frames in each row, the same poses, the same weapon in his hands and the same frame positions. Only change his outfit to a heavy chemical protection suit: a dirty yellow-olive rubberized hazmat suit with thick folds, gray duct tape sealing the wrists and ankles, a small round filter canister strapped to the chest, a slim air pack on the back, black rubber gloves and black rubber boots, scuffs and grime. Keep his head bare (no helmet, no mask, no hood): the same face and hair as in the attached sheet. Same detailed dark pixel art style, desaturated colors with warm orange highlights, isometric 3/4 top-down view, all facing the same way as in the attached sheet. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 52-2 · 방호 후드 헬멧 + 방호복 아이콘 · 📐 **1:1** · `hazmat_gear.png`
+```
+Match the art style of the attached concept image. Create ONE image with 2 separate items side by side with a wide empty gap between them: 1. a hazmat hood helmet seen from the front-right at a 3/4 angle: a dirty yellow-olive rubber hood with a large clear round face visor and a twin-filter respirator under the visor, gray tape at the neck seal, only the empty head gear (no head or face inside); 2. an inventory icon of the same hazmat suit folded neatly with its round chest filter canister on top. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no text, no logos. Do not use pink or magenta on the items.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |

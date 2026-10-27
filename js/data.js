@@ -198,6 +198,30 @@ const HELMETS = {
   gasmask:   { name: '방독면 헬멧',  icon: 'gasmask', def: 12, lvl: 12, price: 800, radRes: 0.7 },
   exoHelm:   { name: '외골격 헬멧',  icon: 'exoHelm', def: 20, lvl: 16, price: 1600 },
 };
+// v2.0 장비 단계: 10레벨마다 한 단계 · 외골격은 Lv60 최종 장비 (v2.0 잠금이 풀릴 때 같이 켜짐 — 이미 가진 장비는 그대로)
+// Lv30 화생방 방호복 · Lv40 블랙선 전투복 · Lv50 처리반 중장갑 은 그림이 오기 전까지 군용 강화복 몸에 색만 바꿔 씀 (assets.js)
+// 방독면은 단계 밖 「특수 헬멧」(Lv15 · 여의도 방사능) — 단계 드랍에서 빠지고 지역 특산으로만
+if (V2_OPEN) {
+  Object.assign(ARMORS.tactical, { lvl: 10 }); Object.assign(ARMORS.military, { lvl: 20 });
+  Object.assign(ARMORS, {
+    hazmat: { name: '화생방 방호복',   icon: 'military', def: 38, lvl: 30, price: 3000 },
+    bsuit:  { name: '블랙선 전투복',   icon: 'tactical', def: 48, lvl: 40, price: 4500 },
+    eod:    { name: '처리반 중장갑',   icon: 'exo', def: 58, lvl: 50, price: 6500 },
+  });
+  Object.assign(ARMORS.exo, { def: 70, lvl: 60, price: 9000 }); const ex = ARMORS.exo; delete ARMORS.exo; ARMORS.exo = ex; // 맨 뒤로 (도감 순서)
+  Object.assign(HELMETS.tacHelmet, { lvl: 10 }); Object.assign(HELMETS.gasmask, { lvl: 15, special: true });
+  Object.assign(HELMETS, {
+    hazHood: { name: '방호 후드 헬멧',  icon: 'gasmask', def: 17, lvl: 30, price: 2400, radRes: 0.4 },
+    bvisor:  { name: '블랙선 바이저',   icon: 'tacHelmet', def: 22, lvl: 40, price: 3600 },
+    eodHelm: { name: '처리반 헬멧',     icon: 'exoHelm', def: 27, lvl: 50, price: 5200 },
+  });
+  Object.assign(HELMETS.exoHelm, { def: 33, lvl: 60, price: 7500 }); const eh = HELMETS.exoHelm; delete HELMETS.exoHelm; HELMETS.exoHelm = eh;
+  Object.assign(SETS.rad.pieces, { armor: 'military', helmet: 'gasmask' }); Object.assign(SETS.blacksun.pieces, { armor: 'military', helmet: 'tacHelmet' });
+  UNIQUES.shade.key = 'military';
+}
+// 맵 레벨에 맞는 방어구 · 헬멧: 그 레벨에서 나올 수 있는 가장 높은 단계 (+ 한 단계 아래 조금) — 특수(방독면)는 빼고
+function gearTier(defs, level) { const ks = Object.keys(defs).filter(k => defs[k].lvl <= level + 2 && !defs[k].special).sort((a, b) => defs[b].lvl - defs[a].lvl); return ks; }
+function tierOK(k, level) { const d = ARMORS[k] ? ARMORS : HELMETS[k] ? HELMETS : null; if (!V2_OPEN || !d || d[k].special) return true; const top = gearTier(d, level)[0]; return !top || d[k].lvl >= d[top].lvl - 10; }
 
 const CONSUMABLES = {
   medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복 · 8초에 한 번', price: 40, stack: 20 },
@@ -283,6 +307,12 @@ const ZONES = [
     desc: '깊은 강은 다리로만 건넌다 · 물가에선 물귀신 변이체가 올라온다', packs: { drowned: [2, 4], zombie: [3, 5] },
     gear: ['rifle', 'lmg', 'katana', 'exo', 'exoHelm', 'gasmask'], gearText: '돌격소총·기관총·고주파 블레이드·외골격' },
 ];
+// v2.0: 지역 특산의 외골격 → 그 지역 단계 방어구로 (외골격은 Lv60)
+if (V2_OPEN) for (const z of ZONES) if (z.gear) {
+  const a = gearTier(ARMORS, z.lvl[1])[0], h = gearTier(HELMETS, z.lvl[1])[0];
+  z.gear = [...new Set(z.gear.map(k => k === 'exo' ? a : k === 'exoHelm' ? h : k))];
+  if (z.gearText) z.gearText = z.gearText.replace('외골격 슈트', ARMORS[a].name).replace('외골격 장비', ARMORS[a].name + '·' + HELMETS[h].name).replace('외골격', ARMORS[a].name);
+}
 
 // v1.3 맵 (출격·탈출): 캠프(거점)에서 맵을 골라 출격하고, 맵 가장자리 탈출 지점으로 귀환
 // chapter: 이야기가 이 장에 도달하면 해금 · landmark: 맵 가운데 랜드마크 · boss/hazards: 타이탄 아레나·방사능 웅덩이

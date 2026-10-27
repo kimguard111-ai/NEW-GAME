@@ -138,16 +138,18 @@ function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
     if (sid) { const slot = pick(['weapon', 'weapon', 'armor', 'helmet']), key = SETS[sid].pieces[slot]; if (GEAR_DEFS(key).lvl <= level + 2) return makeSetPiece(sid, slot, level, r); }
   }
   if (bias && Math.random() < 0.5) {
-    const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2);
+    const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2 && tierOK(k, level)); // v2.0 지역 특산도 단계에 맞는 것만
     if (keys.length) return makeGear(pick(keys), level, r);
   }
   if (Math.random() < 0.7) {
     const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2 && !WEAPONS[k].myth); // v1.52 불법 무기는 박씨에게서만
     return makeWeapon(pick(keys), level, r);
   }
-  if (Math.random() < 0.4) return makeHelmet(pick(Object.keys(HELMETS).filter(k => HELMETS[k].lvl <= level + 2)), level, r);
+  // v2.0 맵 레벨에 맞는 단계: 가장 높은 단계 80% · 한 단계 아래 20% (Lv34 맵에서 방탄 조끼가 나오던 것)
+  const tier = defs => { const ks = gearTier(defs, level); return ks.length > 1 && Math.random() < 0.2 ? ks[1] : ks[0]; };
+  if (Math.random() < 0.4) return makeHelmet(V2_OPEN ? tier(HELMETS) : pick(Object.keys(HELMETS).filter(k => HELMETS[k].lvl <= level + 2)), level, r);
   const keys = Object.keys(ARMORS).filter(k => ARMORS[k].lvl <= level + 2);
-  return makeArmor(pick(keys), level, r);
+  return makeArmor(V2_OPEN ? tier(ARMORS) : pick(keys), level, r);
 }
 
 // 강화 단계가 반영된 이름 / 수치
