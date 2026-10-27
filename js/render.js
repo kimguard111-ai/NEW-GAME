@@ -108,7 +108,7 @@ function drawGroundTile(tx, ty, t) {
       ctx.fillStyle = 'rgba(150,145,130,0.55)'; if (dl) ctx.fillRect(x, y, 5, TILE + 0.6); if (dr) ctx.fillRect(x + TILE - 5, y, 5, TILE + 0.6);
       if (World.tileAt(tx, ty - 1) === T.DEEP) ctx.fillRect(x, y, TILE, 4); if (World.tileAt(tx, ty + 1) === T.DEEP) ctx.fillRect(x, y + TILE - 4, TILE, 4); // 끊긴 끝
       ctx.fillStyle = 'rgba(0,0,0,0.25)'; if (ty % 3 === 0) ctx.fillRect(x, y, TILE, 1.5);
-      if ((dl || dr) && ty % 4 === 0) { const px = dl ? x + 2.5 : x + TILE - 2.5; ctx.fillStyle = '#2a2a2e'; ctx.fillRect(px - 2, y + 12, 4, 8); ctx.fillStyle = 'rgba(255,200,120,0.85)'; ctx.fillRect(px - 1.5, y + 13, 3, 3); } // 가로등 기둥
+      if ((dl || dr) && ty % 4 === 0 && !(ART.props && ART.props.br_lamp)) { const px = dl ? x + 2.5 : x + TILE - 2.5; ctx.fillStyle = '#2a2a2e'; ctx.fillRect(px - 2, y + 12, 4, 8); ctx.fillStyle = 'rgba(255,200,120,0.85)'; ctx.fillRect(px - 1.5, y + 13, 3, 3); } // 가로등 기둥
     }
     const R = World.river, b = R && ty >= R.r0 && ty <= R.r1 && R.bridges.find(q => tx >= q.x0 && tx <= q.x1);
     if (b && bt) { if (b.x1 - b.x0 >= 9 && Math.abs(ty - R.mid) > 2 && (tx - b.x0 === 3 || tx - b.x0 === 7) && ty % 2 === 0) { ctx.fillStyle = 'rgba(220,220,210,0.5)'; ctx.fillRect(x - 1, y + 4, 2, 16); } } // 그림 바닥: 4차선 점선만 덧그림

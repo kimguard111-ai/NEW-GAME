@@ -186,20 +186,25 @@ const City = {
     const nSmall = Math.round(W * H / 700);
     for (let i = 0; i < nSmall; i++) { const key = SMALL[Math.floor(rng() * SMALL.length)]; tryPut(key, SIZE[key] || 1, SOLIDK.has(key), 60); }
     // 잠실 석촌호수: 오리배 몇 척 (물 위, 안 막음)
-    // v2.0 한강 다리: 가로등 (4칸마다 · 3할은 꺼진 것) · 대교 철골 아치 · 다리 끝 초소 · 전망 쉼터 벤치 · 끊긴 다리 난간 · 케이블 / 둔치: 오리배 · 파라솔 · 공공자전거
+    // v2.0 한강 다리: 가로등 (4칸마다 · 3할은 꺼진 것) · 대교 철골 아치 · 다리 끝 초소 · 전망 쉼터 벤치 · 끊긴 다리 난간 · 케이블 · 물속 교각
+    // 둔치 (돌 둑 · 풀밭 · 산책로 한 줄씩): 구명환 · 모래주머니 · 갈대 · 부서진 난간 · 교각 잔해 · 파라솔 탁자 · 공공자전거 / 강: 오리배 · 반쯤 가라앉은 경비정
     const RV = World.river;
     if (RV) {
-      const ok = (x, y) => !occ.has(y * W + x) && at(x, y) === T.ROAD;
+      const okT = (x, y, ts) => x > 1 && x < W - 2 && !occ.has(y * W + x) && ts.includes(at(x, y));
       for (const b of RV.bridges) {
         const wide = b.x1 - b.x0 >= 9, gapNear = y => b.broken && Math.abs(y - RV.mid) <= 4;
-        // 가로등 그림(br_lamp)은 발판이 커서 보류 — 난간 가로등은 render.js 코드 그림
-        if (wide) for (let y = RV.r0 + 3; y <= RV.r1 - 3; y += 6) for (const x of [b.x0, b.x1]) if (Math.abs(y - RV.mid) > 3 && ok(x, y)) put(rng() < 0.25 ? 'br_arch2' : 'br_arch', x, y, 1, false, {});
-        if (wide) for (const x of [b.x0 - 3, b.x1 + 3]) if (ok(x, RV.mid)) put('br_bench', x, RV.mid, 1, false, { flip: x > b.x1 });
-        for (const y of [RV.r0 - 2, RV.r1 + 2]) { const x = rng() < 0.5 ? b.x0 : b.x1; if (ok(x, y)) put('br_booth', x, y, 1, true, {}); }
-        if (b.broken) for (const y of [RV.mid - 4, RV.mid + 4]) { if (ok(b.x0 + 1, y)) put('br_rail', b.x0 + 1, y, 1, false, {}); if (ok(b.x1 - 1, y)) put('br_cables', b.x1 - 1, y, 1, false, {}); }
+        for (let y = RV.r0 + 1; y <= RV.r1 - 1; y += 4) for (const x of [b.x0, b.x1]) if (!gapNear(y) && okT(x, y, [T.ROAD])) put(rng() < 0.3 ? 'br_lamp2' : 'br_lamp', x, y, 1, false, { flip: x === b.x1 });
+        if (wide) for (let y = RV.r0 + 3; y <= RV.r1 - 3; y += 6) for (const x of [b.x0, b.x1]) if (Math.abs(y - RV.mid) > 3 && okT(x, y, [T.ROAD])) put(rng() < 0.25 ? 'br_arch2' : 'br_arch', x, y, 1, false, {});
+        if (wide) for (const x of [b.x0 - 3, b.x1 + 3]) if (okT(x, RV.mid, [T.ROAD])) put('br_bench', x, RV.mid, 1, false, { flip: x > b.x1 });
+        for (const y of [RV.r0 - 2, RV.r1 + 2]) { const x = rng() < 0.5 ? b.x0 : b.x1; if (okT(x, y, [T.ROAD])) put('br_booth', x, y, 1, true, {}); }
+        if (b.broken) for (const y of [RV.mid - 4, RV.mid + 4]) { if (okT(b.x0 + 1, y, [T.ROAD])) put('br_rail', b.x0 + 1, y, 1, false, {}); if (okT(b.x1 - 1, y, [T.ROAD])) put('br_cables', b.x1 - 1, y, 1, false, {}); }
+        for (let y = RV.r0 + 2; y <= RV.r1 - 2; y += 6) for (const x of [b.x0 - 1, b.x1 + 1]) if (okT(x, y, [T.DEEP])) put('br_pier', x, y, 1, false, {}); // 다리 밑 교각 (물 위 · 안 막음)
       }
-      for (let i = 0, k = 0; i < 6 && k < 500; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = RV.r0 + Math.floor(rng() * (RV.r1 - RV.r0 + 1)); if (free(x, y, 1, t => t === T.DEEP) && put('swanboat', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
-      for (let i = 0, k = 0; i < 10 && k < 600; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = rng() < 0.5 ? RV.r0 - 2 : RV.r1 + 2; if (free(x, y, 1, t => t === T.GRASS || t === T.WALK) && put(rng() < 0.5 ? 'parasol' : 'bikes', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
+      const scatter = (keys, rows, ts, n, solid) => { for (let i = 0, k = 0; i < n && k < n * 60; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = rows[Math.floor(rng() * rows.length)]; if (okT(x, y, ts) && !RV.bridges.some(q => x >= q.x0 - 4 && x <= q.x1 + 4) && put(keys[Math.floor(rng() * keys.length)], x, y, 1, solid, { flip: rng() < 0.5 })) i++; } };
+      const bankStone = [RV.r0 - 1, RV.r1 + 1], bankGrass = [RV.r0 - 2, RV.r1 + 2], walkRow = [RV.r0 - 3, RV.r1 + 3], water = []; for (let y = RV.r0 + 1; y < RV.r1; y++) water.push(y);
+      scatter(['hg_ring', 'hg_ring', 'hg_reeds', 'hg_reeds', 'hg_stump', 'hg_rail'], bankStone, [T.RUBBLE], Math.round(W / 7), false);
+      scatter(['hg_table', 'hg_bikes', 'hg_sandbag', 'parasol'], bankGrass.concat(walkRow), [T.GRASS, T.WALK], Math.round(W / 8), false);
+      scatter(['hg_swan', 'hg_swan', 'hg_boat'], water, [T.DEEP], 7, false);
     }
     if (map === 'jamsil') for (let i = 0, k = 0; i < 4 && k < 400; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)); if (free(x, y, 1, t => t === T.WATER) && put('swanboat', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
   },
