@@ -153,15 +153,16 @@ const World = {
         else this.tiles[i] = (y === r0 - 1 || y === r1 + 1) ? T.RUBBLE /* 돌 둑 */ : ((y === r0 - 3 || y === r1 + 3) ? T.WALK /* 산책로 */ : T.GRASS);
       }
       for (const [bx, bw, broken] of B) {
-        const wide = bw >= 10;
+        const wide = bw >= 10, lanes = wide ? [3, 6] : [1, 4], last = {}; // 버려진 차: 안쪽 차선만 (바깥은 난간 · 아치 자리) · 같은 차선은 4칸 띄움
         for (let y = r0 - 3; y <= r1 + 3; y++) {
           const deck = wide && Math.abs(y - mid) <= 2 ? 3 : 0; // 전망 쉼터: 양옆 3칸씩 넓어짐
           for (let x = bx - deck; x < bx + bw + deck; x++) {
             const gap = broken && Math.abs(y - mid) <= 2, edge = x === bx - deck || x === bx + bw + deck - 1;
             if (gap) continue;
             if (broken && Math.abs(y - mid) === 3) { set(x, y, T.RUBBLE); continue; } // 끊긴 끝
-            const lane = x - bx, jam = y >= r0 + 2 && y <= r1 - 2 && !deck && (wide ? (lane === 1 || lane === 8) : (lane === 1 || lane === 4)) && rng() < 0.16; // 버려진 차 (가장자리 차선 · 가운데 차선은 늘 비워 둠)
-            set(x, y, (edge && y >= r0 && y <= r1 && rng() < 0.1) || jam ? T.CAR : T.ROAD);
+            const lane = x - bx, jam = y >= r0 + 2 && y <= r1 - 3 && Math.abs(y - mid) > 4 && !(broken && Math.abs(y - mid) <= 5) && lanes.includes(lane) && y - (last[lane] ?? -99) >= 4 && y - (last.any ?? -99) >= 2 && rng() < 0.22; // 옆 차선 차와도 2칸 엇갈리게
+            if (jam) last[lane] = last.any = y;
+            set(x, y, jam ? T.CAR : T.ROAD);
           }
         }
       }

@@ -63,7 +63,7 @@ const City = {
       // v1.47.1 버스 폭도 2칸 (그림이 2칸 폭이라 1칸만 막으면 옆구리로 파고들던 것)
       const cells = [];
       for (const w of [0, 1]) for (let k = 0; k < 5; k++) cells.push(vert ? [bx + lane + w, by + off + k] : [bx + off + k, by + lane + w]);
-      if (!cells.every(([x, y]) => at(x, y) === T.ROAD && !near(x, y))) continue;
+      if (!cells.every(([x, y]) => at(x, y) === T.ROAD && !near(x, y) && !(World.river && y >= World.river.r0 - 4 && y <= World.river.r1 + 4))) continue;
       for (const [x, y] of cells) { T_[y * W + x] = T.CAR; this.carSkip.add(y * W + x); this.busCells.add(y * W + x); }
       const xs = cells.map(c => c[0]), ys = cells.map(c => c[1]), fx = Math.max(...xs), fy = Math.max(...ys);
       add('bus', (Math.min(...xs) + fx + 1) / 2 * TILE, (Math.min(...ys) + fy + 1) / 2 * TILE, { vertical: vert, front: fx + fy, color: rng() < 0.6 ? 0 : 1, burnt: rng() < 0.3 });
@@ -73,7 +73,7 @@ const City = {
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
       const i = y * W + x;
       if (T_[i] !== T.CAR || this.carSkip.has(i)) continue;
-      const vert = x % B < RW, nx = vert ? x : x + 1, ny = vert ? y + 1 : y, cells = [[x, y]];
+      const RVb = World.river && y >= World.river.r0 - 3 && y <= World.river.r1 + 3, vert = RVb || x % B < RW, nx = vert ? x : x + 1, ny = vert ? y + 1 : y, cells = [[x, y]];
       if (at(nx, ny) === T.ROAD && !near(nx, ny)) { T_[ny * W + nx] = T.CAR; cells.push([nx, ny]); }
       for (const [cx, cy] of cells) this.carSkip.add(cy * W + cx);
       const h = hash2(x * 5 + 3, y * 9 + 1), zone = World.zoneIndex(x * TILE, y * TILE), [lx, ly] = cells[cells.length - 1];
@@ -134,7 +134,8 @@ const City = {
     const occ = new Set(this.props.filter(p => !SOFT.has(p.type)).map(cell)), soft = new Set(this.props.filter(p => SOFT.has(p.type)).map(cell));
     const has = k => !!(ART.props && ART.props[k]);
     const edge = (x, y) => (World.edgePts || []).some(e => Math.abs(e.x / TILE - x) < 7 && Math.abs(e.y / TILE - y) < 7);
-    const free = (x0, y0, n, ok) => { for (let y = y0 - 1; y <= y0 + n; y++) for (let x = x0 - 1; x <= x0 + n; x++) if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1 || occ.has(y * W + x) || (n < 2 && soft.has(y * W + x)) || !ok(at(x, y)) || near(x, y) || edge(x, y)) return false; return true; };
+    const RB = World.river, inRiver = y => RB && y >= RB.r0 - 4 && y <= RB.r1 + 4; // v2.0 한강 띠는 아래 한강 배치만
+    const free = (x0, y0, n, ok) => { if (inRiver(y0) || inRiver(y0 + n)) return false; for (let y = y0 - 1; y <= y0 + n; y++) for (let x = x0 - 1; x <= x0 + n; x++) if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1 || occ.has(y * W + x) || (n < 2 && soft.has(y * W + x)) || !ok(at(x, y)) || near(x, y) || edge(x, y)) return false; return true; };
     const put = (key, x0, y0, n, solid, extra) => {
       if (!has(key)) return false;
       const m = n >= 4 ? 3 : 1; // 성문처럼 큰 건 앞뒤 나무도 더 치움 (가려서 안 보이던 것)
@@ -152,7 +153,7 @@ const City = {
     if (zone === 1 || zone === 2 || zone === 7) CURB.push(['fishcart', 0.066]);
     if (zone === 6 || zone === 4) CURB.push(['busshelter', 0.07]);
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-      if (at(x, y) !== T.WALK || occ.has(y * W + x) || near(x, y)) continue;
+      if (at(x, y) !== T.WALK || occ.has(y * W + x) || near(x, y) || inRiver(y)) continue;
       const h = hash2(x * 11 + 5, y * 7 + 13), lx = x % B, ly = y % B, curb = lx === RW || ly === RW, side = lx === RW ? 'x' : 'y';
       if (curb) { const c = CURB.find(([, p]) => h < p); if (c && put(c[0], x, y, 1, false, { side, flip: (side === 'x') !== (h * 1000 % 2 < 1) })) continue; }
       else if (h < 0.05 && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) === T.BUILDING)) put('vent', x, y, 1, false, { flip: h < 0.025 });
@@ -190,7 +191,8 @@ const City = {
     // 둔치 (돌 둑 · 풀밭 · 산책로 한 줄씩): 구명환 · 모래주머니 · 갈대 · 부서진 난간 · 교각 잔해 · 파라솔 탁자 · 공공자전거 / 강: 오리배 · 반쯤 가라앉은 경비정
     const RV = World.river;
     if (RV) {
-      const okT = (x, y, ts) => x > 1 && x < W - 2 && !occ.has(y * W + x) && ts.includes(at(x, y));
+      const clear = (x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const i = (y + dy) * W + x + dx; if (occ.has(i) || soft.has(i) || T_[i] === T.CAR) return false; } return true; }; // 둘레 한 칸까지 비어 있어야 (소품끼리 겹치지 않게)
+      const okT = (x, y, ts) => x > 1 && x < W - 2 && ts.includes(at(x, y)) && clear(x, y);
       for (const b of RV.bridges) {
         const wide = b.x1 - b.x0 >= 9, gapNear = y => b.broken && Math.abs(y - RV.mid) <= 4;
         // 대교 옆 아치 (br_side · 51-5c): 쉼터 위아래로 8칸짜리 아치를 양쪽 난간에 하나씩 · 끝마다 경고등 기둥 (난간 선 위에 바로 놓음)
@@ -204,7 +206,7 @@ const City = {
         if (wide) for (const x of [b.x0 - 3, b.x1 + 3]) if (okT(x, RV.mid, [T.ROAD])) put('br_bench', x, RV.mid, 1, false, { flip: x > b.x1 });
         for (const y of [RV.r0 - 2, RV.r1 + 2]) { const x = rng() < 0.5 ? b.x0 : b.x1; if (okT(x, y, [T.ROAD])) put('br_booth', x, y, 1, true, {}); }
         if (b.broken) for (const y of [RV.mid - 4, RV.mid + 4]) { if (okT(b.x0 + 1, y, [T.ROAD])) put('br_rail', b.x0 + 1, y, 1, false, {}); if (okT(b.x1 - 1, y, [T.ROAD])) put('br_cables', b.x1 - 1, y, 1, false, {}); }
-        for (let y = RV.r0 + 2; y <= RV.r1 - 2; y += 6) for (const x of [b.x0 - 1, b.x1 + 1]) if (okT(x, y, [T.DEEP])) put('br_pier', x, y, 1, false, {}); // 다리 밑 교각 (물 위 · 안 막음)
+        if (!wide) for (let y = RV.r0 + 2; y <= RV.r1 - 2; y += 6) for (const x of [b.x0 - 1, b.x1 + 1]) if (okT(x, y, [T.DEEP])) put('br_pier', x, y, 1, false, {}); // 다리 밑 교각 (물 위 · 안 막음)
       }
       const scatter = (keys, rows, ts, n, solid) => { for (let i = 0, k = 0; i < n && k < n * 60; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = rows[Math.floor(rng() * rows.length)]; if (okT(x, y, ts) && !RV.bridges.some(q => x >= q.x0 - 4 && x <= q.x1 + 4) && put(keys[Math.floor(rng() * keys.length)], x, y, 1, solid, { flip: rng() < 0.5 })) i++; } };
       const bankStone = [RV.r0 - 1, RV.r1 + 1], bankGrass = [RV.r0 - 2, RV.r1 + 2], walkRow = [RV.r0 - 3, RV.r1 + 3], water = []; for (let y = RV.r0 + 1; y < RV.r1; y++) water.push(y);
