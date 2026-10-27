@@ -44,12 +44,12 @@ const TILE_COLORS = {
   [T.ROAD]: '#2a2c30', [T.WALK]: '#45464b', [T.RUBBLE]: '#3d3833', [T.GRASS]: '#2c3824',
   [T.CAMP]: '#363c45', [T.CAR]: '#2a2c30', [T.BARRICADE]: '#363c45', [T.BUILDING]: '#1d1d20', [T.LANDMARK]: '#3a3833',
   [T.WALL]: '#2a2420', [T.FLOOR]: '#4a4038', [T.DOOR]: '#4a4038', [T.PROP]: '#4a4038',
-  [T.LWALL]: '#060709', [T.LFLOOR]: '#3a3f46', [T.LPROP]: '#3a3f46', [T.WATER]: '#16303e',
+  [T.LWALL]: '#060709', [T.LFLOOR]: '#3a3f46', [T.LPROP]: '#3a3f46', [T.WATER]: '#16303e', [T.DEEP]: '#0d2231',
 };
 
 // ---------------- 바닥 ----------------
 // v1.31.2 바닥 질감 (프롬프트 16번): 있으면 바탕색 대신 그림 — 그림 하나를 4×4칸에 걸쳐 펼침. 차선·횡단보도·풀 포기 같은 코드 디테일은 그 위에 그대로
-const GROUND_TEX = { [T.ROAD]: 'gr_asphalt', [T.CAR]: 'gr_asphalt', [T.WALK]: 'gr_sidewalk', [T.GRASS]: ['gr_grass', 'gr_grass2'], [T.RUBBLE]: 'gr_dirt', [T.WATER]: 'gr_water', [T.CAMP]: ['cp_tile', 'cp_tile', 'cp_tile', 'cp_tile', 'cp_concrete', 'cp_concrete', 'cp_rubber', 'cp_tarp', 'cp_pallet', 'gr_plaza'], [T.BARRICADE]: ['cp_gravel', 'gr_plaza'], /* v1.79 캠프 바닥 (43절) */ [T.LANDMARK]: 'gr_dirt' };
+const GROUND_TEX = { [T.ROAD]: 'gr_asphalt', [T.CAR]: 'gr_asphalt', [T.WALK]: 'gr_sidewalk', [T.GRASS]: ['gr_grass', 'gr_grass2'], [T.RUBBLE]: 'gr_dirt', [T.WATER]: 'gr_water', [T.DEEP]: 'gr_water', [T.CAMP]: ['cp_tile', 'cp_tile', 'cp_tile', 'cp_tile', 'cp_concrete', 'cp_concrete', 'cp_rubber', 'cp_tarp', 'cp_pallet', 'gr_plaza'], [T.BARRICADE]: ['cp_gravel', 'gr_plaza'], /* v1.79 캠프 바닥 (43절) */ [T.LANDMARK]: 'gr_dirt' };
 function groundTex(tx, ty, t, x, y) {
   let k = (t === T.LFLOOR || t === T.LPROP) && World.def ? (World.def.tower ? ['tw_f_carpet', 'tw_f_carpet', 'tw_f_lobby', 'tw_f_roots'] : ['lab_f_tile', 'lab_f_steel', 'lab_f_tile', 'lab_f_steel', 'lab_f_grate']) : GROUND_TEX[t]; // v1.79 던전 바닥
   if (Array.isArray(k)) { const v = k.filter(q => ART.tex[q] && ART.tex[q].ready); k = v[Math.floor(hash2(tx >> 2, ty >> 2) * v.length)]; } // 변형: 4×4칸 덩어리마다
@@ -84,6 +84,14 @@ function drawGroundTile(tx, ty, t) {
   const g2 = groundTex2(tx, ty, t, x, y); // v1.58 이 그림이 깔리면 아래 코드 보도블록으로 덮지 않음
   const g1 = !g2 && groundTex(tx, ty, t, x, y); // v1.79 그림이 깔리면 아래 코드 무늬(캠프 판자 · 던전 바닥)는 건너뜀
   if (!g2 && !g1) { ctx.fillStyle = TILE_COLORS[t]; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); }
+  if ((t === T.ROAD || t === T.CAR) && World.river) { // v2.0 다리 위: 양옆 난간 (깊은 물과 닿은 쪽) · 이음매
+    const dl = World.tileAt(tx - 1, ty) === T.DEEP, dr = World.tileAt(tx + 1, ty) === T.DEEP;
+    if (dl || dr || World.tileAt(tx, ty - 1) === T.DEEP || World.tileAt(tx, ty + 1) === T.DEEP) {
+      ctx.fillStyle = 'rgba(150,145,130,0.55)'; if (dl) ctx.fillRect(x, y, 5, TILE + 0.6); if (dr) ctx.fillRect(x + TILE - 5, y, 5, TILE + 0.6);
+      if (World.tileAt(tx, ty - 1) === T.DEEP) ctx.fillRect(x, y, TILE, 4); if (World.tileAt(tx, ty + 1) === T.DEEP) ctx.fillRect(x, y + TILE - 4, TILE, 4); // 끊긴 끝
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; if (ty % 3 === 0) ctx.fillRect(x, y, TILE, 1.5);
+    }
+  }
   if (t === T.ROAD || t === T.CAR) {
     const lx = tx % World.BLOCK, ly = ty % World.BLOCK, RW = World.ROADW;
     ctx.fillStyle = '#8a7a3a'; // 중앙선 (4차선: 2번째와 3번째 칸 사이)
@@ -133,12 +141,13 @@ function drawGroundTile(tx, ty, t) {
     if (h < 0.07) { ctx.fillStyle = '#4a3a2a'; for (let i = 0; i < 3; i++) ctx.fillRect(x + 3, y + 4 + i * 9, TILE - 6, 7); ctx.fillStyle = 'rgba(0,0,0,0.3)'; for (let i = 0; i < 3; i++) ctx.fillRect(x + 3, y + 10 + i * 9, TILE - 6, 1); } // 판자
     else if (h > 0.975) { ctx.fillStyle = 'rgba(50,70,90,0.4)'; ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4); } // 방수포
     else if (h > 0.8) { ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(x + 16, y + 16, 10, 7, h * 9, 0, TAU); ctx.fill(); } // 얼룩
-  } else if (t === T.WATER) { // v1.6 석촌호수: 잔물결 · 떠다니는 잔해
+  } else if (t === T.WATER || t === T.DEEP) { // v1.6 석촌호수: 잔물결 · 떠다니는 잔해 · v2.0 한강(깊은 물): 더 어둡고 물결 길게
+    if (t === T.DEEP) { ctx.fillStyle = 'rgba(14,52,84,0.62)'; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); ctx.strokeStyle = 'rgba(140,190,230,0.22)'; ctx.lineWidth = 1.2; const yy = y + 6 + h * 20; ctx.beginPath(); ctx.moveTo(x, yy); ctx.quadraticCurveTo(x + 16, yy - 3, x + 32, yy); ctx.stroke(); }
     ctx.strokeStyle = 'rgba(120,180,210,0.18)'; ctx.lineWidth = 1.5;
     for (let i = 0; i < 2; i++) { const yy = y + 8 + i * 14 + h * 6; ctx.beginPath(); ctx.moveTo(x + 4 + h * 8, yy); ctx.quadraticCurveTo(x + 14, yy - 3, x + 24 - h * 6, yy); ctx.stroke(); }
     ctx.lineWidth = 1;
     if (h < 0.05) { ctx.fillStyle = '#3a3428'; ctx.fillRect(x + 8, y + 10, 10, 5); }
-    const d = (dx, dy) => World.tileAt(tx + dx, ty + dy) !== T.WATER; // 물가 테두리
+    const d = (dx, dy) => { const q = World.tileAt(tx + dx, ty + dy); return q !== T.WATER && q !== T.DEEP; }; // 물가 테두리
     ctx.fillStyle = 'rgba(160,150,120,0.35)';
     if (d(0, -1)) ctx.fillRect(x, y, TILE, 3); if (d(0, 1)) ctx.fillRect(x, y + TILE - 3, TILE, 3);
     if (d(-1, 0)) ctx.fillRect(x, y, 3, TILE); if (d(1, 0)) ctx.fillRect(x + TILE - 3, y, 3, TILE);
@@ -689,6 +698,7 @@ const Sprites = {
     if (d.x < 0) ctx.scale(-1, 1); // 그림은 오른쪽을 보는 기준, 왼쪽은 좌우 반전
     if (ol && !flash) { const o = this.outline(s); if (o) { ctx.globalAlpha = ol; const ok = s.olK || 1; Mip.draw(o, f * cw * ok, row * s.cell * ok, cw * ok, s.cell * ok, -cw * sc / 2, -size, cw * sc, size); ctx.globalAlpha = 1; } } // v1.46 적 윤곽
     if (flash && 'filter' in ctx) ctx.filter = flash === 2 ? 'brightness(4) saturate(0.15)' : 'brightness(2.6)'; // v1.40 맞은 순간은 하얗게
+    else if (s.filter && 'filter' in ctx) ctx.filter = s.filter; // v2.0 같은 그림을 색만 바꿔 다른 적으로
     Mip.draw(s.img, f * cw, row * s.cell, cw, s.cell, -cw * sc / 2, -size, cw * sc, size);
     ctx.restore();
     // 머리 위치 (가공 도구가 기록한 프레임별 값, 발 기준 칸 좌표)
@@ -1908,6 +1918,15 @@ function drawLandmark(l) {
     ctx.strokeStyle = '#3a3e46'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(tx, ty + 24); ctx.lineTo(tx + 6, ty - 10); ctx.stroke(); ctx.lineWidth = 1;
     ctx.fillStyle = on ? '#ff3030' : '#4a1010'; ctx.beginPath(); ctx.arc(tx + 6, ty - 12, 4, 0, TAU); ctx.fill();
     if (on && Settings.light) addLight(tx + 6, ty - 12, 160, 0.8, 'rgba(255,40,40,A)');
+  } else if (l.id === 'pump') { // v2.0 한강 배수 펌프장 (코드 그림): 낮은 콘크리트 본관 + 제어탑 + 녹슨 배수관 3줄 + 노란 경고등
+    drawBox(x0 + 4, y0 + 4, x1 - 4, y1 - 4, 10, '#4e5250', '#2e3230', '#3e4240', 0, 0, 0); // 기단
+    boxWin(x0 + 8, y0 + 8, x1 - 8, y1 - 40, 96, '#7a7e78', '#4a4e48', '#5e625c', 4242, 10); // 본관
+    boxWin(x0 + 12, y0 + 12, x0 + 52, y0 + 52, 168, '#868a84', '#52564e', '#6a6e66', 707, 96); // 제어탑
+    for (let i = 0; i < 3; i++) { const py = y1 - 34 + i * 10; drawBox(x0 + 10, py, x1 - 10, py + 7, 26 - i * 4, '#7a4a2a', '#4a2a16', '#5e3820', 10, 10, 0); } // 배수관
+    drawBox(x1 - 30, y0 + 12, x1 - 14, y1 - 46, 128, '#3e4a52', '#26303a', '#323c46', 96, 96, 0); // 수문 기둥
+    const lx = Iso.sx(x0 + 32, y0 + 32), ly = Iso.sy(x0 + 32, y0 + 32, 176), on = Math.sin(G.time * 4) > 0;
+    ctx.fillStyle = on ? '#ffc23a' : '#5a4010'; ctx.beginPath(); ctx.arc(lx, ly, 4, 0, TAU); ctx.fill();
+    if (on && Settings.light) addLight(lx, ly, 140, 0.7, 'rgba(255,190,60,A)');
   } else if (l.id === 'tower63') {
     boxWin(x0 + 6, y0 + 6, x1 - 6, y1 - 6, 330, '#b8902a', '#7a5c16', '#9c7a20', 6363);
     boxWin(x0 + 22, y0 + 14, x1 - 34, y1 - 30, 372, '#c49a30', '#806018', '#a68226', 0, 330);

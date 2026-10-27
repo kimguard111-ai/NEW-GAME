@@ -10,7 +10,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
 (async () => {
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1280, height: 720 } }); pg.setDefaultTimeout(300000); // v1.51 그림을 다 받을 때까지 시작 버튼이 막혀 있음
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
-  await pg.goto('file://' + require('path').resolve(__dirname, '../index.html')); await pg.evaluate(() => localStorage.clear()); await pg.reload();
+  await pg.goto('file://' + require('path').resolve(__dirname, '../index.html') + (FIXMAP === 'hangang' ? '?v2' : '')); /* v2.0 잠금 중엔 ?v2 로 열어서 측정 */ await pg.evaluate(() => localStorage.clear()); await pg.reload();
   if (process.env.QUEST) await pg.evaluate(q => { window.__QUEST = q; }, process.env.QUEST);
   if (process.env.TIER) await pg.evaluate(t => { window.__TIER = t; }, +process.env.TIER); // v1.63 TIER=<위협 등급> (ASSAULT 와 함께)
   await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기

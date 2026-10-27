@@ -8,6 +8,7 @@ const ELITES = {
   panther: { name: '약탈자 두목 「흑표」', base: 'raider', level: 10, at: 'bosingak', hpMul: 8, dmgMul: 1.25, scale: 1.25, fireMul: 0.45 }, // v1.95 피해 ×1.4 → ×1.25 (「1장부터 보스들이 너무 셈」)
   argos:   { name: '자율 전투 드론 「아르고스」', base: 'drone', level: 13, at: 'base', hpMul: 9, dmgMul: 1.3, scale: 1.7, fireMul: 0.65 }, // v1.62 Lv15 → 13 (3장에 오는 Lv10~12가 봇 기준 8번 연속 사망) · v1.63 쏘는 간격 ×0.4 → ×0.65 (Lv12 봇 6연속 사망)
   raven:   { name: '블랙선 용병대장 「레이븐」', base: 'merc', level: 25, at: 'coex', hpMul: 12, dmgMul: 1.3, scale: 1.3, fireMul: 0.5 }, // v1.6
+  sumun:   { name: '한강 수문장', base: 'brute', art: 'sumun', level: 34, at: 'pump', hpMul: 16, dmgMul: 1.35, scale: 1.7, speedMul: 1.05, patterns: ['quake', 'dash', 'glutton', 'quake'] }, // v2.0 7장 보스 (그림 키 sumun · 지금은 파수꾼 그림을 물빛으로 · GEMINI_PROMPTS 51절)
   babel:   { name: '변이 군주 「바벨」', base: 'brute', level: 30, at: 'lotte', hpMul: 20, dmgMul: 1.4, scale: 1.8, speedMul: 1.15 }, // v1.63 체력 ×16 → ×20 (봇 완주 2번 모두 Lv26~28 첫 시도에 쓰러짐 — 최종 보스답게)
 };
 
@@ -74,7 +75,7 @@ const CHAPTERS = [
       { type: 'hunt', elite: 'raven', text: '블랙선 용병대장 「레이븐」을 처치하라.',
         reward: { exp: 25000, credits: 12000, gear: 3 } },
     ] },
-  { title: '제6장 · 바벨의 탑', minLevel: 25,
+  { title: '제6장 · 바벨의 탑', minLevel: 25, ending: true, // v2.0 첫 엔딩은 6장 끝 (7장이 생겨도)
     intro: '잠실은 변이체 소굴이야. 눈에 안 보이는 놈들도 있다더군. 공기가 일렁이면 바로 몸을 날려 피하게. 석촌호수 물가에선 발이 느려지니 조심하고.',
     outro: '바벨이 쓰러졌다. 탑의 신호도 끊겼어. 이제 정말로 끝이야... 서울은 다시 우리 것이네.',
     steps: [
@@ -87,7 +88,22 @@ const CHAPTERS = [
       { type: 'hunt', elite: 'babel', text: '모든 변이의 근원, 변이 군주 「바벨」을 처치하라.',
         reward: { exp: 40000, credits: 20000, gear: 4 } },
     ] },
+  // v2.0 7장 · 한강 (Lv30~) — 바벨이 쓰러진 뒤에도 강 건너에서 신호가 남음
+  { title: '제7장 · 강을 건너는 것들', minLevel: 30,
+    intro: '바벨이 쓰러졌는데도 한강 쪽에서 신호가 하나 더 잡히네. 배수 펌프장이야. 다리는 거의 다 끊겼다니 남은 다리로만 건너게. 물가는 조심하고 — 물속에서 뭔가 올라온다는 보고가 있어.',
+    outro: '수문장이 쓰러지자 펌프장이 다시 돌기 시작했네. 강 건너에도 아직 사람이 있을지 몰라. 이제 시작일세.',
+    steps: [
+      { type: 'kill', target: 'drowned', count: 15, text: '한강 둔치에서 물귀신 변이체를 처치하라.',
+        reward: { exp: 60000, credits: 9000 } },
+      { type: 'collect', from: 'merc', zone: 9, item: '펌프장 출입 코드', count: 4, chance: 0.4, text: '한강에 남은 블랙선 용병에게서 펌프장 출입 코드를 회수하라.',
+        reward: { exp: 70000, credits: 10000 } },
+      { type: 'reach', landmark: 'pump', text: '신호가 나오는 한강 배수 펌프장으로 가라.',
+        reward: { exp: 50000, credits: 8000 } },
+      { type: 'hunt', elite: 'sumun', text: '펌프장을 틀어막은 「한강 수문장」을 처치하라.',
+        reward: { exp: 150000, credits: 30000, gear: 4 } },
+    ] },
 ];
+if (!V2_OPEN) CHAPTERS.length = 6; // v2.0 잠금 (7장)
 
 function radio(msg) { log(`${ICON('radio')} 한씨: "${msg}"`, '#8cf'); }
 
@@ -173,10 +189,11 @@ const Story = {
       const x = l.x + Math.cos(a) * r, y = l.y + Math.sin(a) * r;
       if (World.circleBlocked(x, y, ENEMIES[def.base].r * def.scale) || World.buildingAt(x, y)) continue;
       const e = makeEnemy(def.base, x, y, def.level);
-      e.elite = id; e.scale = def.scale; e.art = id; // 전용 그림 키 (assets.js)
+      e.elite = id; e.scale = def.scale; e.art = def.art || id; // 전용 그림 키 (assets.js) · v2.0 다른 그림을 빌려 쓸 수 있게
       e.hp = e.maxHp = Math.round(e.maxHp * def.hpMul); e.dmg *= def.dmgMul;
       e.r = Math.round(e.r * def.scale); e.speed *= def.speedMul || 1; e.fireMul = def.fireMul || 1;
       e.weight = e.def.weight * 4; // 잘 밀리지 않음
+      if (def.patterns) e.patterns = def.patterns; // v2.0 장 보스도 패턴 목록으로 (수문장)
       G.enemies.push(e); G.elite = e;
       log(`${ICON('warn')} ${def.name} 출현!`, '#ffa53a');
       return;
@@ -206,7 +223,7 @@ const Story = {
       UI.toast(`${c.title} 완료!`, CHAPTERS[p.quest.ch + 1] ? `다음 장: Lv${CHAPTERS[p.quest.ch + 1].minLevel} 이상 · 캠프의 한씨` : '모든 장을 완료했습니다');
       p.quest.ch++; p.quest.step = 0; p.quest.active = false;
       p.sp = (p.sp || 0) + 1; log('장 완료 보상: 스킬 포인트 +1', '#7fd'); // v1.25
-      if (!CHAPTERS[p.quest.ch] && !p.finalEnd) { p.ended = p.finalEnd = true; setTimeout(() => Pause.ending(), 2500); } // v1.0 엔딩 · v1.6 제6장 뒤로 (4장에서 본 사람도 다시 봄)
+      if (c.ending && !p.finalEnd) { p.ended = p.finalEnd = true; setTimeout(() => Pause.ending(), 2500); } // v1.0 엔딩 · v1.6 제6장 뒤로 (4장에서 본 사람도 다시 봄)
     } else {
       const next = c.steps[p.quest.step];
       radio(next.text);

@@ -11,7 +11,7 @@ const ELITE_AFFIXES = {
 
 // 세력: 다른 세력끼리는 플레이어가 없을 때 서로 싸움
 const FACTION = { zombie: 'infected', dog: 'infected', brute: 'infected', boss: 'infected', raider: 'human', drone: 'machine',
-  subject: 'infected', spitter: 'infected', sentry: 'machine', merc: 'human', shield: 'human', stalker: 'infected', nest: 'infected', researcher: 'infected', guardbot: 'machine' }; // v1.5 연구소: 실험체 ↔ 보안 장비
+  subject: 'infected', spitter: 'infected', sentry: 'machine', merc: 'human', shield: 'human', stalker: 'infected', nest: 'infected', researcher: 'infected', guardbot: 'machine', drowned: 'infected' }; // v1.5 연구소: 실험체 ↔ 보안 장비
 
 const Monsters = {
   // ---------------- 엘리트 ----------------
@@ -169,7 +169,7 @@ const Monsters = {
       e.skillT = 7; e.lastAtk = G.time;
       const n = G.enemies.filter(o => o.guardOf === e && o.hp > 0).length;
       for (let i = 0; i < 3 && n + i < 5; i++) {
-        const g = makeEnemy('subject', e.x + rand(-80, 80), e.y + rand(-80, 80), Math.max(1, e.level - 3));
+        const g = makeEnemy(World.map === 'hangang' ? 'drowned' : 'subject', e.x + rand(-80, 80), e.y + rand(-80, 80), Math.max(1, e.level - 3)); // v2.0 한강은 물귀신
         if (World.circleBlocked(g.x, g.y, g.r)) continue;
         g.guardOf = e; g.minion = true; g.state = 'chase'; G.enemies.push(g);
       }

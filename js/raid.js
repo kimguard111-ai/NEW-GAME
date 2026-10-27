@@ -18,7 +18,7 @@ const MAP_SMS = {
   lab: '[방역 당국] 지하 연구시설 격리 해제 경보. 생물학적 위험. 즉시 대피하십시오.',
 };
 const Raid = {
-  unlocked(id) { const d = MAPS[id]; return !!d && (d.chapter === undefined || G.player.quest.ch >= d.chapter) && (!d.minLv || G.player.level >= d.minLv) && (!d.needLab || (G.player.labKills || 0) >= 1); }, // v1.77 연구소는 Lv30부터 · v1.78 타워는 키메라 처치 뒤
+  unlocked(id) { const d = MAPS[id]; return !!d && (V2_OPEN || id !== 'hangang') && (d.chapter === undefined || G.player.quest.ch >= d.chapter) && (!d.minLv || G.player.level >= d.minLv) && (!d.needLab || (G.player.labKills || 0) >= 1); }, // v1.77 연구소는 Lv30부터 · v1.78 타워는 키메라 처치 뒤
   inRaid() { return World.map !== 'camp'; },
 
   // 출격 지도 (작전 장교 대화)
@@ -87,6 +87,7 @@ const Raid = {
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     if (World.def.lab) { this.labLiftEvent(); const D = DUNGEONS[id]; p[D.best] = Math.max(p[D.best] || 0, 1); } // v1.77 승강기
     Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
+    Hangang.reset(); // v2.0
     G.fade = { t: 0, life: 1.4, text: MAPS[id].name + (p.raid.diff ? ' · ' + DIFFS[p.raid.diff].name : '') + (p.raid.floor ? ' ' + DUNGEONS[id].label(p.raid.floor) : ''), sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17
     if (World.def.lab) log(World.def.tower ? `스카이타워 20층. 바벨의 뿌리가 벽을 타고 올라간다. 가운데 방의 위층 계단(미니맵 ▲)으로 오를수록 강해진다 · 옥상에 무언가 있다 · 어느 층이든 비상구(초록 원) 한 곳으로 나갈 수 있다.` : `비상 전원만 남은 연구소 B1. 가운데 방의 승강기(미니맵 하늘색)로 내려갈수록 강해진다 · B${LAB_FLOORS} 격리실에 무언가 있다 · 어느 층이든 비상구(초록 원) 한 곳으로 나갈 수 있다.`, '#ff8a8a'); // v1.77 · v1.78
     saveGame();

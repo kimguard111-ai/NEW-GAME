@@ -2,7 +2,8 @@
 const T = { ROAD: 0, BUILDING: 1, RUBBLE: 2, CAR: 3, GRASS: 4, CAMP: 5, BARRICADE: 6, WALK: 7, LANDMARK: 8,
   WALL: 9, FLOOR: 10, DOOR: 11, PROP: 12, // v0.13 들어갈 수 있는 건물: 외벽·실내 바닥·출입문 · v0.15 실내 소품
   LWALL: 13, LFLOOR: 14, LPROP: 15, // v1.5 연구소 벽·바닥·실험 장비
-  WATER: 16 }; // v1.6 얕은 물 (석촌호수): 지나갈 수 있지만 느려짐, 총알은 통과
+  WATER: 16, // v1.6 얕은 물 (석촌호수): 지나갈 수 있지만 느려짐, 총알은 통과
+  DEEP: 17 }; // v2.0 깊은 물 (한강): 걸어서는 못 건넘 (다리로만) · 총알 · 날아다니는 드론은 지나감
 const SOLID = new Set([T.BUILDING, T.CAR, T.BARRICADE, T.LANDMARK, T.WALL, T.PROP, T.LWALL, T.LPROP]);
 const SHOP_TILES = new Set([T.WALL, T.FLOOR, T.DOOR, T.PROP]);
 // 상가 종류별 실내 소품: style = 배치 방식, h = 높이, c = [윗면, 남쪽면, 동쪽면]
@@ -45,7 +46,7 @@ const World = {
 
     // 도로와 블록 (v0.13: 블록 18칸 = 4차선 도로 + 보도 1칸 + 건물 부지 12×12)
     const RW = this.ROADW, L0 = RW + 1, L1 = B - 2, bigLots = [];
-    this.lots = new Set(); // v1.58 주차장 블록 (바닥 그림)
+    this.river = null; this.lots = new Set(); // v1.58 주차장 블록 (바닥 그림)
     // v1.50.8 랜드마크(어설트) 둘레 8칸 안에 걸치는 부지는 건물 없이 광장으로 (건물이 붙어 있어 싸우기·찾기 힘들던 것)
     const LM = LANDMARKS.find(l => l.id === def.landmark), LMP = 8;
     const lmRect = LM ? { x0: Math.floor(W / 2 - LM.size / 2) - LMP, y0: Math.floor(H / 2 - LM.size / 2) - LMP, x1: Math.floor(W / 2 - LM.size / 2) + LM.size + LMP, y1: Math.floor(H / 2 - LM.size / 2) + LM.size + LMP } : null;
@@ -137,6 +138,23 @@ const World = {
         const d = Math.hypot((x - lx) / rx, (y - ly) / ry);
         if (d < 1) { set(x, y, T.WATER); if (x >= 0 && y >= 0 && x < W && y < H) this.height[y * W + x] = 0; }
         else if (d < 1.28) set(x, y, T.WALK);
+      }
+    }
+
+    // v2.0 한강 (def.river): 맵 위쪽을 가로지르는 깊은 강 (12칸) + 양쪽 둔치(한강공원 풀밭 · 산책로) + 다리 3개 (가운데 넓은 다리 · 서쪽 다리 · 동쪽은 끊긴 다리)
+    if (def.river) {
+      const r0 = Math.floor(H * 0.2), r1 = r0 + 11, B = [[Math.floor(W * 0.2), 4, false], [(W >> 1) - 2, 6, false], [Math.floor(W * 0.78), 4, true]];
+      this.river = { r0, r1, bridges: B.map(([x, w, broken]) => ({ x0: x, x1: x + w - 1, broken })) };
+      for (let y = r0 - 3; y <= r1 + 3; y++) for (let x = 1; x < W - 1; x++) {
+        const i = y * W + x; if (y < 1 || y >= H - 1) continue;
+        this.bid[i] = -1; this.height[i] = 0;
+        if (y >= r0 && y <= r1) this.tiles[i] = T.DEEP;
+        else this.tiles[i] = (y === r0 - 1 || y === r1 + 1) ? T.RUBBLE /* 돌 둑 */ : ((y === r0 - 3 || y === r1 + 3) ? T.WALK /* 산책로 */ : T.GRASS);
+      }
+      for (const [bx, bw, broken] of B) for (let y = r0 - 3; y <= r1 + 3; y++) for (let x = bx; x < bx + bw; x++) {
+        const mid = (r0 + r1) >> 1, gap = broken && Math.abs(y - mid) <= 1;
+        if (!gap) set(x, y, (x === bx || x === bx + bw - 1) && y >= r0 && y <= r1 && rng() < 0.12 ? T.CAR : T.ROAD); // 다리 위 버려진 차 (가장자리 · 엄폐물)
+        if (broken && Math.abs(y - mid) === 2) set(x, y, T.RUBBLE); // 끊긴 끝
       }
     }
 
@@ -427,13 +445,14 @@ const World = {
     return this.tiles[ty * this.W + tx];
   },
   solidAt(px, py) { return SOLID.has(this.tileAt(Math.floor(px / TILE), Math.floor(py / TILE))); },
+  groundOk(px, py) { const t = this.tileAt(Math.floor(px / TILE), Math.floor(py / TILE)); return !SOLID.has(t) && t !== T.DEEP; }, // v2.0 걸어서 설 수 있는 곳 (밀려남 · 떨어지는 아이템)
 
   // 원형 충돌체가 벽과 겹치는지
   circleBlocked(x, y, r) {
     const x0 = Math.floor((x - r) / TILE), x1 = Math.floor((x + r) / TILE);
     const y0 = Math.floor((y - r) / TILE), y1 = Math.floor((y + r) / TILE);
     for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
-      if (!SOLID.has(this.tileAt(tx, ty))) continue;
+      const tt = this.tileAt(tx, ty); if (!SOLID.has(tt) && tt !== T.DEEP) continue; // v2.0 깊은 물도 막힘 (걷는 것만)
       const nx = clamp(x, tx * TILE, tx * TILE + TILE), ny = clamp(y, ty * TILE, ty * TILE + TILE);
       if ((x - nx) ** 2 + (y - ny) ** 2 < r * r) return true;
     }
@@ -472,7 +491,7 @@ const World = {
       [T.ROAD]: [45, 47, 52], [T.BUILDING]: [95, 92, 88], [T.RUBBLE]: [70, 64, 56], [T.CAR]: [110, 60, 40],
       [T.GRASS]: [48, 70, 40], [T.CAMP]: [60, 90, 120], [T.BARRICADE]: [140, 110, 60], [T.WALK]: [62, 62, 66],
       [T.LANDMARK]: [200, 170, 90], [T.WALL]: [120, 100, 80], [T.FLOOR]: [80, 68, 56], [T.DOOR]: [230, 200, 110], [T.PROP]: [96, 84, 70],
-      [T.LWALL]: [22, 24, 28], [T.LFLOOR]: [78, 84, 92], [T.LPROP]: [60, 66, 74], [T.WATER]: [40, 80, 110],
+      [T.LWALL]: [22, 24, 28], [T.LFLOOR]: [78, 84, 92], [T.LPROP]: [60, 66, 74], [T.WATER]: [40, 80, 110], [T.DEEP]: [18, 44, 70],
     };
     for (let i = 0; i < this.tiles.length; i++) {
       const c3 = col[this.tiles[i]];
@@ -484,6 +503,7 @@ const World = {
 };
 
 // 길찾기 (v0.16): 플레이어 칸에서 퍼져 나가는 거리 지도. 시야가 막힌 적은 숫자가 줄어드는 쪽으로 이동 → 건물을 돌아서 옴
+const NAV_BLOCK = t => SOLID.has(t) || t === T.DEEP; // v2.0 길 찾기: 깊은 물은 못 지나감
 const Nav = {
   dist: null, q: null, t: 0, ptx: -1, pty: -1, MAX: 48,
   update(dt) {
@@ -498,10 +518,10 @@ const Nav = {
     while (h < n) {
       const i = q[h++], x = i % W, y = (i - x) / W, nd = d[i] + 1;
       if (nd > this.MAX) continue;
-      if (x > 0 && d[i - 1] < 0 && !SOLID.has(World.tiles[i - 1])) { d[i - 1] = nd; q[n++] = i - 1; }
-      if (x < W - 1 && d[i + 1] < 0 && !SOLID.has(World.tiles[i + 1])) { d[i + 1] = nd; q[n++] = i + 1; }
-      if (y > 0 && d[i - W] < 0 && !SOLID.has(World.tiles[i - W])) { d[i - W] = nd; q[n++] = i - W; }
-      if (y < H - 1 && d[i + W] < 0 && !SOLID.has(World.tiles[i + W])) { d[i + W] = nd; q[n++] = i + W; }
+      if (x > 0 && d[i - 1] < 0 && !NAV_BLOCK(World.tiles[i - 1])) { d[i - 1] = nd; q[n++] = i - 1; }
+      if (x < W - 1 && d[i + 1] < 0 && !NAV_BLOCK(World.tiles[i + 1])) { d[i + 1] = nd; q[n++] = i + 1; }
+      if (y > 0 && d[i - W] < 0 && !NAV_BLOCK(World.tiles[i - W])) { d[i - W] = nd; q[n++] = i - W; }
+      if (y < H - 1 && d[i + W] < 0 && !NAV_BLOCK(World.tiles[i + W])) { d[i + W] = nd; q[n++] = i + W; }
     }
   },
   // 적이 가야 할 방향(각도). 길이 없으면 null
@@ -516,7 +536,7 @@ const Nav = {
       if (nx < 0 || ny < 0 || nx >= W || ny >= World.H) continue;
       const v = d[ny * W + nx];
       if (v < 0 || v >= best) continue;
-      if (ox && oy && (SOLID.has(World.tiles[ty * W + nx]) || SOLID.has(World.tiles[ny * W + tx]))) continue; // 모서리 끼임 방지
+      if (ox && oy && (NAV_BLOCK(World.tiles[ty * W + nx]) || NAV_BLOCK(World.tiles[ny * W + tx]))) continue; // 모서리 끼임 방지
       best = v; bx = ox; by = oy;
     }
     if (!bx && !by) return null;

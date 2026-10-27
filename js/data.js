@@ -6,8 +6,11 @@ const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
 const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.98.4';
-const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
+const GAME_VERSION = 'v1.98.5';
+// v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
+const V2_READY = false;
+const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
+const MAX_LEVEL = V2_OPEN ? 40 : 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트) · v2.0 30 → 40 (한강 다리 Lv30~34 · 도전 던전 ~42)
 
 const RARITIES = [
   { name: '일반', mul: 1.0, color: '#dddddd', weight: 56 },
@@ -228,6 +231,7 @@ const ENEMIES = {
   researcher: { name: '변이 연구원', hp: 95, dmg: 14, speed: 96, r: 12, exp: 36, weight: 1, color: '#d8d0c8', atkCd: 0.9, aggro: 420, gasDeath: true }, // 죽으면 등의 가스통이 터져 보라 독가스 웅덩이
   guardbot:   { name: '경비 로봇', hp: 150, dmg: 6, speed: 72, r: 13, exp: 44, weight: 1.4, color: '#c8ccd0', atkCd: 1.0, aggro: 480,
                 ranged: true, range: 380, fireCd: 2.4, burst: 3, bulletSpeed: 500, front: 0.5 }, // 3점사 · 정면 장갑 (앞에서 맞으면 피해 절반 · 폭발·뒤·옆은 그대로)
+  drowned: { name: '물귀신 변이체', hp: 130, dmg: 13, speed: 108, r: 12, exp: 58, weight: 1, color: '#3a6a7a', atkCd: 0.9, aggro: 440 }, // v2.0 한강: 물가에서 올라옴 (그림은 실험체를 물빛으로 · 나중에 교체)
   stalker: { name: '은신 변이체', hp: 120, dmg: 16, /* v1.7 21→16: 위협은 은신, 피해까지 최고일 필요 없음 */ speed: 150, r: 12, exp: 46, weight: 0.9, color: '#4a3a5a', atkCd: 0.9, aggro: 420, pounce: true, cloak: true }, // 가까이 오거나 맞기 전엔 거의 안 보임
   boss:   { name: '방사능 군주 타이탄', hp: 52000, /* v1.7 90000→60000: 엔딩이 6장으로 옮겨져 중간 보스, 봇 측정상 Lv20 장비로 2분+ · v1.66 → 52000 · 피해 130 → 110 (봇 완주: 장비 운 나쁜 판에 타이탄에서 12번 사망 — 장판·폭발·돌진) */ dmg: 110, speed: 75, r: 36, exp: 20000, weight: 0, color: '#3fbf5a', atkCd: 1.2, aggro: 700, boss: true },
 };
@@ -271,6 +275,11 @@ const ZONES = [
     spawns: [['merc', 25], ['stalker', 22], ['shield', 15], ['drone', 18], ['brute', 10], ['spitter', 10]],
     desc: '5층 도전 · 계단으로 오를수록 강해짐 · 옥상에 바벨 원형체', packs: { merc: [2, 3], stalker: [2, 3] }, /* v1.81 */
     gear: ['rifle', 'lmg', 'katana', 'exo', 'exoHelm', 'gasmask'], gearText: '돌격소총·기관총·고주파 블레이드·외골격' },
+  // v2.0 한강 다리 (9): 끊어진 다리 · 한강공원 둔치 · 물에서 올라오는 변이체
+  { name: '한강 다리', maxDist: 999, lvl: [30, 34], dark: 0.58, tint: 'rgba(20,50,80,0.10)',
+    spawns: [['drowned', 26], ['zombie', 18], ['brute', 10], ['merc', 14], ['spitter', 12], ['dog', 12]],
+    desc: '깊은 강은 다리로만 건넌다 · 물가에선 물귀신 변이체가 올라온다', packs: { drowned: [2, 4], zombie: [3, 5] },
+    gear: ['rifle', 'lmg', 'katana', 'exo', 'exoHelm', 'gasmask'], gearText: '돌격소총·기관총·고주파 블레이드·외골격' },
 ];
 
 // v1.3 맵 (출격·탈출): 캠프(거점)에서 맵을 골라 출격하고, 맵 가장자리 탈출 지점으로 귀환
@@ -284,6 +293,7 @@ const MAPS = {
   gangnam:    { name: '강남 업무지구', zone: 6, size: 108, seed: 1606, landmark: 'coex', chapter: 4, tall: [0.55, 6, 6] } /* v1.21 9~17층 → 6~11층 (층 높이 2.7m) */, // v1.6 유리 고층 빌딩 숲
   jamsil:     { name: '잠실 변이 지대', zone: 7, size: 108, seed: 1707, landmark: 'lotte', chapter: 5, lake: true },      // v1.6 석촌호수 (얕은 물)
   tower:      { name: '스카이타워', zone: 8, size: 66, seed: 1808, lab: true, tower: true, card: 'card_tower.png', minLv: 30, needLab: true, lock: '지하 연구소 B5 키메라 처치 후' }, // v1.78 두 번째 도전 (연구소와 같은 층 구조 · 위로 오름)
+  hangang:    { name: '한강 다리', zone: 9, size: 108, seed: 1909, landmark: 'pump', chapter: 6, river: true }, // v2.0 7장 · 깊은 강 + 다리 3개 (하나는 끊김)
   lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, card: 'card_lab.png', /* v1.83 출격 카드 그림 */ minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
 };
 // v1.77 지하 연구소 = 5층 도전: B1 Lv30 → B5 Lv38 · B1~B4 는 승강기로 내려감 · B5 격리실에 키메라 · 어느 층이든 비상 계단으로 탈출
@@ -293,8 +303,8 @@ const DUNGEONS = {
   lab:   { floors: LAB_FLOORS, lv: labFloorLv, hpM: f => 1.8 + 0.3 * (f - 1), dmgM: f => 1.3 + 0.1 * (f - 1), /* v1.81 장비를 맞춘 Lv30 에겐 너무 약하던 것 */ label: f => `B${f}`, extra: { f: 2, spawn: ['researcher', 24] }, /* v1.83 */ lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
   tower: { floors: 5, lv: f => 32 + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, extra: { f: 2, spawn: ['guardbot', 24] }, /* v1.83 */ lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
 };
-const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'lab', 'tower']; // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
-const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil'];      // v1.6 장 번호 → 그 장의 맵
+const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang', 'lab', 'tower'].filter(id => V2_OPEN || id !== 'hangang'); // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
+const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang'].filter(id => V2_OPEN || id !== 'hangang'); // v1.6 장 번호 → 그 장의 맵
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상
 const LANDMARKS = [
@@ -304,6 +314,7 @@ const LANDMARKS = [
   { id: 'tower63', name: '금빛타워 잔해', zone: 4, tx: 5, ty: 23, size: 7, base: 4, exp: 6000, credits: 3000 },
   { id: 'coex', name: '무너진 무역센터', zone: 6, tx: 0, ty: 0, size: 8, base: 5, exp: 9000, credits: 4000 },
   { id: 'lotte', name: '스카이타워 잔해', zone: 7, tx: 0, ty: 0, size: 7, base: 4, exp: 14000, credits: 6000 },
+  { id: 'pump', name: '한강 배수 펌프장', zone: 9, tx: 0, ty: 0, size: 7, base: 4, exp: 22000, credits: 8000 }, // v2.0 (그림 전에는 코드 그림)
 ];
 
 const SKILLS = [

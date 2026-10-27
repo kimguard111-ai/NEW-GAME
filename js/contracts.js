@@ -154,6 +154,7 @@ const MAP_EVENTS = {
   yeouido:    { name: '방사능 정화 장치', desc: '돌리는 데 8초, 실험체들이 냄새를 맡고 온다' },
   gangnam:    { name: '블랙선 서버 탈취', desc: '서버를 빼내는 데 10초, 용병들이 바로 출동한다' },
   jamsil:     { name: '변이 알 무더기', desc: '알 세 개가 곧 깨어난다. 60초 안에 깨부숴라' },
+  hangang:    { name: '가라앉은 구조선', desc: '둔치에 걸린 구조선을 뒤지는 데 9초, 물소리에 물귀신들이 올라온다' }, // v2.0
 };
 const MapEvents = {
   make() {
@@ -185,6 +186,11 @@ const MapEvents = {
         onFinish: e => { if (yeo) { gainExp(Math.round(PlayerStats.expNext(p.level) * 0.1)); Workshop.gain(2, 2, '정화 장치'); drop(e, 'credits', { amount: lvl * 50 }); done(e, '정화 장치 가동', '경험치 · 부품 · 크레딧'); }
           else { Workshop.gain(1, 3, '서버'); drop(e, 'item', { item: randomGear(lvl, 1.4, 2, bias) }); drop(e, 'credits', { amount: lvl * 80 }); done(e, '서버 탈취', '전자 부품 · 희귀 이상 장비'); } } };
       if (!yeo) for (const k of [0, 1]) { const m = makeEnemy('merc', s.x + rand(-80, 80), s.y + rand(-80, 80), lvl); if (!World.circleBlocked(m.x, m.y, 14)) { m.evGuard = true; G.enemies.push(m); } } }
+    else if (id === 'hangang') { // v2.0 가라앉은 구조선: 9초 뒤지기 · 시작하면 물귀신 두 무리 · 보상 희귀 이상 장비 + 구급 · 부품
+      e = { ...base, hint: '[E] 구조선 뒤지기 (9초)', dur: 9,
+        onStart: e => { if (!e.waves) { e.waves = 1; for (let k = 0; k < 3; k++) { const a = rand(0, TAU), m = makeEnemy('drowned', e.x + Math.cos(a) * 260, e.y + Math.sin(a) * 260, lvl); if (World.groundOk(m.x, m.y) && !World.circleBlocked(m.x, m.y, 14)) { m.state = 'chase'; m.heard = true; G.enemies.push(m); } } e.wave2 = 4.5; log('구조선이 삐걱거린다. 물소리에 물귀신이 몰려온다!', '#7ab8d8'); } return true; },
+        tick: (e, dt) => { if (e.wave2 > 0 && (e.wave2 -= dt) <= 0) RaidEvents.squad(e.x, e.y, 3, { r0: 300, r1: 420, chase: true }); },
+        onFinish: e => { drop(e, 'item', { item: randomGear(lvl, 1.4, 2, bias) }); drop(e, 'item', { item: makeConsumable('medkit', 2) }); drop(e, 'credits', { amount: lvl * 70 }); Workshop.gain(2, 2, '구조선'); done(e, '구조선 인양', '희귀 이상 장비 · 구급상자 · 부품'); } }; }
     else if (id === 'jamsil') { const eggs = [];
       for (let i = 0; i < 3; i++) { let x = 0, y = 0, okp = false; for (let k = 0; k < 10 && !okp; k++) { const a = i / 3 * TAU + k * 0.6, rr = 70 + (k >> 1) * 22; x = s.x + Math.cos(a) * rr; y = s.y + Math.sin(a) * rr; okp = !World.circleBlocked(x, y, 20); } if (!okp) continue; /* v1.84.4 외부 점검: 막힌 자리면 각도·거리를 바꿔 다시 (알이 3개보다 적게 생기던 것) */
         const g = makeEnemy('brute', x, y, lvl); g.type = 'nest'; g.nest = true; g.egg = true; g.evGuard = true; g.weight = 0; g.r = 20; g.def = { ...ENEMIES.brute, name: '변이 알', speed: 0, aggro: 0, weight: 0, exp: ENEMIES.brute.exp }; g.hp = g.maxHp = Math.round(g.maxHp * 1.2); G.enemies.push(g); eggs.push(g); }

@@ -1295,6 +1295,48 @@ Match the art style of the attached concept image. Create ONE wide 16:9 cinemati
 
 ---
 
+## 51. v2.0 한강 다리 (Lv30~34 · 7장) — 🔒 지금은 잠겨 있음 · **그림이 다 오면 엶**
+게임에는 다 들어가 있고 `js/data.js` 의 `V2_READY = false` 로 닫혀 있습니다 (주소 끝에 `?v2` 를 붙이면 미리 열려서 그림 확인 가능).
+지금은 다른 그림에 물빛 색만 입혀 임시로 씁니다. 아래 4장이 오면 임시 줄을 바꾸고 `V2_READY = true`.
+
+| 순서 | 🔧 이름 | 누구 · 무엇 | 지금 임시 그림 | 등록할 때 |
+|---|---|---|---|---|
+| ★1 | **drowned** | 물귀신 변이체 (한강 일반 적 · 가장 많이 나옴) | 탈주 실험체 + 물빛 | `js/assets.js` 의 `drowned:` 줄을 도구 결과로 **바꾸기** |
+| ★2 | **pump** | 한강 배수 펌프장 (랜드마크 · 출격 지도 카드도 이 그림) | 코드 그림 | `landmarks` 안에 붙여넣기 |
+| ★3 | **sumun** | 7장 보스 「한강 수문장」 | 파수꾼 + 물빛 | `sumun:` 줄 바꾸기 |
+| 4 | **leech** | 필드 보스 「거머리」 | 군체 + 물빛 | `leech:` 줄 바꾸기 |
+| (선택) | 한강 소품 9종 | 둔치 · 다리 꾸미기 | 없음 (기존 소품) | 코드 연결이 필요 — 그림 오면 제가 붙임 |
+
+📎 콘셉트 아트 + (캐릭터는) 1번 플레이어 그림 · 🔢 캐릭터 3장 모두 `idle 4, walk 6, attack 4, hit 2, death 5`
+**색 규칙:** 한강 쪽은 **청록 · 진흙 갈색 · 녹슨 쇠** 위주로 (다른 맵과 구분). 물빛이라도 위험 표시는 초록이 아니라 주황 · 빨강.
+
+### 51-1 ★ · 물귀신 변이체 · 🔧 **drowned**
+```
+Match the art style of the attached concept image. Create ONE sprite sheet image of a drowned river mutant: a bloated waterlogged human corpse with pale blue-gray wrinkled skin, long wet black hair hanging over the face, torn muddy rain jacket, river weeds and mud stuck to the body, long thin arms with webbed clawed fingers, water dripping, hunched and crawling posture. Rows: row 1: 4 frames of idle swaying and dripping; row 2: 6 frames of a lurching hunched run; row 3: 4 frames of lunging forward and grabbing with both clawed hands; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing into a wet heap on the ground. The same creature in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 51-2 ★ · 한강 배수 펌프장 · 🔧 **pump** · 정사각형
+```
+Match the art style of the attached concept image. Create ONE image of a single ruined concrete riverside drainage pump station on the Han River in Seoul: a low gray concrete main hall with a flat roof, a small square control tower with broken windows, three thick rusty orange pipes coming out of the wall and bending down into the ground, a large steel sluice gate frame on one side, a blinking yellow warning lamp on the tower, moss, water stains and cracks, a few sandbags at the door. The building stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the building: no river, no street, no ground, no people, no shadow, no text, no logos. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the building.
+```
+
+### 51-3 ★ · 한강 수문장 (7장 보스) · 🔧 **sumun**
+```
+Match the art style of the attached concept image. Create ONE sprite sheet image of a huge mutant floodgate keeper, two times human size: a hulking brute fused with rusty steel floodgate plates like armor on the shoulders and back, a broken heavy chain wrapped around one arm, a corroded iron valve wheel embedded in its chest, teal-gray skin covered in barnacles and river mud, glowing pale cyan eyes, water pouring from the joints. Rows: row 1: 4 frames of idle heavy breathing; row 2: 6 frames of a slow heavy stomping walk; row 3: 4 frames of raising both fists and slamming the ground; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, falling forward and lying on the ground. The same monster in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 51-4 · 물귀신 군주 「거머리」 (필드 보스) · 🔧 **leech**
+```
+Match the art style of the attached concept image. Create ONE sprite sheet image of a giant leech-like river mutant, three times human size: a thick segmented slimy body standing upright like a worm, dark olive-brown wet skin with pale cyan spots, a huge round mouth full of rings of teeth at the top, several drowned human arms growing from its sides, small leeches dropping off its body. Rows: row 1: 4 frames of idle writhing; row 2: 6 frames of a slithering crawl forward; row 3: 4 frames of rearing back and striking forward with the round mouth; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same monster in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 51-5 (선택) · 한강 소품 9종 · `props_hangang.png` (3×3) · 12절과 같은 방식
+```
+Match the art style of the attached concept image. Create ONE image with 9 separate isometric game props arranged in a 3 by 3 grid with wide empty gaps between them, every prop on a square diamond-shaped footprint viewed from the south corner: 1. a broken concrete bridge railing section with bent steel bars, 2. a rusty swan-shaped pedal boat lying on its side, 3. a toppled row of public rental bicycles, 4. a faded orange life ring on a short post, 5. a riverside convenience store folding table with two plastic chairs and a broken parasol, 6. a stack of sandbags with a flood warning light, 7. a half-sunken rusty patrol boat bow, 8. a tangle of river reeds and floating trash, 9. a cracked concrete bridge pillar stump. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. No people, no shadow, no ground, no text, no logos, no brand names. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the props.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |

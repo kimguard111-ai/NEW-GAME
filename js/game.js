@@ -936,7 +936,7 @@ function tryMoveSmart(e, a, step) {
   if (e.def.flying) { // 드론: 낮은 장애물은 넘지만 건물 위에는 머물지 않음 (건물 위에서 맞지 않고 쏘는 문제)
     for (const off of tries) {
       const nx = e.x + Math.cos(a + off) * step, ny = e.y + Math.sin(a + off) * step;
-      if (!World.inSafe(nx, ny) && !World.solidAt(nx, ny)) { e.x = nx; e.y = ny; return; }
+      if (!World.inSafe(nx, ny) && World.groundOk(nx, ny)) { e.x = nx; e.y = ny; return; } // v2.0 강물로 비켜서지 않게
     }
     e.sideDir *= -1;
     return;
@@ -1322,7 +1322,7 @@ function updateDrops(dt) {
     if (!d.landed) {
       d.vz -= 560 * dt; d.z += d.vz * dt;
       const nx = d.x + d.vx * dt, ny = d.y + d.vy * dt;
-      if (!World.solidAt(nx, ny) && !(d.kind === 'item' && World.circleBlocked(nx, ny, 6))) { d.x = nx; d.y = ny; } // v1.96.2 아이템은 차 · 상자 몸체 안으로도 튀어 들어가지 않게
+      if (World.groundOk(nx, ny) && !(d.kind === 'item' && World.circleBlocked(nx, ny, 6))) { d.x = nx; d.y = ny; } // v2.0 강물에도 안 떨어짐 // v1.96.2 아이템은 차 · 상자 몸체 안으로도 튀어 들어가지 않게
       if (d.z <= 0 && d.vz < 0) {
         d.z = 0;
         if (d.bounce++ === 0 && d.vz < -90) { d.vz = -d.vz * 0.32; d.vx *= 0.4; d.vy *= 0.4; }
@@ -1417,6 +1417,7 @@ function update(dt) {
   Raid.update(dt);
   Scavenge.update(dt);
   RaidEvents.update(dt); // v1.10
+  Hangang.update(dt); // v2.0 한강 물가 변이체
   Gadgets.update(dt); // v1.14 지뢰
   Turrets.update(dt); // v1.26 포탑
   Juice.update(dt); // v1.28
