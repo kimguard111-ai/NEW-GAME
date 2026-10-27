@@ -195,12 +195,12 @@ const City = {
       const okT = (x, y, ts) => x > 1 && x < W - 2 && ts.includes(at(x, y)) && clear(x, y);
       for (const b of RV.bridges) {
         const wide = b.x1 - b.x0 >= 9, gapNear = y => b.broken && Math.abs(y - RV.mid) <= 4;
-        // 대교 옆 아치 (br_side · 51-5c): 쉼터 위아래로 8칸짜리 아치를 양쪽 난간에 하나씩 · 끝마다 경고등 기둥 (난간 선 위에 바로 놓음)
-        if (wide && has('br_side')) for (const y0 of [RV.r0, RV.mid + 3]) for (const side of [0, 1]) {
-          const lx = side ? (b.x1 + 1) * TILE - 3 : b.x0 * TILE + 3;
-          add('deco', lx, (y0 + 4) * TILE, { key: rng() < 0.25 ? 'br_side2' : 'br_side' });
-          for (const yy of [y0, y0 + 8]) add('deco', lx, yy * TILE + 2, { key: 'br_post' });
-          for (let yy = y0; yy < y0 + 8; yy++) occ.add(yy * W + (side ? b.x1 : b.x0)); // 그 자리에 가로등 안 겹치게
+        // 대교 옆 아치 (br_side · 51-5c): 쉼터 위 · 아래 반쪽마다 아치 2개씩 이어서 양쪽 난간에 (그림 1개 = 8칸 → 길이에 맞춰 k 배) · 이음매마다 경고등 기둥
+        if (wide && has('br_side')) for (const [ya, yb] of [[RV.r0, RV.mid - 3], [RV.mid + 3, RV.r1]]) for (const side of [0, 1]) {
+          const lx = side ? (b.x1 + 1) * TILE - 3 : b.x0 * TILE + 3, L = yb - ya + 1, n = Math.max(1, Math.round(L / 7)), Ls = L / n;
+          for (let i = 0; i < n; i++) add('deco', lx, (ya + (i + 0.5) * Ls) * TILE, { key: rng() < 0.2 ? 'br_side2' : 'br_side', k: Ls / 8, noShadow: true });
+          for (let i = 0; i <= n; i++) add('deco', lx, (ya + i * Ls) * TILE + 2, { key: 'br_post', k: Math.min(1, Ls / 8 + 0.2) });
+          for (let yy = ya; yy <= yb; yy++) occ.add(yy * W + (side ? b.x1 : b.x0)); // 그 자리에 가로등 안 겹치게
         }
         for (let y = RV.r0 + 1; y <= RV.r1 - 1; y += 4) for (const x of [b.x0, b.x1]) if (!gapNear(y) && okT(x, y, [T.ROAD])) put(rng() < 0.3 ? 'br_lamp2' : 'br_lamp', x, y, 1, false, { flip: x === b.x1 });
         if (wide) for (const x of [b.x0 - 3, b.x1 + 3]) if (okT(x, RV.mid, [T.ROAD])) put('br_bench', x, RV.mid, 1, false, { flip: x > b.x1 });
@@ -397,13 +397,13 @@ function drawCityProp(o) {
   if (ak && propArt(ak)) { // v1.18 그림
     let px = sx, py = sy;
     if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
-    drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
+    if (!o.noShadow) drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4 * (o.k || 1));
     const fw = (ART.propFit[ak] || { w: 40 }).w;
     const fade = o.type === 'tree' ? Behind.alpha(o, px, py, fw * (o.s || 1), fw * (o.s || 1) * 1.6) // v1.46
       : o.type === 'deco' && fw >= 200 ? Behind.big(o, px, py, fw, fw * 0.6) : o.type === 'deco' && fw >= 70 ? Behind.alpha(o, px, py, fw, fw * 1.2) // v1.58 큰 소품(회전목마·탱크 등) 뒤도 반투명
       : o.type === 'bus' || o.type === 'car' || o.type === 'police' ? Behind.vehicle(o, ak, px, py) : 1; // v1.47.1 버스·차 뒤에 사람·적이 있으면 반투명
     ctx.globalAlpha = fade;
-    drawPropArt(ak, px, py, o.type === 'deco' ? !!o.flip : o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
+    drawPropArt(ak, px, py, o.type === 'deco' ? !!o.flip : o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : (o.k || 1)); // v2.0 o.k = 소품 크기 배율 (한강 아치 길이)
     ctx.globalAlpha = 1;
     if (o.type === 'car' && o.burnt) burnFx(o.tx, o.ty);
     if (o._noFx) return;

@@ -141,10 +141,10 @@ const World = {
       }
     }
 
-    // v2.0 한강 (def.river): 맵 위쪽을 가로지르는 깊은 강 (22칸 — 다리를 한참 건너야 함) + 양쪽 둔치(한강공원 풀밭 · 산책로) + 다리 3개
+    // v2.0 한강 (def.river): 맵 위쪽을 가로지르는 깊은 강 (29칸 — 다리를 한참 건너야 함 · v1.98.8 22 → 29) + 양쪽 둔치(한강공원 풀밭 · 산책로) + 다리 3개
     // 가운데 = 넓은 대교 (10칸 · 한가운데 전망 쉼터로 양옆이 넓어짐) · 서쪽 = 6칸 다리 · 동쪽 = 6칸이지만 가운데가 끊김
     if (def.river) {
-      const r0 = Math.floor(H * 0.17), r1 = r0 + 21, mid = (r0 + r1) >> 1, B = [[Math.floor(W * 0.16), 6, false], [(W >> 1) - 5, 10, false], [Math.floor(W * 0.8), 6, true]];
+      const r0 = Math.floor(H * 0.16), r1 = r0 + 28, mid = (r0 + r1) >> 1, B = [[Math.floor(W * 0.16), 6, false], [(W >> 1) - 5, 10, false], [Math.floor(W * 0.8), 6, true]];
       this.river = { r0, r1, mid, bridges: B.map(([x, w, broken]) => ({ x0: x, x1: x + w - 1, broken, cx: x + w / 2 })) };
       for (let y = r0 - 3; y <= r1 + 3; y++) for (let x = 1; x < W - 1; x++) {
         const i = y * W + x; if (y < 1 || y >= H - 1) continue;
