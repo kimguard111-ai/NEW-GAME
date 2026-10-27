@@ -186,7 +186,7 @@ const City = {
     const nSmall = Math.round(W * H / 700);
     for (let i = 0; i < nSmall; i++) { const key = SMALL[Math.floor(rng() * SMALL.length)]; tryPut(key, SIZE[key] || 1, SOLIDK.has(key), 60); }
     // 잠실 석촌호수: 오리배 몇 척 (물 위, 안 막음)
-    // v2.0 한강 다리: 가로등 (4칸마다 · 3할은 꺼진 것) · 대교 철골 아치 · 다리 끝 초소 · 전망 쉼터 벤치 · 끊긴 다리 난간 · 케이블 · 물속 교각
+    // v2.0 한강 다리: 가로등 (4칸마다 · 3할은 꺼진 것) · 다리 끝 초소 · 전망 쉼터 벤치 · 끊긴 다리 난간 · 케이블 · 물속 교각
     // 둔치 (돌 둑 · 풀밭 · 산책로 한 줄씩): 구명환 · 모래주머니 · 갈대 · 부서진 난간 · 교각 잔해 · 파라솔 탁자 · 공공자전거 / 강: 오리배 · 반쯤 가라앉은 경비정
     const RV = World.river;
     if (RV) {
@@ -194,7 +194,7 @@ const City = {
       for (const b of RV.bridges) {
         const wide = b.x1 - b.x0 >= 9, gapNear = y => b.broken && Math.abs(y - RV.mid) <= 4;
         for (let y = RV.r0 + 1; y <= RV.r1 - 1; y += 4) for (const x of [b.x0, b.x1]) if (!gapNear(y) && okT(x, y, [T.ROAD])) put(rng() < 0.3 ? 'br_lamp2' : 'br_lamp', x, y, 1, false, { flip: x === b.x1 });
-        if (wide) for (let y = RV.r0 + 3; y <= RV.r1 - 3; y += 6) for (const x of [b.x0, b.x1]) if (Math.abs(y - RV.mid) > 3 && okT(x, y, [T.ROAD])) put(rng() < 0.25 ? 'br_arch2' : 'br_arch', x, y, 1, false, {});
+        // 철골 아치 그림(br_arch)은 그 자체가 작은 다리 모양이라 난간에 붙이면 「옆에 다리가 또 있는」 것처럼 보여서 뺌
         if (wide) for (const x of [b.x0 - 3, b.x1 + 3]) if (okT(x, RV.mid, [T.ROAD])) put('br_bench', x, RV.mid, 1, false, { flip: x > b.x1 });
         for (const y of [RV.r0 - 2, RV.r1 + 2]) { const x = rng() < 0.5 ? b.x0 : b.x1; if (okT(x, y, [T.ROAD])) put('br_booth', x, y, 1, true, {}); }
         if (b.broken) for (const y of [RV.mid - 4, RV.mid + 4]) { if (okT(b.x0 + 1, y, [T.ROAD])) put('br_rail', b.x0 + 1, y, 1, false, {}); if (okT(b.x1 - 1, y, [T.ROAD])) put('br_cables', b.x1 - 1, y, 1, false, {}); }
