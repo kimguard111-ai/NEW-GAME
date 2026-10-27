@@ -199,14 +199,14 @@ const HELMETS = {
   exoHelm:   { name: '외골격 헬멧',  icon: 'exoHelm', def: 20, lvl: 16, price: 1600 },
 };
 // v2.0 장비 단계: 10레벨마다 한 단계 · 외골격은 Lv60 최종 장비 (v2.0 잠금이 풀릴 때 같이 켜짐 — 이미 가진 장비는 그대로)
-// Lv30 화생방 방호복 · Lv40 블랙선 전투복 · Lv50 처리반 중장갑 은 그림이 오기 전까지 군용 강화복 몸에 색만 바꿔 씀 (assets.js)
+// Lv30 방호 강화복 · Lv40 블랙선 전투복 · Lv50 처리반 강화복 = 군용 강화복 몸에서 갑옷 색만 바꾼 그림 + 단계 전용 헬멧 (몸 그림을 새로 그리지 않음)
 // 방독면은 단계 밖 「특수 헬멧」(Lv15 · 여의도 방사능) — 단계 드랍에서 빠지고 지역 특산으로만
 if (V2_OPEN) {
   Object.assign(ARMORS.tactical, { lvl: 10 }); Object.assign(ARMORS.military, { lvl: 20 });
   Object.assign(ARMORS, {
-    hazmat: { name: '화생방 방호복',   icon: 'military', def: 38, lvl: 30, price: 3000 },
+    hazmat: { name: '방호 강화복',   icon: 'military', def: 38, lvl: 30, price: 3000 },
     bsuit:  { name: '블랙선 전투복',   icon: 'tactical', def: 48, lvl: 40, price: 4500 },
-    eod:    { name: '처리반 중장갑',   icon: 'exo', def: 58, lvl: 50, price: 6500 },
+    eod:    { name: '처리반 강화복',   icon: 'exo', def: 58, lvl: 50, price: 6500 },
   });
   Object.assign(ARMORS.exo, { def: 70, lvl: 60, price: 9000 }); const ex = ARMORS.exo; delete ARMORS.exo; ARMORS.exo = ex; // 맨 뒤로 (도감 순서)
   Object.assign(HELMETS.tacHelmet, { lvl: 10 }); Object.assign(HELMETS.gasmask, { lvl: 15, special: true });

@@ -447,8 +447,9 @@ const ART = {
     player_exo_heavy: { file: 'player_exo_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 5] }, headW: 18, heads: { idle: [[4,-104],[3,-99],[4,-99],[5,-99]], walk: [[6,-98],[0,-94],[-1,-91],[3,-98],[4,-98],[-3,-94],[2,-95],[1,-95]], attack: [[-15,-97],[-1,-103],[2,-101],[2,-97],[2,-97]], hit: [[5,-96],[5,-98]], death: [[12,-97],[-30,-87],[-25,-79],[-22,-70],[-20,-66]] } },
   },
 };
-// v2.0 새 방어구 임시 몸 그림: 군용 강화복 몸(무기별 13장)을 색만 바꿔 씀 — 진짜 그림(player_hazmat 등)이 등록되면 그쪽이 먼저
-for (const [nk, f] of [['hazmat', 'sepia(0.6) hue-rotate(10deg) saturate(1.6) brightness(1.1)'], ['bsuit', 'grayscale(0.7) brightness(0.55) contrast(1.2)'], ['eod', 'sepia(0.4) hue-rotate(-25deg) saturate(1.2) brightness(0.85)']])
-  for (const k of Object.keys(ART.sprites)) if (k === 'player_military' || k.startsWith('player_military_')) { const n = k.replace('military', nk); if (!ART.sprites[n]) ART.sprites[n] = { ...ART.sprites[k], filter: f, tempArt: true }; }
+// v2.0 갑옷 단계 몸 그림: 군용 강화복 몸(무기별 12장)에서 목 아래 갑옷 색만 바꾼 그림 (tools/art/recolor_armor.py — 새로 그리지 않음)
+// 방호 강화복 Lv30 = 화학 방호 노랑 · 블랙선 전투복 Lv40 = 흑연 + 노란 모서리 · 처리반 강화복 Lv50 = 강철 회색 / 칸 · 동작 · 머리 위치는 군용 강화복과 같음
+for (const nk of ['hazmat', 'bsuit', 'eod'])
+  for (const k of Object.keys(ART.sprites)) if (k === 'player_military' || k.startsWith('player_military_')) { const n = k.replace('military', nk); if (!ART.sprites[n]) ART.sprites[n] = { ...ART.sprites[k], file: ART.sprites[k].file.replace('military', nk) }; }
 for (const [nk, from] of [['hazHood', 'gasmask'], ['bvisor', 'tacHelmet'], ['eodHelm', 'exoHelm']]) if (!ART.helmets[nk] && ART.helmets[from]) ART.helmets[nk] = { ...ART.helmets[from] };
 
