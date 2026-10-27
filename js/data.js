@@ -299,11 +299,12 @@ const MAPS = {
   lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, card: 'card_lab.png', /* v1.83 출격 카드 그림 */ minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
 };
 // v1.77 지하 연구소 = 5층 도전: B1 Lv30 → B5 Lv38 · B1~B4 는 승강기로 내려감 · B5 격리실에 키메라 · 어느 층이든 비상 계단으로 탈출
-const LAB_FLOORS = 5, labFloorLv = f => 28 + 2 * f;
+// v2.x 엔드게임 다시 맞춤 (v2.0 잠금이 풀릴 때 같이 켜짐 · V2_OPEN): 연구소 B1~B5 Lv34 → 42 · 타워 Lv38 → 46 (적 레벨만 +4 — 배율까지 올리면 봇 사망률 100%) · 연구소 몹 수 +20% (pop.js) · 보스 레벨 +4 (bosses.js)
+const LAB_FLOORS = 5, labFloorLv = f => (V2_OPEN ? 32 : 28) + 2 * f;
 // v1.78 도전 던전 공통: floors 층 수 · lv 층별 적 레벨 · label 층 이름 · lift 다음 층으로 가는 것 · best 최고 기록 키
 const DUNGEONS = {
   lab:   { floors: LAB_FLOORS, lv: labFloorLv, hpM: f => 1.8 + 0.3 * (f - 1), dmgM: f => 1.3 + 0.1 * (f - 1), /* v1.81 장비를 맞춘 Lv30 에겐 너무 약하던 것 */ label: f => `B${f}`, extra: { f: 2, spawn: ['researcher', 24] }, /* v1.83 */ lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
-  tower: { floors: 5, lv: f => 32 + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, extra: { f: 2, spawn: ['guardbot', 24] }, /* v1.83 */ lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
+  tower: { floors: 5, lv: f => (V2_OPEN ? 36 : 32) + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, extra: { f: 2, spawn: ['guardbot', 24] }, /* v1.83 */ lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
 };
 const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang', 'lab', 'tower'].filter(id => V2_MAP || id !== 'hangang'); // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
 const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang'].filter(id => V2_OPEN || id !== 'hangang'); // v1.6 장 번호 → 그 장의 맵
