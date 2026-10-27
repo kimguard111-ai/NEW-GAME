@@ -193,8 +193,14 @@ const City = {
       const okT = (x, y, ts) => x > 1 && x < W - 2 && !occ.has(y * W + x) && ts.includes(at(x, y));
       for (const b of RV.bridges) {
         const wide = b.x1 - b.x0 >= 9, gapNear = y => b.broken && Math.abs(y - RV.mid) <= 4;
+        // 대교 옆 아치 (br_side · 51-5c): 쉼터 위아래로 8칸짜리 아치를 양쪽 난간에 하나씩 · 끝마다 경고등 기둥 (난간 선 위에 바로 놓음)
+        if (wide && has('br_side')) for (const y0 of [RV.r0, RV.mid + 3]) for (const side of [0, 1]) {
+          const lx = side ? (b.x1 + 1) * TILE - 3 : b.x0 * TILE + 3;
+          add('deco', lx, (y0 + 4) * TILE, { key: rng() < 0.25 ? 'br_side2' : 'br_side' });
+          for (const yy of [y0, y0 + 8]) add('deco', lx, yy * TILE + 2, { key: 'br_post' });
+          for (let yy = y0; yy < y0 + 8; yy++) occ.add(yy * W + (side ? b.x1 : b.x0)); // 그 자리에 가로등 안 겹치게
+        }
         for (let y = RV.r0 + 1; y <= RV.r1 - 1; y += 4) for (const x of [b.x0, b.x1]) if (!gapNear(y) && okT(x, y, [T.ROAD])) put(rng() < 0.3 ? 'br_lamp2' : 'br_lamp', x, y, 1, false, { flip: x === b.x1 });
-        // 철골 아치 그림(br_arch)은 그 자체가 작은 다리 모양이라 난간에 붙이면 「옆에 다리가 또 있는」 것처럼 보여서 뺌
         if (wide) for (const x of [b.x0 - 3, b.x1 + 3]) if (okT(x, RV.mid, [T.ROAD])) put('br_bench', x, RV.mid, 1, false, { flip: x > b.x1 });
         for (const y of [RV.r0 - 2, RV.r1 + 2]) { const x = rng() < 0.5 ? b.x0 : b.x1; if (okT(x, y, [T.ROAD])) put('br_booth', x, y, 1, true, {}); }
         if (b.broken) for (const y of [RV.mid - 4, RV.mid + 4]) { if (okT(b.x0 + 1, y, [T.ROAD])) put('br_rail', b.x0 + 1, y, 1, false, {}); if (okT(b.x1 - 1, y, [T.ROAD])) put('br_cables', b.x1 - 1, y, 1, false, {}); }
