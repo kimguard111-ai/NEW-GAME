@@ -181,6 +181,12 @@ function startGame(save, name) {
     G.player.mats = G.player.mats || { scrap: 0, chip: 0 }; // v0.12 재료
     G.player.quest = Story.migrate(G.player.quest); // v0.7: 단일 임무 → 챕터
     Bag.normalize(); // v1.87 가방 칸 격자: 자리 잡기 (옛 세이브는 못 들어가는 것을 창고로)
+    { // v1.98 탄약 · 소모품 최대치: 넘치는 건 반값에 크레딧으로 (옛 세이브 — 구급상자 188개 · 기관총탄 9천 발 같은)
+      const P0 = G.player; let cr = 0; const out = [];
+      for (const t of Object.keys(AMMO)) { const cap = ammoCap(P0, t), n = (P0.ammo[t] || 0) - cap; if (n > 0) { P0.ammo[t] = cap; cr += Math.round(n * AMMO[t].price / AMMO[t].pack * 0.5); out.push(`${AMMO[t].name} ${fmt(n)}발`); } }
+      for (const it of P0.inventory) if (it.kind === 'cons' && it.count > consCap(it.key)) { const n = it.count - consCap(it.key); it.count -= n; cr += Math.round(n * (CONSUMABLES[it.key].price || 20) * 0.3); out.push(`${CONSUMABLES[it.key].name} ${n}개`); }
+      if (out.length) { P0.credits += cr; setTimeout(() => UI.toast('최대 소지량이 생겼다', `넘친 ${out.join(' · ')} → ₵${fmt(cr)}`), 2500); log(`v1.98 탄약 · 소모품 최대 소지량: 넘친 ${out.join(', ')}을(를) ₵${fmt(cr)}에 정리했다.`, '#ffd76a'); }
+    }
     if (!('helmet' in G.player.equip)) G.player.equip.helmet = null; // v0.6.2 헬멧 칸
     for (const k of ['w1', 'w2']) { const w = G.player.equip[k]; if (w && !WEAPONS[w.key].melee) w.loaded = Math.min(w.loaded || 0, magSize(w)); }
     G.bossT = save.bossT || 0;
@@ -564,7 +570,7 @@ function useItem(it) {
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
   } else if (it.key === 'ammo') {
-    const [t, n] = giveAmmoUnits(p, 120); log(`${AMMO[t].name} +${n}`, '#cc8');
+    const [t, n] = giveAmmoUnits(p, 120); log(n ? `${AMMO[t].name} +${n}` : `${AMMO[t].name}이(가) 가득 차 있다 (최대 ${ammoCap(p, t)})`, '#cc8');
   } else if (CONSUMABLES[it.key].slot) { // v1.14 투척물·보조: 가방에서 누르면 그 칸에 선택
     const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
     const on = Hotbar.autoAdd(it.key); log(`${it.name}${on ? `을(를) 벨트 ${G.player.hotbar.indexOf(it.key) + 1}번 칸에 올렸다.` : '. 벨트 칸이 가득 (B로 바꾸기)'}`, '#cfe'); // v1.50 벨트 = 소모품
@@ -579,7 +585,8 @@ function addItem(it) {
   const inv = G.player.inventory;
   if (it.kind === 'cons') {
     const ex = inv.find(i => i && i.kind === 'cons' && i.key === it.key);
-    if (ex) { ex.count += it.count; UI.refreshInventory(); if (it.key !== 'ammo' && G.player.hotbar) Hotbar.autoAdd(it.key); return true; }
+    if (ex) { const room = consCap(it.key) - ex.count; if (room <= 0) { G.stackFull = it.key; return false; } if (it.count > room) { ex.count += room; it.count -= room; UI.refreshInventory(); G.stackFull = it.key; return false; } // v1.98 묶음 최대 — 넘치는 건 바닥에 남음
+      ex.count += it.count; UI.refreshInventory(); if (it.key !== 'ammo' && G.player.hotbar) Hotbar.autoAdd(it.key); return true; }
   }
   if (!Bag.place(it, inv)) return false; // v1.87 칸 격자
   inv.push(it); Journal.onItem(it); // v1.15 도감
@@ -1334,8 +1341,8 @@ function updateDrops(dt) {
     if (dd < 24 && !d.noPick) {
       if (d.kind === 'credits' && p.raid) p.raid.credits += d.amount; // 탈출해야 확정
       if (d.kind === 'credits') { p.credits += d.amount; floatText(p.x, p.y - 26, `+${d.amount}₵`, '#ffd76a', 12); d.gone = true; SFX.play('coin'); }
-      else if (d.kind === 'ammo') { const t = d.ammo || ammoPick(p), n = addAmmo(p, t, d.amount * AMMO[t].k); floatText(p.x, p.y - 26, `${AMMO[t].name} +${n}`, AMMO[t].color, 12); d.gone = true; SFX.play('ammo'); }
-      else if (d.kind === 'item' && !pickupItem(d)) BagSwap.offer(d); // v1.88 꽉 찼으면 「바꾸기」 카드 (예전: 「인벤토리가 가득 찼습니다」 한 줄)
+      else if (d.kind === 'ammo') { const t = d.ammo || ammoPick(p), n = addAmmo(p, t, d.amount * AMMO[t].k); floatText(p.x, p.y - 26, n ? `${AMMO[t].name} +${n}` : `${AMMO[t].name} 가득 (${ammoCap(p, t)})`, n ? AMMO[t].color : '#999', 12); d.gone = true; SFX.play('ammo'); }
+      else if (d.kind === 'item' && (G.stackFull = null, !pickupItem(d))) { if (G.stackFull) { if (!d.warned) { d.warned = true; floatText(p.x, p.y - 30, `${CONSUMABLES[G.stackFull].name} 최대 ${consCap(G.stackFull)}개`, '#aaa', 12); } } else BagSwap.offer(d); } // v1.88 꽉 찼으면 「바꾸기」 카드 (예전: 「인벤토리가 가득 찼습니다」 한 줄)
     }
     if (d.t > 120) d.gone = true;
   }

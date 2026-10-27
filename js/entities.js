@@ -390,6 +390,11 @@ function makeEnemy(type, x, y, level) {
 // v1.33 탄약 4종 도우미
 function ammoOf(w) { return w && WEAPONS[w.key] && WEAPONS[w.key].ammo || null; }
 function gunAmmoTypes(p) { return [...new Set(['w1', 'w2'].map(k => ammoOf(p.equip[k])).filter(Boolean))]; }
-function addAmmo(p, t, n) { p.ammo[t] = (p.ammo[t] || 0) + Math.max(1, Math.round(n)); return Math.max(1, Math.round(n)); }
+// v1.98 탄약 최대 소지량 (테스터: 후반엔 탄이 9천 발 남아돌아 재장전 · 탄 관리 의미가 없음) — 종류마다 기본값, 큰 탄창 총을 들면 탄창 4개분까지
+const AMMO_CAP = { pistol: 240, auto: 720, shell: 150 };
+function ammoCap(p, t) { let m = 0; for (const k of ['w1', 'w2']) { const w = p.equip && p.equip[k], b = w && WEAPONS[w.key]; if (b && b.ammo === t && !b.melee) m = Math.max(m, magSize(w)); } return Math.max(AMMO_CAP[t] || 300, m * 4); }
+function addAmmo(p, t, n) { const room = Math.max(0, ammoCap(p, t) - (p.ammo[t] || 0)), a = Math.min(room, Math.max(1, Math.round(n))); p.ammo[t] = (p.ammo[t] || 0) + a; return a; }
+// v1.98 소모품 한 묶음 최대 (CONSUMABLES.stack — 있었지만 안 쓰이던 것: 구급상자 20 · 탄약 상자 20 · 나머지 10)
+const consCap = k => (CONSUMABLES[k] && CONSUMABLES[k].stack) || 10;
 // 기관총탄 u발어치를 들고 있는 총(없으면 장착한 총, 그것도 없으면 권총탄)에 맞춰 줌
 function giveAmmoUnits(p, u, t) { t = t || ammoOf(curWeapon()) || gunAmmoTypes(p)[0] || 'pistol'; return [t, addAmmo(p, t, u * AMMO[t].k)]; }
