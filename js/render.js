@@ -71,6 +71,24 @@ function groundKey2(tx, ty, t) {
   else if ((t === T.ROAD || t === T.CAR) && (z === 4 || z === 6) && lx < RW && ly >= RW && hash2(bx * 5 + 7, 3) < 0.4) return ['g_buslane', lx, false];
   return null;
 }
+// v2.0 한강 다리 바닥 그림 (tex_bridge): 다리 칸이면 그려서 true
+function bridgeTex(tx, ty, t, x, y) {
+  const R = World.river; if (!R || ty < R.r0 - 3 || ty > R.r1 + 3 || !(t === T.ROAD || t === T.CAR || t === T.RUBBLE)) return false;
+  const b = R.bridges.find(q => tx >= q.x0 - 3 && tx <= q.x1 + 3); if (!b) return false;
+  const n = b.x1 - b.x0 + 1, deck = n >= 10 && Math.abs(ty - R.mid) <= 2, in4 = v => ((v % 4) + 4) % 4;
+  if (!deck && (tx < b.x0 || tx > b.x1)) return false;
+  const off = tx - b.x0, col = off <= 0 ? 0 : off >= n - 1 ? 3 : off < n / 2 ? 1 : 2;
+  let key = 'b_center', c = col, row = in4(ty), flip = false;
+  if (deck) { key = 'b_deck'; c = in4(tx); }
+  else if (t === T.RUBBLE && b.broken) { key = 'b_broken'; row = 2; flip = ty > R.mid; } // 끊긴 끝: 부서진 쪽이 틈을 보게
+  else if (ty < R.r0 || ty > R.r1) { key = 'b_mud'; c = in4(tx); }
+  else if (ty === R.r0 || ty === R.r1 - 1) { key = 'b_joint'; row = 1; } else if (ty === R.r0 + 1 || ty === R.r1) { key = 'b_joint'; row = 2; }
+  const a = ART.tex && ART.tex[key]; if (!a || !a.ready) return false;
+  const [rx, ry, rw, rh] = a.rect;
+  if (!flip) ctx.drawImage(a.img, rx + c * rw / 4, ry + row * rh / 4, rw / 4, rh / 4, x, y, TILE + 0.6, TILE + 0.6);
+  else { ctx.save(); ctx.translate(x, y + TILE); ctx.scale(1, -1); ctx.drawImage(a.img, rx + c * rw / 4, ry + row * rh / 4, rw / 4, rh / 4, 0, 0, TILE + 0.6, TILE + 0.6); ctx.restore(); }
+  return true;
+}
 function groundTex2(tx, ty, t, x, y) {
   const g = groundKey2(tx, ty, t); if (!g) return false;
   const a = ART.tex && ART.tex[g[0]]; if (!a || !a.ready) return false;
@@ -81,7 +99,7 @@ function groundTex2(tx, ty, t, x, y) {
 }
 function drawGroundTile(tx, ty, t) {
   const x = tx * TILE, y = ty * TILE, h = hash2(tx, ty);
-  const g2 = groundTex2(tx, ty, t, x, y); // v1.58 이 그림이 깔리면 아래 코드 보도블록으로 덮지 않음
+  const bt = World.river && bridgeTex(tx, ty, t, x, y), g2 = bt || groundTex2(tx, ty, t, x, y); // v2.0 다리 그림 · v1.58 이 그림이 깔리면 아래 코드 보도블록으로 덮지 않음
   const g1 = !g2 && groundTex(tx, ty, t, x, y); // v1.79 그림이 깔리면 아래 코드 무늬(캠프 판자 · 던전 바닥)는 건너뜀
   if (!g2 && !g1) { ctx.fillStyle = TILE_COLORS[t]; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); }
   if ((t === T.ROAD || t === T.CAR) && World.river) { // v2.0 다리 위: 양옆 난간 (깊은 물과 닿은 쪽) · 이음매
@@ -93,7 +111,8 @@ function drawGroundTile(tx, ty, t) {
       if ((dl || dr) && ty % 4 === 0) { const px = dl ? x + 2.5 : x + TILE - 2.5; ctx.fillStyle = '#2a2a2e'; ctx.fillRect(px - 2, y + 12, 4, 8); ctx.fillStyle = 'rgba(255,200,120,0.85)'; ctx.fillRect(px - 1.5, y + 13, 3, 3); } // 가로등 기둥
     }
     const R = World.river, b = R && ty >= R.r0 && ty <= R.r1 && R.bridges.find(q => tx >= q.x0 && tx <= q.x1);
-    if (b) { // 다리 차선: 가운데 노란 겹선 · 차선 흰 점선 · 전망 쉼터는 보도블록
+    if (b && bt) { if (b.x1 - b.x0 >= 9 && Math.abs(ty - R.mid) > 2 && (tx - b.x0 === 3 || tx - b.x0 === 7) && ty % 2 === 0) { ctx.fillStyle = 'rgba(220,220,210,0.5)'; ctx.fillRect(x - 1, y + 4, 2, 16); } } // 그림 바닥: 4차선 점선만 덧그림
+    else if (b) { // 다리 차선: 가운데 노란 겹선 · 차선 흰 점선 · 전망 쉼터는 보도블록
       if (Math.abs(ty - R.mid) <= 2 && b.x1 - b.x0 >= 9) { ctx.fillStyle = 'rgba(190,170,140,0.35)'; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(x + 15, y, 1.5, TILE); ctx.fillRect(x, y + 15, TILE, 1.5); }
       else {
         const off = tx - b.cx;

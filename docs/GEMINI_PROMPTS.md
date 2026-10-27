@@ -1295,7 +1295,7 @@ Match the art style of the attached concept image. Create ONE wide 16:9 cinemati
 
 ---
 
-## 51. v2.0 한강 다리 (Lv30~34 · 7장) — 🔒 지금은 잠겨 있음 · **그림이 다 오면 엶**
+## 51. v2.0 한강 다리 (Lv30~34 · 7장) — 🔒 지금은 잠겨 있음 · ✅ v1.98.7 51-1~51-5 반영 (가로등 · 51-6 은 다시)
 게임에는 다 들어가 있고 `js/data.js` 의 `V2_READY = false` 로 닫혀 있습니다 (주소 끝에 `?v2` 를 붙이면 미리 열려서 그림 확인 가능).
 지금은 다른 그림에 물빛 색만 입혀 임시로 씁니다. 아래 4장이 오면 임시 줄을 바꾸고 `V2_READY = true`.
 
@@ -1344,6 +1344,7 @@ Match the art style of the attached concept image. Create ONE image with 9 separ
 ```
 
 ### 51-6 (선택) · 한강 소품 9종 · `props_hangang.png` (3×3) · 12절과 같은 방식
+⚠ v1.98.7: 첫 결과는 소품마다 **검은 바닥 판**이 붙어 와서 못 씀 → 프롬프트 끝에 이 문장을 붙여 다시: `Each prop stands alone on the magenta background: do not draw any floor tile, base plate, platform or ground under the props.` (51-5b 다리 소품의 가로등도 같은 이유로 보류 — 가로등 2개만 이 문장을 붙여 다시 뽑으면 바로 넣음)
 ```
 Match the art style of the attached concept image. Create ONE image with 9 separate isometric game props arranged in a 3 by 3 grid with wide empty gaps between them, every prop on a square diamond-shaped footprint viewed from the south corner: 1. a broken concrete bridge railing section with bent steel bars, 2. a rusty swan-shaped pedal boat lying on its side, 3. a toppled row of public rental bicycles, 4. a faded orange life ring on a short post, 5. a riverside convenience store folding table with two plastic chairs and a broken parasol, 6. a stack of sandbags with a flood warning light, 7. a half-sunken rusty patrol boat bow, 8. a tangle of river reeds and floating trash, 9. a cracked concrete bridge pillar stump. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. No people, no shadow, no ground, no text, no logos, no brand names. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the props.
 ```

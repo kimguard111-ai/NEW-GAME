@@ -6,10 +6,12 @@ const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
 const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.98.6';
+const GAME_VERSION = 'v1.98.7';
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
+// 주소 끝 ?hangang = 한강 지도만 열림 (레벨 30 · 7장은 닫힌 채 — 그림 · 지도 테스트용)
+const V2_MAP = V2_OPEN || (typeof location !== 'undefined' && /[?&]hangang(&|$)/.test(location.search));
 const MAX_LEVEL = V2_OPEN ? 40 : 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트) · v2.0 30 → 40 (한강 다리 Lv30~34 · 도전 던전 ~42)
 
 const RARITIES = [
@@ -303,7 +305,7 @@ const DUNGEONS = {
   lab:   { floors: LAB_FLOORS, lv: labFloorLv, hpM: f => 1.8 + 0.3 * (f - 1), dmgM: f => 1.3 + 0.1 * (f - 1), /* v1.81 장비를 맞춘 Lv30 에겐 너무 약하던 것 */ label: f => `B${f}`, extra: { f: 2, spawn: ['researcher', 24] }, /* v1.83 */ lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
   tower: { floors: 5, lv: f => 32 + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, extra: { f: 2, spawn: ['guardbot', 24] }, /* v1.83 */ lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
 };
-const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang', 'lab', 'tower'].filter(id => V2_OPEN || id !== 'hangang'); // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
+const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang', 'lab', 'tower'].filter(id => V2_MAP || id !== 'hangang'); // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
 const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang'].filter(id => V2_OPEN || id !== 'hangang'); // v1.6 장 번호 → 그 장의 맵
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상

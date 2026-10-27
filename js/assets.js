@@ -90,6 +90,8 @@ const ART = {
     fishcart: { file: 'props_seoul3.png', rect: [4, 4, 189, 204] }, recycle: { file: 'props_seoul3.png', rect: [197, 4, 245, 170] }, phonebooth: { file: 'props_seoul3.png', rect: [446, 4, 110, 212] }, mailbox: { file: 'props_seoul3.png', rect: [560, 4, 78, 154] }, clothesbin: { file: 'props_seoul3.png', rect: [642, 4, 111, 166] }, vent: { file: 'props_seoul3.png', rect: [757, 4, 202, 127] }, kiosk: { file: 'props_seoul3.png', rect: [4, 220, 191, 232] }, trashpile: { file: 'props_seoul3.png', rect: [199, 220, 205, 147] }, wiretree: { file: 'props_seoul3.png', rect: [408, 220, 170, 316] },
     // v1.58 props_subway
     gates: { file: 'props_subway.png', rect: [4, 4, 308, 235] }, ticketm: { file: 'props_subway.png', rect: [316, 4, 170, 243] }, screendoor: { file: 'props_subway.png', rect: [490, 4, 240, 254] }, linemap: { file: 'props_subway.png', rect: [734, 4, 217, 258] }, chairs: { file: 'props_subway.png', rect: [4, 266, 285, 232] }, firebox: { file: 'props_subway.png', rect: [293, 266, 195, 250] }, stationkiosk: { file: 'props_subway.png', rect: [492, 266, 280, 287] }, stairs: { file: 'props_subway.png', rect: [4, 557, 342, 270] }, sandlamp: { file: 'props_subway.png', rect: [350, 557, 278, 195] },
+    // v2.0 51-5b 한강 다리 소품 (그림마다 발판이 붙어 있어 다리 위에만 둠)
+    br_arch: { file: 'props_bridge.png', rect: [4, 4, 270, 199] }, br_arch2: { file: 'props_bridge.png', rect: [278, 4, 270, 185] }, br_pier: { file: 'props_bridge.png', rect: [552, 4, 269, 195] }, br_lamp: { file: 'props_bridge.png', rect: [4, 207, 251, 172] }, br_lamp2: { file: 'props_bridge.png', rect: [259, 207, 252, 166] }, br_rail: { file: 'props_bridge.png', rect: [515, 207, 251, 156] }, br_bench: { file: 'props_bridge.png', rect: [4, 383, 253, 161] }, br_booth: { file: 'props_bridge.png', rect: [261, 383, 253, 177] }, br_cables: { file: 'props_bridge.png', rect: [518, 383, 253, 178] },
     // v1.58 props_landmark
     haechi: { file: 'props_landmark.png', rect: [4, 4, 151, 184] }, pavilion: { file: 'props_landmark.png', rect: [159, 4, 220, 206] }, gym: { file: 'props_landmark.png', rect: [383, 4, 152, 169] }, gym2: { file: 'props_landmark.png', rect: [539, 4, 162, 178] }, busshelter: { file: 'props_landmark.png', rect: [705, 4, 243, 216] }, fountain: { file: 'props_landmark.png', rect: [4, 224, 223, 146] }, parasol: { file: 'props_landmark.png', rect: [231, 224, 176, 203] }, palacewall: { file: 'props_landmark.png', rect: [464, 224, 242, 191] }, bust: { file: 'props_landmark.png', rect: [710, 224, 92, 193] }, barricades: { file: 'props_landmark.png', rect: [806, 224, 212, 184] },
     // v1.58 props_district
@@ -189,6 +191,7 @@ const ART = {
     truck: { w: 100, y: 18 }, taxi_o: { w: 92, y: 18 }, minibus: { w: 130, y: 24 }, taxi_s: { w: 92, y: 18 }, delivery: { w: 34, y: 5 }, van: { w: 98, y: 18 }, reefer: { w: 104, y: 20 }, handcart: { w: 34, y: 5 }, bikes: { w: 46, y: 6 },
     fishcart: { w: 40, y: 6 }, recycle: { w: 40, y: 6 }, phonebooth: { w: 22, y: 4 }, mailbox: { w: 14, y: 2 }, clothesbin: { w: 22, y: 4 }, vent: { w: 40, y: 8 }, kiosk: { w: 36, y: 8 }, trashpile: { w: 40, y: 6 }, wiretree: { w: 40, y: 6 },
     gates: { w: 64, y: 8 }, ticketm: { w: 28, y: 6 }, screendoor: { w: 60, y: 8 }, linemap: { w: 52, y: 4 }, chairs: { w: 50, y: 6 }, firebox: { w: 34, y: 6 }, stationkiosk: { w: 48, y: 10 }, stairs: { w: 72, y: 12 }, sandlamp: { w: 52, y: 8 },
+    br_arch: { w: 118, y: 29 }, br_arch2: { w: 118, y: 29 }, br_pier: { w: 58, y: 14 }, br_lamp: { w: 58, y: 14 }, br_lamp2: { w: 58, y: 14 }, br_rail: { w: 58, y: 14 }, br_bench: { w: 58, y: 14 }, br_booth: { w: 58, y: 14 }, br_cables: { w: 58, y: 14 }, // v2.0 발판 1칸 = 58px
     haechi: { w: 36, y: 6 }, pavilion: { w: 110, y: 16 }, gym: { w: 42, y: 6 }, gym2: { w: 40, y: 6 }, busshelter: { w: 84, y: 10 }, fountain: { w: 96, y: 14 }, parasol: { w: 56, y: 8 }, palacewall: { w: 88, y: 12 }, bust: { w: 20, y: 4 }, barricades: { w: 56, y: 8 },
     carousel: { w: 150, y: 20 }, coaster: { w: 190, y: 16 }, swanboat: { w: 52, y: 8 }, gondola: { w: 48, y: 8 }, billboard: { w: 80, y: 6 }, floodlight: { w: 70, y: 6 }, tank: { w: 120, y: 20 }, ticketbooth: { w: 46, y: 8 }, riverboat: { w: 150, y: 20 },
     in_pcbang: { w: 64, y: 10 }, in_karaoke: { w: 40, y: 8 }, in_snackbar: { w: 40, y: 8 }, in_ticket: { w: 16, y: 4 }, in_wait: { w: 32, y: 6 }, in_salon: { w: 30, y: 6 }, in_laundry: { w: 40, y: 6 }, in_desk: { w: 28, y: 6 }, in_shoelocker: { w: 32, y: 6 }, in_counter: { w: 44, y: 8 }, // v1.58
@@ -243,6 +246,9 @@ const ART = {
     // v1.58 옥상 2 (27절): 기와 · 초록 방수페인트 · 함석 — 정사각으로 잘라 씀 (세 번째 아래 분홍 상자 피함)
     r_giwa: { file: 'tex_roof2.png', rect: [3, 3, 330, 330] }, r_green: { file: 'tex_roof2.png', rect: [350, 40, 324, 324] }, r_tin: { file: 'tex_roof2.png', rect: [692, 3, 328, 328] },
     // v1.58 바닥 2 (30절): 점자블록 보도 · 붉은 보도블록 · 버스전용차로 · 주차장 · 한강공원 길 · 횡단보도
+    // v2.0 51-5a 한강 다리 바닥 (render.js bridgeTex): 중앙 노란 겹선 · 차선 · 전망 쉼터 보도블록 · 이음쇠 · 끊긴 끝 · 진흙 진입로
+    b_center: { file: 'tex_bridge.png', rect: [7, 7, 298, 264] }, b_lane: { file: 'tex_bridge.png', rect: [315, 7, 297, 264] }, b_deck: { file: 'tex_bridge.png', rect: [622, 7, 287, 263] },
+    b_joint: { file: 'tex_bridge.png', rect: [7, 281, 299, 264] }, b_broken: { file: 'tex_bridge.png', rect: [316, 281, 298, 264] }, b_mud: { file: 'tex_bridge.png', rect: [624, 281, 299, 264] },
     g_tactile: { file: 'tex_street2.png', rect: [3, 3, 330, 277] }, g_redbrick: { file: 'tex_street2.png', rect: [347, 3, 330, 277] }, g_buslane: { file: 'tex_street2.png', rect: [690, 3, 331, 277] },
     g_parking: { file: 'tex_street2.png', rect: [3, 292, 330, 277] }, g_parkpath: { file: 'tex_street2.png', rect: [347, 292, 330, 277] }, g_crosswalk: { file: 'tex_street2.png', rect: [690, 292, 331, 277] },
     r_concrete: { file: 'tex_roof.png', rect: [7, 7, 330, 342] },
@@ -312,6 +318,7 @@ const ART = {
     tower63: { file: 'tower63.png' },
     coex: { file: 'coex.png' },
     lotte: { file: 'lotte.png' },
+    pump: { file: 'pump.png' }, // v2.0 51-2 한강 배수 펌프장
   },
   sprites: {
     // 예시 (도구가 만들어 주는 형식):
@@ -424,11 +431,10 @@ const ART = {
     colony: { file: 'colony.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
     queen: { file: 'queen.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     shade: { file: 'shade.png', cell: 128, w: 307, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 4] } },
-    drowned: { file: 'subject.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, filter: 'hue-rotate(150deg) saturate(0.75) brightness(0.8)' }, // v2.0 물귀신 변이체 (실험체 그림을 물빛으로)
+    drowned: { file: 'drowned.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 4], attack: [2, 4], hit: [3, 2], death: [4, 6] } }, // v2.0 51-1 물귀신 (걷기 = 기어 오는 4장)
     warden: { file: 'warden.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
-    // v2.0 한강 (그림 오기 전 임시: 파수꾼 · 군체 그림을 물빛으로) — 그림이 오면 이 두 줄을 sprite-tool 결과로 바꿈
-    sumun: { file: 'warden.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] }, filter: 'hue-rotate(160deg) saturate(0.7) brightness(0.85)' },
-    leech: { file: 'colony.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] }, filter: 'hue-rotate(120deg) saturate(0.6) brightness(0.75)' },
+    sumun: { file: 'sumun.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } }, // v2.0 51-3 한강 수문장
+    leech: { file: 'leech.png', cell: 128, w: 307, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } }, // v2.0 51-4 거머리
     player_blade: { file: 'player_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, headW: 19, heads: { idle: [[4,-104],[4,-99],[4,-95],[4,-99]], walk: [[6,-99],[1,-98],[0,-95],[4,-99],[5,-104],[-2,-98],[1,-99],[1,-95]], attack: [[-11,-99],[-9,-100],[-10,-96],[5,-96]], hit: [[-1,-97],[12,-95]], death: [[-28,-99],[-33,-92],[-44,-82],[-13,-59],[6,-59]] } },
     player_vest_blade: { file: 'player_vest_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[4,-99],[3,-99],[3,-104],[3,-104]], walk: [[3,-95],[1,-98],[-1,-90],[2,-90],[2,-95],[-2,-98],[1,-90],[-1,-95]], attack: [[-18,-106],[18,-97],[-20,-92],[10,-92],[40,-98]], hit: [[-4,-97],[-1,-95]], death: [[5,-98],[-28,-92],[-27,-80],[-53,-56],[7,-58],[-36,-48]] } },
     player_tactical_blade: { file: 'player_tactical_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[4,-99],[4,-99],[4,-104],[4,-99]], walk: [[6,-95],[1,-94],[0,-95],[3,-95],[4,-100],[-3,-98],[3,-95],[1,-100]], attack: [[7,-100],[21,-96],[34,-96],[12,-96]], hit: [[-4,-97],[24,-89]], death: [[-4,-102],[-53,-89],[-40,-82],[-25,-66],[0,-58],[-3,-58]] } },

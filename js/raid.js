@@ -18,7 +18,7 @@ const MAP_SMS = {
   lab: '[방역 당국] 지하 연구시설 격리 해제 경보. 생물학적 위험. 즉시 대피하십시오.',
 };
 const Raid = {
-  unlocked(id) { const d = MAPS[id]; return !!d && (V2_OPEN || id !== 'hangang') && (d.chapter === undefined || G.player.quest.ch >= d.chapter) && (!d.minLv || G.player.level >= d.minLv) && (!d.needLab || (G.player.labKills || 0) >= 1); }, // v1.77 연구소는 Lv30부터 · v1.78 타워는 키메라 처치 뒤
+  unlocked(id) { const d = MAPS[id]; return !!d && (V2_MAP || id !== 'hangang') && (d.chapter === undefined || G.player.quest.ch >= d.chapter) && (!d.minLv || G.player.level >= d.minLv) && (!d.needLab || (G.player.labKills || 0) >= 1); }, // v1.77 연구소는 Lv30부터 · v1.78 타워는 키메라 처치 뒤
   inRaid() { return World.map !== 'camp'; },
 
   // 출격 지도 (작전 장교 대화)

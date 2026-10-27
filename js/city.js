@@ -186,6 +186,21 @@ const City = {
     const nSmall = Math.round(W * H / 700);
     for (let i = 0; i < nSmall; i++) { const key = SMALL[Math.floor(rng() * SMALL.length)]; tryPut(key, SIZE[key] || 1, SOLIDK.has(key), 60); }
     // 잠실 석촌호수: 오리배 몇 척 (물 위, 안 막음)
+    // v2.0 한강 다리: 가로등 (4칸마다 · 3할은 꺼진 것) · 대교 철골 아치 · 다리 끝 초소 · 전망 쉼터 벤치 · 끊긴 다리 난간 · 케이블 / 둔치: 오리배 · 파라솔 · 공공자전거
+    const RV = World.river;
+    if (RV) {
+      const ok = (x, y) => !occ.has(y * W + x) && at(x, y) === T.ROAD;
+      for (const b of RV.bridges) {
+        const wide = b.x1 - b.x0 >= 9, gapNear = y => b.broken && Math.abs(y - RV.mid) <= 4;
+        // 가로등 그림(br_lamp)은 발판이 커서 보류 — 난간 가로등은 render.js 코드 그림
+        if (wide) for (let y = RV.r0 + 3; y <= RV.r1 - 3; y += 6) for (const x of [b.x0, b.x1]) if (Math.abs(y - RV.mid) > 3 && ok(x, y)) put(rng() < 0.25 ? 'br_arch2' : 'br_arch', x, y, 1, false, {});
+        if (wide) for (const x of [b.x0 - 3, b.x1 + 3]) if (ok(x, RV.mid)) put('br_bench', x, RV.mid, 1, false, { flip: x > b.x1 });
+        for (const y of [RV.r0 - 2, RV.r1 + 2]) { const x = rng() < 0.5 ? b.x0 : b.x1; if (ok(x, y)) put('br_booth', x, y, 1, true, {}); }
+        if (b.broken) for (const y of [RV.mid - 4, RV.mid + 4]) { if (ok(b.x0 + 1, y)) put('br_rail', b.x0 + 1, y, 1, false, {}); if (ok(b.x1 - 1, y)) put('br_cables', b.x1 - 1, y, 1, false, {}); }
+      }
+      for (let i = 0, k = 0; i < 6 && k < 500; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = RV.r0 + Math.floor(rng() * (RV.r1 - RV.r0 + 1)); if (free(x, y, 1, t => t === T.DEEP) && put('swanboat', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
+      for (let i = 0, k = 0; i < 10 && k < 600; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = rng() < 0.5 ? RV.r0 - 2 : RV.r1 + 2; if (free(x, y, 1, t => t === T.GRASS || t === T.WALK) && put(rng() < 0.5 ? 'parasol' : 'bikes', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
+    }
     if (map === 'jamsil') for (let i = 0, k = 0; i < 4 && k < 400; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)); if (free(x, y, 1, t => t === T.WATER) && put('swanboat', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
   },
 
