@@ -54,6 +54,8 @@ const ART = {
     tacHelmet: { file: 'helmets.png', rect: [188, 0, 212, 208] },
     gasmask: { file: 'helmets.png', rect: [408, 0, 188, 228] },
     exoHelm: { file: 'helmets.png', rect: [604, 0, 164, 204] },
+    // v2.0 52-3 갑옷 단계 헬멧
+    hazHood: { file: 'helmets2.png', rect: [4, 4, 232, 264] }, bvisor: { file: 'helmets2.png', rect: [240, 4, 204, 238] }, eodHelm: { file: 'helmets2.png', rect: [448, 4, 216, 264] },
   },
   helmetFit: { w: 1.35, up: 0.18 }, // 헬멧 폭 = 머리 폭 × w, 머리 꼭대기보다 (헬멧 폭 × up) 만큼 위에서 시작
 
@@ -182,6 +184,7 @@ const ART = {
     // v1.49.12 총기 부품 12종 (프롬프트 22)
     att_reddot: { file: 'icons_attach1.png', rect: [4, 4, 169, 164] }, att_scope2: { file: 'icons_attach1.png', rect: [177, 4, 224, 202] }, att_scope4: { file: 'icons_attach1.png', rect: [405, 4, 322, 246] }, att_suppressor: { file: 'icons_attach1.png', rect: [4, 254, 297, 246] }, att_comp: { file: 'icons_attach1.png', rect: [305, 254, 224, 172] }, att_choke: { file: 'icons_attach1.png', rect: [533, 254, 221, 172] }, att_vgrip: { file: 'icons_attach1.png', rect: [758, 254, 134, 282] }, att_agrip: { file: 'icons_attach1.png', rect: [4, 540, 259, 174] }, att_laser: { file: 'icons_attach1.png', rect: [267, 540, 233, 159] },
     att_extmag: { file: 'icons_attach2.png', rect: [4, 4, 185, 308] }, att_dualmag: { file: 'icons_attach2.png', rect: [193, 4, 259, 293] }, att_drum: { file: 'icons_attach2.png', rect: [456, 4, 241, 281] },
+    hazmat: { file: 'icons_armor2.png', rect: [4, 4, 250, 262] }, bsuit: { file: 'icons_armor2.png', rect: [258, 4, 233, 262] }, eod: { file: 'icons_armor2.png', rect: [495, 4, 226, 262] }, // v2.0 52-4 갑옷 단계 아이콘 (3번은 크게 나와서 셋 다 같은 크기로 맞춤)
     vest: { file: 'icons_gear.png', rect: [4, 4, 160, 208] }, tactical: { file: 'icons_gear.png', rect: [168, 4, 194, 215] }, military: { file: 'icons_gear.png', rect: [366, 4, 226, 222] }, medkit: { file: 'icons_gear.png', rect: [792, 4, 155, 155] }, exo: { file: 'icons_gear.png', rect: [4, 230, 259, 261] }, belt: { file: 'icons_gear.png', rect: [267, 230, 234, 132] }, ammo: { file: 'icons_gear.png', rect: [505, 230, 222, 233] }, scrap: { file: 'icons_gear.png', rect: [731, 230, 196, 129] },
     molotov: { file: 'icons_items.png', rect: [4, 4, 189, 246] }, flash: { file: 'icons_items.png', rect: [197, 4, 116, 231] }, mine: { file: 'icons_items.png', rect: [317, 4, 227, 174] }, stim: { file: 'icons_items.png', rect: [548, 4, 193, 204] }, ammo_pistol: { file: 'icons_items.png', rect: [745, 4, 194, 157] }, plate: { file: 'icons_items.png', rect: [4, 254, 176, 232] }, ammo_shell: { file: 'icons_items.png', rect: [184, 254, 195, 225] }, ammo_sniper: { file: 'icons_items.png', rect: [383, 254, 199, 124] }, ammo_auto: { file: 'icons_items.png', rect: [586, 254, 127, 254] },
     rapid: { file: 'icons_skills.png', rect: [4, 4, 231, 238] }, grenade: { file: 'icons_skills.png', rect: [239, 4, 231, 238] }, heal: { file: 'icons_skills.png', rect: [474, 4, 231, 238] }, adren: { file: 'icons_skills.png', rect: [4, 246, 235, 240] }, turret: { file: 'icons_skills.png', rect: [243, 246, 233, 240] }, roll: { file: 'icons_skills.png', rect: [717, 246, 235, 240] },

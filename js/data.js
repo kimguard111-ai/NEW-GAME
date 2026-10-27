@@ -204,9 +204,9 @@ const HELMETS = {
 if (V2_OPEN) {
   Object.assign(ARMORS.tactical, { lvl: 10 }); Object.assign(ARMORS.military, { lvl: 20 });
   Object.assign(ARMORS, {
-    hazmat: { name: '방호 강화복',   icon: 'military', def: 38, lvl: 30, price: 3000 },
-    bsuit:  { name: '블랙선 전투복',   icon: 'tactical', def: 48, lvl: 40, price: 4500 },
-    eod:    { name: '처리반 강화복',   icon: 'exo', def: 58, lvl: 50, price: 6500 },
+    hazmat: { name: '방호 강화복',   icon: 'hazmat', def: 38, lvl: 30, price: 3000 },
+    bsuit:  { name: '블랙선 전투복',   icon: 'bsuit', def: 48, lvl: 40, price: 4500 },
+    eod:    { name: '처리반 강화복',   icon: 'eod', def: 58, lvl: 50, price: 6500 },
   });
   Object.assign(ARMORS.exo, { def: 70, lvl: 60, price: 9000 }); const ex = ARMORS.exo; delete ARMORS.exo; ARMORS.exo = ex; // 맨 뒤로 (도감 순서)
   Object.assign(HELMETS.tacHelmet, { lvl: 10 }); Object.assign(HELMETS.gasmask, { lvl: 15, special: true });
