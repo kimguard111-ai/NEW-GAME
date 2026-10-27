@@ -688,3 +688,14 @@ body.touch #quest-tracker.min::after { content: '펼치기 ▾' !important; colo
 /* v1.98.3 주소 이사 안내 */
 #addr-warn.move { color: #ffd76a; border-color: #e0b23a; }
 #addr-warn.move button { margin-left: 8px; padding: 4px 10px; font-size: 13px; border-color: #e0b23a; color: #ffd76a; }
+/* v1.98.4 설정 탭 */
+.set-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; border-bottom: 2px solid #3a352a; padding-bottom: 6px; }
+.set-tab { padding: 6px 14px; font-size: 14px; }
+.set-tab.on { border-color: #e0b23a !important; color: #e0b23a !important; background: rgba(224,178,58,.12) !important; }
+.set-page.hidden { display: none !important; }
+body.touch .set-tab { padding: 5px 10px; font-size: 13px; }
+#settings-body { columns: auto !important; }
+#settings-body .set-page { columns: 2; column-gap: 22px; } #settings-body .set-page > * { break-inside: avoid; }
+body.touch #settings-body .set-page { columns: 2; column-gap: 14px; }
+body.touch #settings-body { font-size: 11.5px !important; line-height: 1.4 !important; } body.touch #settings-body .muted { font-size: 10px; }
+#settings-body .set-page[data-page="keys"], #settings-body .set-page[data-page="data"] { columns: 1; }

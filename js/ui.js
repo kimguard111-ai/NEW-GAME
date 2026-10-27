@@ -469,39 +469,53 @@ const UI = {
   // ---------------- 설정 ----------------
   refreshSettings() {
     const opt = (k, label, desc) => `<label class="set-row"><input type="checkbox" data-set="${k}" ${Settings[k] ? 'checked' : ''}> <b>${label}</b> <span class="muted">${desc}</span></label>`;
-    $('settings-body').innerHTML = opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
-      + opt('detail', '세부 묘사', '옥상·1층·도로·차 디테일 (끄면 가벼워짐)')
-      + `<div class="set-row"><b>화면 흔들림</b> <span id="shk-val">${Math.round(Settings.shakeAmt * 100)}%</span> <span class="muted">타격 · 폭발 · 사격 반동 (0% = 끔)</span><br><input type="range" id="shk-range" min="0" max="1" step="0.1" value="${Settings.shakeAmt}"></div>`
-      + ((IS_TOUCH && typeof navigator.vibrate === 'function') || Pad.on ? opt('vibrate', '진동', '맞을 때 · 보스 큰 공격 · 전설 획득 · 쓰러질 때 (v1.90)') : '')
-      + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 회피)'))
-      + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
-      + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
-      + opt('bagPause', '창 열면 멈춤', '출격 중 가방 · 능력치 · 스킬 · 임무 · 설정 창을 열면 게임이 멈춤 (v1.96)')
-      + (IS_TOUCH ? opt('autoFire', '자동 공격', '쫓아오는 적 · 가까운 적을 알아서 쏨 (화면 오른쪽 「자동」 버튼과 같음 · 탄을 쓰니 주의)') : '')
-      + opt('nearHud', '캐릭터 옆 상태', '맞으면 머리 위 체력 · 구르면 발밑 회피 막대 · 탄이 적으면 옆에 숫자 · 버프 남은 초 (필요할 때만 뜸)')
-      + opt('cb', '색약 모드', '탈출 지점 초록 → 하늘색 · 위험 원에 흰 테두리 · 비교 파랑/주황 · 칸에 등급 이름 (v1.92)')
-      + opt('sound', '효과음', '총소리·타격·획득 소리')
-      + opt('bgm', '배경 음악', '맵 분위기 음악 · 적이 쫓아오면 전투 음악 (v1.17)')
-      + `<div class="set-row"><b>음악 음량</b> <span id="mus-val">${Math.round((Settings.musicVol ?? 0.5) * 100)}%</span><br><input type="range" id="mus-range" min="0" max="1" step="0.05" value="${Settings.musicVol ?? 0.5}"></div>`
-      + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
-      + `<div class="set-row"><b>글자 크기</b> <span class="muted">화면 글씨 · 창 글씨</span><br>${[[1, '보통'], [1.15, '크게'], [1.3, '아주 크게']].map(([v, n]) => `<button class="ts-btn${Math.abs(textScale() - v) < 0.01 ? ' on' : ''}" data-ts="${v}">${n}</button>`).join(' ')}</div>` // v1.64
-      + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="${ZOOM_MAX}" step="0.1" value="${ZOOM}"></div>`
-      + `<div class="set-row"><b>화면 해상도</b> <span class="muted">낮추면 덜 선명하고 훨씬 가벼움 · 자동 = 버벅이면 알아서 내림 (지금 ${['높음', '보통', '낮음'][resLevel()]})</span><br>${[['auto', '자동'], ['0', '높음'], ['1', '보통'], ['2', '낮음']].map(([v, n]) => `<button class="res-btn${Settings.resMode === v ? ' on' : ''}" data-res="${v}">${n}</button>`).join(' ')}</div>`
-      + opt('tips', '도움말 팁', '처음 겪는 상황에서 한 번씩 안내')
-      + opt('reverb', '울림', '바깥 메아리 · 실내 울림 (끄면 가벼워짐, 모바일은 기본 끔)')
-      + opt('ambient', '환경음', '바람 · 먼 총성 · 사이렌 같은 맵 분위기 소리')
-      + opt('xray', '가려진 적 윤곽', '건물 뒤에 있는 적을 붉은 윤곽으로 보여 줌')
-      + opt('outline', '적 테두리', '적 둘레에 붉은 테두리 · 발밑 고리 (어두운 곳에서도 잘 보이게)')
-      + opt('fps', '프레임 표시', '화면 왼쪽 아래에 초당 프레임 (폰이 버벅이는지 잴 때)')
-      + (IS_TOUCH ? opt('fullscreen', '전체 화면', '화면을 누르면 주소창 없이 전체 화면으로 (아이폰은 「홈 화면에 추가」로 열어야 전체 화면)') : '')
-      + `<div class="set-row"><button id="btn-lowspec">저사양 모드 (한 번에 가볍게)</button> <span class="muted">조명 · 세부 묘사 · 울림 · 환경음 끔</span></div>`
-      + (IS_TOUCH ? '' : `<hr style="border-color:#333"><b>조작 키</b> <span class="muted">누르고 새 키 입력. 겹치면 서로 바뀜, ESC는 고정</span><div class="key-grid">${Object.keys(KEY_DEFAULTS).map(a => `<span class="key-row">${KEY_NAMES[a]} <button class="key-btn" data-key="${a}">${keyLabel(keyOf(a))}</button></span>`).join('')}</div><button id="btn-keyreset">기본 키로</button>`)
-      + `<hr style="border-color:#333"><b>게임패드</b> <span class="muted">${Pad.get() ? '연결됨' : '연결하고 아무 버튼이나 누르면 켜짐'}</span><div class="muted" style="line-height:1.6">왼쪽 스틱 이동 · 오른쪽 스틱 조준 · ${Pad.label('fire')} 사격 · ${Pad.label('aim')} 정밀 조준 · ${Pad.label('dodge')} 회피 · ${Pad.label('interact')} 상호작용 · ${Pad.label('reload')} 재장전 · ${Pad.label('swap')} 무기 교체 · ${Pad.label('useMed')} 구급상자 · ${Pad.label('throw')} 투척물 · 십자키 스킬 1~4 · L3 유탄 · R3 동료 명령 · ${Pad.label('settings')} 일시정지 · ${Pad.label('inventory')} 가방<br>창에서는 커서: 왼쪽 스틱으로 옮기고 ${Pad.label('dodge')} 누르기 · 오른쪽 스틱 스크롤 · ${Pad.label('interact')} 닫기</div>`
-      + `<hr style="border-color:#333"><b>세이브 백업</b> <span class="muted">다른 기기·브라우저로 옮길 때</span><br>`
-      + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
-      + `<hr style="border-color:#333"><b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`
-      + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
-      + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`;
+    const tab = UI.setTab || 'screen'; // v1.98.4 설정을 갈래별 탭으로 (한 장에 다 있어 너무 복잡하던 것)
+    const page = (id, h) => `<div class="set-page${id === tab ? '' : ' hidden'}" data-page="${id}">${h}</div>`;
+    $('settings-body').innerHTML = `<div class="set-tabs">${[["screen", "화면"], ["play", "전투"], ["sound", "소리"], ["keys", "조작"], ["data", "저장 · 기타"]].map(([id, n]) => `<button class="set-tab${id === tab ? ' on' : ''}" data-tab="${id}">${n}</button>`).join('')}</div>`
+      + page('screen', ''
+        + `<div class="set-row"><b>글자 크기</b> <span class="muted">화면 글씨 · 창 글씨</span><br>${[[1, '보통'], [1.15, '크게'], [1.3, '아주 크게']].map(([v, n]) => `<button class="ts-btn${Math.abs(textScale() - v) < 0.01 ? ' on' : ''}" data-ts="${v}">${n}</button>`).join(' ')}</div>` // v1.64
+        + `<div class="set-row"><b>화면 확대</b> <span id="zoom-val">${ZOOM.toFixed(1)}배</span><br><input type="range" id="zoom-range" min="${ZOOM_MIN}" max="${ZOOM_MAX}" step="0.1" value="${ZOOM}"></div>`
+        + `<div class="set-row"><b>화면 해상도</b> <span class="muted">낮추면 덜 선명하고 훨씬 가벼움 · 자동 = 버벅이면 알아서 내림 (지금 ${['높음', '보통', '낮음'][resLevel()]})</span><br>${[['auto', '자동'], ['0', '높음'], ['1', '보통'], ['2', '낮음']].map(([v, n]) => `<button class="res-btn${Settings.resMode === v ? ' on' : ''}" data-res="${v}">${n}</button>`).join(' ')}</div>`
+        + opt('light', '조명 효과', '끄면 가벼워짐 (저사양·모바일 권장)')
+        + opt('detail', '세부 묘사', '옥상·1층·도로·차 디테일 (끄면 가벼워짐)')
+        + `<div class="set-row"><button id="btn-lowspec">저사양 모드 (한 번에 가볍게)</button> <span class="muted">조명 · 세부 묘사 · 울림 · 환경음 끔</span></div>`
+        + opt('fps', '프레임 표시', '화면 왼쪽 아래에 초당 프레임 (폰이 버벅이는지 잴 때)')
+        + (IS_TOUCH ? opt('fullscreen', '전체 화면', '화면을 누르면 주소창 없이 전체 화면으로 (아이폰은 「홈 화면에 추가」로 열어야 전체 화면)') : '')
+        + opt('cb', '색약 모드', '탈출 지점 초록 → 하늘색 · 위험 원에 흰 테두리 · 비교 파랑/주황 · 칸에 등급 이름 (v1.92)')
+      )
+      + page('play', ''
+        + `<div class="set-row"><b>화면 흔들림</b> <span id="shk-val">${Math.round(Settings.shakeAmt * 100)}%</span> <span class="muted">타격 · 폭발 · 사격 반동 (0% = 끔)</span><br><input type="range" id="shk-range" min="0" max="1" step="0.1" value="${Settings.shakeAmt}"></div>`
+        + ((IS_TOUCH && typeof navigator.vibrate === 'function') || Pad.on ? opt('vibrate', '진동', '맞을 때 · 보스 큰 공격 · 전설 획득 · 쓰러질 때 (v1.90)') : '')
+        + opt('nearHud', '캐릭터 옆 상태', '맞으면 머리 위 체력 · 구르면 발밑 회피 막대 · 탄이 적으면 옆에 숫자 · 버프 남은 초 (필요할 때만 뜸)')
+        + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
+        + opt('xray', '가려진 적 윤곽', '건물 뒤에 있는 적을 붉은 윤곽으로 보여 줌')
+        + opt('outline', '적 테두리', '적 둘레에 붉은 테두리 · 발밑 고리 (어두운 곳에서도 잘 보이게)')
+        + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
+        + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 회피)'))
+        + (IS_TOUCH ? opt('autoFire', '자동 공격', '쫓아오는 적 · 가까운 적을 알아서 쏨 (화면 오른쪽 「자동」 버튼과 같음 · 탄을 쓰니 주의)') : '')
+        + opt('bagPause', '창 열면 멈춤', '출격 중 가방 · 능력치 · 스킬 · 임무 · 설정 창을 열면 게임이 멈춤 (v1.96)')
+        + opt('tips', '도움말 팁', '처음 겪는 상황에서 한 번씩 안내')
+      )
+      + page('sound', ''
+        + opt('sound', '효과음', '총소리·타격·획득 소리')
+        + opt('bgm', '배경 음악', '맵 분위기 음악 · 적이 쫓아오면 전투 음악 (v1.17)')
+        + `<div class="set-row"><b>음악 음량</b> <span id="mus-val">${Math.round((Settings.musicVol ?? 0.5) * 100)}%</span><br><input type="range" id="mus-range" min="0" max="1" step="0.05" value="${Settings.musicVol ?? 0.5}"></div>`
+        + `<div class="set-row"><b>음량</b> <span id="vol-val">${Math.round(Settings.volume * 100)}%</span><br><input type="range" id="vol-range" min="0" max="1" step="0.05" value="${Settings.volume}"></div>`
+        + opt('reverb', '울림', '바깥 메아리 · 실내 울림 (끄면 가벼워짐, 모바일은 기본 끔)')
+        + opt('ambient', '환경음', '바람 · 먼 총성 · 사이렌 같은 맵 분위기 소리')
+      )
+      + page('keys', ''
+        + (IS_TOUCH ? '' : `<b>조작 키</b> <span class="muted">누르고 새 키 입력. 겹치면 서로 바뀜, ESC는 고정</span><div class="key-grid">${Object.keys(KEY_DEFAULTS).map(a => `<span class="key-row">${KEY_NAMES[a]} <button class="key-btn" data-key="${a}">${keyLabel(keyOf(a))}</button></span>`).join('')}</div><button id="btn-keyreset">기본 키로</button>`)
+        + `<b>게임패드</b> <span class="muted">${Pad.get() ? '연결됨' : '연결하고 아무 버튼이나 누르면 켜짐'}</span><div class="muted" style="line-height:1.6">왼쪽 스틱 이동 · 오른쪽 스틱 조준 · ${Pad.label('fire')} 사격 · ${Pad.label('aim')} 정밀 조준 · ${Pad.label('dodge')} 회피 · ${Pad.label('interact')} 상호작용 · ${Pad.label('reload')} 재장전 · ${Pad.label('swap')} 무기 교체 · ${Pad.label('useMed')} 구급상자 · ${Pad.label('throw')} 투척물 · 십자키 스킬 1~4 · L3 유탄 · R3 동료 명령 · ${Pad.label('settings')} 일시정지 · ${Pad.label('inventory')} 가방<br>창에서는 커서: 왼쪽 스틱으로 옮기고 ${Pad.label('dodge')} 누르기 · 오른쪽 스틱 스크롤 · ${Pad.label('interact')} 닫기</div>`
+      )
+      + page('data', ''
+        + `<b>세이브 백업</b> <span class="muted">다른 기기·브라우저로 옮길 때</span><br>`
+        + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
+        + `<b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`
+        + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
+        + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`
+      );
+    $('settings-body').querySelectorAll('.set-tab').forEach(b => { b.onclick = () => { UI.setTab = b.dataset.tab; $('settings-body').querySelectorAll('.set-tab').forEach(x => x.classList.toggle('on', x === b)); $('settings-body').querySelectorAll('.set-page').forEach(pg => pg.classList.toggle('hidden', pg.dataset.page !== UI.setTab)); SFX.play('ui'); }; });
     $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); if (el.dataset.set === 'autoFire') Touch.autoBtn(); if (el.dataset.set === 'cb') { document.body.classList.toggle('cb', Settings.cb); UI.refreshInventory(); } if (el.dataset.set === 'vibrate' && el.checked) Haptic.pulse(40, 0); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
     $('settings-body').querySelectorAll('.res-btn').forEach(b => { b.onclick = () => { Settings.resMode = b.dataset.res; Settings.save(); applyRes(); UI.refreshSettings(); }; }); // v1.93
     $('settings-body').querySelectorAll('.ts-btn').forEach(b => { b.onclick = () => { Settings.textScale = +b.dataset.ts; Settings.save(); applyTextScale(); UI.refreshSettings(); }; }); // v1.64
