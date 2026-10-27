@@ -1,8 +1,8 @@
-# 출시 준비 자료 (v1.86)
+# 출시 준비 자료 (v1.86 · v1.98.2에서 이름 변경: 「SEOUL 2049」 → 「폐허의 도시: 익스트랙션 · CITY OF RUINS: Extraction」)
 
 순서: **① 웹 주소로 한국 커뮤니티 공개 테스트** → (동시에) **② 구글 플레이 준비 · 비공개 테스트 12명 14일** → ③ 정식 출시 · itch는 덤.
 
-- 게임 주소: `https://seoul2049.vercel.app`
+- 게임 주소: `https://seoul2049.vercel.app` → **새 이름 주소로 옮기기 추천** (Vercel 프로젝트 이름을 `cityofruins` 로 바꾸면 `https://cityofruins.vercel.app` · 옛 주소의 세이브는 「세이브 코드」로 옮겨야 함 — 브라우저 저장은 주소마다 따로). 아래 글의 주소는 옮긴 뒤 바꿔 쓰기
 - 개인정보처리방침: `https://seoul2049.vercel.app/privacy.html` (문의 kimguard111@gmail.com)
 - 스크린샷 8장: `docs/store/screens/` (1920×1080 가로 · 플레이 스토어 규격 맞음)
 - 스토어 큰 그림: `docs/store/feature_1024x500.png` · 앱 아이콘: `docs/store/app_icon_1024.png` (스토어용은 512×512 — `assets/app/icon512.png`)
@@ -20,7 +20,7 @@
 | 레딧 r/WebGames · r/indiegaming (영어) | 「한국어만 지원」을 꼭 적기 |
 
 ### 글 초안 A — 디시 · 루리웹 (한국어)
-**제목:** 혼자 만든 웹 익스트랙션 RPG 「서울 2049」 공개 테스트 합니다 (폰·PC 브라우저, 무료)
+**제목:** 혼자 만든 웹 익스트랙션 RPG 「폐허의 도시」 공개 테스트 합니다 (폰·PC 브라우저, 무료)
 
 **본문:**
 > 붕괴 20년 뒤 서울, 시청역 지하 캠프에서 출발해 명동 · 종로 · 용산 · 여의도 · 강남 · 잠실로 출격하는 쿼터뷰 액션 RPG입니다.
@@ -41,14 +41,14 @@
 (스크린샷 3~4장 첨부 추천: `03_myeongdong` · `04_fieldboss` · `07_tower_boss` · `06_lab`)
 
 ### 글 초안 B — 레딧 (영어, 짧게)
-**Title:** I made a browser extraction RPG set in ruined Seoul, 2049 (free, phone & PC) — Korean text only for now
+**Title:** I made CITY OF RUINS: Extraction, a browser extraction RPG set in ruined Seoul (free, phone & PC) — Korean text only for now
 
 > Isometric action RPG: deploy from a survivor camp under Seoul City Hall station, loot, and make it to an extraction point alive — die and your gear stays in a body bag you can recover next run. Six districts, two endgame challenge dungeons, three mythic weapons.
 > Play in the browser: https://seoul2049.vercel.app (landscape on phones; works offline after the first launch)
 > The UI is Korean only for now. Feedback on performance (Settings → "프레임 표시" shows FPS) is very welcome!
 
 ### 받을 피드백 정리 칸 (제게 그대로 붙여 주세요)
-- 댓글에 붙은 「[서울 2049 피드백]」 덩어리는 그대로 (기종 · 브라우저 · FPS · 오류가 들어 있음)
+- 댓글에 붙은 「[폐허의 도시 피드백]」 덩어리는 그대로 (기종 · 브라우저 · FPS · 오류가 들어 있음)
 - 버그 (어디서 · 무엇을 하다가)
 - 어렵다 · 쉽다 · 지루하다 느낀 곳
 
@@ -63,28 +63,28 @@
 ### 2. 앱 묶기 (TWA — 웹 게임을 그대로 앱으로)
 1. https://www.pwabuilder.com 에 `https://seoul2049.vercel.app` 입력 → 점수 확인 (manifest · 서비스 워커 · 아이콘 준비됨)
 2. **Package For Stores → Android** → 설정
-   - Package ID: **`com.guardk111.seoul2049`** (확정 · 한 번 정하면 못 바꿈)
-   - App name: `서울 2049` · Launcher name: `서울 2049`
+   - Package ID: **`com.guardk111.cityofruins`** (확정 · 한 번 정하면 못 바꿈 — 이름 변경으로 seoul2049 에서 바꿈, 아직 업로드 전이라 괜찮음)
+   - App name: `폐허의 도시: 익스트랙션` · Launcher name: `폐허의 도시`
    - Display mode: `fullscreen` · Orientation: `landscape`
    - Signing key: **새로 만들기** (받은 zip 안의 키 파일 · 비밀번호는 **절대 잃어버리면 안 됨** — 업데이트를 못 올림)
 3. 받은 zip 안의 **`assetlinks.json`** 을 저에게 주세요 (모양은 아래와 같음 — 지문 값만 다름)
    ```json
    [{ "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": { "namespace": "android_app", "package_name": "com.guardk111.seoul2049",
+      "target": { "namespace": "android_app", "package_name": "com.guardk111.cityofruins",
                   "sha256_cert_fingerprints": ["(업로드 키 SHA-256)", "(Play 앱 서명 키 SHA-256)"] } }]
    ```
    → 이 저장소 `/.well-known/assetlinks.json` 으로 올림 (이게 있어야 앱 위쪽에 주소창이 안 보임)
 4. Play Console에 `.aab` 파일 업로드 → **Play 앱 서명**을 쓰면 콘솔의 「앱 서명 키 SHA-256」도 assetlinks.json 에 추가해야 함 (그 값도 주세요)
 
 ### 3. 스토어 등록 정보 (복사해서 붙이기)
-**앱 이름 (30자):** `서울 2049: 폐허의 도시`
+**앱 이름 (30자):** `폐허의 도시: 익스트랙션` (영어 스토어: `CITY OF RUINS: Extraction`)
 
 **간단한 설명 (80자):**
 `붕괴 20년 후 서울. 출격하고, 파밍하고, 살아서 탈출하라. 쿼터뷰 익스트랙션 액션 RPG`
 
 **자세한 설명 (4000자 이내):**
 ```
-2049년, 대붕괴 20년 뒤의 서울.
+대붕괴 20년 뒤의 서울.
 시청역 지하에 남은 마지막 생존자 캠프에서, 당신은 오늘도 폐허가 된 지상으로 나간다.
 
 ■ 출격 → 파밍 → 탈출
@@ -130,7 +130,7 @@
 | 정부 앱 · 뉴스 앱 · 코로나 앱 | 아니요 |
 
 ### 5. 비공개 테스트 모집 글 (네이버 카페 · 디시)
-> 「서울 2049」 구글 플레이 비공개 테스트 참여자 12명 구합니다.
+> 「폐허의 도시」 구글 플레이 비공개 테스트 참여자 12명 구합니다.
 > 구글 정책상 14일 동안 설치만 유지해 주시면 됩니다 (매일 안 하셔도 돼요).
 > 지메일 주소를 댓글/쪽지로 주시면 테스트 링크를 보내 드립니다. 웹 버전은 지금도 https://seoul2049.vercel.app 에서 할 수 있어요.
 
@@ -142,5 +142,5 @@
 
 ## 남은 결정 · 받을 것
 - [x] 개인정보처리방침 문의 이메일 (kimguard111@gmail.com)
-- [x] Package ID 확정: `com.guardk111.seoul2049`
+- [x] Package ID 확정: `com.guardk111.cityofruins`
 - [ ] PWABuilder 에서 받은 `assetlinks.json` (+ Play 앱 서명 SHA-256)

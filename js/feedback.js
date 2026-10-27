@@ -27,7 +27,7 @@ const Feedback = {
     const pt = Math.round((p && p.playTime || 0) / 60), h = Math.floor(pt / 60);
     const prog = p ? `Lv${p.level} · ${Story.chapter(p) ? Story.chapter(p).title.split(' · ')[0] : '이야기 끝'} · 플레이 ${h ? h + '시간 ' : ''}${pt % 60}분 · 탈출 ${(p.rec && p.rec.extracts) || 0} · 사망 ${p.deaths || 0}${World.map && World.map !== 'camp' ? ` · 지금 ${(MAPS[World.map] && MAPS[World.map].name) || World.map}` : ''}` : '시작 전';
     return [
-      `[서울 2049 피드백] ${GAME_VERSION}`,
+      `[폐허의 도시 피드백] ${GAME_VERSION}`,
       `기기: ${this.device()}`,
       `프레임: ${fps}`,
       `설정: 조명 ${on(S.light)} · 세부 ${on(S.detail)} · 흔들림 ${Math.round(S.shakeAmt * 100)}% · 진동 ${on(S.vibrate)} · 글자 ${S.textScale || 1}${(() => { try { return localStorage.getItem('seoul2049-autolow') ? ' · 자동 저사양 켜진 적 있음' : ''; } catch (e) { return ''; } })()}`,
