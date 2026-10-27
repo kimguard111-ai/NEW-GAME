@@ -6,7 +6,7 @@ const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
 const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.96.3';
+const GAME_VERSION = 'v1.97';
 const MAX_LEVEL = 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트)
 
 const RARITIES = [

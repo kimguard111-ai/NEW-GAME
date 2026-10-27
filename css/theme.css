@@ -660,3 +660,18 @@ body.touch #touch-side button.auto.on { border-color: #7fe08a; color: #0b0c0e; b
 .panel-head .shop-cr { margin-left: 10px; color: #ffd76a; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; font-size: 14px; letter-spacing: 0; } /* v1.96.1 */
 body.touch #touch-side button.gl { font-size: 10px; letter-spacing: -0.5px; border-color: #ff8a3a; color: #ffb070; line-height: 1; } /* v1.96.3 유탄 (E·Q·R 줄) */
 body.touch #touch-side button.gl i { display: block; font-style: normal; font-size: 9px; color: #ffd76a; }
+
+/* v1.97 목표 창 접기 (테스터: 퀘스트 창이 시야를 너무 가림) — 누르면 접힘/펼침 · PC도 · 접으면 한 줄만 */
+#quest-tracker { pointer-events: auto; cursor: pointer; }
+#quest-tracker::after { content: '접기 ▴'; position: absolute; right: 4px; top: 2px; font-size: 10px; color: var(--paper); background: rgba(0,0,0,.45); padding: 0 5px; border: 1px solid #3a352a; }
+#quest-tracker.min { max-height: calc(1.5em + 26px); overflow: hidden; }
+#quest-tracker.min::after { content: '펼치기 ▾'; color: #ffd76a; }
+body.touch #quest-tracker::after { content: '접기 ▴' !important; font-size: 9px !important; top: 1px !important; right: 2px !important; padding: 0 4px; }
+body.touch #quest-tracker.min { max-height: calc(1.3em + 14px) !important; }
+body.touch #quest-tracker.min::after { content: '펼치기 ▾' !important; color: #ffd76a; }
+/* v1.97 남은 스킬 포인트 · 능력치: 메뉴 버튼에 반짝이는 점 · 가방 늘리는 법 */
+#menu-buttons button.alert { position: relative; }
+#menu-buttons button.alert::after { content: ''; position: absolute; right: 2px; top: 2px; width: 9px; height: 9px; border-radius: 50%; background: #ffd76a; box-shadow: 0 0 6px #ffd76a; animation: alertPulse 1s ease-in-out infinite; }
+#menu-buttons button[data-panel="skills"].alert::after { background: #7fc8ff; box-shadow: 0 0 6px #7fc8ff; }
+@keyframes alertPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.7); } }
+#bag-count .bag-up { color: #9fd0ff; font-size: 11px; }

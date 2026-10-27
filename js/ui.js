@@ -148,6 +148,9 @@ const UI = {
     if (p.buffs.shield > 0) buffs.push(`${ICON('shield')}방어막 ${p.buffs.shield.toFixed(1)}s`);
     if (p.buffs.stim > 0) buffs.push(`${ICON('stim')}자극제 ${p.buffs.stim.toFixed(1)}s`);
     if (p.plate > 0) buffs.push(`${ICON('plate')}방탄판 ${Math.ceil(p.plate)}`);
+    if (p.sp > 0) buffs.push(`<b style="color:#7fc8ff">${ICON('rapid')}스킬 포인트 ${p.sp}${IS_TOUCH ? '' : ' (K)'}</b>`); // v1.97 남은 스킬 포인트도 능력치처럼 알림 (폰은 위 메뉴 버튼에 점)
+    if (p.statPoints > 0) buffs.push(`<b style="color:#ffd76a">★ 능력치 ${p.statPoints}${IS_TOUCH ? '' : ' (C)'}</b>`);
+    { const m = document.querySelector('#menu-buttons [data-panel="skills"]'), s = document.querySelector('#menu-buttons [data-panel="stats"]'); if (m) m.classList.toggle('alert', p.sp > 0); if (s) s.classList.toggle('alert', p.statPoints > 0 || PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])); } // 메뉴 버튼에 반짝이는 점
     if (PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])) buffs.push(`<b style="color:#ffd76a">${ICON('tip')}특성 선택 가능 (C)</b>`);
     if (World.inSafe(p.x, p.y)) buffs.push(`${ICON('shield')} 안전 지대 (체력 회복)`);
     UI.html('hud-buffs', buffs.join('&nbsp; '));
@@ -195,6 +198,7 @@ const UI = {
     if (npc || gift || crate || sc || asl) { $('interact-hint').classList.remove('hidden'); $('interact-hint').textContent = (npc ? `[${keyLabel(keyOf('interact'))}] ${npc.name}와(과) 대화` : gift ? Settlement.hint() : crate ? `[${keyLabel(keyOf('interact'))}] 보급 상자 열기` : sc ? Scavenge.hint(sc) : Assault.hint(asl)).replace('[E]', `[${keyLabel(keyOf('interact'))}]`); }
     else $('interact-hint').classList.add('hidden');
     if (UI.shopOpen) UI.html('shop-cr', `내 돈 ₵${fmt(p.credits)}`); // v1.96.1 상점에 내 돈 (테스터: 거래 눌렀을 때 가진 돈이 안 보임)
+    if (!IS_TOUCH && !UI.qtInit) { UI.qtInit = true; const qt = $('quest-tracker'); qt.addEventListener('click', () => { qt.classList.toggle('min'); try { localStorage.setItem('seoul2049-qtmin', qt.classList.contains('min') ? '1' : ''); } catch (e) { /* 무시 */ } }); try { if (localStorage.getItem('seoul2049-qtmin') === '1') qt.classList.add('min'); } catch (e) { /* 무시 */ } } // v1.97 PC 목표 창도 눌러서 접기
     BagSwap.update(dt); // v1.88 꽉 찬 가방 「바꾸기」 카드
 
     // 임무 추적 (챕터)
@@ -270,7 +274,8 @@ const UI = {
       $('doll-stats').innerHTML = `<b>Lv.${p.level}</b> ${p.name}<br><span class="muted">체력</span> ${Math.ceil(p.hp)} / ${PlayerStats.maxHp(p)}`
         + `<br><span class="muted">방어</span> ${PlayerStats.def(p)} (-${Math.round(PlayerStats.dmgReduce(p) * 100)}%)<br><span class="muted">DPS</span> ${w ? Math.round(weaponDps(p, w)) : 0}`
         + `<br><span class="muted">₵</span> ${fmt(p.credits)} · ${ICON('scrap')}${p.mats.scrap} ${ICON('chip')}${p.mats.chip}`;
-      $('bag-count').textContent = `${Bag.used()} / ${Bag.cells()}칸`; // v1.87
+      const slv = Camp.lv('store'), nx = slv < 2 ? 2 : slv < 3 ? 3 : 0; // v1.97 가방 늘리는 법 안내 (테스터: 가방이 작게 느껴짐 — 창고 증축으로 늘어나는 걸 몰랐음)
+      $('bag-count').innerHTML = `${Bag.used()} / ${Bag.cells()}칸` + (nx ? ` <span class="bag-up" title="캠프 생존자 대장 한씨 → 캠프 시설 → 창고 증축">· 창고 증축 ${nx}단계 → 가방 +8칸 (한씨)</span>` : '');
       $('btn-sort').onclick = () => UI.sortBag(); // v1.15
     }
     Bag.render($('inv-grid'), it => { UI.selected = it; it.isNew = false; UI.refreshInventory(); }, { drag: true, sel: UI.selected }); // v1.87 칸 격자 (PC: 끌어 놓기)
