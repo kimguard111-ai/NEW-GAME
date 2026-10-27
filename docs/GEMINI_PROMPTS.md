@@ -1387,6 +1387,20 @@ Match the art style of the attached concept image. Create ONE image with 2 separ
 
 ---
 
+### 52-3 ★ · 헬멧 3종 한 장 (1×3) · 📐 **16:9** · `helmets2.png` — 방호 후드 → 블랙선 바이저 → 처리반 헬멧
+📎 콘셉트 아트 + `assets/helmets.png` (기존 헬멧 — 크기 · 각도 맞추기)
+```
+Match the art style of the attached images (the second image shows the existing helmets in this game: use the same size, angle and pixel style). Create ONE image showing exactly 3 separate helmets in a single horizontal row with wide empty space between them. Order from left to right: 1. a chemical protection hood helmet: a dirty mustard-yellow rubberized hood with a large round clear face visor and a twin-filter respirator under the visor, gray tape around the neck seal; 2. a sleek black corporate mercenary helmet with a smooth curved dark visor across the face and a thin yellow stripe running over the top; 3. a heavy bomb-disposal helmet: a thick steel-gray dome with a flat armored glass face plate and a tall padded neck guard collar. Helmets only: no heads, no faces, no people. Each helmet in isometric 3/4 view facing right, as if worn by a character looking right, all the same size. Chunky readable shapes. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no numbers, no labels, no shadow, no border. Do not use pink or magenta on the helmets.
+```
+
+### 52-4 ★ · 갑옷 아이콘 3종 한 장 (1×3) · 📐 **16:9** · `icons_armor2.png` — 방호 강화복 → 블랙선 전투복 → 처리반 강화복
+📎 콘셉트 아트 + `assets/icons_gear.png` (기존 아이콘 — 각도 · 화풍 맞추기)
+```
+Match the art style of the attached images (the second image shows the existing inventory icons in this game: use the same angle, size and pixel style). Create ONE image showing exactly 3 separate inventory item icons in a single horizontal row with wide empty space between them, each a single armor chest piece seen from a slight top-down three-quarter angle with a bold clear silhouette readable at very small size. Order from left to right: 1. a combat armor vest with shoulder guards, coated in dirty mustard-yellow chemical protection rubber, a small round filter canister on the chest; 2. a sleek matte black corporate combat armor vest with sharp plates and thin yellow edge stripes; 3. a heavy steel-gray bomb-disposal armor vest with thick layered chest plates and a high padded collar. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no numbers, no labels, no shadow, no border. Do not use pink or magenta on the items.
+```
+
+---
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
