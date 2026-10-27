@@ -90,9 +90,19 @@ function drawGroundTile(tx, ty, t) {
       ctx.fillStyle = 'rgba(150,145,130,0.55)'; if (dl) ctx.fillRect(x, y, 5, TILE + 0.6); if (dr) ctx.fillRect(x + TILE - 5, y, 5, TILE + 0.6);
       if (World.tileAt(tx, ty - 1) === T.DEEP) ctx.fillRect(x, y, TILE, 4); if (World.tileAt(tx, ty + 1) === T.DEEP) ctx.fillRect(x, y + TILE - 4, TILE, 4); // 끊긴 끝
       ctx.fillStyle = 'rgba(0,0,0,0.25)'; if (ty % 3 === 0) ctx.fillRect(x, y, TILE, 1.5);
+      if ((dl || dr) && ty % 4 === 0) { const px = dl ? x + 2.5 : x + TILE - 2.5; ctx.fillStyle = '#2a2a2e'; ctx.fillRect(px - 2, y + 12, 4, 8); ctx.fillStyle = 'rgba(255,200,120,0.85)'; ctx.fillRect(px - 1.5, y + 13, 3, 3); } // 가로등 기둥
+    }
+    const R = World.river, b = R && ty >= R.r0 && ty <= R.r1 && R.bridges.find(q => tx >= q.x0 && tx <= q.x1);
+    if (b) { // 다리 차선: 가운데 노란 겹선 · 차선 흰 점선 · 전망 쉼터는 보도블록
+      if (Math.abs(ty - R.mid) <= 2 && b.x1 - b.x0 >= 9) { ctx.fillStyle = 'rgba(190,170,140,0.35)'; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(x + 15, y, 1.5, TILE); ctx.fillRect(x, y + 15, TILE, 1.5); }
+      else {
+        const off = tx - b.cx;
+        ctx.fillStyle = '#b0902e'; if (off === 0) { ctx.fillRect(x - 3, y, 2, TILE + 0.6); ctx.fillRect(x + 1, y, 2, TILE + 0.6); }
+        ctx.fillStyle = 'rgba(220,220,210,0.55)'; if (off !== 0 && (tx - b.x0) % 2 === 0 && tx !== b.x0 && ty % 2 === 0) ctx.fillRect(x - 1, y + 4, 2, 16);
+      }
     }
   }
-  if (t === T.ROAD || t === T.CAR) {
+  if ((t === T.ROAD || t === T.CAR) && !(World.river && ty >= World.river.r0 - 3 && ty <= World.river.r1 + 3)) { // v2.0 다리 위는 위에서 따로 그림
     const lx = tx % World.BLOCK, ly = ty % World.BLOCK, RW = World.ROADW;
     ctx.fillStyle = '#8a7a3a'; // 중앙선 (4차선: 2번째와 3번째 칸 사이)
     if (lx === RW / 2 && ly > RW && ty % 2 === 0) ctx.fillRect(x - 2, y + 4, 4, 18);

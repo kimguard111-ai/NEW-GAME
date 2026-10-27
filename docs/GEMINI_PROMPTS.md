@@ -1305,7 +1305,7 @@ Match the art style of the attached concept image. Create ONE wide 16:9 cinemati
 | ★2 | **pump** | 한강 배수 펌프장 (랜드마크 · 출격 지도 카드도 이 그림) | 코드 그림 | `landmarks` 안에 붙여넣기 |
 | ★3 | **sumun** | 7장 보스 「한강 수문장」 | 파수꾼 + 물빛 | `sumun:` 줄 바꾸기 |
 | 4 | **leech** | 필드 보스 「거머리」 | 군체 + 물빛 | `leech:` 줄 바꾸기 |
-| (선택) | 한강 소품 9종 | 둔치 · 다리 꾸미기 | 없음 (기존 소품) | 코드 연결이 필요 — 그림 오면 제가 붙임 |
+| (선택) | 다리 꾸미기 (51-5) · 한강 소품 (51-6) | 대교 아치 · 가로등 · 다리 바닥 · 둔치 소품 | 없음 (기존 소품) | 코드 연결이 필요 — 그림 오면 제가 붙임 |
 
 📎 콘셉트 아트 + (캐릭터는) 1번 플레이어 그림 · 🔢 캐릭터 3장 모두 `idle 4, walk 6, attack 4, hit 2, death 5`
 **색 규칙:** 한강 쪽은 **청록 · 진흙 갈색 · 녹슨 쇠** 위주로 (다른 맵과 구분). 물빛이라도 위험 표시는 초록이 아니라 주황 · 빨강.
@@ -1330,7 +1330,20 @@ Match the art style of the attached concept image. Create ONE sprite sheet image
 Match the art style of the attached concept image. Create ONE sprite sheet image of a giant leech-like river mutant, three times human size: a thick segmented slimy body standing upright like a worm, dark olive-brown wet skin with pale cyan spots, a huge round mouth full of rings of teeth at the top, several drowned human arms growing from its sides, small leeches dropping off its body. Rows: row 1: 4 frames of idle writhing; row 2: 6 frames of a slithering crawl forward; row 3: 4 frames of rearing back and striking forward with the round mouth; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same monster in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
 ```
 
-### 51-5 (선택) · 한강 소품 9종 · `props_hangang.png` (3×3) · 12절과 같은 방식
+### 51-5 (선택) · 다리 꾸미기 — 길이 · 폭은 **코드가 정함**, 그림은 겉모습만
+다리 **크기 · 모양 (몇 칸 넓이 · 강 폭 · 끊긴 곳 · 전망 쉼터)** 은 지도를 만드는 코드가 정합니다 → v1.98.6 에서 강 22칸 · 대교 10칸 · 쉼터로 넓혀 둠. 그림으로는 **다리 위 바닥 · 난간 · 아치 구조물** 을 바꿀 수 있습니다. 그림이 오면 제가 코드에 붙입니다.
+
+#### 51-5a · 다리 바닥 · 난간 질감 6종 · `tex_bridge.png` (3×2) · 16-1 바닥 질감과 같은 방식
+```
+Match the art style of the attached concept image. Create ONE image with 6 separate square seamless top-down ground textures arranged in a 3 by 2 grid with thin empty gaps: 1. cracked dark asphalt bridge deck with a faded double yellow center line running vertically, 2. cracked dark asphalt bridge deck with a faded white dashed lane line running vertically, 3. gray concrete paving blocks of a bridge observation deck with small drains, 4. a steel expansion joint plate crossing a bridge deck horizontally, rusty, 5. a broken bridge deck edge with exposed rebar and crumbling concrete, 6. asphalt deck with dried mud, puddles and a few river weeds. Flat top-down view, no perspective, detailed dark pixel art, desaturated colors with warm orange highlights. No objects, no cars, no people, no text. Solid flat #FF00FF magenta background between the tiles.
+```
+
+#### 51-5b · 대교 아치 · 기둥 · 가로등 9종 · `props_bridge.png` (3×3) · 12절과 같은 방식 (★ 다리를 「한강답게」 만드는 핵심)
+```
+Match the art style of the attached concept image. Create ONE image with 9 separate isometric game props arranged in a 3 by 3 grid with wide empty gaps between them, every prop on a square diamond-shaped footprint viewed from the south corner: 1. a tall rusty steel arch truss segment of a large river bridge, rising high, 2. the same steel arch truss segment but broken and bent, 3. a thick concrete bridge pier rising out of the water with water stains, 4. a tall double-arm bridge street lamp with a warm orange light, 5. the same street lamp bent and dark, 6. a steel bridge guardrail section with a small rusty sign plate (no text), 7. a bridge observation deck bench with a broken coin binocular viewer, 8. a toll-booth-like small bridge control booth, windows broken, 9. a hanging cable stay anchor with snapped steel cables. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. No people, no shadow, no ground, no water, no text, no logos, no brand names. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the props.
+```
+
+### 51-6 (선택) · 한강 소품 9종 · `props_hangang.png` (3×3) · 12절과 같은 방식
 ```
 Match the art style of the attached concept image. Create ONE image with 9 separate isometric game props arranged in a 3 by 3 grid with wide empty gaps between them, every prop on a square diamond-shaped footprint viewed from the south corner: 1. a broken concrete bridge railing section with bent steel bars, 2. a rusty swan-shaped pedal boat lying on its side, 3. a toppled row of public rental bicycles, 4. a faded orange life ring on a short post, 5. a riverside convenience store folding table with two plastic chairs and a broken parasol, 6. a stack of sandbags with a flood warning light, 7. a half-sunken rusty patrol boat bow, 8. a tangle of river reeds and floating trash, 9. a cracked concrete bridge pillar stump. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. No people, no shadow, no ground, no text, no logos, no brand names. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the props.
 ```
