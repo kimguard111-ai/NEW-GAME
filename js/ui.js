@@ -501,7 +501,6 @@ const UI = {
       + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
       + `<hr style="border-color:#333"><b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`
       + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
-      + (TESTERS.length ? `<div class="set-thanks">${testersText()}</div>` : '') // v1.95.1 도움 주신 분
       + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`;
     $('settings-body').querySelectorAll('input[data-set]').forEach(el => { el.onchange = () => { Settings[el.dataset.set] = el.checked; Settings.save(); if (el.dataset.set === 'autoFire') Touch.autoBtn(); if (el.dataset.set === 'cb') { document.body.classList.toggle('cb', Settings.cb); UI.refreshInventory(); } if (el.dataset.set === 'vibrate' && el.checked) Haptic.pulse(40, 0); SFX.setVolume(); if (el.dataset.set === 'detail') GroundCache.clear(); }; });
     $('settings-body').querySelectorAll('.res-btn').forEach(b => { b.onclick = () => { Settings.resMode = b.dataset.res; Settings.save(); applyRes(); UI.refreshSettings(); }; }); // v1.93

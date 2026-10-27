@@ -63,11 +63,17 @@
 ### 2. 앱 묶기 (TWA — 웹 게임을 그대로 앱으로)
 1. https://www.pwabuilder.com 에 `https://seoul2049.vercel.app` 입력 → 점수 확인 (manifest · 서비스 워커 · 아이콘 준비됨)
 2. **Package For Stores → Android** → 설정
-   - Package ID: `com.guardk111.seoul2049` (추천 · 한 번 정하면 못 바꿈)
+   - Package ID: **`com.guardk111.seoul2049`** (확정 · 한 번 정하면 못 바꿈)
    - App name: `서울 2049` · Launcher name: `서울 2049`
    - Display mode: `fullscreen` · Orientation: `landscape`
    - Signing key: **새로 만들기** (받은 zip 안의 키 파일 · 비밀번호는 **절대 잃어버리면 안 됨** — 업데이트를 못 올림)
-3. 받은 zip 안의 **`assetlinks.json`** 을 저에게 주세요 → 이 저장소 `/.well-known/assetlinks.json` 으로 올림 (이게 있어야 앱 위쪽에 주소창이 안 보임)
+3. 받은 zip 안의 **`assetlinks.json`** 을 저에게 주세요 (모양은 아래와 같음 — 지문 값만 다름)
+   ```json
+   [{ "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": { "namespace": "android_app", "package_name": "com.guardk111.seoul2049",
+                  "sha256_cert_fingerprints": ["(업로드 키 SHA-256)", "(Play 앱 서명 키 SHA-256)"] } }]
+   ```
+   → 이 저장소 `/.well-known/assetlinks.json` 으로 올림 (이게 있어야 앱 위쪽에 주소창이 안 보임)
 4. Play Console에 `.aab` 파일 업로드 → **Play 앱 서명**을 쓰면 콘솔의 「앱 서명 키 SHA-256」도 assetlinks.json 에 추가해야 함 (그 값도 주세요)
 
 ### 3. 스토어 등록 정보 (복사해서 붙이기)
@@ -136,5 +142,5 @@
 
 ## 남은 결정 · 받을 것
 - [x] 개인정보처리방침 문의 이메일 (kimguard111@gmail.com)
-- [ ] Package ID 확정 (`com.guardk111.seoul2049` 추천)
+- [x] Package ID 확정: `com.guardk111.seoul2049`
 - [ ] PWABuilder 에서 받은 `assetlinks.json` (+ Play 앱 서명 SHA-256)

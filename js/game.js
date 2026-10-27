@@ -1609,7 +1609,15 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     btnC.disabled = !save; btnC.textContent = '이어서';
   };
   slots();
-  if (TESTERS.length) document.getElementById('title-testers').textContent = ` · 테스트 도움 ${TESTERS.length <= 3 ? TESTERS.join(' · ') : TESTERS.length + '분'}`; // v1.95.1
+  // v1.98.1 크레딧은 타이틀 「크레딧」에서 (설정 화면 맨 아래에 있던 것)
+  document.getElementById('btn-credits').onclick = () => {
+    const row = (k, v) => `<div class="cr-row"><span>${k}</span><b>${v}</b></div>`;
+    document.getElementById('credits-body').innerHTML = row('제작 · 기획 · 아트 디렉션', 'GuardK111') + row('프로그래밍', 'Claude Code') + row('그림 · 배경 음악', 'Gemini (AI 생성 · 가공)') + row('코드 점검', 'ChatGPT')
+      + (TESTERS.length ? `<div class="cr-head">테스트에 도움 주신 분</div><div class="cr-names">${TESTERS.join(' · ')}</div><div class="muted">고맙습니다</div>` : '')
+      + `<div class="muted cr-ver">${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></div>`;
+    document.getElementById('credits-screen').classList.remove('hidden');
+  };
+  document.getElementById('btn-credits-close').onclick = () => document.getElementById('credits-screen').classList.add('hidden');
   document.getElementById('btn-new').onclick = () => {
     if (save && !Ask.ok(`슬롯 ${SAVE_SLOT}의 「${save.p.name} Lv${save.p.level}」 저장이 지워집니다. 새로 시작할까요?`, () => document.getElementById('btn-new').onclick())) return;
     const name = document.getElementById('name-input').value.replace(/[<>]/g, '').trim() || '생존자'; // v1.84.1 이름에 HTML 글자 금지

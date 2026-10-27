@@ -675,3 +675,13 @@ body.touch #quest-tracker.min::after { content: '펼치기 ▾' !important; colo
 #menu-buttons button[data-panel="skills"].alert::after { background: #7fc8ff; box-shadow: 0 0 6px #7fc8ff; }
 @keyframes alertPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.7); } }
 #bag-count .bag-up { color: #9fd0ff; font-size: 11px; }
+/* v1.98.1 크레딧 */
+#credits-screen { z-index: 70; }
+.credits-box { min-width: min(88vw, 380px); max-height: calc(100dvh - 16px); overflow-y: auto; }
+.credits-box h1 { font-size: 30px !important; margin: 0 0 10px !important; }
+.credits-box .cr-row { display: flex; justify-content: space-between; gap: 16px; padding: 3px 0; border-bottom: 1px solid #2a2620; text-align: left; font-size: 13px; }
+.credits-box .cr-row span { color: #8f8875; }
+.credits-box .cr-head { margin: 14px 0 4px; color: #e0b23a; font-size: 14px; }
+.credits-box .cr-names { color: #ffd76a; font-size: 15px; font-weight: bold; }
+.credits-box .cr-ver { margin-top: 12px; font-size: 11px; }
+.credits-box button { margin-top: 12px; }
