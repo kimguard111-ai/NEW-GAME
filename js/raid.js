@@ -43,10 +43,11 @@ const Raid = {
         + (ok ? '<div class="mc-go">▶ 출격</div>' : '') + '</div></div>';
     };
     const low = id => MAPS[id].lab || MAPS[id].endRow, end = MAP_ORDER.filter(low); // v1.98.12 한강(Lv30+)은 아래 엔드게임 줄로 → 일반 6곳 3×2 + 「한강 · 연구소 · 타워」 한 줄 (한강만 한 줄에 덩그러니 남던 것)
-    h += `<div class="map-grid">${MAP_ORDER.filter(id => !low(id)).map(card).join('')}</div>` + `<div class="map-grid dun${end.length > 2 ? ' three' : ''}">${end.map(card).join('')}</div>`; // v1.83.1 도전 던전 두 장을 한 줄에
+    h += `<div class="map-grid">${MAP_ORDER.filter(id => !low(id)).map(card).join('')}</div>` + `<div class="map-grid dun${end.length > 2 ? ' three' : ''}">${end.map(card).join('')}</div>` + Ops.html(p); // v1.98.28 작전 // v1.83.1 도전 던전 두 장을 한 줄에
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨', h, btns); $('panel-dialog').classList.add('mapdlg');
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격
+    Ops.bind($('dialog-text'));
     $('dialog-text').querySelectorAll('[data-diff]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); UI.close('dialog'); FirstRun.rules(() => this.deploy(b.closest('[data-map]').dataset.map, +b.dataset.diff)); }; }); // v1.66 난이도 골라 출격
   },
 
@@ -134,6 +135,7 @@ const Raid = {
 
   // 맵을 바꿀 때 월드 상태 초기화
   resetWorld() {
+    G.op = null; G.opT = 0; // v1.98.28 작전
     G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.turrets = []; G.corpses = []; Juice.reset(); G.camF = null;
     G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.echoBoss = null; G.fbT = 150; G.inside = null;
     G.labBoss = null; G.labBossDone = false; G.grave = null; // v1.5 · v1.84.1 캠프로 돌아와도 지난 출격의 가방 표시가 남던 것 (출격·층 이동 땐 이 뒤에 다시 연결)

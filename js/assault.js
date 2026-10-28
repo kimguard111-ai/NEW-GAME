@@ -92,6 +92,7 @@ const Assault = {
   },
 
   update(dt) {
+    Ops.update(dt); // v1.98.28 작전 귀환 헬기
     const s = G.assault;
     if (!s) return;
     const p = G.player, a = ASSAULTS[s.id], l = s.l;
@@ -216,7 +217,8 @@ const Assault = {
     p.assaults[s.id] = { best: rec && 'SAB'.indexOf(rec.best) < 'SAB'.indexOf(rk) ? rec.best : rk,
       time: rec ? Math.min(rec.time, t) : t, clears: (rec ? rec.clears : 0) + 1, tier: Math.max(tier, (rec && rec.tier) || 1) };
     Bounty.on('assault', tier);
-    UI.toast(`어설트 완료, 등급 ${rk}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `${t}초 (S ≤ ${this.par(a, tier)}초) · EXP +${fmt(exp)} · +${fmt(credits)}₵${first ? ' · 첫 클리어 보너스!' : ''}`);
+    const opNote = Ops.onClear(s.id, rk, tier, lvl, drop); // v1.98.28 작전 훈장
+    UI.toast(`어설트 완료, 등급 ${rk}${tier > 1 ? ` · 위협 ${tier}` : ''}`, `${t}초 (S ≤ ${this.par(a, tier)}초) · EXP +${fmt(exp)} · +${fmt(credits)}₵${first ? ' · 첫 클리어 보너스!' : ''}${opNote}`);
     log(`어설트 완료: ${a.name} 위협 ${tier} 등급 ${rk} (${t}초)${better && rec ? ' 기록 갱신!' : ''}`, R.color);
     G.effects.push({ type: 'ring', x: p.x, y: p.y, t: 0, life: 1.2, color: R.color, r: 160 });
     burst(p.x, p.y, R.color, 40, 220, 0.9, 4);
@@ -228,7 +230,7 @@ const Assault = {
     const s = G.assault;
     for (const e of G.enemies) if (e.assault) e.hp = 0; // 남은 어설트 적 철수 (보상 없음)
     G.enemies = G.enemies.filter(e => e.hp > 0);
-    log(`어설트 실패: ${why}`, '#f66');
+    log(`어설트 실패: ${why}`, '#f66'); if (G.op) { G.op = null; log('작전 실패. 걸어서 탈출 지점으로 나가야 한다.', '#f88'); }
     if (!G.player.dead) UI.toast('어설트 실패', why);
     G.assault = null;
   },
@@ -250,5 +252,73 @@ const Assault = {
       h += `<div class="step-row">${a.name} <span class="muted">Lv${a.minLevel}+</span> ${state}</div>`;
     }
     return h;
+  },
+};
+
+// v1.98.28 작전 (v2.0 과 같이 열림 · V2_OPEN): 어설트를 「해도 그만」 곁다리에서 메인 축으로
+// ① 작전 출격: 출격 지도에서 발견한 거점으로 바로 → 바로 어설트 → 클리어하면 15초 뒤 헬기 귀환 (그동안 전리품 줍기)
+// ② 작전 훈장: 클리어마다 (S 3 · A 2 · B 1 + 위협 2단계마다 +1) → 윤씨 「훈장 교환」 (구급상자 · 영웅 보급 상자 · 고유 · 신화)
+// ③ 주간 작전: 매주 거점 하나 — 훈장 ×2 · 그 주 첫 S 클리어에 전설 장비
+const OPS_SHOP = [
+  { name: '구급상자 2개', cost: 2, give: p => makeConsumable('medkit', 2) },
+  { name: '작전 보급 상자 · 영웅 이상 장비 (내 레벨)', cost: 8, give: p => randomGear(p.level, 2, 3) },
+  { name: '고유 장비 · 무작위 (내 레벨)', cost: 25, give: p => makeUnique(pick(Object.keys(UNIQUES)), p.level) },
+  { name: '신화 무기 · 아직 없는 것부터', cost: 60, give: p => { const all = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), had = (p.codex && p.codex.myth) || {}, fresh = all.filter(k => !had[k]); return makeMyth(pick(fresh.length ? fresh : all), p.level); } },
+];
+const Ops = {
+  on: () => V2_OPEN,
+  mapOf(lid) { return Object.keys(MAPS).find(id => MAPS[id].landmark === lid && !MAPS[id].lab); },
+  list(p) { return Object.keys(ASSAULTS).filter(id => p.found.includes(id) && this.mapOf(id) && Raid.unlocked(this.mapOf(id))); },
+  weekly() { const k = Object.keys(ASSAULTS); return k[weekNo() % k.length]; },
+  medals(rk, tier, id) { const n = { S: 3, A: 2, B: 1 }[rk] + Math.floor((tier - 1) / 2); return id === this.weekly() ? n * 2 : n; },
+  // 출격 지도 아래 「작전」 줄
+  html(p) {
+    if (!this.on()) return '';
+    const L = this.list(p), wk = this.weekly();
+    let h = `<div class="sum-head">${ICON('swords')} 작전 · 거점 탈환 <span class="muted">발견한 거점으로 바로 · 클리어하면 헬기 귀환 · 훈장 ${fmt(p.medals || 0)}개</span> <span class="dbtn ops-shop" data-opshop="1">훈장 교환</span></div>`;
+    if (!L.length) return h + '<div class="muted" style="margin:2px 0 8px">아직 발견한 거점이 없다. 출격 중에 랜드마크를 찾으면 여기서 바로 작전에 나갈 수 있다.</div>';
+    h += '<div class="ops-grid">';
+    for (const id of L) {
+      const a = ASSAULTS[id], rec = p.assaults[id], top = Math.min(TIER_MAX, ((rec && rec.tier) || 0) + 1), ok = p.level >= a.minLevel - 2;
+      h += `<div class="ops-card${id === wk ? ' wk' : ''}${ok ? '' : ' locked'}"><div class="mc-name">${a.name}${id === wk ? ' <span class="mc-rec">이번 주 · 훈장 ×2</span>' : ''}</div>`
+        + `<div class="mc-lv">${MAPS[this.mapOf(id)].name} · 권장 Lv${a.minLevel}+${rec ? ` · 최고 <b style="color:${RANKS[rec.best].color}">${rec.best}</b> · 위협 ${rec.tier || 1}` : ' · 첫 클리어 영웅 장비'}</div>`
+        + (ok ? `<div class="mc-diff">${Array.from({ length: top }, (_, i) => `<span class="dbtn" data-op="${id}" data-tier="${i + 1}">위협 ${i + 1}</span>`).join('')}</div>` : `<div class="muted">Lv${a.minLevel - 2}부터</div>`) + '</div>';
+    }
+    return h + '</div>';
+  },
+  bind(root) {
+    root.querySelectorAll('[data-op]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); UI.close('dialog'); FirstRun.rules(() => this.go(b.dataset.op, +b.dataset.tier)); }; });
+    root.querySelectorAll('[data-opshop]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); this.shop(); }; });
+  },
+  go(id, tier) {
+    const p = G.player, m = this.mapOf(id);
+    Raid.deploy(m, 0);
+    const l = World.landmarks.find(x => x.id === id); if (!l) return;
+    for (let k = 0; k < 24; k++) { const an = rand(0, TAU), r = ASSAULT_R * rand(0.45, 0.7), x = l.x + Math.cos(an) * r, y = l.y + Math.sin(an) * r; if (World.groundOk(x, y) && !World.circleBlocked(x, y, p.r)) { p.x = x; p.y = y; break; } }
+    G.op = { id, tier }; G.exits = G.exits || [];
+    Assault.start(l, tier);
+  },
+  // Assault.clear 에서: 훈장 · 주간 보너스 · 작전 출격이면 헬기
+  onClear(id, rk, tier, lvl, drop) {
+    if (!this.on()) return '';
+    const p = G.player, n = this.medals(rk, tier, id); p.medals = (p.medals || 0) + n;
+    let note = ` · 작전 훈장 +${n}`;
+    if (id === this.weekly() && rk === 'S' && (p.opWeek || 0) !== weekNo()) { p.opWeek = weekNo(); drop(randomGear(lvl + 1, 2.5, 4)); note += ' · 주간 작전 S 보상 (전설 장비)'; }
+    if (G.op && G.op.id === id) { G.opT = 15; log('작전 완료. 15초 뒤 헬기가 내린다 — 주변 전리품을 챙겨라.', '#9fd'); }
+    return note;
+  },
+  update(dt) {
+    if (!(G.opT > 0)) return;
+    const p = G.player; G.opT -= dt;
+    if (Math.ceil(G.opT) !== Math.ceil(G.opT + dt) && G.opT <= 5 && G.opT > 0) floatText(p.x, p.y - 50, `헬기 ${Math.ceil(G.opT)}`, '#9fd', 14);
+    if (G.opT <= 0) { G.opT = 0; G.op = null; if (p.raid && !p.dead) { for (const d of G.drops) if (d.kind === 'item' && !d.gone && dist(d, p) < ASSAULT_R * 1.5) pickupItem(d); Raid.extract(); } } // 못 주운 작전 보상은 헬기에 실어 감 (가방 자리만큼)
+  },
+  shop() {
+    const p = G.player, btns = OPS_SHOP.map(o => [`${o.name} — 훈장 ${o.cost}`, () => {
+      if ((p.medals || 0) < o.cost) return log('작전 훈장이 부족합니다.', '#f88');
+      const it = o.give(p); if (!addItem(it)) { if ((p.stash || []).length >= Camp.stashSize()) return log('가방도 창고도 가득 찼습니다.', '#f88'); p.stash.push(it); log(`가방이 차서 창고로: ${itemName(it)}`, '#8cf'); }
+      p.medals -= o.cost; Journal.onItem(it); SFX.play('coin'); log(`훈장 교환: ${itemName(it)}`, it.rarity >= 3 ? RARITIES[it.rarity].color : '#8cf'); saveGame(); this.shop(); }]);
+    btns.push(['돌아가기', () => Raid.openMap()]);
+    UI.dialog('훈장 교환 · 작전 장교 윤씨', `"작전 뛰고 온 놈한테는 줄 게 있지." <span class="muted">가진 훈장 <b style="color:#ffd76a">${fmt(p.medals || 0)}</b>개 · 훈장은 어설트를 깰 때마다 (S 3 · A 2 · B 1 + 위협 2단계마다 +1 · 이번 주 작전 ×2)</span>`, btns);
   },
 };
