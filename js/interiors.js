@@ -53,7 +53,7 @@ const Interiors = {
     const drop = (kind, extra) => G.drops.push({ x: c.x + rand(-18, 18), y: c.y + rand(-18, 18), kind, t: 0, ...extra });
     drop('credits', { amount: Math.round(zone.lvl[1] * rand(8, 16)) });
     if (Math.random() < 0.6) drop('ammo', { amount: randInt(20, 45) });
-    if (Math.random() < 0.3) drop('item', { item: makeConsumable('medkit', 1) });
+    if (Math.random() < 0.1) drop('item', { item: makeConsumable('medkit', 1) }); // v1.98.26 30% → 10%
     if (Math.random() < 0.07 * ECON.gear) drop('item', { item: randomGear(lvl, 0.9, 0, zone.gear) }); // v1.7.1 0.12 → 0.07
     if (Math.random() < 0.06) drop('item', { item: randomAttach(lvl) }); // v1.50 부품: 건물 안 보급 상자 · v1.51 15% → 6%
     Workshop.gain(randInt(2, 4), Math.random() < 0.15 ? 1 : 0);

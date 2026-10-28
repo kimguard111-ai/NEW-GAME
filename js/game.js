@@ -576,7 +576,7 @@ function useItem(it) {
     if (p.hp >= mh) { log('체력이 이미 가득합니다.', '#aaa'); return; }
     if ((p.medCd || 0) > G.time) { floatText(p.x, p.y - 34, `구급상자 ${Math.ceil(p.medCd - G.time)}초`, '#aaa', 12); SFX.play('empty'); return; } // v1.57 쿨타임
     p.medCd = G.time + MED_CD;
-    const amt = Math.round(mh * 0.4 * (perk('fieldMedic') ? 1.5 : 1) * (pas('s4') ? 1.2 : 1) * (1 + gearBonus(p, 'medHeal')));
+    const amt = Math.round(mh * 0.4 * (perk('fieldMedic') ? 1.5 : 1) * (pas('s4') ? 1.2 : 1) * (1 + gearBonus(p, 'medHeal')) * (Camp.lv('med') >= 2 ? 1.1 : 1)); // v1.98.26 의무실 2단계
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
   } else if (it.key === 'ammo') {
@@ -905,7 +905,7 @@ function killEnemy(e) {
     for (let i = 0; i < 3; i++) dropAt('item', { item: randomGear(20, 2.5) });
     rollUnique('titan', 20, dropAt); // v1.12
     rollMyth('titan', e.level, dropAt); // v1.53 신화
-    dropAt('item', { item: makeConsumable('medkit', 5) });
+    dropAt('item', { item: makeConsumable('medkit', 2) }); // v1.98.26 5 → 2
     Workshop.gain(30, 8, '타이탄 잔해 회수');
     // 보스 소환수 정리
     for (const o of G.enemies) if (o.minion) o.hp = 0;
@@ -934,7 +934,7 @@ function killEnemy(e) {
   }
   if (Math.random() < 0.75) dropAt('credits', { amount: Math.round(e.level * rand(2, 5) * (e.type === 'brute' ? 3 : 1)) });
   if (Math.random() < 0.34) dropAt('ammo', { amount: randInt(15, 35) }); // v1.33 0.28 → 0.34 (탄약이 4종으로 나뉘어 권총도 탄이 필요)
-  if (Math.random() < 0.025) dropAt('item', { item: makeConsumable('medkit', 1) }); // v1.96.1 5% → 2.5% (구급상자가 너무 많이 쌓임)
+  if (Math.random() < 0.008) dropAt('item', { item: makeConsumable('medkit', 1) }); // v1.96.1 5% → 2.5% (구급상자가 너무 많이 쌓임) · v1.98.26 → 0.8%
   if (Math.random() < (e.affix ? 0.025 : e.type === 'brute' ? 0.008 : 0.002)) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 · v1.51 낮춤 (엘리트 6→2.5% · 거구 2→0.8% · 보통 0.6→0.2%)
   // 장비 드랍: 일반은 흔하게, 희귀 이상은 가끔. 깊은 지역일수록 좋은 등급 확률 증가
   const gearChance = e.assault || e.fieldBoss || e.labBoss ? 0 : e.type === 'brute' ? 0.04 : 0.015; // v0.10 드랍률 하향 (어설트 적은 보상 상자로 대체) · v1.5.1 (0.05/0.11 → 0.03/0.07) · v1.7.1 (→ 0.015/0.04, 대신 등급 상향)

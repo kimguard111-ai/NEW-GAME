@@ -7,7 +7,7 @@ const FAC_COST = [ // 단계별 비용 · 요구 레벨
   { credits: 18000, scrap: 90, chip: 20, lvl: 20 },
 ];
 const FACILITIES = {
-  med:   { name: '의무실', icon: 'medkit', fx: ['출격할 때 구급상자 1개', '출격할 때 구급상자 2개', '출격할 때 구급상자 3개 · 출격 중 최대 체력 +5%'] },
+  med:   { name: '의무실', icon: 'medkit', fx: ['출격할 때 구급상자 1개', '출격할 때 구급상자 1개 · 구급상자 회복 +10%', '출격할 때 구급상자 2개 · 출격 중 최대 체력 +5%'] },
   range: { name: '사격장', icon: 'rifle', fx: ['모든 무기 피해 +3%', '모든 무기 피해 +6%', '모든 무기 피해 +10%'] },
   store: { name: '창고 증축', icon: 'box', fx: ['창고 칸 +16', '창고 칸 +32 · 가방 한 줄 +8칸', '창고 칸 +48 · 가방 두 줄 +16칸'] },
   bench: { name: '작업대', icon: 'scrap', fx: ['강화 비용 -15%', '강화 비용 -15% · 분해 재료 +30%', '강화 비용 -15% · 분해 재료 +30% · 강화 성공 +5%p'] },
@@ -42,7 +42,7 @@ const Camp = {
   enhanceMul() { return this.lv('bench') >= 1 ? 0.85 : 1; },
   salvageMul() { return this.lv('bench') >= 2 ? 1.3 : 1; },
   enhanceBonus() { return this.lv('bench') >= 3 ? 0.05 : 0; },
-  medkits() { return this.lv('med'); },
+  medkits() { return [0, 1, 1, 2][this.lv('med')]; }, // v1.98.26 1·2·3 → 1·1·2
   raidHpMul() { return this.lv('med') >= 3 && G.player.raid ? 1.05 : 1; },
   alertDelay() { return (this.lv('radio') >= 2 ? 60 : 0) + (FirstRun.rookie() ? 120 : 0); }, // v1.45 첫 출격은 경보 2분 늦게
 

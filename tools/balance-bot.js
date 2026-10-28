@@ -69,7 +69,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       for (const it of [...p.inventory]) if (it.kind !== 'cons' && !(window.__WEAPON && it.kind === 'weapon') && p.level >= itemReqLevel(it) && isUpgrade(p, it)) UI.equip(it, it.kind === 'weapon' ? (WEAPONS[it.key].melee ? 'w2' : 'w1') : it.kind);
       for (const it of [...p.inventory]) if (it.kind !== 'cons' && !isUpgrade(p, it)) { p.credits += itemSellPrice(it); removeItem(it); }
       const med = p.inventory.find(i => i.key === 'medkit'); let mc = med ? med.count : 0;
-      while (mc < 8 && p.credits >= 120 + 50) { addItem(makeConsumable('medkit', 3)); p.credits -= 120; mc += 3; B.bought += 120; }
+      const m3 = (typeof medPrice === 'function' ? medPrice(p.level) : 40) * 3; while (mc < 6 && p.credits >= m3 * 1.5) { addItem(makeConsumable('medkit', 3)); p.credits -= m3; mc += 3; B.bought += m3; } // v1.98.26 구급상자 값이 레벨 따라 · 6개까지
       for (const t of gunAmmoTypes(p)) while (p.ammo[t] < AMMO[t].pack * 3.3 && p.credits >= AMMO[t].price + 50) { p.ammo[t] += AMMO[t].pack; p.credits -= AMMO[t].price; B.bought += AMMO[t].price; } // v1.33 탄약 4종
       for (const slot of ['w1', 'armor', 'helmet']) { const it = p.equip[slot]; let k = 0; while (it && it.plus < 6 && p.credits > enhanceCost(it) * 2 && k++ < 10) { UI.doEnhance(it); B.enh++; } }
       while (p.statPoints > 0) { p.stats[['dex', 'vit', 'agi'][p.statPoints % 3]]++; p.statPoints--; }

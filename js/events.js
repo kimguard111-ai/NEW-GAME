@@ -149,11 +149,11 @@ const RaidEvents = {
     if (e.kind === 'airdrop') {
       drop('item', { item: randomGear(lvl, 1.2, 2, bias) });
       if (Math.random() < 0.5 * ECON.gear) drop('item', { item: randomGear(lvl, 0.8, 0, bias) });
-      drop('item', { item: makeConsumable('medkit', 2) }); drop('ammo', { amount: randInt(60, 100) }); drop('credits', { amount: lvl * 60 });
+      drop('item', { item: makeConsumable('medkit', 1) }); drop('ammo', { amount: randInt(60, 100) }); drop('credits', { amount: lvl * 60 });
       Workshop.gain(randInt(2, 4), 1, '보급 상자');
       UI.toast('보급 상자 확보', '희귀 이상 장비. 탈출해야 내 것');
     } else if (e.kind === 'survivor') {
-      drop('credits', { amount: lvl * 45 }); drop('item', { item: makeConsumable('medkit', 2) });
+      drop('credits', { amount: lvl * 45 }); if (Math.random() < 0.5) drop('item', { item: makeConsumable('medkit', 1) });
       if (Math.random() < 0.6 * ECON.gear) drop('item', { item: randomGear(lvl, 1.0, 1, bias) });
       gainExp(Math.round(PlayerStats.expNext(p.level) * 0.06));
       // 보답: 근처 뒤질 곳 3곳을 미니맵에 표시
@@ -245,7 +245,7 @@ const RaidEvents = {
   openTrader(npc) {
     const p = G.player, st = npc.stock, g = st.gear, again = () => this.openTrader(npc);
     const btns = [];
-    btns.push([`${ICON('medkit')} +3 (180₵)`, () => { if (p.credits < 180) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 180; SFX.play('coin'); again(); }]);
+    const m3 = Math.round(medPrice(p.level) * 3 * 1.5 / 10) * 10; btns.push([`${ICON('medkit')} +3 (${fmt(m3)}₵)`, () => { if (p.credits < m3) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= m3; SFX.play('coin'); again(); }]);
     btns.push([`${ICON('ammo')} 들고 있는 총 탄약 (70₵)`, () => { if (p.credits < 70) return log('크레딧이 부족합니다.', '#f88'); const [t, n] = giveAmmoUnits(p, 150); log(`${AMMO[t].name} +${n}`, '#cc8'); p.credits -= 70; SFX.play('ammo'); again(); }]);
     if (!st.sold) btns.push([`${itemIcon(g)} ${itemName(g)} (₵${fmt(st.price)})`, () => {
       if (p.credits < st.price) return log('크레딧이 부족합니다.', '#f88');

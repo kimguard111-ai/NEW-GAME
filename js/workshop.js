@@ -9,7 +9,7 @@ const MATS = {
 const SALVAGE = { scrap: [2, 4, 7, 12, 20, 40], chip: [0, 0, 1, 3, 6, 15] }; // v1.84.3 신화(5) 칸이 없어 분해하면 재료가 NaN 이 되던 것
 // 소모품 제작
 const CRAFTS = {
-  medkit: { scrap: 4 },
+  medkit: { scrap: 8 }, // v1.98.26 4 → 8
   ammo:   { scrap: 3 },
   // v1.14 작업대(캠프 시설) 단계에 따라 제작 목록이 늘어남
   molotov: { scrap: 3, bench: 1 },

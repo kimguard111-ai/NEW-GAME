@@ -911,7 +911,7 @@ const UI = {
     };
     for (const k of Object.keys(CONSUMABLES)) {
       const c = CONSUMABLES[k];
-      row(`${ICON(c.icon)} ${c.name} <span class="muted">${c.desc}</span>`, c.price, () => UI.buy(makeConsumable(k, 1), c.price));
+      const pr = consPrice(k); row(`${ICON(c.icon)} ${c.name} <span class="muted">${c.desc}</span>`, pr, () => UI.buy(makeConsumable(k, 1), pr));
     }
     for (const it of G.shopStock) {
       const req = itemReqLevel(it);

@@ -210,7 +210,7 @@ const Assault = {
       const pool = Object.keys(UNIQUES).filter(k => ECHO_ARTS.includes(UNIQUES[k].from));
       if (Math.random() < Math.min(1, 0.12 * (tier - 3) + (rk === 'S' ? 0.15 : 0))) { const it = makeUnique(pick(pool), lvl + 1); drop(it); log(`${ICON('star')} 작전 보상: ${it.name}`, '#ffb84a'); }
     }
-    drop(makeConsumable('medkit', 2));
+    drop(makeConsumable('medkit', 1)); // v1.98.26 2 → 1
     Workshop.gain(4 + 'BAS'.indexOf(rk) * 3 + 2 * (tier - 1), 1 + 'BAS'.indexOf(rk) + (tier - 1), '작전 보급'); // 재료: 등급·위협 비례
     const better = !rec || 'SAB'.indexOf(rk) < 'SAB'.indexOf(rec.best) || t < rec.time;
     p.assaults[s.id] = { best: rec && 'SAB'.indexOf(rec.best) < 'SAB'.indexOf(rk) ? rec.best : rk,

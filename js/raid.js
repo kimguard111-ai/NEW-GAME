@@ -26,7 +26,7 @@ const Raid = {
     const p = G.player, btns = [], med = (p.inventory.find(i => i.key === 'medkit') || { count: 0 }).count;
     let h = '<div class="mc-intro">"어디로 나갈 건가? 뭘 줍든 살아서 돌아와야 네 거야." <span class="muted">카드를 누르면 바로 나간다</span></div>'
       + `<div class="prep">출격 준비: 체력 <b style="color:${p.hp < PlayerStats.maxHp(p) * 0.7 ? '#ff8a8a' : 'inherit'}">${Math.round(p.hp)}/${PlayerStats.maxHp(p)}</b>${p.hp < PlayerStats.maxHp(p) * 0.7 ? ' <span style="color:#ff8a8a">(의무병 이씨에게 치료부터)</span>' : ''} · ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${Bag.used()}/${Bag.cells()}칸</b> · ₵${fmt(p.credits)}</div>`;
-    btns.push([`${ICON('medkit')} +3 (120₵)`, () => { if (p.credits < 120) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= 120; SFX.play('coin'); this.openMap(); }]);
+    const m3 = medPrice(p.level) * 3; btns.push([`${ICON('medkit')} +3 (${fmt(m3)}₵)`, () => { if (p.credits < m3) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= m3; SFX.play('coin'); this.openMap(); }]);
     for (const [k, a] of Object.entries(AMMO)) btns.push([`${ICON('ammo_' + k)} ${a.name} +${a.pack} (${a.price}₵)`, () => { if ((p.ammo[k] || 0) >= ammoCap(p, k)) return log(`${a.name}은(는) 더 들 수 없다 (최대 ${ammoCap(p, k)})`, '#f88'); if (p.credits < a.price) return log('크레딧이 부족합니다.', '#f88'); addAmmo(p, k, a.pack); p.credits -= a.price; SFX.play('ammo'); this.openMap(); }]); // v1.33 탄약 4종
     h += `<div class="sum-head">${ICON('map')} 출격할 곳</div>`; // v1.45.2 맵 목록을 먼저 · 계약은 그 아래
     // v1.53.1 3×2 카드 (지하 연구소는 아래 가로 한 줄) · 지금 갈 곳에 「추천」 — 한 줄 목록이라 출격 버튼을 못 찾던 것
@@ -54,7 +54,7 @@ const Raid = {
     const p = G.player; G.hurtLog = []; // v1.70 사망 원인 기록 초기화
     // v1.7 비상 보급: 구급상자도 돈도 없으면 2개, 예비 탄약이 바닥이면 120발 (죽음의 악순환 방지 — 봇 측정에서 발견)
     const med = p.inventory.find(i => i.key === 'medkit');
-    if (!med && p.credits < 120 && addItem(makeConsumable('medkit', 2))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." (비상 구급상자 2개)', '#8cf');
+    if (!med && p.credits < medPrice(p.level) && addItem(makeConsumable('medkit', 1))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." (비상 구급상자 1개)', '#8cf'); // v1.98.26 2 → 1
     for (const t of gunAmmoTypes(p)) if ((p.ammo[t] || 0) < AMMO[t].pack / 2) { addAmmo(p, t, AMMO[t].pack); log(`작전 장교 윤씨: 비상 ${AMMO[t].name} ${AMMO[t].pack}발 지급`, '#8cf'); }
     if (Camp.medkits() && addItem(makeConsumable('medkit', Camp.medkits()))) log(`의무실: 구급상자 ${Camp.medkits()}개 지급`, '#8cf'); // v1.13
     if (perk('supplyLine')) { for (const t of Object.keys(AMMO)) p.ammo[t] = Math.max(p.ammo[t] || 0, ammoCap(p, t)); if (addItem(makeConsumable('medkit', 2))) log('보급선: 탄약 가득 · 구급상자 2개', '#8cf'); } // v2.x
