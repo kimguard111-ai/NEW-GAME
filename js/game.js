@@ -1677,6 +1677,7 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     }
   }
   // v1.98.1 크레딧은 타이틀 「크레딧」에서 (설정 화면 맨 아래에 있던 것)
+  { const th = document.getElementById('title-thanks'); if (th && TESTERS.length) { th.innerHTML = `<span class="tt-h">테스트에 도움 주신 분들</span><span class="tt-n">${TESTERS.join(' · ')}</span><span class="tt-s">고맙습니다</span>`; th.classList.remove('hidden'); } } // v1.98.38 타이틀에도 (크레딧 링크가 작아 잘 안 보였음)
   document.getElementById('btn-credits').onclick = () => {
     const row = (k, v) => `<div class="cr-row"><span>${k}</span><b>${v}</b></div>`;
     document.getElementById('credits-body').innerHTML = row('제작 · 기획 · 아트 디렉션', 'GuardK111') + row('프로그래밍', 'Claude Code') + row('그림 · 배경 음악', 'Gemini (AI 생성 · 가공)') + row('코드 점검', 'ChatGPT')

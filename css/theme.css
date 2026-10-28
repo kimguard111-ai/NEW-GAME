@@ -728,3 +728,9 @@ body.touch #panel-dialog.newsdlg { width: calc(100vw - 24px); }
 .ops-card .dbtn:hover, .ops-shop:hover { background: rgba(255,154,90,.15); }
 .ops-shop { border-color: #ffd76a; color: #ffd76a; margin-left: 6px; }
 body.touch .ops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+/* v1.98.38 타이틀 감사 줄 */
+#title-thanks { margin: 12px 0 0; padding: 7px 12px; text-align: center; border-top: 1px solid #5a4a22; border-bottom: 1px solid #5a4a22; background: rgba(0,0,0,.35); font-family: 'Typer', monospace; line-height: 1.5; }
+#title-thanks .tt-h { display: block; font-size: 11px; letter-spacing: 2px; color: #a89f8a; }
+#title-thanks .tt-n { display: block; font-size: 15px; color: #ffd76a; text-shadow: 0 0 6px rgba(255,200,80,.35); }
+#title-thanks .tt-s { display: block; font-size: 11px; color: #8d8470; }
+body.touch #title-thanks { margin-top: 6px; padding: 3px 8px; } body.touch #title-thanks .tt-h { display: inline; font-size: 10px; } body.touch #title-thanks .tt-s { display: none; } body.touch #title-thanks .tt-n { display: inline; font-size: 12px; margin: 0 6px; }
