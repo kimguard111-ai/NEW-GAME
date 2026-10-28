@@ -1242,6 +1242,7 @@ function drawWeaponOverlay(sx, sy, w, p, fr) {
 
 // v1.6 은신 변이체: 가까이(150px) 오거나, 맞았거나(2.5초), 공격 준비·경직 중이면 보임
 function enemyCloaked(e) {
+  if (e.seen === false) return true; // v1.98.27 도전 던전 벽 너머 (조준 · 미니맵 · 동료도 못 봄)
   return !armorLegend('nightVision') && e.def.cloak && !e.bossName && !e.elite && !e.affix && !(e.revealT > 0) && e.stunT <= 0 && !(e.pounceT > 0) && !(e.leapT > 0) && !(e.windT > 0)
     && dist(e, G.player) > 150;
 }
@@ -1253,6 +1254,7 @@ function enemyMark(e, sx, sy, k, hz) {
   if (Light.list.length < 90) addLight(sx, sy - 14 - (hz || 0), 52, ch ? 0.5 : 0.35);
 }
 function drawEnemy(e) {
+  if (e.seen === false && e.hp > 0) return; // v1.98.27 도전 던전: 벽 너머 적은 안 그림
   const down = e.downT > 0 ? e.downT : 0, fl = e.flinchT > 0 ? e.flinchT / 0.16 : 0;
   if (e.joltT > 0) { e.joltT -= 1 / 60; } // v1.40 맞으면 그림이 맞은 쪽으로 툭 밀렸다 돌아옴
   if (e.joltT > 0 && !down && !e.nest) { const d = Iso.dir(e.joltA || 0), k = (e.joltT / 0.09) * (e.joltK || 3); ctx.save(); ctx.translate(d.x * k, d.y * k * 0.6); try { drawEnemyInner(e, down, fl); } finally { ctx.restore(); } return; }

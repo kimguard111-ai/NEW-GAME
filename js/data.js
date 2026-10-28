@@ -8,7 +8,7 @@ const TESTERS = ['17사단탈영범', '하누라'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.26' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.27' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
@@ -29,6 +29,7 @@ const NEWS_V2 = { ver: 'v2.0', title: 'v2.0 「한강」 — 서울 편 마지�
   '<b>방어구 단계</b>: 10레벨마다 — 방호 강화복 30 · 블랙선 전투복 40 (새 헬멧 · 새 모습) · 맵 레벨에 맞는 단계가 나옴',
   '<b>연구소 · 스카이타워</b>: Lv40 기준으로 다시 맞춤 · 하드 그대로',
   '<b>새 시즌 — 처음부터</b>: 레벨 · 장비 · 창고 · 이야기 · 업적 · 도감 모두 초기화 (설정은 그대로)',
+  '<b>연구소 · 스카이타워 시야</b>: 벽 너머 적은 안 보이고, 적도 나를 못 봄 — 모퉁이 조심',
   '<b>구급상자</b>: 훨씬 덜 나오고 레벨 따라 비싸짐 — 아껴 쓰기',
   '<b>업적 · 도감 영구 보너스</b>: 업적 하나마다 피해 · 최대 체력 +0.3% · 도감 10칸마다 치명타 +0.3%p · 받는 피해 -0.3%',
 ] };
@@ -251,6 +252,7 @@ function tierOK(k, level) { const d = ARMORS[k] ? ARMORS : HELMETS[k] ? HELMETS 
 // v1.98.26 구급상자 값은 레벨 따라 (Lv1 50 · Lv10 290 · Lv20 700 · Lv30 1,220 · Lv40 1,820) — 너무 잘 나오고 싸서 긴장감이 떨어짐 · 팔 때 값은 그대로(40 기준)
 const medPrice = lvl => Math.round((40 + 10 * Math.pow(Math.max(1, lvl), 1.4)) / 10) * 10;
 const consPrice = k => k === 'medkit' && typeof G !== 'undefined' && G.player ? medPrice(G.player.level) : CONSUMABLES[k].price;
+const DUN_NEAR = 110; // v1.98.27 도전 던전 시야: 이 거리 안은 벽 너머라도 보임 (발소리 · 숨소리)
 const CONSUMABLES = {
   medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복 · 8초에 한 번', price: 40, stack: 20 },
   ammo:   { name: '탄약 상자', icon: 'ammo', desc: '들고 있는 총의 탄약 (기관총탄 120발어치)', price: 45, stack: 20 },

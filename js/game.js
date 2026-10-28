@@ -1000,10 +1000,11 @@ function updateBoss(e, dt, d) {
 }
 
 function updateEnemies(dt) {
-  const p = G.player, pSafe = World.inSafe(p.x, p.y);
+  const p = G.player, pSafe = World.inSafe(p.x, p.y), dunVis = !!(World.def && World.def.lab); // v1.98.27 도전 던전: 벽 너머는 서로 못 봄
   Monsters.auras();
   for (const e of G.enemies) {
     if (e.hp <= 0) continue;
+    if (!dunVis) e.seen = true; else if ((e.seenT = (e.seenT || 0) - dt) <= 0) { e.seenT = 0.1; e.seen = e.def.flying && dist(e, p) < 200 || dist(e, p) < DUN_NEAR || World.lineOfSight(p, e); } // 시야: 보이는 적만 그리고 · 보여야 알아챔 (바로 옆은 소리로)
     if (e.nest) { RaidEvents.nestTick(e, dt, dist(e, p)); continue; } // v1.10 변이 둥지 (움직이지 않음)
     if (e.regenMut) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.02 * dt); // v1.15 변형 규칙: 재생
     if (e.state !== 'chase' && !e.def.boss && !e.fieldBoss && !e.labBoss && Math.abs(e.x - p.x) + Math.abs(e.y - p.y) > 2200) continue; // v1.16 멀리 있는 적은 쉼 (사라지지 않음)
@@ -1014,7 +1015,7 @@ function updateEnemies(dt) {
     if (e.kbx || e.kby) { const mx = e.kbx * dt, my = e.kby * dt; if (e.def.flying) { if (!World.solidAt(e.x + mx, e.y + my)) { e.x += mx; e.y += my; } } else World.move(e, mx, my); const f = Math.exp(-KB_RATE * dt); e.kbx *= f; e.kby *= f; if (Math.abs(e.kbx) + Math.abs(e.kby) < 3) e.kbx = e.kby = 0; }
     if (e.stunT > 0) { e.stunT -= dt; e.state = 'chase'; e.fireT = Math.max(e.fireT, 0.2); Monsters.interrupt(e); continue; } // 경직: 이동·공격 불가, 준비 중인 공격 끊김
     const same = Interiors.sameSpace(e); // 건물 안팎이 다르면 쫓지 않음 (벽 너머 길찾기 없음)
-    if (!p.dead && !pSafe && same && d < e.def.aggro) e.state = 'chase';
+    if (!p.dead && !pSafe && same && d < e.def.aggro && e.seen !== false) e.state = 'chase'; // v1.98.27 던전은 보여야 쫓음 (총소리 · 무리 알림 · 맞으면 그대로)
     else if (e.state === 'chase' && (p.dead || pSafe || d > e.def.aggro * (e.heard ? 2.6 : 1.7) || (!same && Nav.dist && Nav.dist[Math.floor(e.y / TILE) * World.W + Math.floor(e.x / TILE)] < 0))) e.state = 'idle'; // 길이 없을 때만 포기
     if (e.assault && !p.dead) e.state = 'chase'; // 어설트 적은 항상 추격
     if (e.state === 'chase' && e.prevSt !== 'chase' && !e.minion && G.time - (e.spotT || -99) > 8) { e.spotT = G.time; Juice.spot(e, d); Monsters.packAlert(e); } // v1.29 처음 알아챔: 「!」 + 울음
