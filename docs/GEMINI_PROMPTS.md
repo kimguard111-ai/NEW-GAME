@@ -1401,6 +1401,16 @@ Match the art style of the attached images (the second image shows the existing 
 
 ---
 
+## 53. 어설트 「배수 펌프장 탈환전」 거점 보스 (v1.98.23 · v2.0 과 같이 열림)
+
+### 53-1 ★ · 물귀신 어미 「흑수」 · 🔧 **heuksu** · 📐 **1:1** · 🔢 `idle 4, walk 6, attack 4, hit 2, death 5`
+📎 콘셉트 아트 첨부 · 지금은 물귀신 변이체(drowned) 그림을 ×2.7 로 키워 임시로 씀 (기어 다니는 그림이라 보스치고 작아 보임)
+**다른 한강 보스와 구분:** 수문장 = 철판 갑옷 거한 · 거머리 = 서 있는 벌레 · **흑수 = 검은 물을 뒤집어쓴 거대한 어미 물귀신 (새끼를 낳음)**. 몸은 **창백한 청회색 + 검은 머리카락 덩어리**, 위험 표시(눈 · 입 안)는 **주황**.
+```
+Match the art style of the attached concept image. Create ONE sprite sheet image of a giant mother river-ghost mutant, three times human size: a huge bloated drowned woman-like monster rising half out of the water on long thin arms, pale blue-gray swollen waterlogged skin, an enormous mass of long wet black hair pouring down over her face and back like black water, only a wide jagged mouth and two small glowing orange eyes visible through the hair, a swollen belly with several small drowned infant-sized mutants clinging to it, torn rotten fishing net and river weeds tangled around her, black water constantly dripping from the hair, hunched upright posture leaning forward on her long arms. Rows: row 1: 4 frames of idle swaying with the hair dripping; row 2: 6 frames of a heavy lurching walk forward on her long arms; row 3: 4 frames of rearing up and slamming both arms down to the ground; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing forward and melting into a puddle of black hair. The same monster in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated teal and mud-brown colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+**등록할 때:** `new` 폴더에 `heuksu.png` 로 올려 주면 제가 잘라서 `js/assets.js` 에 넣고 `ASSAULTS.pump.boss.art` 를 `heuksu` 로 바꿈 (크기도 ×2.7 → 그림에 맞게).
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
