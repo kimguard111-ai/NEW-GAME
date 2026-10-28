@@ -6,7 +6,7 @@ const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
 const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.98.9 · 한강 테스트';
+const GAME_VERSION = 'v1.98.10 · 한강 테스트';
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
@@ -32,7 +32,7 @@ const PITY_DROPS = 10; // v1.25 드랍 자체가 귀해진 만큼 15 → 10 // v
 const AMMO = {
   pistol: { name: '권총탄',   color: '#d8c890', k: 0.6,  pack: 48,  price: 15, start: 72 },
   auto:   { name: '기관총탄', color: '#c8a050', k: 1,    pack: 120, price: 45, start: 120, desc: '기관단총 · 소총 · 기관총' },
-  shell:  { name: '산탄',     color: '#d05a3a', k: 0.25, pack: 30,  price: 45, start: 24 },
+  shell:  { name: '산탄',     color: '#d05a3a', k: 0.25, pack: 40,  price: 45, start: 30 }, // v1.98.10 묶음 30 → 40
   // v1.55 저격탄 삭제 (남은 탄은 크레딧으로)
   //sniper: { name: '저격탄',   color: '#7ab0d8', k: 0.12, pack: 15,  price: 50, start: 10 },
 };
@@ -41,20 +41,20 @@ const AMMO = {
 // role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
   // v1.55 pipe 삭제 (그림이 있는 무기만 · 세이브의 것은 소방 도끼로 바뀜)
-  pistol:  { ammo: 'pistol', name: 'P-45 권총',    icon: 'pistol', dmg: 18, rate: 0.42, /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
-             quickDraw: true, lvl: 1, price: 80, role: '권총탄이 흔하고 쌈 · 즉시 꺼내 듦 · 언제나 믿을 수 있는 보조무기' },
+  pistol:  { ammo: 'pistol', name: 'P-45 권총',    icon: 'pistol', dmg: 24, rate: 0.34, /* v1.98.10 18/0.42 → 24/0.34 (초당 43 → 71) · 치명타 +10% */ /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 0.8, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05, critBonus: 0.1,
+             quickDraw: true, lvl: 1, price: 80, role: '권총탄이 흔하고 쌈 · 즉시 꺼내 듦 · 치명타 +10% · 빠른 재장전' },
   axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 42, rate: 1.0, /* v1.8.1 0.8/44 · v1.72 55 → 42 (Lv1부터 한 번에 셋을 한 방 — 너무 셈) */ range: 64, arc: 1.75, /* v1.95 72 · 2.1 → 64 · 1.75 (테스터: 초반 도끼가 너무 셈 · 범위가 너무 넓음) */ knock: 42, stagger: 0.7, move: 0.98, lvl: 1, price: 220, /* v1.55 쇠파이프 대신 첫 근접 무기 (Lv1~ 초중반) */
-             role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄' },
-  smg:     { ammo: 'auto', name: 'SP-9 기관단총',  icon: 'smg', dmg: 12, rate: 0.13, /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
+             role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄 · 들고 있으면 받는 피해 -25%' },
+  smg:     { ammo: 'auto', name: 'SP-9 기관단총',  icon: 'smg', dmg: 14, rate: 0.13, /* v1.98.10 12 → 14 */ /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
-  shotgun: { ammo: 'shell', name: 'R-12 산탄총',   icon: 'shotgun', dmg: 10, pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
+  shotgun: { ammo: 'shell', name: 'R-12 산탄총',   icon: 'shotgun', dmg: 16, /* v1.98.10 10 → 16: 다 맞으면 초당 100 → 160 (소총 122 의 1.3배 · 대신 사거리 260 vs 620 · 봇 강남 분당 처치 소총 7.5 → 산탄 14) */ pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 12, stagger: 0.35, move: 1.0,
              lvl: 5, price: 380, role: '근거리 폭발력 · 코앞에서 쏘면 크게 날려버림' },
   rifle:   { ammo: 'auto', name: 'KR-49 돌격소총',   icon: 'rifle', dmg: 22, rate: 0.18, /* v1.50.7 0.14 → 0.18 (×1.2) · v1.40.2 17/0.11 (초당 피해 유지) */ mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
              lvl: 8, price: 620, role: '안정적인 중거리 화력 · 끊어 쏘면 첫 발이 정확' },
   katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 62, rate: 0.5, /* v1.8.1 0.38/60 · v1.27 79 → 62 (Lv16 기관총보다 훨씬 강하던 것) */ range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 18, price: 900, /* v1.55 후반 근접 (11 → 18) */
-             role: '긴 칼날 · 3타째 돌진 찌르기 · 가장 빠른 이동' },
+             role: '긴 칼날 · 3타째 돌진 찌르기 · 가장 빠른 이동 · 들고 있으면 받는 피해 -25%' },
   // v1.55 sniper 삭제 (그림이 있는 무기만 · 세이브의 것은 돌격소총으로 바뀜)
-  lmg:     { ammo: 'auto', name: 'LM-49 기관총',     icon: 'lmg', dmg: 15, rate: 0.1, /* v1.50.7 0.07 → 0.1 (×1.28) */ mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
+  lmg:     { ammo: 'auto', name: 'LM-49 기관총',     icon: 'lmg', dmg: 15, rate: 0.1, /* v1.50.7 0.07 → 0.1 (×1.28) */ mag: 100, reload: 3.2, /* v1.98.10 4.0 → 3.2 · 이동 0.8 → 0.88 */ spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.88,
              lvl: 16, price: 1800, role: '압도적 지속 화력 · 쏠수록 빨라지고 정확해짐 · 무거움' },
   // v1.53 신화 무기 (특별 총 3종): 신화 등급 고정 · 바벨·타이탄·키메라 · 어설트 위협 5+ A 등급 이상(v1.63, 전엔 S)에서 낮은 확률 (MYTH_DROP) · 상자·상점에서는 안 나옴 · 죽으면 잃음
   // base = 소리·손맛·부품을 빌려 오는 총 · 고유 아이콘과 손에 든 그림을 만들 예정
@@ -432,8 +432,8 @@ const PASSIVES = {
 
 // v1.11 스킬 갈래: 스킬마다 2개 중 하나 (캠프에서 자유롭게 바꿈). 고르지 않으면 기본형
 const SKILL_MODS = {
-  rapid:   { a: { name: '정밀 사격', desc: '연사 +40% 대신 +18%로 낮추고 치명타 확률 +25%' },
-             b: { name: '탄약 보급', desc: '발동 순간 탄창 가득 · 지속 중 탄약 소모 없음 (지속 -25%)' } },
+  rapid:   { a: { name: '정밀 사격', desc: '연사 +40% 그대로 · 치명타 확률 +20%' }, // v1.98.10 연사를 깎던 것 없앰
+             b: { name: '사냥 본능', desc: '지속 +25% · 지속 중 처치할 때마다 +0.6초 (최대 +4초)' } }, // v1.98.10 궁극에서 내려옴
   grenade: { a: { name: '집속탄', desc: '터진 뒤 작은 폭탄 4개가 흩어져 다시 폭발 (각 35%)' },
              b: { name: '소이탄', desc: '폭발 피해 -20% · 그 자리에 4초 불길 (초당 폭발 피해의 22%)' } },
   heal:    { a: { name: '재생 주사', desc: '즉시 절반 회복 + 6초 동안 나머지의 2배를 서서히 회복' },
@@ -457,7 +457,7 @@ const skillResetCost = p => 300 + p.level * 120; // 캠프 상인 박씨: 스킬
 const SKILL_TREE = {
   rapid:   { r1: { name: '숙련 사격', desc: '지속 +1.5초', lvl: 4, price: 700 },
              r2: { name: '사격 숙달', desc: '재사용 대기 -15%', lvl: 8, price: 1600 },
-             cap: { name: '사냥 본능', desc: '지속 중 처치할 때마다 지속 +0.6초 (최대 +4초)', lvl: 18, price: 8000 } },
+             cap: { name: '탄약 보급', desc: '발동 순간 탄창 가득 · 지속 중 탄약 소모 없음', lvl: 18, price: 8000 } }, // v1.98.10 무한 탄창을 궁극으로 (갈래에서 올라옴)
   grenade: { r1: { name: '파편 증량', desc: '폭발 반경 +15%', lvl: 6, price: 1500 },
              r2: { name: '투척 숙달', desc: '재사용 대기 -15%', lvl: 10, price: 3000 },
              cap: { name: '연쇄 폭발', desc: '1초 뒤 같은 자리에서 한 번 더 폭발 (피해 50%)', lvl: 20, price: 9000 } },

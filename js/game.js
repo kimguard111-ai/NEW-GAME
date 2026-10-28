@@ -221,6 +221,9 @@ function startGame(save, name) {
     { const R = { pistol: 18 / 14, sniper: 140 / 120, katana: 62 / 79 }; // v1.27 총기 밸런스: 가진 무기도 같은 비율로 (시체 가방 포함)
       const graves = Object.values(P.graves || {}).flatMap(g => g.items || []);
       for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves]) if (it && it.kind === 'weapon' && !it.v127) { if (R[it.key]) it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v127 = true; } }
+    { const R = { pistol: 24 / 18, smg: 14 / 12, shotgun: 16 / 10 }; // v1.98.10 무기 역할 나누기: 가진 무기도 같은 비율로 (시체 가방 포함)
+      const graves = Object.values(P.graves || {}).flatMap(g => g.items || []);
+      for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves]) if (it && it.kind === 'weapon' && !it.v19810) { if (R[it.key]) it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v19810 = true; } }
     P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
     P.contract = null; P.cboard = null; // v1.47.1 출격 계약 게시판 삭제 (받아 둔 계약도 정리)
     mythTestGrant(P); // v1.61.2 시험 모드: Lv26 + 신화 3종
@@ -445,7 +448,7 @@ function playerAttack() {
     }
   }
   if (perk('lastRounds') && w.loaded <= magSize(w) * 0.25) cc += 0.25; // v1.11 마지막 탄
-  if (!(w.legend === 'thrift' && Math.random() < 0.35) && !(p.buffs.rapid > 0 && smod('rapid') === 'b')) w.loaded--; // v1.11 탄약 보급: 소모 없음
+  if (!(w.legend === 'thrift' && Math.random() < 0.35) && !(p.buffs.rapid > 0 && stree('rapid', 'cap'))) w.loaded--; // v1.11 탄약 보급: 소모 없음 (v1.98.10 궁극)
   const pellets = pelletCount(w), dmg = weaponDmg(w) * playerDamageMul(false) * attMul(w, 'dmg'), rapid = G.time - (p.lastShot || -9) < 0.3; // v1.50 rapid = 연사 중 (보정기·수직 손잡이)
   // v1.9 무기 손맛: 기관총 예열(연사할수록 정확·빨라짐) · 소총 첫 발 정조준(잠깐 쉬었다 쏘면 정확 + 치명타)
   const first = wbase(w.key) === 'rifle' && G.time - (p.lastShot || -9) > 0.35;
@@ -525,8 +528,8 @@ function useSkill(i) {
   SFX.play(s.id === 'heal' ? 'heal' : 'skill');
   const m = smod(s.id); // v1.11 스킬 갈래
   if (s.id === 'rapid') {
-    p.buffs.rapid = SkillCalc.rapidDur(p); p.rapidExt = 0; floatText(p.x, p.y - 30, m === 'a' ? '정밀 사격!' : m === 'b' ? '탄약 보급!' : '집중 사격!', '#7fd');
-    const w = curWeapon(); if (m === 'b' && w && !WEAPONS[w.key].melee) { w.loaded = magSize(w); p.reloadT = 0; }
+    p.buffs.rapid = SkillCalc.rapidDur(p); p.rapidExt = 0; floatText(p.x, p.y - 30, stree('rapid', 'cap') ? '탄약 보급!' : m === 'a' ? '정밀 사격!' : m === 'b' ? '사냥 본능!' : '집중 사격!', '#7fd');
+    const w = curWeapon(); if (stree('rapid', 'cap') && w && !WEAPONS[w.key].melee) { w.loaded = magSize(w); p.reloadT = 0; }
   } else if (s.id === 'grenade') {
     const { x: tx, y: ty } = Iso.toWorld(input.mx, input.my);
     const a = Math.atan2(ty - p.y, tx - p.x), d = Math.min(380, Math.hypot(tx - p.x, ty - p.y));
@@ -678,8 +681,10 @@ function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이
   if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) tk *= 0.85;
   if (perk('ghost') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1) tk *= 0.5;
   if (perk('ironWill')) tk *= 0.88; // v2.x 강철 의지
+  { const cw = curWeapon(); if (cw && WEAPONS[cw.key] && WEAPONS[cw.key].melee) tk *= 0.75; } // v1.98.10 근접 무기를 들면 받는 피해 -25% (붙어 싸우는 대가 · 하누라님 피드백)
+  if (p.buffs.adren > 0) tk *= 0.8; // v1.98.10 아드레날린 기본 받는 피해 -20%
   if (p.buffs.shield > 0) tk *= 0.6;
-  if (p.buffs.adren > 0 && smod('adren') === 'b') tk *= 0.7;
+  if (p.buffs.adren > 0 && smod('adren') === 'b') tk *= 0.7; // 진통제 (기본 -20% 와 겹쳐 -44%)
   if (pas('s5')) tk *= 0.95; // v1.23 철벽
   if (p.buffs.stim > 0) tk *= 0.9; // v1.14 전투 자극제
   if (setOn('steel', 3) && p.hp >= PlayerStats.maxHp(p) * 0.5) tk *= 0.8; // v1.12 강철 부대 3세트
@@ -850,7 +855,7 @@ function killEnemy(e) {
     if (heldUnique('babel')) { const mh = PlayerStats.maxHp(p); p.hp = Math.min(mh, p.hp + mh * 0.03); }
   }
   if (e.lastHit && e.lastHit.melee && perk('brawler')) { const mh = PlayerStats.maxHp(p); p.hp = Math.min(mh, p.hp + mh * 0.04); } // v1.11 싸움꾼
-  if (p.buffs.rapid > 0 && stree('rapid', 'cap') && (p.rapidExt || 0) < 4) { p.buffs.rapid += 0.6; p.rapidExt = (p.rapidExt || 0) + 0.6; } // v1.22 사냥 본능
+  if (p.buffs.rapid > 0 && smod('rapid') === 'b' && (p.rapidExt || 0) < 4) { p.buffs.rapid += 0.6; p.rapidExt = (p.rapidExt || 0) + 0.6; } // v1.22 사냥 본능
   if (p.buffs.adren > 0 && smod('adren') === 'a' && (p.adrenExt || 0) < 8) { p.buffs.adren += 1.5; p.adrenExt = (p.adrenExt || 0) + 1.5; } // 광폭
   const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
   SFX.play(e.def.boss || e.fieldBoss || e.elite ? 'roar' : 'kill', e.def.boss ? 1 : 0.8);
