@@ -23,6 +23,10 @@ ASSAULTS.coex = { name: '무역센터 탈환전', level: 24, minLevel: 21, par: 
 ASSAULTS.lotte = { name: '스카이타워 정화 작전', level: 29, minLevel: 26, par: 90, limit: 300,
   waves: [{ stalker: 4, zombie: 6 }, { stalker: 4, brute: 2, spitter: 3 }, { stalker: 5, brute: 3, zombie: 4, elites: 3 }],
   boss: { name: '포식 변이체 「여왕」', art: 'queen', base: 'brute', hpMul: 10, dmgMul: 1.35, scale: 1.7, patterns: ['glutton', 'brood', 'quake'] } };
+// v1.98.23 한강 (v2.0): 배수 펌프장 — 한강에만 어설트가 없던 것 · 그림은 있는 것으로 (물귀신 변이체를 크게)
+if (V2_OPEN) ASSAULTS.pump = { name: '배수 펌프장 탈환전', level: 34, minLevel: 31, par: 90, limit: 300,
+  waves: [{ drowned: 6, dog: 3 }, { drowned: 5, merc: 3, spitter: 2 }, { drowned: 6, brute: 2, merc: 3, elites: 3 }],
+  boss: { name: '물귀신 어미 「흑수」', art: 'drowned', base: 'brute', hpMul: 11, dmgMul: 1.35, scale: 2.7 /* 기어 다니는 그림이라 크게 */, speedMul: 1.1, patterns: ['brood', 'dash', 'quake'] } };
 const ASSAULT_R = 13 * TILE; // 봉쇄 구역 반지름
 // 위협 등급 (v0.14 엔드게임): 등급마다 적 레벨 +2 · 체력 +20% (v1.63) · 보상 증가. 등급 N을 깨면 N+1 개방
 const TIER_MAX = 10; // v1.15: 6~10은 적 레벨 대신 이번 주 변형 규칙이 단계마다 하나씩 붙음
