@@ -80,7 +80,7 @@ const Bosses = {
     dropAt('item', { item: randomGear(e.level + 1, 1.5, Math.random() < 0.3 ? 3 : 2, ZONES[e.fieldBoss].gear) });
     if (Math.random() < 0.25 * ECON.gear) dropAt('item', { item: randomGear(e.level + 1, 1, 1, ZONES[e.fieldBoss].gear) });
     dropAt('item', { item: makeConsumable('medkit', 2) });
-    rollUnique(e.art, e.level + 1, dropAt); // v1.12 보스 고유 장비
+    rollUnique(e.art, e.level + 1, dropAt, e.echo ? (curDiff() || {}).uniq || 1 : 1); // v1.12 보스 고유 장비 · v1.98.13 하드 메아리 ×1.5
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0; // 부하 정리
     p.fieldBossKills = (p.fieldBossKills || 0) + 1;
     Workshop.gain(10, 2, '필드 보스 잔해 회수');
@@ -129,7 +129,7 @@ const Bosses = {
       dropAt('item', { item: randomGear(e.level, 2.4, Math.random() < 0.45 ? 4 : 3, ZONES[8].gear) }); dropAt('item', { item: randomGear(e.level, 1.6, 3, ZONES[8].gear) }); dropAt('item', { item: makeConsumable('medkit', 3) });
       rollMyth('tower', e.level, dropAt);
       for (const o of G.enemies) if (o.guardOf === e) o.hp = 0;
-      p.towerKills = (p.towerKills || 0) + 1; Workshop.gain(18, 8, '뿌리 표본 회수'); Bounty.on('fieldBoss'); hitstop(0.2); G.shake = Math.max(G.shake, 18);
+      p.towerKills = (p.towerKills || 0) + 1; if (p.towerKills === 1 && !p.hellOpen) { UI.toast('스카이타워 하드 개방', '출격 지도에서 「하드」 — 적 Lv+4 · 경험치 ×1.5 · 신화 ×2'); log('뿌리를 쓰러뜨렸다 — 스카이타워 하드가 열렸다.', '#ff9a3a'); } // v1.98.13 Workshop.gain(18, 8, '뿌리 표본 회수'); Bounty.on('fieldBoss'); hitstop(0.2); G.shake = Math.max(G.shake, 18);
       return;
     }
     log(`${e.bossName} 처치! 격리실의 연구 기록을 회수했다.`, '#ffa53a');
@@ -142,6 +142,7 @@ const Bosses = {
     rollMyth('chimera', e.level, dropAt); // v1.53 신화
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0;
     p.labKills = (p.labKills || 0) + 1;
+    if (p.labKills === 1 && !p.hellOpen) { UI.toast('지하 연구소 하드 개방', '출격 지도에서 「하드」 — 적 Lv+4 · 경험치 ×1.5 · 신화 ×2'); log('키메라를 쓰러뜨렸다 — 지하 연구소 하드가 열렸다.', '#ff9a3a'); } // v1.98.13
     Workshop.gain(14, 6, '실험 장비 잔해 회수');
     Bounty.on('fieldBoss');
     hitstop(0.2); G.shake = Math.max(G.shake, 16);

@@ -8,7 +8,7 @@ const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.12' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.13' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
@@ -71,19 +71,18 @@ const WEAPONS = {
 // v1.53 신화 무기 드랍: 확률 + 못 얻을 때마다 pity · MYTH_LIVE = false 면 아직 안 나옴 (고유 그림이 오면 켬)
 const MYTH_LIVE = true; // v1.55 고유 그림이 와서 켬
 const MYTH_TEST = false; // v1.61.2 시험 모드: 새 게임·불러오기 모두 바로 Lv26 + 신화 3종 · 이 동안 신화 레벨 제한 25 — 출시 전 false
-const MYTH_DROP = { babel: { chance: 0.06, pity: 0.02 }, titan: { chance: 0.03, pity: 0.01 }, chimera: { chance: 0.04, pity: 0.015 }, tower: { chance: 0.08, pity: 0.03 }, /* v1.78 스카이타워 옥상 */ assault: { chance: 0.06, pity: 0.02, tier: 5, rank: 'A' } }; // v1.63 어설트는 위협 5+ A 등급 이상 (S만이면 최상급 장비로도 거의 못 함)
-// v1.66 마지막 맵(잠실) 난이도: 하드 = 이야기를 끝내면 · 헬 = 하드에서 바벨을 쓰러뜨리면 · 적 레벨·체력·피해 ↑ · 경험치·장비 등급·신화 확률 ↑
-// 하드·헬에서는 바벨이 출격마다 스카이타워에 나타남 (이야기 뒤에도 신화를 노릴 수 있게) · 엘리트·필드 보스도 낮은 확률로 신화
-const DIFF_MAP = 'jamsil';
+const MYTH_DROP = { babel: { chance: 0.035, pity: 0.012 }, titan: { chance: 0.018, pity: 0.006 }, chimera: { chance: 0.025, pity: 0.009 }, tower: { chance: 0.045, pity: 0.017 }, /* v1.78 스카이타워 옥상 */ assault: { chance: 0.035, pity: 0.012, tier: 5, rank: 'A' } }; // v1.98.13 신화 확률 약 0.6배 (너무 쉽게 나온다는 의견) // v1.63 어설트는 위협 5+ A 등급 이상 (S만이면 최상급 장비로도 거의 못 함)
+// v1.98.13 난이도: 잠실 하드 · 헬 → 도전 던전(지하 연구소 · 스카이타워) 「하드」 하나로 — 엔드게임은 던전에 모음
+// 그 던전 보스(키메라 · 뿌리)를 한 번 쓰러뜨리면 그 던전 하드가 열림 · 적 레벨·체력·피해 ↑ · 경험치 · 장비 등급 · 신화 ×2 · 층 보상 · 메아리 고유 장비 ×1.5 · 엘리트 · 필드 보스도 아주 낮은 확률로 신화
+const DIFF_MAPS = ['lab', 'tower'];
 const DIFFS = [
   { name: '일반', lv: 0, hp: 1, dmg: 1, exp: 1, gear: 0, myth: 1, color: '#cfc6b0' },
-  { name: '하드', lv: 4, hp: 1.5, dmg: 1.3, exp: 1.5, gear: 0.5, myth: 2, elite: { chance: 0.01, pity: 0.004 }, color: '#ff9a3a' },
-  { name: '헬', lv: 8, hp: 2.2, dmg: 1.7, exp: 2.5, gear: 1.0, myth: 4, elite: { chance: 0.03, pity: 0.01 }, color: '#ff4a4a' },
+  { name: '하드', lv: 4, hp: 1.4, dmg: 1.2, exp: 1.5, /* v1.98.13 던전 배율과 겹쳐 1.5·1.3 은 봇 사망 67% → 1.4·1.2 */ gear: 0.5, myth: 2, uniq: 1.5, floorCr: 1.5, elite: { chance: 0.005, pity: 0.002 }, color: '#ff9a3a' },
 ];
 // v1.81 도전 던전 층 배율 (적 체력 · 피해) — 없으면 null
 function dunMul() { const p = typeof G !== 'undefined' && G.player, D = typeof World !== 'undefined' && World.def && World.def.lab && p && p.raid && p.raid.floor ? DUNGEONS[World.map] : null; return D ? { hp: D.hpM(p.raid.floor), dmg: D.dmgM(p.raid.floor) } : null; }
 function curDiff() { const p = typeof G !== 'undefined' && G.player; return p && p.raid && p.raid.diff ? DIFFS[p.raid.diff] : null; }
-function diffOpen(p) { return !p.finalEnd ? 0 : p.hellOpen ? 2 : 1; }
+function diffOpen(p, id) { return !DIFF_MAPS.includes(id) ? 0 : p.hellOpen || (id === 'lab' ? (p.labKills || 0) : (p.towerKills || 0)) >= 1 ? 1 : 0; } // v1.98.13 잠실 헬까지 열었던 사람은 두 던전 하드 바로
 const wbase = k => (WEAPONS[k] && WEAPONS[k].base) || k; // v1.52 불법 무기 → 같은 계열 총 (소리·손맛·부품)
 
 // v1.9 근접 3타 콤보. 1·2타(MELEE_COMBO) → 3타 무기별 마무리(MELEE_FINISH). 값은 무기 기본치에 곱함

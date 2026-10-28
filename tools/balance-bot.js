@@ -11,6 +11,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1280, height: 720 } }); pg.setDefaultTimeout(300000); // v1.51 그림을 다 받을 때까지 시작 버튼이 막혀 있음
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
   await pg.goto('file://' + require('path').resolve(__dirname, '../index.html') + (FIXMAP === 'hangang' || process.env.V2 ? '?v2' : '')); /* v2.0 잠금 중엔 ?v2 로 열어서 측정 */ await pg.evaluate(() => localStorage.clear()); await pg.reload();
+  if (process.env.DIFF) await pg.evaluate(d => { window.__DIFF = d; }, +process.env.DIFF); // v1.98.13 던전 하드
   if (process.env.WEAPON) await pg.evaluate(w => { window.__WEAPON = w; }, process.env.WEAPON); // v1.98.10 무기 비교
   if (process.env.QUEST) await pg.evaluate(q => { window.__QUEST = q; }, process.env.QUEST);
   if (process.env.TIER) await pg.evaluate(t => { window.__TIER = t; }, +process.env.TIER); // v1.63 TIER=<위협 등급> (ASSAULT 와 함께)
@@ -76,7 +77,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     B.deploy = () => {
       B.camp();
       const id = B.mapFor();
-      Raid.deploy(id); $('raid-summary').classList.add('hidden');
+      if (window.__DIFF) { G.player.labKills = Math.max(1, G.player.labKills || 0); G.player.towerKills = Math.max(1, G.player.towerKills || 0); } Raid.deploy(id, window.__DIFF || 0); $('raid-summary').classList.add('hidden'); // v1.98.13 DIFF=1 던전 하드
       B.cur = { map: id, t0: G.time, k0: p.totalKills, lv0: p.level, exp0: p.exp, cr0: p.credits, plan: rand(300, 480) };
       B.field = null; B.fieldKey = '';
     };

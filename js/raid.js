@@ -39,7 +39,7 @@ const Raid = {
         + `<div class="mc-body"><div class="mc-name">${ok ? '' : ICON('lock') + ' '}${d.name}${id === rec && ok ? ' <span class="mc-rec">추천</span>' : ''}</div>`
         + `<div class="mc-lv">${d.lab ? (D => `도전 · ${D.label(1)}~${D.label(D.floors)} · 적 Lv${D.lv(1)}~${D.lv(D.floors)}${p[D.best] ? ` · 최고 ${D.label(p[D.best])}` : ''}${gr && gr.floor ? ` · 가방 ${D.label(gr.floor)}` : ''}`)(DUNGEONS[id]) : `Lv${z.lvl[0]}~${z.lvl[1]}`}</div><div class="mc-desc">${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</div>`
         + (gr ? `<div class="mc-grave">${ICON('skull')} 시체 가방 (장비 ${gr.items.length})</div>` : '') + ev
-        + (ok && id === DIFF_MAP && diffOpen(p) > 0 ? `<div class="mc-diff">${DIFFS.map((D, i) => i > diffOpen(p) ? `<span class="dbtn off">${ICON('lock')} ${D.name}</span>` : `<span class="dbtn" data-diff="${i}" style="border-color:${D.color};color:${D.color}">${D.name}${i ? ` <small>경험치 ×${D.exp} · 신화 ×${D.myth}</small>` : ''}</span>`).join('')}</div>${diffOpen(p) < 2 ? '<div class="muted" style="font-size:11px">헬: 하드에서 바벨을 쓰러뜨리면</div>' : ''}` : '') // v1.66 잠실 난이도
+        + (ok && diffOpen(p, id) > 0 ? `<div class="mc-diff">${DIFFS.map((D, i) => `<span class="dbtn" data-diff="${i}" style="border-color:${D.color};color:${D.color}">${D.name}${i ? ` <small>경험치 ×${D.exp} · 신화 ×${D.myth}</small>` : ''}</span>`).join('')}</div>` : ok && DIFF_MAPS.includes(id) ? `<div class="muted" style="font-size:11px">${ICON('lock')} 하드: ${id === 'lab' ? 'B5 키메라' : '옥상 뿌리'}를 쓰러뜨리면</div>` : '') // v1.98.13 던전 하드 (전: 잠실 하드 · 헬)
         + (ok ? '<div class="mc-go">▶ 출격</div>' : '') + '</div></div>';
     };
     const low = id => MAPS[id].lab || MAPS[id].endRow, end = MAP_ORDER.filter(low); // v1.98.12 한강(Lv30+)은 아래 엔드게임 줄로 → 일반 6곳 3×2 + 「한강 · 연구소 · 타워」 한 줄 (한강만 한 줄에 덩그러니 남던 것)
@@ -47,7 +47,7 @@ const Raid = {
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨', h, btns); $('panel-dialog').classList.add('mapdlg');
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격
-    $('dialog-text').querySelectorAll('[data-diff]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); UI.close('dialog'); FirstRun.rules(() => this.deploy(DIFF_MAP, +b.dataset.diff)); }; }); // v1.66 난이도 골라 출격
+    $('dialog-text').querySelectorAll('[data-diff]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); UI.close('dialog'); FirstRun.rules(() => this.deploy(b.closest('[data-map]').dataset.map, +b.dataset.diff)); }; }); // v1.66 난이도 골라 출격
   },
 
   deploy(id, diff = 0) {
@@ -67,7 +67,7 @@ const Raid = {
     if (MAPS[id].lab) G.exits = [dunExitPick(G.exits, start)];
     else { const n = FirstRun.rookie() ? 2 : Math.random() < 0.5 ? 1 : 2; G.exits = G.exits.sort(() => Math.random() - 0.5).slice(0, n); } // v1.82 일반 맵 탈출 지점 3 → 1~2 (첫 출격은 2) // v1.81 도전 던전: 탈출구 하나 (시작 자리에서 가장 먼 방)
     p.x = start.x; p.y = start.y; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 출격 때 체력을 채워 주지 않음 (의무병 · 구급상자 의미)
-    p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0, diff: id === DIFF_MAP ? Math.max(0, Math.min(diff, diffOpen(p))) : 0, floor: MAPS[id].lab ? 1 : 0 }; // v1.66 잠실 난이도 · v1.77 연구소 층
+    p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0, diff: Math.max(0, Math.min(diff, diffOpen(p, id))), floor: MAPS[id].lab ? 1 : 0 }; // v1.66 잠실 난이도 · v1.77 연구소 층
     if (FirstRun.rookie()) G.fbT = 1e9; // v1.45 첫 출격엔 필드 보스 없음
     G.extractT = 0; G.search = null;
     Scavenge.generate(); // v1.4 뒤질 곳
@@ -115,7 +115,7 @@ const Raid = {
     r.floor++; this.labFloor(r.floor, id);
     const rec = r.floor > (p[D.best] || 1); // v1.84 처음 오른(내려간) 층이면 신기록 알림
     p[D.best] = Math.max(p[D.best] || 0, r.floor);
-    const bonus = r.floor * (id === 'tower' ? 500 : 400); r.credits += bonus; p.credits += bonus; // 층 보상 (탈출해야 확정 — 죽으면 이번 출격 크레딧처럼 잃음)
+    const bonus = Math.round(r.floor * (id === 'tower' ? 500 : 400) * ((curDiff() || {}).floorCr || 1)); // v1.98.13 하드 ×1.5 r.credits += bonus; p.credits += bonus; // 층 보상 (탈출해야 확정 — 죽으면 이번 출격 크레딧처럼 잃음)
     World.generate(id); this.resetWorld();
     const pts = World.edgePts, start = pts[Math.floor(Math.random() * pts.length)];
     G.exits = [dunExitPick(pts.filter(q => q !== start), start)]; p.x = start.x; p.y = start.y; // v1.81 탈출구 하나

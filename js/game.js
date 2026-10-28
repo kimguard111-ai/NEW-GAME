@@ -917,7 +917,6 @@ function killEnemy(e) {
     dropAt('credits', { amount: e.level * 40 });
     rollUnique(e.elite, e.level, dropAt); // v1.12 레이븐 · 바벨
     if (e.elite === 'babel') rollMyth('babel', e.level, dropAt); // v1.53 신화
-    if (e.elite === 'babel' && p.raid && p.raid.diff === 1 && !p.hellOpen) { p.hellOpen = true; UI.toast('헬 난이도 개방', '잠실을 「헬」로 출격할 수 있다 (출격 지도)'); log('하드 바벨을 쓰러뜨렸다 — 잠실 헬 난이도가 열렸다.', '#ff4a4a'); } // v1.66
     if (Math.random() < 0.15) dropAt('item', { item: randomAttach(e.level) }); // v1.50 부품 · v1.51 30% → 15%
     hitstop(0.12); G.shake = Math.max(G.shake, 10);
   }
@@ -1258,18 +1257,18 @@ function makeMyth(key, level) { const w = makeWeapon(key, Math.max(level, WEAPON
 function rollMyth(src, level, dropAt) {
   const p = G.player, DF = curDiff(), D = src === 'hard' ? DF && DF.elite : MYTH_DROP[src]; // v1.66 하드·헬 엘리트 신화
   if (!MYTH_LIVE || !D) return false;
-  const dm = src === 'hard' ? 1 : DF ? DF.myth : 1; // v1.66 난이도 배율 (바벨 하드 ×2 · 헬 ×4)
+  const dm = src === 'hard' ? 1 : DF ? DF.myth : 1; // v1.66 난이도 배율 (v1.98.13 던전 하드 ×2)
   p.mythPity = p.mythPity || {};
   if (Math.random() < (D.chance + (p.mythPity[src] || 0) * D.pity) * dm) { p.mythPity[src] = 0;
     const all = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), had = (p.codex && p.codex.myth) || {}, fresh = all.filter(k => !had[k]); // v1.63 아직 확보 못 한 신화부터
     dropAt('item', { item: makeMyth(pick(fresh.length ? fresh : all), level) }); return true; }
   p.mythPity[src] = (p.mythPity[src] || 0) + 1; return false;
 }
-function rollUnique(from, level, dropAt) {
+function rollUnique(from, level, dropAt, mul = 1) { // mul: v1.98.13 던전 하드 메아리 ×1.5
   const uid = Object.keys(UNIQUES).find(k => UNIQUES[k].from === from), p = G.player;
   if (!uid) return;
   p.uniqPity = p.uniqPity || {};
-  const ch = UNIQUES[uid].chance + (p.uniqPity[uid] || 0) * 0.03;
+  const ch = (UNIQUES[uid].chance + (p.uniqPity[uid] || 0) * 0.03) * mul;
   if (Math.random() < ch) { p.uniqPity[uid] = 0; dropAt('item', { item: makeUnique(uid, level) }); }
   else p.uniqPity[uid] = (p.uniqPity[uid] || 0) + 1;
 }
