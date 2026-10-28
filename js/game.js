@@ -100,7 +100,7 @@ function saveGame(silent = true) {
   if (!G.player) return;
   try {
     const p = { ...G.player, reloadT: 0, atkT: 0 }, key = saveKey();
-    const str = JSON.stringify({ ver: 2, p, nextItemId, bossT: G.bossT, savedAt: Date.now() });
+    const str = JSON.stringify({ ver: 2, season: SEASON2 ? 2 : undefined, p, nextItemId, bossT: G.bossT, savedAt: Date.now() });
     // v1.49 백업: 2분마다 직전 저장을 「-bak」에 남김 (저장이 깨져도 그 전으로 돌아갈 수 있게)
     const old = localStorage.getItem(key);
     if (old && Date.now() - (G.bakT || 0) > 120000 && validSave(old)) { try { localStorage.setItem(key + '-bak', old); G.bakT = Date.now(); } catch (e) { /* v1.84.1 백업이 실패해도 본 저장은 시도 */ } }
@@ -124,7 +124,7 @@ function sanitizeSave(v) {
   if (P.mats) for (const k of ['scrap', 'chip']) if (!Number.isFinite(P.mats[k])) P.mats[k] = 0; // v1.84.3 신화 분해로 NaN 이 된 재료 복구
   return v;
 }
-function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(str) : str; return !!(s && s.p && typeof s.p === 'object' && s.p.name !== undefined && Array.isArray(s.p.inventory) && s.p.equip && typeof s.p.equip === 'object' && !Array.isArray(s.p.equip) && s.p.stats && typeof s.p.stats === 'object'); } catch (e) { return false; } }
+function validSave(str) { try { const s = typeof str === 'string' ? JSON.parse(str) : str; return !!(s && (!SEASON2 || s.season === 2) /* v1.98.22 새 시즌엔 옛 세이브(코드 · 옛 주소에서 옮긴 것 포함) 안 받음 */ && s.p && typeof s.p === 'object' && s.p.name !== undefined && Array.isArray(s.p.inventory) && s.p.equip && typeof s.p.equip === 'object' && !Array.isArray(s.p.equip) && s.p.stats && typeof s.p.stats === 'object'); } catch (e) { return false; } }
 // v1.51 실제 총 이름 → 가상 이름 (예전 세이브의 장비 이름도 바꿈)
 const LEGACY_NAMES = [['M1911 권총', 'P-45 권총'], ['MP5 기관단총', 'SP-9 기관단총'], ['M870 산탄총', 'R-12 산탄총'], ['K2 돌격소총', 'KR-49 돌격소총'], ['K14 저격소총', 'SR-49 저격소총'], ['K3 기관총', 'LM-49 기관총']];
 function renameLegacy(str) { for (const [a, b] of LEGACY_NAMES) str = str.split(a).join(b); return str; }
@@ -388,7 +388,7 @@ function playerDamageMul(melee) {
   if (pas('a5')) m *= 1.05; if (branchOn('atk')) m *= 1.08; // v1.23 패시브 트리
   if (!melee) { const cw = curWeapon(); if (cw && cw.arBoost) m *= 1.2; } // v1.65 완벽 장전한 탄창
   if (p.buffs.perfect > 0) m *= 1.3; // v1.65 완벽 회피 뒤 3초
-  return m * Camp.dmgMul(); // v1.13 사격장
+  return m * Camp.dmgMul() * (1 + (p.jb ? p.jb.dmg : 0)); // v1.13 사격장 · v1.98.22 업적 영구 보너스
 }
 
 function playerAttack() {
@@ -686,6 +686,7 @@ function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이
   if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) tk *= 0.85;
   if (perk('ghost') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1) tk *= 0.5;
   if (perk('ironWill')) tk *= 0.88; // v2.x 강철 의지
+  if (p.jb) tk *= 1 - p.jb.dr; // v1.98.22 도감 영구 보너스
   { const cw = curWeapon(); if (cw && WEAPONS[cw.key] && WEAPONS[cw.key].melee) tk *= 0.75; } // v1.98.10 근접 무기를 들면 받는 피해 -25% (붙어 싸우는 대가 · 하누라님 피드백)
   if (p.buffs.adren > 0) tk *= 0.8; // v1.98.10 아드레날린 기본 받는 피해 -20%
   if (p.buffs.shield > 0) tk *= 0.6;
@@ -1599,6 +1600,12 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
 // ---------------- 타이틀 ----------------
 (function initTitle() {
   UI.init();
+  if (SEASON2) { let done = '2'; try { done = localStorage.getItem('seoul2049-season'); } catch (e) { /* 막힘 */ } // v1.98.22 v2.0 새 시즌: 옛 세이브는 숨은 백업으로 옮기고 처음부터
+    if (done !== '2') { let had = false;
+      try { for (const n of [1, 2, 3]) for (const sfx of ['', '-bak']) { const k = slotKey(n) + sfx, raw = localStorage.getItem(k); if (!raw) continue; had = true; if (!localStorage.getItem('seoul2049-s1-' + n + sfx)) localStorage.setItem('seoul2049-s1-' + n + sfx, raw); localStorage.removeItem(k); }
+        localStorage.setItem('seoul2049-season', '2'); localStorage.setItem('seoul2049-news', NEWS_V2.ver); } catch (e) { /* 막힘 */ }
+      if (had) setTimeout(() => UI.dialog('v2.0 「한강」 — 새 시즌', `<p>서울 편 마지막 장이 열리면서 <b>모든 진행을 처음부터</b> 다시 시작합니다 (레벨 · 장비 · 창고 · 이야기 · 업적 · 도감). 설정은 그대로예요.</p><ul class="news">${NEWS_V2.items.map(t => `<li>${t}</li>`).join('')}</ul><div class="muted" style="font-size:11px">함께 해 주셔서 고맙습니다 · ${GAME_VERSION}</div>`, [['새로 시작', () => UI.close('dialog')]]), 600); }
+  }
   if (document.fonts) for (const f of ['12px BlackHan', '12px Typer', '12px Pen']) document.fonts.load(f); // v1.39 캔버스 글씨용 글꼴 미리 읽기
   Sprites.loadAll();
   document.getElementById('version-label').textContent = GAME_VERSION + (/\.vercel\.app$/.test(location.hostname) ? ' · ' + location.hostname : ''); // v1.83.1 접속 주소도 (기기마다 같은 주소인지 확인용)

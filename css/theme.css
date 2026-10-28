@@ -709,3 +709,5 @@ body.touch .title-main .controls { display: none; }
 body.touch #inv-grid.bag-grid { --bag-cell: 34px; }
 body.touch.shop-open #inv-grid.bag-grid { --bag-cell: 30px; }
 #hud-buffs .bf { white-space: nowrap; } /* v1.98.18 효과 하나가 두 줄로 쪼개지지 않게 */
+.jb-line { margin: 2px 0 8px; padding: 5px 8px; border: 1px solid #5a4a22; background: rgba(255,215,106,.07); color: #e8dcc0; font-size: 12px; line-height: 1.5; } .jb-line b { color: #ffd76a; } /* v1.98.22 업적 · 도감 영구 보너스 */
+body.touch .jb-line { font-size: 10.5px; padding: 3px 6px; margin-bottom: 4px; }

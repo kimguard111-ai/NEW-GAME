@@ -250,12 +250,12 @@ const pas = id => !!(G.player && G.player.passive && G.player.passive[id]); // v
 const branchOn = b => !!(G.player && G.player.perks && G.player.perks.filter(id => id && PERK_BRANCH[id] === b).length >= 3); // 같은 갈래 특성 3개 → 갈래 보너스
 const smod = sid => (G.player && G.player.skillMods && G.player.skillMods[sid]) || null;
 const PlayerStats = {
-  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1) * (pas('s1') ? 1.05 : 1) * (branchOn('sur') ? 1.1 : 1) * (setOn('rad', 2) ? 1.08 : 1) * Camp.raidHpMul()),
+  maxHp: p => Math.round((100 + p.stats.vit * 15 + p.level * 10) * (1 + gearBonus(p, 'hp')) * (perk('thickSkin') ? 1.12 : 1) * (pas('s1') ? 1.05 : 1) * (branchOn('sur') ? 1.1 : 1) * (setOn('rad', 2) ? 1.08 : 1) * (1 + (p.jb ? p.jb.hp : 0)) /* v1.98.22 업적 */ * Camp.raidHpMul()),
   def: p => Math.round((armorDef(p.equip.armor) + armorDef(p.equip.helmet) + Math.max(0, p.stats.str - 5)) * (setOn('steel', 2) ? 1.15 : 1) * (pas('s2') ? 1.08 : 1)),
   dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 40 + 8 * p.level); }, // v1.0: 고레벨일수록 같은 방어력의 효과 감소 (Lv5 기존과 동일)
   gunMul: p => (1 + (p.stats.dex - 5) * 0.04) * (pas('a2') ? 1.06 : 1),
   meleeMul: p => (1 + (p.stats.str - 5) * 0.06) * (pas('a1') ? 1.06 : 1),
-  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (w && WEAPONS[w.key] && WEAPONS[w.key].critBonus || 0) /* v1.98.10 권총 */ + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.2 : 0) + (setOn('blacksun', 2) ? 0.08 : 0) + (pas('a3') ? 0.03 : 0),
+  crit: (p, w) => 0.05 + (p.jb ? p.jb.crit : 0) /* v1.98.22 도감 */ + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (w && WEAPONS[w.key] && WEAPONS[w.key].critBonus || 0) /* v1.98.10 권총 */ + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.2 : 0) + (setOn('blacksun', 2) ? 0.08 : 0) + (pas('a3') ? 0.03 : 0),
   critMul: (p, w) => ((w && WEAPONS[w.key].critMul) || 1.8) + gearBonus(p, 'critDmg', w) + (armorLegend('hunterEye') ? 0.35 : 0) + ((p.bsT || 0) > G.time ? 0.5 : 0) + (pas('a4') ? 0.15 : 0),
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {

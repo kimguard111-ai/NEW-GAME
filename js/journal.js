@@ -51,6 +51,17 @@ const Journal = {
     if (!p.mythChk) { p.mythChk = true; for (const it of [...(p.inventory || []), ...Object.values(p.equip || {}), ...(p.stash || [])]) if (it && it.rarity === 5 && !it.raid && WEAPONS[it.key]) p.codex.myth[it.key] = true; } // 이미 가진 것
     p.rec = p.rec || {}; p.ach = p.ach || {};
   },
+  // v1.98.22 영구 보너스 (v2.0 새 시즌부터): 업적 1개 = 피해 · 최대 체력 +0.3% · 도감 10칸 = 치명타 +0.3%p · 받는 피해 -0.3%
+  JB: { achDmg: 0.003, achHp: 0.003, cxStep: 10, cxCrit: 0.003, cxDr: 0.003 } /* 업적 35개 = +10.5% · 도감 164칸 = 16단계 치명타 +4.8%p · 받는 피해 -4.8% */,
+  cxCells(p) { const c = p.codex, gk = this.gearKeys(); return gk.reduce((a, k) => a + Math.min(5, Math.max(0, (c.items[k] ?? -1) + 1)), 0) + this.foeList().filter(f => c.kills[f.name]).length + Object.keys(c.uniq).length + Object.keys(c.sets).length + Object.keys(c.myth || {}).length; },
+  calcBonus(p) {
+    if (!V2_OPEN) { p.jb = null; return; }
+    const a = ACHIEVEMENTS.filter(x => p.ach[x.id]).length, c = this.cxCells(p), st = Math.floor(c / this.JB.cxStep), J = this.JB;
+    const prev = p.jb; p.jb = { a, c, st, dmg: a * J.achDmg, hp: a * J.achHp, crit: st * J.cxCrit, dr: st * J.cxDr };
+    if (prev && st > prev.st && G.running) { UI.toast(`도감 ${c}칸 — 영구 보너스`, `치명타 +${(J.cxCrit * 100).toFixed(1)}%p · 받는 피해 -${(J.cxDr * 100).toFixed(1)}% (합계 치명타 +${(p.jb.crit * 100).toFixed(1)}%p · 받는 피해 -${(p.jb.dr * 100).toFixed(1)}%)`); SFX.play('quest'); }
+  },
+  bonusLine(p) { const b = p.jb; if (!b) return ''; const J = this.JB, nx = J.cxStep - b.c % J.cxStep;
+    return `<div class="jb-line">영구 보너스 · 업적 ${b.a}개: <b>피해 · 최대 체력 +${(b.dmg * 100).toFixed(1)}%</b> · 도감 ${b.c}칸: <b>치명타 +${(b.crit * 100).toFixed(1)}%p · 받는 피해 -${(b.dr * 100).toFixed(1)}%</b> <span class="muted">(업적 하나마다 +${(J.achDmg * 100).toFixed(1)}% · 도감 ${J.cxStep}칸마다 · 다음까지 ${nx}칸)</span></div>`; },
   enemyName(e) { return e.bossName || (e.elite && ELITES[e.elite] && ELITES[e.elite].name) || (e.nest ? e.def.name : null) || e.def.name; },
   onKill(e) {
     const p = G.player; this.ensure(p);
@@ -94,7 +105,7 @@ const Journal = {
     if ((this.t -= dt) > 0) return;
     this.t = 2;
     const p = G.player; if (!p || p.dead) return;
-    this.ensure(p);
+    this.ensure(p); this.calcBonus(p);
     for (const a of ACHIEVEMENTS) {
       if (p.ach[a.id]) continue;
       let ok = false; try { ok = a.ok(p); } catch (e) { ok = false; }
@@ -102,7 +113,7 @@ const Journal = {
       p.ach[a.id] = Date.now();
       if (a.r.credits) p.credits += a.r.credits;
       if (a.r.chip) Workshop.gain(0, a.r.chip);
-      const rw = [a.r.credits ? `+${fmt(a.r.credits)}₵` : '', a.r.chip ? `전자 부품 +${a.r.chip}` : ''].filter(Boolean).join(' · ');
+      const rw = [a.r.credits ? `+${fmt(a.r.credits)}₵` : '', a.r.chip ? `전자 부품 +${a.r.chip}` : '', V2_OPEN ? `영구 피해 · 체력 +${(this.JB.achDmg * 100).toFixed(1)}%` : ''].filter(Boolean).join(' · '); this.calcBonus(p);
       UI.toast(`업적: ${a.name}`, `${a.desc} · ${rw}`);
       log(`${ICON('star')} 업적: ${a.name} (${a.desc}) ${rw}`, '#ffd76a');
       SFX.play('quest');
@@ -156,7 +167,7 @@ const Journal = {
       const head = (name, got, all, col, note = '') => `<div class="cxh"><b style="color:${col}">${name}</b> <span class="muted">${got} / ${all}${note ? ' · ' + note : ''}</span>${got >= all ? ' <span class="cxdone">완성</span>' : ''}</div><div class="cxbar"><i style="width:${Math.round(got / all * 100)}%;background:${col}"></i></div>`;
       const gk = this.gearKeys(), cnt = t => gk.filter(k => (p.codex.items[k] ?? -1) >= t).length;
       const fs = this.foeList(), fGot = fs.filter(f => p.codex.kills[f.name]).length;
-      let h = `<div class="jtabs cxsubs">${st('gear', `장비 ${gk.reduce((a, k) => a + Math.max(0, (p.codex.items[k] ?? -1) + 1), 0)}/${gk.length * 5}`)}${st('foe', `적 ${fGot}/${fs.length}`)}</div>`;
+      let h = this.bonusLine(p) + `<div class="jtabs cxsubs">${st('gear', `장비 ${gk.reduce((a, k) => a + Math.max(0, (p.codex.items[k] ?? -1) + 1), 0)}/${gk.length * 5}`)}${st('foe', `적 ${fGot}/${fs.length}`)}</div>`;
       if (sub === 'foe') { h += `<div class="muted cxnote" id="cx-tip">${IS_TOUCH ? '칸을 누르면' : '칸에 마우스를 올리면'} 처치 수 · 힌트.</div>`;
         for (const [g, gname, col] of [[0, '일반 적', '#cfcfcf'], [1, '정예', '#ffd76a'], [2, '필드 보스', '#ff9a4a'], [3, '어설트 보스', '#ff6a5a'], [4, '최종 보스', RARITIES[5].color]]) {
           const L = fs.filter(f => f.g === g); if (!L.length) continue;
@@ -183,7 +194,7 @@ const Journal = {
       return h + '</div>';
     }
     if (this.tab === 'ach') {
-      let h = '<div class="muted">조건을 채우면 자동으로 보상을 받습니다.</div>';
+      let h = this.bonusLine(p) + '<div class="muted">조건을 채우면 자동으로 보상을 받습니다.</div>';
       for (const a of ACHIEVEMENTS) {
         const ok = p.ach[a.id], rw = [a.r.credits ? `${fmt(a.r.credits)}₵` : '', a.r.chip ? `전자 부품 ${a.r.chip}` : ''].filter(Boolean).join(' · ');
         h += `<div class="ach${ok ? ' ok' : ''}">${ok ? '★' : '☆'} <b>${a.name}</b> <span class="muted">${a.desc} (${rw})</span></div>`;
