@@ -157,9 +157,9 @@ const UI = {
     if (p.sp > 0) buffs.push(`<b style="color:#7fc8ff">${ICON('rapid')}스킬 포인트 ${p.sp}${IS_TOUCH ? '' : ' (K)'}</b>`); // v1.97 남은 스킬 포인트도 능력치처럼 알림 (폰은 위 메뉴 버튼에 점)
     if (p.statPoints > 0) buffs.push(`<b style="color:#ffd76a">★ 능력치 ${p.statPoints}${IS_TOUCH ? '' : ' (C)'}</b>`);
     { const m = document.querySelector('#menu-buttons [data-panel="skills"]'), s = document.querySelector('#menu-buttons [data-panel="stats"]'); if (m) m.classList.toggle('alert', p.sp > 0); if (s) s.classList.toggle('alert', p.statPoints > 0 || PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])); } // 메뉴 버튼에 반짝이는 점
-    if (PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])) buffs.push(`<b style="color:#ffd76a">${ICON('tip')}특성 선택 가능 (C)</b>`);
-    if (World.inSafe(p.x, p.y)) buffs.push(`${ICON('shield')} 안전 지대 (체력 회복)`);
-    UI.html('hud-buffs', buffs.join('&nbsp; '));
+    if (PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i])) buffs.push(`<b style="color:#ffd76a">${ICON('tip')}특성 선택${IS_TOUCH ? '' : ' 가능 (C)'}</b>`); // v1.98.18 폰엔 C 키가 없어 줄이 넘침
+    if (World.inSafe(p.x, p.y)) buffs.push(`${ICON('shield')} 안전 지대${IS_TOUCH ? '' : ' (체력 회복)'}`);
+    UI.html('hud-buffs', buffs.map(b => `<span class="bf">${b}</span>`).join(' &nbsp;'));
     const z = ZONES[G.zone];
     UI.html('hud-zone', (G.zone === 0 ? z.name : `${z.name}${World.def && World.def.lab && DUNGEONS[World.map] ? ' ' + DUNGEONS[World.map].label(World.labFloor || 1) : ''}  ·  Lv${z.lvl[0]}~${z.lvl[1]}<div class="zone-sub">${World.def && World.def.lab ? z.desc : `${z.desc} · 특산 ${z.gearText}`}</div>`)
       + (p.inRad ? `<div class="zone-rad">${ICON('rad')} 방사능 피폭 중! 웅덩이에서 벗어나세요</div>` : ''));
@@ -517,7 +517,7 @@ const UI = {
       )
       + page('data', ''
         + `<b>세이브 백업</b> <span class="muted">다른 기기·브라우저로 옮길 때</span><br>`
-        + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button>`
+        + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button><br>`
         + `<b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`
         + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
         + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`

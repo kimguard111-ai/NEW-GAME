@@ -699,7 +699,7 @@ body.touch .set-tab { padding: 5px 10px; font-size: 13px; }
 #settings-body .set-page { columns: 2; column-gap: 22px; } #settings-body .set-page > * { break-inside: avoid; }
 body.touch #settings-body .set-page { columns: 2; column-gap: 14px; }
 body.touch #settings-body { font-size: 11.5px !important; line-height: 1.4 !important; } body.touch #settings-body .muted { font-size: 10px; }
-#settings-body .set-page[data-page="keys"], #settings-body .set-page[data-page="data"] { columns: 1; }
+#settings-body .set-page[data-page="keys"], #settings-body .set-page[data-page="data"], body.touch #settings-body .set-page[data-page="keys"], body.touch #settings-body .set-page[data-page="data"] { columns: 1; }
 
 /* v1.98.16 업데이트 소식 */ ul.news { margin: 4px 0 8px 18px; padding: 0; } ul.news li { margin: 3px 0; line-height: 1.45; }
 #quest-tracker.boss { opacity: .35; transition: opacity .3s; } #quest-tracker.boss:hover { opacity: 1; } /* v1.98.16 보스전 */
@@ -708,3 +708,4 @@ body.touch #settings-body { font-size: 11.5px !important; line-height: 1.4 !impo
 body.touch .title-main .controls { display: none; }
 body.touch #inv-grid.bag-grid { --bag-cell: 34px; }
 body.touch.shop-open #inv-grid.bag-grid { --bag-cell: 30px; }
+#hud-buffs .bf { white-space: nowrap; } /* v1.98.18 효과 하나가 두 줄로 쪼개지지 않게 */
