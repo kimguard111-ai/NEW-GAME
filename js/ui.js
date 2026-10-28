@@ -13,7 +13,13 @@ const Pause = {
     const p = G.player, m = Math.floor(p.playTime / 60);
     return `${p.name} · Lv${p.level} · 플레이 ${Math.floor(m / 60)}시간 ${m % 60}분 · 처치 ${fmt(p.totalKills)} · 사망 ${p.deaths} · 최고 콤보 ${p.bestCombo}`;
   },
-  ending() {
+  // v2.x kind 'seoul' = 7장 끝 「서울 편」 마지막 엔딩 (파트 2 예고) · 기본 = 6장 바벨 엔딩
+  ending(kind) {
+    const h2 = $('ending-h2'), lore = $('ending-lore');
+    const note = $('ending-note');
+    if (!this.endTxt) this.endTxt = [h2.textContent, lore.innerHTML, note.innerHTML];
+    if (kind === 'seoul') { h2.textContent = '서울 편 끝 — 강 너머'; lore.innerHTML = '수문장이 쓰러지고 배수 펌프장이 20년 만에 다시 돌았다. 한강의 물길이 열리자 펌프장 통신기에 흐릿한 목소리가 걸렸다.<br>「…인천항… 배가 남아 있다… 바다로…」<br>시청역 캠프는 처음으로 서울 밖을 이야기하기 시작했다. <b>— 파트 2: 인천으로 이어집니다</b>'; note.innerHTML = '서울에서 할 일은 남아 있다. 지하 연구소 · 스카이타워 · 어설트 · 잠실 헬 난이도 — 그리고 바다 건너 다음 도시를 기다리며.'; }
+    else { h2.textContent = this.endTxt[0]; lore.innerHTML = this.endTxt[1]; note.innerHTML = this.endTxt[2]; }
     const p = G.player, best = Object.values(p.assaults).reduce((a, r) => Math.max(a, r.tier || 1), 0);
     G.paused = true; input.down = false;
     $('ending-stats').innerHTML = `<p>${Pause.statsHtml()}<br>필드 보스 ${p.fieldBossKills || 0} · 어설트 최고 위협 ${best || '-'} · 타이탄 처치 ${p.bossKills} · 키메라 처치 ${p.labKills || 0}</p>`;
@@ -489,7 +495,7 @@ const UI = {
         + opt('nearHud', '캐릭터 옆 상태', '맞으면 머리 위 체력 · 구르면 발밑 회피 막대 · 탄이 적으면 옆에 숫자 · 버프 남은 초 (필요할 때만 뜸)')
         + opt('dmgNum', '피해 숫자', '적에게 준 피해 표시')
         + opt('xray', '가려진 적 윤곽', '건물 뒤에 있는 적을 붉은 윤곽으로 보여 줌')
-        + opt('outline', '적 테두리', '적 둘레에 붉은 테두리 · 발밑 고리 (어두운 곳에서도 잘 보이게)')
+        + opt('outline', '적 테두리', '적 둘레에 붉은 테두리 (어두운 곳에서도 잘 보이게)')
         + opt('camLead', '조준 방향 시야', '마우스 쪽으로 화면이 조금 따라감 (어지러우면 끄기)')
         + (IS_TOUCH ? '' : opt('rmbAim', '오른쪽 클릭 조준', '누르고 있으면 정확하게 · 느리게 · 멀리 봄 (끄면 오른쪽 클릭 = 회피)'))
         + (IS_TOUCH ? opt('autoFire', '자동 공격', '쫓아오는 적 · 가까운 적을 알아서 쏨 (화면 오른쪽 「자동」 버튼과 같음 · 탄을 쓰니 주의)') : '')
@@ -881,8 +887,8 @@ const UI = {
       const stock = [];
       const rr = p.level >= 10 ? 1 : 0; // v1.25 상점은 일반·고급까지만 (좋은 장비는 파밍으로)
       for (const k of Object.keys(WEAPONS)) if (WEAPONS[k].lvl <= p.level + 2 && !WEAPONS[k].myth) stock.push(makeWeapon(k, p.level, rr));
-      for (const k of Object.keys(ARMORS)) if (ARMORS[k].lvl <= p.level + 2) stock.push(makeArmor(k, p.level, rr));
-      for (const k of Object.keys(HELMETS)) if (HELMETS[k].lvl <= p.level + 2) stock.push(makeHelmet(k, p.level, rr));
+      for (const k of Object.keys(ARMORS)) if (ARMORS[k].lvl <= p.level + 2 && tierOK(k, p.level)) stock.push(makeArmor(k, p.level, rr)); // v2.0 단계에 맞는 것만
+      for (const k of Object.keys(HELMETS)) if (HELMETS[k].lvl <= p.level + 2 && tierOK(k, p.level)) stock.push(makeHelmet(k, p.level, rr));
       for (let t = 1; t <= 2; t++) if (BELTS[t].lvl <= p.level + 2) stock.push(makeBelt(t)); // v1.24 벨트 (특수부대 장구류는 뒤지기에서만)
       G.shopStock = stock;
     }

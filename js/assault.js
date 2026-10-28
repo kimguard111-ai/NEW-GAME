@@ -27,7 +27,9 @@ const ASSAULT_R = 13 * TILE; // 봉쇄 구역 반지름
 // 위협 등급 (v0.14 엔드게임): 등급마다 적 레벨 +2 · 체력 +20% (v1.63) · 보상 증가. 등급 N을 깨면 N+1 개방
 const TIER_MAX = 10; // v1.15: 6~10은 적 레벨 대신 이번 주 변형 규칙이 단계마다 하나씩 붙음
 // v1.63 등급마다 +3레벨·체력 +30% → +2레벨·+20% (봇 측정: 위협 1은 Lv25에 50~60초 S, 위협 5는 Lv25~27 6번 모두 시간 초과 — 레벨 비례 체력과 곱해져 위협 5가 위협 1의 약 4배 → 약 2.8배)
-const tierLvl = t => 2 * (Math.min(t, 5) - 1) + Math.max(0, t - 5), tierHp = t => 1 + 0.2 * (Math.min(t, 5) - 1) + 0.15 * Math.max(0, t - 5);
+const tierLvl = t => 2 * (Math.min(t, 5) - 1) + Math.max(0, t - 5),
+  aLvl = (a, t) => { const l = a.level + tierLvl(t); return t >= 6 && G.player ? Math.max(l, G.player.level - 2) : l; }, // v1.98.11 위협 6+ = 적 · 보상 레벨이 내 레벨에 맞춰짐 (낮은 지역 어설트도 끝까지 돌 이유 — 하누라님 피드백)
+  tierHp = t => 1 + 0.2 * (Math.min(t, 5) - 1) + 0.15 * Math.max(0, t - 5);
 const tierLimit = (a, t = 1) => a.limit + 15 * (Math.min(t, 5) - 1); // v1.63 제한 시간도 등급마다 +15초
 // v1.15 변형 규칙 (주마다 순서가 바뀜): 위협 6 = 1개 · 7 = 2개 … 10 = 5개
 const MUTATORS = {
@@ -67,7 +69,7 @@ const Assault = {
     const p = G.player, a = ASSAULTS[l.id], rec = p.assaults[l.id];
     if (!rec) return this.start(l, 1);
     const top = Math.min(TIER_MAX, (rec.tier || 1) + 1), btns = [];
-    for (let t = 1; t <= top; t++) btns.push([`위협 ${t} (적 Lv${a.level + tierLvl(t)})${t > 5 ? ' ' + tierMutators(t).map(m => MUTATORS[m].name).join('·') : ''}`, () => { UI.close('dialog'); this.start(l, t); }]);
+    for (let t = 1; t <= top; t++) btns.push([`위협 ${t} (적 Lv${aLvl(a, t)})${t > 5 ? ' ' + tierMutators(t).map(m => MUTATORS[m].name).join('·') : ''}`, () => { UI.close('dialog'); this.start(l, t); }]);
     btns.push(['취소', () => UI.close('dialog')]);
     UI.dialog(a.name, `위협 등급이 높을수록 적 레벨 +2 · 체력 +20% · 제한 시간 +15초씩, 보상(장비 등급·전자 부품·경험치)도 커집니다.<br><span class="muted">위협 N을 클리어하면 N+1이 열립니다. (최대 ${TIER_MAX})</span>`
       + `<br><b style="color:#ff8a5a">위협 6~10: 이번 주 변형 규칙</b> <span class="muted">(매주 월요일 바뀜, 단계마다 하나씩 추가)</span><br>${weekMutators().map((m, i) => `<span class="muted">${i + 6}:</span> ${MUTATORS[m].name} — ${MUTATORS[m].desc}`).join('<br>')}`, btns);
@@ -112,7 +114,7 @@ const Assault = {
     }
     if (s.phase === 'ready' && (s.wait -= dt) <= 0) {
       s.wave++; s.phase = 'fight';
-      if (s.wave < a.waves.length) this.spawnWave(a.waves[s.wave], a.level + tierLvl(s.tier));
+      if (s.wave < a.waves.length) this.spawnWave(a.waves[s.wave], aLvl(a, s.tier));
       else this.spawnBoss(a);
     }
   },
@@ -172,7 +174,7 @@ const Assault = {
 
   spawnBoss(a) {
     const b = a.boss, br = ENEMIES[b.base].r * b.scale + 4, at = this.spot(ASSAULT_R * 0.35, ASSAULT_R * 0.7, br) || this.spot(60, ASSAULT_R, br) || this.spot(0, ASSAULT_R * 1.2, Math.min(br, 24)) || { x: G.assault.l.x, y: G.assault.l.y + G.assault.l.size * TILE }; // v1.84.2 외부 점검: 자리를 못 찾으면 범위를 넓혀 다시 (벽 속 고정 좌표는 마지막 수단)
-    const e = makeEnemy(b.base, at.x, at.y, a.level + 1 + tierLvl(G.assault.tier));
+    const e = makeEnemy(b.base, at.x, at.y, aLvl(a, G.assault.tier) + 1);
     e.bossName = b.name; e.art = b.art; e.patterns = b.patterns; e.scale = b.scale; e.expMul = 6;
     e.hp = e.maxHp = Math.round(e.maxHp * b.hpMul); e.dmg *= b.dmgMul;
     e.r = Math.round(e.r * b.scale); e.fireMul = b.fireMul || 1; e.weight = e.def.weight * 5;
@@ -189,7 +191,7 @@ const Assault = {
   clear() {
     const s = G.assault, p = G.player, a = ASSAULTS[s.id], l = s.l;
     const tier = s.tier || 1, t = Math.round(s.t), rk = this.rank(t, a, tier), R = RANKS[rk];
-    const rec = p.assaults[s.id], first = !rec, lvl = a.level + tierLvl(tier), tm = 1 + 0.5 * (tier - 1);
+    const rec = p.assaults[s.id], first = !rec, lvl = aLvl(a, tier), tm = 1 + 0.5 * (tier - 1);
     const exp = Math.round(lvl * lvl * 18 * R.mul * tm), credits = Math.round(lvl * 70 * R.mul * tm);
     gainExp(exp); p.credits += credits;
     const zone = ZONES[l.zone].gear;
@@ -200,6 +202,10 @@ const Assault = {
     if (tier > 1 && tier > ((rec && rec.tier) || 1)) drop(randomGear(lvl + 1, 2, tier >= 10 ? 4 : 3, zone)); // 새 위협 등급 첫 클리어: 영웅 이상 (v1.15 위협 10은 전설)
     if (tier >= 6) { drop(randomGear(lvl + 1, 1.5 + 0.3 * (tier - 5), 3, zone)); Weekly.on('mutator', tier); } // v1.15 변형 규칙 보상
     { const M = MYTH_DROP.assault; if (tier >= M.tier && 'SAB'.indexOf(rk) <= 'SAB'.indexOf(M.rank)) rollMyth('assault', lvl, (k, o) => drop(o.item)); } // v1.53 신화: 위협 5+ · v1.63 A 등급 이상
+    if (tier >= 4) { // v1.98.11 위협 4+: 지역 필드 보스 고유 장비 (위협마다 12% · S 등급 +15%) — 고유 장비를 낮은 맵 뺑뺑이 없이
+      const pool = Object.keys(UNIQUES).filter(k => ECHO_ARTS.includes(UNIQUES[k].from));
+      if (Math.random() < Math.min(1, 0.12 * (tier - 3) + (rk === 'S' ? 0.15 : 0))) { const it = makeUnique(pick(pool), lvl + 1); drop(it); log(`${ICON('star')} 작전 보상: ${it.name}`, '#ffb84a'); }
+    }
     drop(makeConsumable('medkit', 2));
     Workshop.gain(4 + 'BAS'.indexOf(rk) * 3 + 2 * (tier - 1), 1 + 'BAS'.indexOf(rk) + (tier - 1), '작전 보급'); // 재료: 등급·위협 비례
     const better = !rec || 'SAB'.indexOf(rk) < 'SAB'.indexOf(rec.best) || t < rec.time;

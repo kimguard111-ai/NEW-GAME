@@ -63,7 +63,7 @@ const City = {
       // v1.47.1 버스 폭도 2칸 (그림이 2칸 폭이라 1칸만 막으면 옆구리로 파고들던 것)
       const cells = [];
       for (const w of [0, 1]) for (let k = 0; k < 5; k++) cells.push(vert ? [bx + lane + w, by + off + k] : [bx + off + k, by + lane + w]);
-      if (!cells.every(([x, y]) => at(x, y) === T.ROAD && !near(x, y))) continue;
+      if (!cells.every(([x, y]) => at(x, y) === T.ROAD && !near(x, y) && !(World.river && y >= World.river.r0 - 4 && y <= World.river.r1 + 4))) continue;
       for (const [x, y] of cells) { T_[y * W + x] = T.CAR; this.carSkip.add(y * W + x); this.busCells.add(y * W + x); }
       const xs = cells.map(c => c[0]), ys = cells.map(c => c[1]), fx = Math.max(...xs), fy = Math.max(...ys);
       add('bus', (Math.min(...xs) + fx + 1) / 2 * TILE, (Math.min(...ys) + fy + 1) / 2 * TILE, { vertical: vert, front: fx + fy, color: rng() < 0.6 ? 0 : 1, burnt: rng() < 0.3 });
@@ -73,7 +73,7 @@ const City = {
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
       const i = y * W + x;
       if (T_[i] !== T.CAR || this.carSkip.has(i)) continue;
-      const vert = x % B < RW, nx = vert ? x : x + 1, ny = vert ? y + 1 : y, cells = [[x, y]];
+      const RVb = World.river && y >= World.river.r0 - 3 && y <= World.river.r1 + 3, vert = RVb || x % B < RW, nx = vert ? x : x + 1, ny = vert ? y + 1 : y, cells = [[x, y]];
       if (at(nx, ny) === T.ROAD && !near(nx, ny)) { T_[ny * W + nx] = T.CAR; cells.push([nx, ny]); }
       for (const [cx, cy] of cells) this.carSkip.add(cy * W + cx);
       const h = hash2(x * 5 + 3, y * 9 + 1), zone = World.zoneIndex(x * TILE, y * TILE), [lx, ly] = cells[cells.length - 1];
@@ -134,7 +134,8 @@ const City = {
     const occ = new Set(this.props.filter(p => !SOFT.has(p.type)).map(cell)), soft = new Set(this.props.filter(p => SOFT.has(p.type)).map(cell));
     const has = k => !!(ART.props && ART.props[k]);
     const edge = (x, y) => (World.edgePts || []).some(e => Math.abs(e.x / TILE - x) < 7 && Math.abs(e.y / TILE - y) < 7);
-    const free = (x0, y0, n, ok) => { for (let y = y0 - 1; y <= y0 + n; y++) for (let x = x0 - 1; x <= x0 + n; x++) if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1 || occ.has(y * W + x) || (n < 2 && soft.has(y * W + x)) || !ok(at(x, y)) || near(x, y) || edge(x, y)) return false; return true; };
+    const RB = World.river, inRiver = y => RB && y >= RB.r0 - 4 && y <= RB.r1 + 4; // v2.0 한강 띠는 아래 한강 배치만
+    const free = (x0, y0, n, ok) => { if (inRiver(y0) || inRiver(y0 + n)) return false; for (let y = y0 - 1; y <= y0 + n; y++) for (let x = x0 - 1; x <= x0 + n; x++) if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1 || occ.has(y * W + x) || (n < 2 && soft.has(y * W + x)) || !ok(at(x, y)) || near(x, y) || edge(x, y)) return false; return true; };
     const put = (key, x0, y0, n, solid, extra) => {
       if (!has(key)) return false;
       const m = n >= 4 ? 3 : 1; // 성문처럼 큰 건 앞뒤 나무도 더 치움 (가려서 안 보이던 것)
@@ -152,7 +153,7 @@ const City = {
     if (zone === 1 || zone === 2 || zone === 7) CURB.push(['fishcart', 0.066]);
     if (zone === 6 || zone === 4) CURB.push(['busshelter', 0.07]);
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-      if (at(x, y) !== T.WALK || occ.has(y * W + x) || near(x, y)) continue;
+      if (at(x, y) !== T.WALK || occ.has(y * W + x) || near(x, y) || inRiver(y)) continue;
       const h = hash2(x * 11 + 5, y * 7 + 13), lx = x % B, ly = y % B, curb = lx === RW || ly === RW, side = lx === RW ? 'x' : 'y';
       if (curb) { const c = CURB.find(([, p]) => h < p); if (c && put(c[0], x, y, 1, false, { side, flip: (side === 'x') !== (h * 1000 % 2 < 1) })) continue; }
       else if (h < 0.05 && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) === T.BUILDING)) put('vent', x, y, 1, false, { flip: h < 0.025 });
@@ -186,6 +187,33 @@ const City = {
     const nSmall = Math.round(W * H / 700);
     for (let i = 0; i < nSmall; i++) { const key = SMALL[Math.floor(rng() * SMALL.length)]; tryPut(key, SIZE[key] || 1, SOLIDK.has(key), 60); }
     // 잠실 석촌호수: 오리배 몇 척 (물 위, 안 막음)
+    // v2.0 한강 다리: 가로등 (4칸마다 · 3할은 꺼진 것) · 다리 끝 초소 · 전망 쉼터 벤치 · 끊긴 다리 난간 · 케이블 · 물속 교각
+    // 둔치 (돌 둑 · 풀밭 · 산책로 한 줄씩): 구명환 · 모래주머니 · 갈대 · 부서진 난간 · 교각 잔해 · 파라솔 탁자 · 공공자전거 / 강: 오리배 · 반쯤 가라앉은 경비정
+    const RV = World.river;
+    if (RV) {
+      const clear = (x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const i = (y + dy) * W + x + dx; if (occ.has(i) || soft.has(i) || T_[i] === T.CAR) return false; } return true; }; // 둘레 한 칸까지 비어 있어야 (소품끼리 겹치지 않게)
+      const okT = (x, y, ts) => x > 1 && x < W - 2 && ts.includes(at(x, y)) && clear(x, y);
+      for (const b of RV.bridges) {
+        const wide = b.x1 - b.x0 >= 9, gapNear = y => b.broken && Math.abs(y - RV.mid) <= 4;
+        // 대교 옆 아치 (br_side · 51-5c): 쉼터 위 · 아래 반쪽마다 아치 2개씩 이어서 양쪽 난간에 (그림 1개 = 8칸 → 길이에 맞춰 k 배) · 이음매마다 경고등 기둥
+        if (wide && has('br_side')) for (const [ya, yb] of [[RV.r0, RV.mid - 3], [RV.mid + 3, RV.r1]]) for (const side of [0, 1]) {
+          const lx = side ? (b.x1 + 1) * TILE - 3 : b.x0 * TILE + 3, L = yb - ya + 1, n = Math.max(1, Math.round(L / 7)), Ls = L / n;
+          for (let i = 0; i < n; i++) add('deco', lx, (ya + (i + 0.5) * Ls) * TILE, { key: rng() < 0.2 ? 'br_side2' : 'br_side', k: Ls / 8, noShadow: true });
+          for (let i = 0; i <= n; i++) add('deco', lx, (ya + i * Ls) * TILE + 2, { key: 'br_post', k: Math.min(1, Ls / 8 + 0.2) });
+          for (let yy = ya; yy <= yb; yy++) occ.add(yy * W + (side ? b.x1 : b.x0)); // 그 자리에 가로등 안 겹치게
+        }
+        for (let y = RV.r0 + 1; y <= RV.r1 - 1; y += 4) for (const x of [b.x0, b.x1]) if (!gapNear(y) && okT(x, y, [T.ROAD])) put(rng() < 0.3 ? 'br_lamp2' : 'br_lamp', x, y, 1, false, { flip: x === b.x1 });
+        if (wide) for (const x of [b.x0 - 3, b.x1 + 3]) if (okT(x, RV.mid, [T.ROAD])) put('br_bench', x, RV.mid, 1, false, { flip: x > b.x1 });
+        for (const y of [RV.r0 - 2, RV.r1 + 2]) { const x = rng() < 0.5 ? b.x0 : b.x1; if (okT(x, y, [T.ROAD])) put('br_booth', x, y, 1, true, {}); }
+        if (b.broken) for (const y of [RV.mid - 4, RV.mid + 4]) { if (okT(b.x0 + 1, y, [T.ROAD])) put('br_rail', b.x0 + 1, y, 1, false, {}); if (okT(b.x1 - 1, y, [T.ROAD])) put('br_cables', b.x1 - 1, y, 1, false, {}); }
+        if (!wide) for (let y = RV.r0 + 2; y <= RV.r1 - 2; y += 6) for (const x of [b.x0 - 1, b.x1 + 1]) if (okT(x, y, [T.DEEP])) put('br_pier', x, y, 1, false, {}); // 다리 밑 교각 (물 위 · 안 막음)
+      }
+      const scatter = (keys, rows, ts, n, solid) => { for (let i = 0, k = 0; i < n && k < n * 60; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = rows[Math.floor(rng() * rows.length)]; if (okT(x, y, ts) && !RV.bridges.some(q => x >= q.x0 - 4 && x <= q.x1 + 4) && put(keys[Math.floor(rng() * keys.length)], x, y, 1, solid, { flip: rng() < 0.5 })) i++; } };
+      const bankStone = [RV.r0 - 1, RV.r1 + 1], bankGrass = [RV.r0 - 2, RV.r1 + 2], walkRow = [RV.r0 - 3, RV.r1 + 3], water = []; for (let y = RV.r0 + 1; y < RV.r1; y++) water.push(y);
+      scatter(['hg_ring', 'hg_ring', 'hg_reeds', 'hg_reeds', 'hg_stump', 'hg_rail'], bankStone, [T.RUBBLE], Math.round(W / 7), false);
+      scatter(['hg_table', 'hg_bikes', 'hg_sandbag', 'parasol'], bankGrass.concat(walkRow), [T.GRASS, T.WALK], Math.round(W / 8), false);
+      scatter(['hg_swan', 'hg_swan', 'hg_boat'], water, [T.DEEP], 7, false);
+    }
     if (map === 'jamsil') for (let i = 0, k = 0; i < 4 && k < 400; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)); if (free(x, y, 1, t => t === T.WATER) && put('swanboat', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
   },
 
@@ -369,13 +397,13 @@ function drawCityProp(o) {
   if (ak && propArt(ak)) { // v1.18 그림
     let px = sx, py = sy;
     if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
-    drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4);
+    if (!o.noShadow) drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4 * (o.k || 1));
     const fw = (ART.propFit[ak] || { w: 40 }).w;
     const fade = o.type === 'tree' ? Behind.alpha(o, px, py, fw * (o.s || 1), fw * (o.s || 1) * 1.6) // v1.46
       : o.type === 'deco' && fw >= 200 ? Behind.big(o, px, py, fw, fw * 0.6) : o.type === 'deco' && fw >= 70 ? Behind.alpha(o, px, py, fw, fw * 1.2) // v1.58 큰 소품(회전목마·탱크 등) 뒤도 반투명
       : o.type === 'bus' || o.type === 'car' || o.type === 'police' ? Behind.vehicle(o, ak, px, py) : 1; // v1.47.1 버스·차 뒤에 사람·적이 있으면 반투명
     ctx.globalAlpha = fade;
-    drawPropArt(ak, px, py, o.type === 'deco' ? !!o.flip : o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : 1);
+    drawPropArt(ak, px, py, o.type === 'deco' ? !!o.flip : o.type === 'bus' || o.type === 'police' || o.type === 'car' ? !!o.vertical : o.type === 'bench' || o.type === 'busstop' || o.type === 'lamp' ? o.side === 'x' : false, o.type === 'tree' ? (o.s || 1) : (o.k || 1)); // v2.0 o.k = 소품 크기 배율 (한강 아치 길이)
     ctx.globalAlpha = 1;
     if (o.type === 'car' && o.burnt) burnFx(o.tx, o.ty);
     if (o._noFx) return;

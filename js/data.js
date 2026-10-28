@@ -6,10 +6,14 @@ const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
 const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.98.6';
+// v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
+const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
+const GAME_VERSION = 'v1.98.11' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
+// 주소 끝 ?hangang = 한강 지도만 열림 (레벨 30 · 7장은 닫힌 채 — 그림 · 지도 테스트용)
+const V2_MAP = TEST_BUILD || V2_OPEN || (typeof location !== 'undefined' && /[?&]hangang(&|$)/.test(location.search));
 const MAX_LEVEL = V2_OPEN ? 40 : 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트) · v2.0 30 → 40 (한강 다리 Lv30~34 · 도전 던전 ~42)
 
 const RARITIES = [
@@ -30,7 +34,7 @@ const PITY_DROPS = 10; // v1.25 드랍 자체가 귀해진 만큼 15 → 10 // v
 const AMMO = {
   pistol: { name: '권총탄',   color: '#d8c890', k: 0.6,  pack: 48,  price: 15, start: 72 },
   auto:   { name: '기관총탄', color: '#c8a050', k: 1,    pack: 120, price: 45, start: 120, desc: '기관단총 · 소총 · 기관총' },
-  shell:  { name: '산탄',     color: '#d05a3a', k: 0.25, pack: 30,  price: 45, start: 24 },
+  shell:  { name: '산탄',     color: '#d05a3a', k: 0.25, pack: 40,  price: 45, start: 30 }, // v1.98.10 묶음 30 → 40
   // v1.55 저격탄 삭제 (남은 탄은 크레딧으로)
   //sniper: { name: '저격탄',   color: '#7ab0d8', k: 0.12, pack: 15,  price: 50, start: 10 },
 };
@@ -39,20 +43,20 @@ const AMMO = {
 // role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
   // v1.55 pipe 삭제 (그림이 있는 무기만 · 세이브의 것은 소방 도끼로 바뀜)
-  pistol:  { ammo: 'pistol', name: 'P-45 권총',    icon: 'pistol', dmg: 18, rate: 0.42, /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 1.0, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05,
-             quickDraw: true, lvl: 1, price: 80, role: '권총탄이 흔하고 쌈 · 즉시 꺼내 듦 · 언제나 믿을 수 있는 보조무기' },
+  pistol:  { ammo: 'pistol', name: 'P-45 권총',    icon: 'pistol', dmg: 24, rate: 0.34, /* v1.98.10 18/0.42 → 24/0.34 (초당 43 → 71) · 치명타 +10% */ /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 0.8, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05, critBonus: 0.1,
+             quickDraw: true, lvl: 1, price: 80, role: '권총탄이 흔하고 쌈 · 즉시 꺼내 듦 · 치명타 +10% · 빠른 재장전' },
   axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 42, rate: 1.0, /* v1.8.1 0.8/44 · v1.72 55 → 42 (Lv1부터 한 번에 셋을 한 방 — 너무 셈) */ range: 64, arc: 1.75, /* v1.95 72 · 2.1 → 64 · 1.75 (테스터: 초반 도끼가 너무 셈 · 범위가 너무 넓음) */ knock: 42, stagger: 0.7, move: 0.98, lvl: 1, price: 220, /* v1.55 쇠파이프 대신 첫 근접 무기 (Lv1~ 초중반) */
-             role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄' },
-  smg:     { ammo: 'auto', name: 'SP-9 기관단총',  icon: 'smg', dmg: 12, rate: 0.13, /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
+             role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄 · 들고 있으면 받는 피해 -25%' },
+  smg:     { ammo: 'auto', name: 'SP-9 기관단총',  icon: 'smg', dmg: 14, rate: 0.13, /* v1.98.10 12 → 14 */ /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
-  shotgun: { ammo: 'shell', name: 'R-12 산탄총',   icon: 'shotgun', dmg: 10, pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 9, stagger: 0.3, move: 1.0,
+  shotgun: { ammo: 'shell', name: 'R-12 산탄총',   icon: 'shotgun', dmg: 16, /* v1.98.10 10 → 16: 다 맞으면 초당 100 → 160 (소총 122 의 1.3배 · 대신 사거리 260 vs 620 · 봇 강남 분당 처치 소총 7.5 → 산탄 14) */ pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 12, stagger: 0.35, move: 1.0,
              lvl: 5, price: 380, role: '근거리 폭발력 · 코앞에서 쏘면 크게 날려버림' },
   rifle:   { ammo: 'auto', name: 'KR-49 돌격소총',   icon: 'rifle', dmg: 22, rate: 0.18, /* v1.50.7 0.14 → 0.18 (×1.2) · v1.40.2 17/0.11 (초당 피해 유지) */ mag: 30, reload: 1.8, spread: 0.04, speed: 1100, range: 620, knock: 4, stagger: 0.05, move: 1.0,
              lvl: 8, price: 620, role: '안정적인 중거리 화력 · 끊어 쏘면 첫 발이 정확' },
   katana:  { name: '고주파 블레이드', icon: 'katana', melee: true, dmg: 62, rate: 0.5, /* v1.8.1 0.38/60 · v1.27 79 → 62 (Lv16 기관총보다 훨씬 강하던 것) */ range: 92, arc: 1.5, knock: 12, stagger: 0.2, move: 1.12, lvl: 18, price: 900, /* v1.55 후반 근접 (11 → 18) */
-             role: '긴 칼날 · 3타째 돌진 찌르기 · 가장 빠른 이동' },
+             role: '긴 칼날 · 3타째 돌진 찌르기 · 가장 빠른 이동 · 들고 있으면 받는 피해 -25%' },
   // v1.55 sniper 삭제 (그림이 있는 무기만 · 세이브의 것은 돌격소총으로 바뀜)
-  lmg:     { ammo: 'auto', name: 'LM-49 기관총',     icon: 'lmg', dmg: 15, rate: 0.1, /* v1.50.7 0.07 → 0.1 (×1.28) */ mag: 100, reload: 4.0, spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.8,
+  lmg:     { ammo: 'auto', name: 'LM-49 기관총',     icon: 'lmg', dmg: 15, rate: 0.1, /* v1.50.7 0.07 → 0.1 (×1.28) */ mag: 100, reload: 3.2, /* v1.98.10 4.0 → 3.2 · 이동 0.8 → 0.88 */ spread: 0.09, speed: 1050, range: 560, knock: 3, stagger: 0.03, move: 0.88,
              lvl: 16, price: 1800, role: '압도적 지속 화력 · 쏠수록 빨라지고 정확해짐 · 무거움' },
   // v1.53 신화 무기 (특별 총 3종): 신화 등급 고정 · 바벨·타이탄·키메라 · 어설트 위협 5+ A 등급 이상(v1.63, 전엔 S)에서 낮은 확률 (MYTH_DROP) · 상자·상점에서는 안 나옴 · 죽으면 잃음
   // base = 소리·손맛·부품을 빌려 오는 총 · 고유 아이콘과 손에 든 그림을 만들 예정
@@ -196,6 +200,30 @@ const HELMETS = {
   gasmask:   { name: '방독면 헬멧',  icon: 'gasmask', def: 12, lvl: 12, price: 800, radRes: 0.7 },
   exoHelm:   { name: '외골격 헬멧',  icon: 'exoHelm', def: 20, lvl: 16, price: 1600 },
 };
+// v2.0 장비 단계: 10레벨마다 한 단계 · 외골격은 Lv60 최종 장비 (v2.0 잠금이 풀릴 때 같이 켜짐 — 이미 가진 장비는 그대로)
+// Lv30 방호 강화복 · Lv40 블랙선 전투복 · Lv50 처리반 강화복 = 군용 강화복 몸에서 갑옷 색만 바꾼 그림 + 단계 전용 헬멧 (몸 그림을 새로 그리지 않음)
+// 방독면은 단계 밖 「특수 헬멧」(Lv15 · 여의도 방사능) — 단계 드랍에서 빠지고 지역 특산으로만
+if (V2_OPEN) {
+  Object.assign(ARMORS.tactical, { lvl: 10 }); Object.assign(ARMORS.military, { lvl: 20 });
+  Object.assign(ARMORS, {
+    hazmat: { name: '방호 강화복',   icon: 'hazmat', def: 38, lvl: 30, price: 3000 },
+    bsuit:  { name: '블랙선 전투복',   icon: 'bsuit', def: 48, lvl: 40, price: 4500 },
+    eod:    { name: '처리반 강화복',   icon: 'eod', def: 58, lvl: 50, price: 6500 },
+  });
+  Object.assign(ARMORS.exo, { def: 70, lvl: 60, price: 9000 }); const ex = ARMORS.exo; delete ARMORS.exo; ARMORS.exo = ex; // 맨 뒤로 (도감 순서)
+  Object.assign(HELMETS.tacHelmet, { lvl: 10 }); Object.assign(HELMETS.gasmask, { lvl: 15, special: true });
+  Object.assign(HELMETS, {
+    hazHood: { name: '방호 후드 헬멧',  icon: 'gasmask', def: 17, lvl: 30, price: 2400, radRes: 0.4 },
+    bvisor:  { name: '블랙선 바이저',   icon: 'tacHelmet', def: 22, lvl: 40, price: 3600 },
+    eodHelm: { name: '처리반 헬멧',     icon: 'exoHelm', def: 27, lvl: 50, price: 5200 },
+  });
+  Object.assign(HELMETS.exoHelm, { def: 33, lvl: 60, price: 7500 }); const eh = HELMETS.exoHelm; delete HELMETS.exoHelm; HELMETS.exoHelm = eh;
+  Object.assign(SETS.rad.pieces, { armor: 'military', helmet: 'gasmask' }); Object.assign(SETS.blacksun.pieces, { armor: 'military', helmet: 'tacHelmet' });
+  UNIQUES.shade.key = 'military';
+}
+// 맵 레벨에 맞는 방어구 · 헬멧: 그 레벨에서 나올 수 있는 가장 높은 단계 (+ 한 단계 아래 조금) — 특수(방독면)는 빼고
+function gearTier(defs, level) { const ks = Object.keys(defs).filter(k => defs[k].lvl <= level + 2 && !defs[k].special).sort((a, b) => defs[b].lvl - defs[a].lvl); return ks; }
+function tierOK(k, level) { const d = ARMORS[k] ? ARMORS : HELMETS[k] ? HELMETS : null; if (!V2_OPEN || !d || d[k].special) return true; const top = gearTier(d, level)[0]; return !top || d[k].lvl >= d[top].lvl - 10; }
 
 const CONSUMABLES = {
   medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복 · 8초에 한 번', price: 40, stack: 20 },
@@ -281,6 +309,12 @@ const ZONES = [
     desc: '깊은 강은 다리로만 건넌다 · 물가에선 물귀신 변이체가 올라온다', packs: { drowned: [2, 4], zombie: [3, 5] },
     gear: ['rifle', 'lmg', 'katana', 'exo', 'exoHelm', 'gasmask'], gearText: '돌격소총·기관총·고주파 블레이드·외골격' },
 ];
+// v2.0: 지역 특산의 외골격 → 그 지역 단계 방어구로 (외골격은 Lv60)
+if (V2_OPEN) for (const z of ZONES) if (z.gear) {
+  const a = gearTier(ARMORS, z.lvl[1])[0], h = gearTier(HELMETS, z.lvl[1])[0];
+  z.gear = [...new Set(z.gear.map(k => k === 'exo' ? a : k === 'exoHelm' ? h : k))];
+  if (z.gearText) z.gearText = z.gearText.replace('외골격 슈트', ARMORS[a].name).replace('외골격 장비', ARMORS[a].name + '·' + HELMETS[h].name).replace('외골격', ARMORS[a].name);
+}
 
 // v1.3 맵 (출격·탈출): 캠프(거점)에서 맵을 골라 출격하고, 맵 가장자리 탈출 지점으로 귀환
 // chapter: 이야기가 이 장에 도달하면 해금 · landmark: 맵 가운데 랜드마크 · boss/hazards: 타이탄 아레나·방사능 웅덩이
@@ -293,17 +327,18 @@ const MAPS = {
   gangnam:    { name: '강남 업무지구', zone: 6, size: 108, seed: 1606, landmark: 'coex', chapter: 4, tall: [0.55, 6, 6] } /* v1.21 9~17층 → 6~11층 (층 높이 2.7m) */, // v1.6 유리 고층 빌딩 숲
   jamsil:     { name: '잠실 변이 지대', zone: 7, size: 108, seed: 1707, landmark: 'lotte', chapter: 5, lake: true },      // v1.6 석촌호수 (얕은 물)
   tower:      { name: '스카이타워', zone: 8, size: 66, seed: 1808, lab: true, tower: true, card: 'card_tower.png', minLv: 30, needLab: true, lock: '지하 연구소 B5 키메라 처치 후' }, // v1.78 두 번째 도전 (연구소와 같은 층 구조 · 위로 오름)
-  hangang:    { name: '한강 다리', zone: 9, size: 124, seed: 1909, landmark: 'pump', chapter: 6, river: true }, // v2.0 7장 · 깊은 강 + 다리 3개 (하나는 끊김)
+  hangang:    { name: '한강 다리', zone: 9, size: 140, seed: 1909, landmark: 'pump', chapter: 6, river: true }, // v2.0 7장 · 깊은 강 + 다리 3개 (하나는 끊김)
   lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, card: 'card_lab.png', /* v1.83 출격 카드 그림 */ minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
 };
 // v1.77 지하 연구소 = 5층 도전: B1 Lv30 → B5 Lv38 · B1~B4 는 승강기로 내려감 · B5 격리실에 키메라 · 어느 층이든 비상 계단으로 탈출
-const LAB_FLOORS = 5, labFloorLv = f => 28 + 2 * f;
+// v2.x 엔드게임 다시 맞춤 (v2.0 잠금이 풀릴 때 같이 켜짐 · V2_OPEN): 연구소 B1~B5 Lv34 → 42 · 타워 Lv38 → 46 (적 레벨만 +4 — 배율까지 올리면 봇 사망률 100%) · 연구소 몹 수 +20% (pop.js) · 보스 레벨 +4 (bosses.js)
+const LAB_FLOORS = 5, labFloorLv = f => (V2_OPEN ? 32 : 28) + 2 * f;
 // v1.78 도전 던전 공통: floors 층 수 · lv 층별 적 레벨 · label 층 이름 · lift 다음 층으로 가는 것 · best 최고 기록 키
 const DUNGEONS = {
   lab:   { floors: LAB_FLOORS, lv: labFloorLv, hpM: f => 1.8 + 0.3 * (f - 1), dmgM: f => 1.3 + 0.1 * (f - 1), /* v1.81 장비를 맞춘 Lv30 에겐 너무 약하던 것 */ label: f => `B${f}`, extra: { f: 2, spawn: ['researcher', 24] }, /* v1.83 */ lift: '승강기', arrow: '▼', verb: '내려가기', col: '#7ad0ff', best: 'labBest', bossRoom: '격리실' },
-  tower: { floors: 5, lv: f => 32 + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, extra: { f: 2, spawn: ['guardbot', 24] }, /* v1.83 */ lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
+  tower: { floors: 5, lv: f => (V2_OPEN ? 36 : 32) + 2 * f, hpM: f => 2 + 0.3 * (f - 1), dmgM: f => 1.35 + 0.1 * (f - 1), label: f => f >= 5 ? '옥상' : `${f * 20}층`, extra: { f: 2, spawn: ['guardbot', 24] }, /* v1.83 */ lift: '위층 계단', arrow: '▲', verb: '올라가기', col: '#ffd76a', best: 'towerBest', bossRoom: '옥상' },
 };
-const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang', 'lab', 'tower'].filter(id => V2_OPEN || id !== 'hangang'); // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
+const MAP_ORDER = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang', 'lab', 'tower'].filter(id => V2_MAP || id !== 'hangang'); // v1.77 연구소는 도전이라 맨 뒤 // 출격 지도 표시 순서
 const CHAPTER_MAP = ['myeongdong', 'jongno', 'yongsan', 'yeouido', 'gangnam', 'jamsil', 'hangang'].filter(id => V2_OPEN || id !== 'hangang'); // v1.6 장 번호 → 그 장의 맵
 
 // 지역 랜드마크 (v0.6). tx,ty: 좌상단 타일, size: 한 변 타일 수, base: 그림 기준 크기(v0.13 확대 전). 처음 가까이 가면 발견 보상
@@ -354,6 +389,15 @@ const PERK_TIERS = [
     { id: 'ghost', name: '그림자 걸음', desc: '회피 재사용 -40% · 회피 후 1초 동안 받는 피해 -50%' },
     { id: 'warlord', name: '전쟁군주', desc: '모든 스킬 재사용 대기 -25%' } ] },
 ];
+if (V2_OPEN) PERK_TIERS.push( // v2.x 최대 레벨 40 → 특성 두 단계 더
+  { lvl: 35, perks: [
+    { id: 'reaper', name: '사신의 연쇄', desc: '처치할 때마다 4초 동안 주는 피해 +5% (최대 5번 겹침)' },
+    { id: 'supplyLine', name: '보급선', desc: '출격할 때 탄약을 가득 채우고 구급상자 +2' },
+    { id: 'ironWill', name: '강철 의지', desc: '받는 피해 -12%' } ] },
+  { lvl: 40, perks: [
+    { id: 'deadeye', name: '명사수', desc: '헤드샷 피해 +30%' },
+    { id: 'overclock', name: '과부하', desc: '스킬을 쓰면 4초 동안 공격 속도 +20%' },
+    { id: 'undying', name: '불굴', desc: '출격마다 한 번, 쓰러질 피해를 받으면 체력 40%로 버팀 (두 번째 숨과 따로)' } ] });
 
 // v1.24 벨트 (장구류): 차는 벨트 등급만큼 핫바 칸 (2 · 4 · 6 · 8). 칸에는 배운 스킬 · 구급상자 · 투척물 · 보조를 직접 등록
 // 등급 = rarity (0 일반 ~ 3 영웅). 벨트가 없어도 기본 2칸
@@ -370,7 +414,7 @@ const HOT_MAX = 6;
 // 같은 갈래 특성을 3개 이상 고르면 갈래 보너스
 const PERK_BRANCH = { rollStrike: 'atk', scavenger: 'tac', thickSkin: 'sur', lastRounds: 'atk', runner: 'tac', brawler: 'sur',
   executioner: 'atk', steadyAim: 'tac', fieldMedic: 'sur', killStreak: 'atk', demolition: 'tac', lastStand: 'sur',
-  bulletStorm: 'atk', treasure: 'tac', secondWind: 'sur', apex: 'atk', warlord: 'tac', ghost: 'sur' };
+  bulletStorm: 'atk', treasure: 'tac', secondWind: 'sur', apex: 'atk', warlord: 'tac', ghost: 'sur', reaper: 'atk', supplyLine: 'tac', ironWill: 'sur', deadeye: 'atk', overclock: 'tac', undying: 'sur' };
 const PASSIVE_BRANCHES = {
   atk: { name: '공격', color: '#ff8a6a', bonus: '모든 피해 +8%' },
   tac: { name: '전술', color: '#6ab4ff', bonus: '스킬 재사용 대기 -10% · 회피 재사용 -20%' },
@@ -390,8 +434,8 @@ const PASSIVES = {
 
 // v1.11 스킬 갈래: 스킬마다 2개 중 하나 (캠프에서 자유롭게 바꿈). 고르지 않으면 기본형
 const SKILL_MODS = {
-  rapid:   { a: { name: '정밀 사격', desc: '연사 +40% 대신 +18%로 낮추고 치명타 확률 +25%' },
-             b: { name: '탄약 보급', desc: '발동 순간 탄창 가득 · 지속 중 탄약 소모 없음 (지속 -25%)' } },
+  rapid:   { a: { name: '정밀 사격', desc: '연사 +40% 그대로 · 치명타 확률 +20%' }, // v1.98.10 연사를 깎던 것 없앰
+             b: { name: '사냥 본능', desc: '지속 +25% · 지속 중 처치할 때마다 +0.6초 (최대 +4초)' } }, // v1.98.10 궁극에서 내려옴
   grenade: { a: { name: '집속탄', desc: '터진 뒤 작은 폭탄 4개가 흩어져 다시 폭발 (각 35%)' },
              b: { name: '소이탄', desc: '폭발 피해 -20% · 그 자리에 4초 불길 (초당 폭발 피해의 22%)' } },
   heal:    { a: { name: '재생 주사', desc: '즉시 절반 회복 + 6초 동안 나머지의 2배를 서서히 회복' },
@@ -415,7 +459,7 @@ const skillResetCost = p => 300 + p.level * 120; // 캠프 상인 박씨: 스킬
 const SKILL_TREE = {
   rapid:   { r1: { name: '숙련 사격', desc: '지속 +1.5초', lvl: 4, price: 700 },
              r2: { name: '사격 숙달', desc: '재사용 대기 -15%', lvl: 8, price: 1600 },
-             cap: { name: '사냥 본능', desc: '지속 중 처치할 때마다 지속 +0.6초 (최대 +4초)', lvl: 18, price: 8000 } },
+             cap: { name: '탄약 보급', desc: '발동 순간 탄창 가득 · 지속 중 탄약 소모 없음', lvl: 18, price: 8000 } }, // v1.98.10 무한 탄창을 궁극으로 (갈래에서 올라옴)
   grenade: { r1: { name: '파편 증량', desc: '폭발 반경 +15%', lvl: 6, price: 1500 },
              r2: { name: '투척 숙달', desc: '재사용 대기 -15%', lvl: 10, price: 3000 },
              cap: { name: '연쇄 폭발', desc: '1초 뒤 같은 자리에서 한 번 더 폭발 (피해 50%)', lvl: 20, price: 9000 } },

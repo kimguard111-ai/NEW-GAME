@@ -9,11 +9,13 @@ const FIELD_BOSSES = {
   9: { name: '물귀신 군주 「거머리」', art: 'leech', base: 'brute', level: 33, hpMul: 20, dmgMul: 1.3, scale: 1.6, patterns: ['brood', 'quake', 'dash', 'glutton'] }, // v2.0 한강 (그림 키 leech · 지금은 군체 그림을 물빛으로 · GEMINI_PROMPTS 51절)
   7: { name: '은신 포식자 「그림자」', art: 'shade', base: 'stalker', level: 28, hpMul: 20, dmgMul: 1.3, scale: 1.5, patterns: ['dash', 'howl', 'dash', 'quake'] },
 };
-const FIELD_BOSS_CD = 360; // 처치 후 다음 출현까지 (초)
+const FIELD_BOSS_CD = 360;
+// v1.98.11 지하 연구소 · 스카이타워 B1~B4 (마지막 층 빼고) 층마다 지역 필드 보스의 「메아리」 하나 — 그 층 레벨로 · 고유 장비도 그 레벨로 (하누라님 피드백: 낮은 맵 뺑뺑이 대신)
+const ECHO_ARTS = ['redfang', 'viper', 'goliath', 'hawk', 'shade']; // 처치 후 다음 출현까지 (초)
 // v1.5 지하 연구소 격리실 보스 (출격마다 한 번)
 // v1.78 스카이타워 옥상 보스 (바벨 그림 · 바벨 패턴 + 내려찍기 · 돌진 · 실험체 호출)
-const TOWER_BOSS = { name: '바벨 원형체 「뿌리」', art: 'root', base: 'brute', level: 42, hpMul: 12, dmgMul: 1.4, scale: 2.1, patterns: ['babel', 'quake', 'dash', 'brood'] };
-const LAB_BOSS = { name: '최종 실험체 「키메라」', art: 'chimera', base: 'brute', level: 38, hpMul: 14, dmgMul: 1.35, /* v1.77 B5 (Lv24 → 38 · 체력 배율 20 → 14 로 맞춤) */ scale: 1.9, patterns: ['glutton', 'dash', 'brood', 'quake'] };
+const TOWER_BOSS = { name: '바벨 원형체 「뿌리」', art: 'root', base: 'brute', level: V2_OPEN ? 46 : 42, hpMul: 12, dmgMul: 1.4, scale: 2.1, patterns: ['babel', 'quake', 'dash', 'brood'] };
+const LAB_BOSS = { name: '최종 실험체 「키메라」', art: 'chimera', base: 'brute', level: V2_OPEN ? 42 : 38, hpMul: 14, dmgMul: 1.35, /* v1.77 B5 (Lv24 → 38 · 체력 배율 20 → 14 로 맞춤) */ scale: 1.9, patterns: ['glutton', 'dash', 'brood', 'quake'] };
 
 const Bosses = {
   // ---------------- 필드 보스 ----------------
@@ -51,6 +53,23 @@ const Bosses = {
       return;
     }
     G.fbT = 5; // 자리를 못 찾으면 잠시 후 재시도
+  },
+
+  echo() {
+    const id = World.map, D = DUNGEONS[id], f = World.labFloor || 1;
+    if (!World.def || !World.def.lab || !D || f >= D.floors) return;
+    const zs = Object.keys(FIELD_BOSSES).map(Number).filter(z => ECHO_ARTS.includes(FIELD_BOSSES[z].art)), z = zs[Math.floor(Math.random() * zs.length)], def = FIELD_BOSSES[z], p = G.player;
+    for (let k = 0; k < 300; k++) {
+      const tx = 2 + Math.floor(Math.random() * (World.W - 4)), ty = 2 + Math.floor(Math.random() * (World.H - 4)), x = tx * TILE + 16, y = ty * TILE + 16;
+      if (Math.hypot(x - p.x, y - p.y) < 650 || World.circleBlocked(x, y, ENEMIES[def.base].r * def.scale + 4) || World.buildingAt(x, y)) continue;
+      const e = makeEnemy(def.base, x, y, D.lv(f));
+      e.bossName = def.name + ' (메아리)'; e.art = def.art; e.fieldBoss = z; e.echo = true; e.patterns = def.patterns; e.scale = def.scale; e.expMul = 6;
+      e.hp = e.maxHp = Math.round(e.maxHp * def.hpMul * 0.55); e.dmg *= def.dmgMul; // 던전 체력 배율이 이미 붙어서 원래보다 낮게
+      e.r = Math.round(e.r * def.scale); e.fireMul = def.fireMul || 1; e.weight = e.def.weight * 6; e.skillT = 2;
+      G.enemies.push(e);
+      log(`${ICON('warn')} 이 층 어딘가에 ${def.name}의 메아리가 있다 · 처치하면 「${def.name}」 고유 장비가 나올 수 있다`, '#ff7a5a');
+      return;
+    }
   },
 
   onFieldKill(e, dropAt) {

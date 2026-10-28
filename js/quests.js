@@ -89,9 +89,9 @@ const CHAPTERS = [
         reward: { exp: 40000, credits: 20000, gear: 4 } },
     ] },
   // v2.0 7장 · 한강 (Lv30~) — 바벨이 쓰러진 뒤에도 강 건너에서 신호가 남음
-  { title: '제7장 · 강을 건너는 것들', minLevel: 30,
+  { title: '제7장 · 강을 건너는 것들', minLevel: 30, finale: true,
     intro: '바벨이 쓰러졌는데도 한강 쪽에서 신호가 하나 더 잡히네. 배수 펌프장이야. 다리는 거의 다 끊겼다니 남은 다리로만 건너게. 물가는 조심하고 — 물속에서 뭔가 올라온다는 보고가 있어.',
-    outro: '수문장이 쓰러지자 펌프장이 다시 돌기 시작했네. 강 건너에도 아직 사람이 있을지 몰라. 이제 시작일세.',
+    outro: '수문장이 쓰러지자 펌프장이 다시 돌기 시작했네. …잠깐, 펌프장 통신기에 뭔가 잡히는군. 서쪽 — 바다 쪽이야.',
     steps: [
       { type: 'kill', target: 'drowned', count: 15, text: '한강 둔치에서 물귀신 변이체를 처치하라.',
         reward: { exp: 60000, credits: 9000 } },
@@ -223,6 +223,7 @@ const Story = {
       UI.toast(`${c.title} 완료!`, CHAPTERS[p.quest.ch + 1] ? `다음 장: Lv${CHAPTERS[p.quest.ch + 1].minLevel} 이상 · 캠프의 한씨` : '모든 장을 완료했습니다');
       p.quest.ch++; p.quest.step = 0; p.quest.active = false;
       p.sp = (p.sp || 0) + 1; log('장 완료 보상: 스킬 포인트 +1', '#7fd'); // v1.25
+      if (c.finale && !p.seoulEnd) { p.seoulEnd = true; setTimeout(() => Pause.ending('seoul'), 2500); } // v2.x 7장 끝 = 서울 편 마지막 엔딩
       if (c.ending && !p.finalEnd) { p.ended = p.finalEnd = true; setTimeout(() => Pause.ending(), 2500); } // v1.0 엔딩 · v1.6 제6장 뒤로 (4장에서 본 사람도 다시 봄)
     } else {
       const next = c.steps[p.quest.step];

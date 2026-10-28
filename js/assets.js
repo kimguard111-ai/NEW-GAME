@@ -54,6 +54,8 @@ const ART = {
     tacHelmet: { file: 'helmets.png', rect: [188, 0, 212, 208] },
     gasmask: { file: 'helmets.png', rect: [408, 0, 188, 228] },
     exoHelm: { file: 'helmets.png', rect: [604, 0, 164, 204] },
+    // v2.0 52-3 갑옷 단계 헬멧
+    hazHood: { file: 'helmets2.png', rect: [4, 4, 232, 264] }, bvisor: { file: 'helmets2.png', rect: [240, 4, 204, 238] }, eodHelm: { file: 'helmets2.png', rect: [448, 4, 216, 264] },
   },
   helmetFit: { w: 1.35, up: 0.18 }, // 헬멧 폭 = 머리 폭 × w, 머리 꼭대기보다 (헬멧 폭 × up) 만큼 위에서 시작
 
@@ -90,6 +92,10 @@ const ART = {
     fishcart: { file: 'props_seoul3.png', rect: [4, 4, 189, 204] }, recycle: { file: 'props_seoul3.png', rect: [197, 4, 245, 170] }, phonebooth: { file: 'props_seoul3.png', rect: [446, 4, 110, 212] }, mailbox: { file: 'props_seoul3.png', rect: [560, 4, 78, 154] }, clothesbin: { file: 'props_seoul3.png', rect: [642, 4, 111, 166] }, vent: { file: 'props_seoul3.png', rect: [757, 4, 202, 127] }, kiosk: { file: 'props_seoul3.png', rect: [4, 220, 191, 232] }, trashpile: { file: 'props_seoul3.png', rect: [199, 220, 205, 147] }, wiretree: { file: 'props_seoul3.png', rect: [408, 220, 170, 316] },
     // v1.58 props_subway
     gates: { file: 'props_subway.png', rect: [4, 4, 308, 235] }, ticketm: { file: 'props_subway.png', rect: [316, 4, 170, 243] }, screendoor: { file: 'props_subway.png', rect: [490, 4, 240, 254] }, linemap: { file: 'props_subway.png', rect: [734, 4, 217, 258] }, chairs: { file: 'props_subway.png', rect: [4, 266, 285, 232] }, firebox: { file: 'props_subway.png', rect: [293, 266, 195, 250] }, stationkiosk: { file: 'props_subway.png', rect: [492, 266, 280, 287] }, stairs: { file: 'props_subway.png', rect: [4, 557, 342, 270] }, sandlamp: { file: 'props_subway.png', rect: [350, 557, 278, 195] },
+    // v2.0 51-5b 한강 다리 소품 · 51-6 둔치 소품 (v1.98.7 바닥 판 없이 다시 받은 그림)
+    br_arch: { file: 'props_bridge.png', rect: [4, 4, 310, 249] }, br_arch2: { file: 'props_bridge.png', rect: [318, 4, 257, 205] }, br_pier: { file: 'props_bridge.png', rect: [579, 4, 102, 185] }, br_lamp: { file: 'props_bridge.png', rect: [685, 4, 103, 173] }, br_lamp2: { file: 'props_bridge.png', rect: [792, 4, 106, 145] }, br_rail: { file: 'props_bridge.png', rect: [4, 257, 155, 133] }, br_bench: { file: 'props_bridge.png', rect: [163, 257, 192, 127] }, br_booth: { file: 'props_bridge.png', rect: [359, 257, 122, 175] }, br_cables: { file: 'props_bridge.png', rect: [485, 257, 64, 158] },
+    br_side: { file: 'props_arch.png', rect: [4, 4, 455, 488] }, br_side2: { file: 'props_arch.png', rect: [463, 4, 428, 471] }, br_post: { file: 'props_arch.png', rect: [895, 4, 75, 174] }, // v2.0 51-5c 대교 옆 아치 (다리 방향 기울기에 맞춰 기울여 둠)
+    hg_rail: { file: 'props_hangang.png', rect: [4, 4, 216, 180] }, hg_swan: { file: 'props_hangang.png', rect: [224, 4, 190, 141] }, hg_bikes: { file: 'props_hangang.png', rect: [418, 4, 220, 160] }, hg_ring: { file: 'props_hangang.png', rect: [4, 188, 92, 160] }, hg_table: { file: 'props_hangang.png', rect: [100, 188, 204, 167] }, hg_sandbag: { file: 'props_hangang.png', rect: [308, 188, 186, 113] }, hg_boat: { file: 'props_hangang.png', rect: [4, 359, 239, 148] }, hg_reeds: { file: 'props_hangang.png', rect: [247, 359, 221, 162] }, hg_stump: { file: 'props_hangang.png', rect: [472, 359, 109, 173] },
     // v1.58 props_landmark
     haechi: { file: 'props_landmark.png', rect: [4, 4, 151, 184] }, pavilion: { file: 'props_landmark.png', rect: [159, 4, 220, 206] }, gym: { file: 'props_landmark.png', rect: [383, 4, 152, 169] }, gym2: { file: 'props_landmark.png', rect: [539, 4, 162, 178] }, busshelter: { file: 'props_landmark.png', rect: [705, 4, 243, 216] }, fountain: { file: 'props_landmark.png', rect: [4, 224, 223, 146] }, parasol: { file: 'props_landmark.png', rect: [231, 224, 176, 203] }, palacewall: { file: 'props_landmark.png', rect: [464, 224, 242, 191] }, bust: { file: 'props_landmark.png', rect: [710, 224, 92, 193] }, barricades: { file: 'props_landmark.png', rect: [806, 224, 212, 184] },
     // v1.58 props_district
@@ -178,6 +184,7 @@ const ART = {
     // v1.49.12 총기 부품 12종 (프롬프트 22)
     att_reddot: { file: 'icons_attach1.png', rect: [4, 4, 169, 164] }, att_scope2: { file: 'icons_attach1.png', rect: [177, 4, 224, 202] }, att_scope4: { file: 'icons_attach1.png', rect: [405, 4, 322, 246] }, att_suppressor: { file: 'icons_attach1.png', rect: [4, 254, 297, 246] }, att_comp: { file: 'icons_attach1.png', rect: [305, 254, 224, 172] }, att_choke: { file: 'icons_attach1.png', rect: [533, 254, 221, 172] }, att_vgrip: { file: 'icons_attach1.png', rect: [758, 254, 134, 282] }, att_agrip: { file: 'icons_attach1.png', rect: [4, 540, 259, 174] }, att_laser: { file: 'icons_attach1.png', rect: [267, 540, 233, 159] },
     att_extmag: { file: 'icons_attach2.png', rect: [4, 4, 185, 308] }, att_dualmag: { file: 'icons_attach2.png', rect: [193, 4, 259, 293] }, att_drum: { file: 'icons_attach2.png', rect: [456, 4, 241, 281] },
+    hazmat: { file: 'icons_armor2.png', rect: [4, 4, 250, 262] }, bsuit: { file: 'icons_armor2.png', rect: [258, 4, 233, 262] }, eod: { file: 'icons_armor2.png', rect: [495, 4, 226, 262] }, // v2.0 52-4 갑옷 단계 아이콘 (3번은 크게 나와서 셋 다 같은 크기로 맞춤)
     vest: { file: 'icons_gear.png', rect: [4, 4, 160, 208] }, tactical: { file: 'icons_gear.png', rect: [168, 4, 194, 215] }, military: { file: 'icons_gear.png', rect: [366, 4, 226, 222] }, medkit: { file: 'icons_gear.png', rect: [792, 4, 155, 155] }, exo: { file: 'icons_gear.png', rect: [4, 230, 259, 261] }, belt: { file: 'icons_gear.png', rect: [267, 230, 234, 132] }, ammo: { file: 'icons_gear.png', rect: [505, 230, 222, 233] }, scrap: { file: 'icons_gear.png', rect: [731, 230, 196, 129] },
     molotov: { file: 'icons_items.png', rect: [4, 4, 189, 246] }, flash: { file: 'icons_items.png', rect: [197, 4, 116, 231] }, mine: { file: 'icons_items.png', rect: [317, 4, 227, 174] }, stim: { file: 'icons_items.png', rect: [548, 4, 193, 204] }, ammo_pistol: { file: 'icons_items.png', rect: [745, 4, 194, 157] }, plate: { file: 'icons_items.png', rect: [4, 254, 176, 232] }, ammo_shell: { file: 'icons_items.png', rect: [184, 254, 195, 225] }, ammo_sniper: { file: 'icons_items.png', rect: [383, 254, 199, 124] }, ammo_auto: { file: 'icons_items.png', rect: [586, 254, 127, 254] },
     rapid: { file: 'icons_skills.png', rect: [4, 4, 231, 238] }, grenade: { file: 'icons_skills.png', rect: [239, 4, 231, 238] }, heal: { file: 'icons_skills.png', rect: [474, 4, 231, 238] }, adren: { file: 'icons_skills.png', rect: [4, 246, 235, 240] }, turret: { file: 'icons_skills.png', rect: [243, 246, 233, 240] }, roll: { file: 'icons_skills.png', rect: [717, 246, 235, 240] },
@@ -189,6 +196,8 @@ const ART = {
     truck: { w: 100, y: 18 }, taxi_o: { w: 92, y: 18 }, minibus: { w: 130, y: 24 }, taxi_s: { w: 92, y: 18 }, delivery: { w: 34, y: 5 }, van: { w: 98, y: 18 }, reefer: { w: 104, y: 20 }, handcart: { w: 34, y: 5 }, bikes: { w: 46, y: 6 },
     fishcart: { w: 40, y: 6 }, recycle: { w: 40, y: 6 }, phonebooth: { w: 22, y: 4 }, mailbox: { w: 14, y: 2 }, clothesbin: { w: 22, y: 4 }, vent: { w: 40, y: 8 }, kiosk: { w: 36, y: 8 }, trashpile: { w: 40, y: 6 }, wiretree: { w: 40, y: 6 },
     gates: { w: 64, y: 8 }, ticketm: { w: 28, y: 6 }, screendoor: { w: 60, y: 8 }, linemap: { w: 52, y: 4 }, chairs: { w: 50, y: 6 }, firebox: { w: 34, y: 6 }, stationkiosk: { w: 48, y: 10 }, stairs: { w: 72, y: 12 }, sandlamp: { w: 52, y: 8 },
+    br_side: { w: 259, y: 63 }, br_side2: { w: 262, y: 64 }, br_post: { w: 30, y: 3 }, // 아치 1개 = 다리 8칸
+    br_arch: { w: 124, y: 8 }, br_arch2: { w: 104, y: 8 }, br_pier: { w: 40, y: 6 }, br_lamp: { w: 40, y: 2 }, br_lamp2: { w: 42, y: 2 }, br_rail: { w: 62, y: 6 }, br_bench: { w: 72, y: 6 }, br_booth: { w: 44, y: 6 }, br_cables: { w: 24, y: 2 }, hg_rail: { w: 72, y: 8 }, hg_swan: { w: 56, y: 8 }, hg_bikes: { w: 64, y: 8 }, hg_ring: { w: 22, y: 2 }, hg_table: { w: 62, y: 6 }, hg_sandbag: { w: 58, y: 6 }, hg_boat: { w: 92, y: 12 }, hg_reeds: { w: 64, y: 6 }, hg_stump: { w: 34, y: 6 }, // v2.0 한강 소품
     haechi: { w: 36, y: 6 }, pavilion: { w: 110, y: 16 }, gym: { w: 42, y: 6 }, gym2: { w: 40, y: 6 }, busshelter: { w: 84, y: 10 }, fountain: { w: 96, y: 14 }, parasol: { w: 56, y: 8 }, palacewall: { w: 88, y: 12 }, bust: { w: 20, y: 4 }, barricades: { w: 56, y: 8 },
     carousel: { w: 150, y: 20 }, coaster: { w: 190, y: 16 }, swanboat: { w: 52, y: 8 }, gondola: { w: 48, y: 8 }, billboard: { w: 80, y: 6 }, floodlight: { w: 70, y: 6 }, tank: { w: 120, y: 20 }, ticketbooth: { w: 46, y: 8 }, riverboat: { w: 150, y: 20 },
     in_pcbang: { w: 64, y: 10 }, in_karaoke: { w: 40, y: 8 }, in_snackbar: { w: 40, y: 8 }, in_ticket: { w: 16, y: 4 }, in_wait: { w: 32, y: 6 }, in_salon: { w: 30, y: 6 }, in_laundry: { w: 40, y: 6 }, in_desk: { w: 28, y: 6 }, in_shoelocker: { w: 32, y: 6 }, in_counter: { w: 44, y: 8 }, // v1.58
@@ -243,6 +252,9 @@ const ART = {
     // v1.58 옥상 2 (27절): 기와 · 초록 방수페인트 · 함석 — 정사각으로 잘라 씀 (세 번째 아래 분홍 상자 피함)
     r_giwa: { file: 'tex_roof2.png', rect: [3, 3, 330, 330] }, r_green: { file: 'tex_roof2.png', rect: [350, 40, 324, 324] }, r_tin: { file: 'tex_roof2.png', rect: [692, 3, 328, 328] },
     // v1.58 바닥 2 (30절): 점자블록 보도 · 붉은 보도블록 · 버스전용차로 · 주차장 · 한강공원 길 · 횡단보도
+    // v2.0 51-5a 한강 다리 바닥 (render.js bridgeTex): 중앙 노란 겹선 · 차선 · 전망 쉼터 보도블록 · 이음쇠 · 끊긴 끝 · 진흙 진입로
+    b_center: { file: 'tex_bridge.png', rect: [7, 7, 298, 264] }, b_lane: { file: 'tex_bridge.png', rect: [315, 7, 297, 264] }, b_deck: { file: 'tex_bridge.png', rect: [622, 7, 287, 263] },
+    b_joint: { file: 'tex_bridge.png', rect: [7, 281, 299, 264] }, b_broken: { file: 'tex_bridge.png', rect: [316, 281, 298, 264] }, b_mud: { file: 'tex_bridge.png', rect: [624, 281, 299, 264] },
     g_tactile: { file: 'tex_street2.png', rect: [3, 3, 330, 277] }, g_redbrick: { file: 'tex_street2.png', rect: [347, 3, 330, 277] }, g_buslane: { file: 'tex_street2.png', rect: [690, 3, 331, 277] },
     g_parking: { file: 'tex_street2.png', rect: [3, 292, 330, 277] }, g_parkpath: { file: 'tex_street2.png', rect: [347, 292, 330, 277] }, g_crosswalk: { file: 'tex_street2.png', rect: [690, 292, 331, 277] },
     r_concrete: { file: 'tex_roof.png', rect: [7, 7, 330, 342] },
@@ -312,6 +324,7 @@ const ART = {
     tower63: { file: 'tower63.png' },
     coex: { file: 'coex.png' },
     lotte: { file: 'lotte.png' },
+    pump: { file: 'pump.png' }, // v2.0 51-2 한강 배수 펌프장
   },
   sprites: {
     // 예시 (도구가 만들어 주는 형식):
@@ -424,11 +437,10 @@ const ART = {
     colony: { file: 'colony.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
     queen: { file: 'queen.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     shade: { file: 'shade.png', cell: 128, w: 307, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 4] } },
-    drowned: { file: 'subject.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, filter: 'hue-rotate(150deg) saturate(0.75) brightness(0.8)' }, // v2.0 물귀신 변이체 (실험체 그림을 물빛으로)
+    drowned: { file: 'drowned.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 4], attack: [2, 4], hit: [3, 2], death: [4, 6] } }, // v2.0 51-1 물귀신 (걷기 = 기어 오는 4장)
     warden: { file: 'warden.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
-    // v2.0 한강 (그림 오기 전 임시: 파수꾼 · 군체 그림을 물빛으로) — 그림이 오면 이 두 줄을 sprite-tool 결과로 바꿈
-    sumun: { file: 'warden.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] }, filter: 'hue-rotate(160deg) saturate(0.7) brightness(0.85)' },
-    leech: { file: 'colony.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] }, filter: 'hue-rotate(120deg) saturate(0.6) brightness(0.75)' },
+    sumun: { file: 'sumun.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } }, // v2.0 51-3 한강 수문장
+    leech: { file: 'leech.png', cell: 128, w: 307, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } }, // v2.0 51-4 거머리
     player_blade: { file: 'player_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, headW: 19, heads: { idle: [[4,-104],[4,-99],[4,-95],[4,-99]], walk: [[6,-99],[1,-98],[0,-95],[4,-99],[5,-104],[-2,-98],[1,-99],[1,-95]], attack: [[-11,-99],[-9,-100],[-10,-96],[5,-96]], hit: [[-1,-97],[12,-95]], death: [[-28,-99],[-33,-92],[-44,-82],[-13,-59],[6,-59]] } },
     player_vest_blade: { file: 'player_vest_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[4,-99],[3,-99],[3,-104],[3,-104]], walk: [[3,-95],[1,-98],[-1,-90],[2,-90],[2,-95],[-2,-98],[1,-90],[-1,-95]], attack: [[-18,-106],[18,-97],[-20,-92],[10,-92],[40,-98]], hit: [[-4,-97],[-1,-95]], death: [[5,-98],[-28,-92],[-27,-80],[-53,-56],[7,-58],[-36,-48]] } },
     player_tactical_blade: { file: 'player_tactical_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[4,-99],[4,-99],[4,-104],[4,-99]], walk: [[6,-95],[1,-94],[0,-95],[3,-95],[4,-100],[-3,-98],[3,-95],[1,-100]], attack: [[7,-100],[21,-96],[34,-96],[12,-96]], hit: [[-4,-97],[24,-89]], death: [[-4,-102],[-53,-89],[-40,-82],[-25,-66],[0,-58],[-3,-58]] } },
@@ -438,3 +450,9 @@ const ART = {
     player_exo_heavy: { file: 'player_exo_heavy.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 5] }, headW: 18, heads: { idle: [[4,-104],[3,-99],[4,-99],[5,-99]], walk: [[6,-98],[0,-94],[-1,-91],[3,-98],[4,-98],[-3,-94],[2,-95],[1,-95]], attack: [[-15,-97],[-1,-103],[2,-101],[2,-97],[2,-97]], hit: [[5,-96],[5,-98]], death: [[12,-97],[-30,-87],[-25,-79],[-22,-70],[-20,-66]] } },
   },
 };
+// v2.0 갑옷 단계 몸 그림: 군용 강화복 몸(무기별 12장)에서 목 아래 갑옷 색만 바꾼 그림 (tools/art/recolor_armor.py — 새로 그리지 않음)
+// 방호 강화복 Lv30 = 화학 방호 노랑 · 블랙선 전투복 Lv40 = 흑연 + 노란 모서리 · 처리반 강화복 Lv50 = 강철 회색 / 칸 · 동작 · 머리 위치는 군용 강화복과 같음
+for (const nk of ['hazmat', 'bsuit', 'eod'])
+  for (const k of Object.keys(ART.sprites)) if (k === 'player_military' || k.startsWith('player_military_')) { const n = k.replace('military', nk); if (!ART.sprites[n]) ART.sprites[n] = { ...ART.sprites[k], file: ART.sprites[k].file.replace('military', nk) }; }
+for (const [nk, from] of [['hazHood', 'gasmask'], ['bvisor', 'tacHelmet'], ['eodHelm', 'exoHelm']]) if (!ART.helmets[nk] && ART.helmets[from]) ART.helmets[nk] = { ...ART.helmets[from] };
+

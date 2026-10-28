@@ -10,7 +10,8 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
 (async () => {
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1280, height: 720 } }); pg.setDefaultTimeout(300000); // v1.51 그림을 다 받을 때까지 시작 버튼이 막혀 있음
   const errs = []; pg.on('pageerror', e => errs.push(e.message + ' @ ' + (e.stack || '').split('\n')[1])); pg.on('dialog', d => d.accept());
-  await pg.goto('file://' + require('path').resolve(__dirname, '../index.html') + (FIXMAP === 'hangang' ? '?v2' : '')); /* v2.0 잠금 중엔 ?v2 로 열어서 측정 */ await pg.evaluate(() => localStorage.clear()); await pg.reload();
+  await pg.goto('file://' + require('path').resolve(__dirname, '../index.html') + (FIXMAP === 'hangang' || process.env.V2 ? '?v2' : '')); /* v2.0 잠금 중엔 ?v2 로 열어서 측정 */ await pg.evaluate(() => localStorage.clear()); await pg.reload();
+  if (process.env.WEAPON) await pg.evaluate(w => { window.__WEAPON = w; }, process.env.WEAPON); // v1.98.10 무기 비교
   if (process.env.QUEST) await pg.evaluate(q => { window.__QUEST = q; }, process.env.QUEST);
   if (process.env.TIER) await pg.evaluate(t => { window.__TIER = t; }, +process.env.TIER); // v1.63 TIER=<위협 등급> (ASSAULT 와 함께)
   await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
@@ -62,7 +63,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       for (const b of Object.keys(PASSIVES)) PASSIVES[b].forEach((n, i) => { if (!p.passive[n.id] && (i === 0 || p.passive[PASSIVES[b][i - 1].id]) && p.level >= n.lvl && p.credits >= n.price + 2500) { p.credits -= n.price; p.passive[n.id] = true; B.skillBuy = (B.skillBuy || 0) + n.price; } }); // v1.23 패시브 단련
       UI.openShop(); // 상인 진열품 중 더 좋은 것 구매 (사람처럼)
       for (const it of G.shopStock) if (p.level >= itemReqLevel(it) && isUpgrade(p, it) && p.credits >= it.value + 300) { const c = JSON.parse(JSON.stringify(it)); c.id = nextItemId++; UI.buy(c, it.value); B.shop = (B.shop || 0) + it.value; }
-      for (const it of [...p.inventory]) if (it.kind !== 'cons' && p.level >= itemReqLevel(it) && isUpgrade(p, it)) UI.equip(it, it.kind === 'weapon' ? (WEAPONS[it.key].melee ? 'w2' : 'w1') : it.kind);
+      for (const it of [...p.inventory]) if (it.kind !== 'cons' && !(window.__WEAPON && it.kind === 'weapon') && p.level >= itemReqLevel(it) && isUpgrade(p, it)) UI.equip(it, it.kind === 'weapon' ? (WEAPONS[it.key].melee ? 'w2' : 'w1') : it.kind);
       for (const it of [...p.inventory]) if (it.kind !== 'cons' && !isUpgrade(p, it)) { p.credits += itemSellPrice(it); removeItem(it); }
       const med = p.inventory.find(i => i.key === 'medkit'); let mc = med ? med.count : 0;
       while (mc < 8 && p.credits >= 120 + 50) { addItem(makeConsumable('medkit', 3)); p.credits -= 120; mc += 3; B.bought += 120; }
@@ -193,6 +194,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
         p.skillbar = [0, 1, 2, 3].map(i => 'sk' + i); // v1.51 벨트는 소모품만 (v1.50)
         p.equip.belt = makeBelt(3, 20);
       }
+      if (window.__WEAPON) { const w = makeWeapon(window.__WEAPON, START, 2); w.plus = 5; p.equip.w1 = w; p.weapon = 'w1'; p.ammo[WEAPONS[w.key].ammo] = ammoCap(p, WEAPONS[w.key].ammo); } // v1.98.10 WEAPON=<총 키>: 그 총만 쓰기 (무기 비교 · 근접은 봇 움직임이 달라 제외)
       p.credits = 5000; UI.closeAll();
     }
     { let c0 = p.credits; B.earned = 0; Object.defineProperty(p, 'credits', { get: () => c0, set: v => { if (v > c0) B.earned += v - c0; c0 = v; }, enumerable: true, configurable: true }); } // v1.31 크레딧 수입 측정

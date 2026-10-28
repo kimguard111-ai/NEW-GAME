@@ -1,7 +1,7 @@
 // 엔지니어 포탑 (v1.26): 스킬 「포탑 설치」로 커서 근처에 자동 포탑을 세움. 지속 시간이 지나면 사라짐 (적은 포탑을 노리지 않음)
 // 갈래 a 화염 포탑 (짧은 사거리 · 앞쪽 적 여럿을 태움) / b 박격 포탑 (느리지만 범위 폭발)
 // 숙련: 지속 +6초 · 숙달: 동시에 2개 · 궁극: 사라질 때 자폭
-const TURRET = { range: 320, flameR: 150, mortarR: 420, rate: 0.3, flameRate: 0.2, mortarRate: 1.6, place: 150 };
+const TURRET = { range: 320, flameR: 170, mortarR: 420, rate: 0.3, flameRate: 0.2, mortarRate: 1.2, place: 150 }; // v1.98.10 화염 사거리 150 → 170 · 박격 1.6 → 1.2초
 
 const Turrets = {
   place(p) {
@@ -42,12 +42,12 @@ const Turrets = {
         for (const e of G.enemies) {
           if (e.hp <= 0 || Math.hypot(e.x - t.x, e.y - t.y) > R + e.r || !World.lineOfSight(t, e)) continue; // v1.84.2 외부 점검: 벽 너머로 불길이 닿던 것 (수류탄 폭발과 같은 규칙)
           const da = Math.abs(((Math.atan2(e.y - t.y, e.x - t.x) - a + Math.PI * 3) % TAU) - Math.PI);
-          if (da < 0.55) damageEnemy(e, dmg * 0.55, false, a, { knock: 1, noProc: true, fire: true });
+          if (da < 0.6) damageEnemy(e, dmg * 0.8, false, a, /* v1.98.10 0.55 → 0.8 · 폭 0.55 → 0.6 */ { knock: 1, noProc: true, fire: true });
         }
         for (let i = 0; i < 4; i++) { const q = a + rand(-0.45, 0.45), v = rand(200, 420); G.particles.push({ x: t.x, y: t.y, vx: Math.cos(q) * v, vy: Math.sin(q) * v, t: 0, life: 0.35, color: i % 2 ? '#ff8a2a' : '#ffd27a', size: 4 }); }
       } else if (t.mod === 'b') { // 박격: 포물선으로 날아가 범위 폭발
         t.cd = TURRET.mortarRate;
-        G.grenades.push({ sx: t.x, sy: t.y, x: t.x, y: t.y, tx: best.x, ty: best.y, t: 0, dur: 0.6, tdmg: dmg * 2.4, tr: 70 });
+        G.grenades.push({ sx: t.x, sy: t.y, x: t.x, y: t.y, tx: best.x, ty: best.y, t: 0, dur: 0.6, tdmg: dmg * 3.2, tr: 85 }); // v1.98.10 2.4 → 3.2 · 반경 70 → 85
         SFX.play('boom', 0.25);
       } else { // 기본: 기관포
         t.cd = TURRET.rate;

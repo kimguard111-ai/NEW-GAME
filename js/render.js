@@ -71,6 +71,24 @@ function groundKey2(tx, ty, t) {
   else if ((t === T.ROAD || t === T.CAR) && (z === 4 || z === 6) && lx < RW && ly >= RW && hash2(bx * 5 + 7, 3) < 0.4) return ['g_buslane', lx, false];
   return null;
 }
+// v2.0 한강 다리 바닥 그림 (tex_bridge): 다리 칸이면 그려서 true
+function bridgeTex(tx, ty, t, x, y) {
+  const R = World.river; if (!R || ty < R.r0 - 3 || ty > R.r1 + 3 || !(t === T.ROAD || t === T.CAR || t === T.RUBBLE)) return false;
+  const b = R.bridges.find(q => tx >= q.x0 - 3 && tx <= q.x1 + 3); if (!b) return false;
+  const n = b.x1 - b.x0 + 1, deck = n >= 10 && Math.abs(ty - R.mid) <= 2, in4 = v => ((v % 4) + 4) % 4;
+  if (!deck && (tx < b.x0 || tx > b.x1)) return false;
+  const off = tx - b.x0, col = off <= 0 ? 0 : off >= n - 1 ? 3 : off < n / 2 ? 1 : 2;
+  let key = 'b_center', c = col, row = in4(ty), flip = false;
+  if (deck) { key = 'b_deck'; c = in4(tx); }
+  else if (t === T.RUBBLE && b.broken) { key = 'b_broken'; row = 2; flip = ty > R.mid; } // 끊긴 끝: 부서진 쪽이 틈을 보게
+  else if (ty < R.r0 || ty > R.r1) { key = 'b_mud'; c = in4(tx); }
+  else if (ty === R.r0 || ty === R.r1 - 1) { key = 'b_joint'; row = 1; } else if (ty === R.r0 + 1 || ty === R.r1) { key = 'b_joint'; row = 2; }
+  const a = ART.tex && ART.tex[key]; if (!a || !a.ready) return false;
+  const [rx, ry, rw, rh] = a.rect;
+  if (!flip) ctx.drawImage(a.img, rx + c * rw / 4, ry + row * rh / 4, rw / 4, rh / 4, x, y, TILE + 0.6, TILE + 0.6);
+  else { ctx.save(); ctx.translate(x, y + TILE); ctx.scale(1, -1); ctx.drawImage(a.img, rx + c * rw / 4, ry + row * rh / 4, rw / 4, rh / 4, 0, 0, TILE + 0.6, TILE + 0.6); ctx.restore(); }
+  return true;
+}
 function groundTex2(tx, ty, t, x, y) {
   const g = groundKey2(tx, ty, t); if (!g) return false;
   const a = ART.tex && ART.tex[g[0]]; if (!a || !a.ready) return false;
@@ -81,7 +99,7 @@ function groundTex2(tx, ty, t, x, y) {
 }
 function drawGroundTile(tx, ty, t) {
   const x = tx * TILE, y = ty * TILE, h = hash2(tx, ty);
-  const g2 = groundTex2(tx, ty, t, x, y); // v1.58 이 그림이 깔리면 아래 코드 보도블록으로 덮지 않음
+  const bt = World.river && bridgeTex(tx, ty, t, x, y), g2 = bt || groundTex2(tx, ty, t, x, y); // v2.0 다리 그림 · v1.58 이 그림이 깔리면 아래 코드 보도블록으로 덮지 않음
   const g1 = !g2 && groundTex(tx, ty, t, x, y); // v1.79 그림이 깔리면 아래 코드 무늬(캠프 판자 · 던전 바닥)는 건너뜀
   if (!g2 && !g1) { ctx.fillStyle = TILE_COLORS[t]; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); }
   if ((t === T.ROAD || t === T.CAR) && World.river) { // v2.0 다리 위: 양옆 난간 (깊은 물과 닿은 쪽) · 이음매
@@ -90,10 +108,11 @@ function drawGroundTile(tx, ty, t) {
       ctx.fillStyle = 'rgba(150,145,130,0.55)'; if (dl) ctx.fillRect(x, y, 5, TILE + 0.6); if (dr) ctx.fillRect(x + TILE - 5, y, 5, TILE + 0.6);
       if (World.tileAt(tx, ty - 1) === T.DEEP) ctx.fillRect(x, y, TILE, 4); if (World.tileAt(tx, ty + 1) === T.DEEP) ctx.fillRect(x, y + TILE - 4, TILE, 4); // 끊긴 끝
       ctx.fillStyle = 'rgba(0,0,0,0.25)'; if (ty % 3 === 0) ctx.fillRect(x, y, TILE, 1.5);
-      if ((dl || dr) && ty % 4 === 0) { const px = dl ? x + 2.5 : x + TILE - 2.5; ctx.fillStyle = '#2a2a2e'; ctx.fillRect(px - 2, y + 12, 4, 8); ctx.fillStyle = 'rgba(255,200,120,0.85)'; ctx.fillRect(px - 1.5, y + 13, 3, 3); } // 가로등 기둥
+      if ((dl || dr) && ty % 4 === 0 && !(ART.props && ART.props.br_lamp)) { const px = dl ? x + 2.5 : x + TILE - 2.5; ctx.fillStyle = '#2a2a2e'; ctx.fillRect(px - 2, y + 12, 4, 8); ctx.fillStyle = 'rgba(255,200,120,0.85)'; ctx.fillRect(px - 1.5, y + 13, 3, 3); } // 가로등 기둥
     }
     const R = World.river, b = R && ty >= R.r0 && ty <= R.r1 && R.bridges.find(q => tx >= q.x0 && tx <= q.x1);
-    if (b) { // 다리 차선: 가운데 노란 겹선 · 차선 흰 점선 · 전망 쉼터는 보도블록
+    if (b && bt) { if (b.x1 - b.x0 >= 9 && Math.abs(ty - R.mid) > 2 && (tx - b.x0 === 3 || tx - b.x0 === 7) && ty % 2 === 0) { ctx.fillStyle = 'rgba(220,220,210,0.5)'; ctx.fillRect(x - 1, y + 4, 2, 16); } } // 그림 바닥: 4차선 점선만 덧그림
+    else if (b) { // 다리 차선: 가운데 노란 겹선 · 차선 흰 점선 · 전망 쉼터는 보도블록
       if (Math.abs(ty - R.mid) <= 2 && b.x1 - b.x0 >= 9) { ctx.fillStyle = 'rgba(190,170,140,0.35)'; ctx.fillRect(x, y, TILE + 0.6, TILE + 0.6); ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(x + 15, y, 1.5, TILE); ctx.fillRect(x, y + 15, TILE, 1.5); }
       else {
         const off = tx - b.cx;
@@ -822,9 +841,9 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
   const moving = !!moveInput(); // v1.37 바꾼 키도
   // 장비 외형: 방어구 → 옷 색, 헬멧 → 머리 장비 (그림이 없을 때의 코드 그래픽)
   const arm = p.equip.armor, hel = p.equip.helmet;
-  const LOOK = { vest: ['#3e5f3a', '#2c3a2c'], tactical: ['#6b6447', '#3e3a2a'], military: ['#3d4a5c', '#262e3a'], exo: ['#7d848c', '#4a4f55'] };
+  const LOOK = { vest: ['#3e5f3a', '#2c3a2c'], tactical: ['#6b6447', '#3e3a2a'], military: ['#3d4a5c', '#262e3a'], exo: ['#7d848c', '#4a4f55'], hazmat: ['#b89a3a', '#6a5a24'], bsuit: ['#26282c', '#141518'], eod: ['#5a6a4a', '#33402a'] };
   const look = arm ? LOOK[arm.key] : ['#5a5048', '#3a332c'];
-  const HEL = { cap: '#3b4a32', tacHelmet: '#26292c', gasmask: '#4a5a3a', exoHelm: '#9aa2aa' };
+  const HEL = { cap: '#3b4a32', tacHelmet: '#26292c', gasmask: '#4a5a3a', exoHelm: '#9aa2aa', hazHood: '#a8902e', bvisor: '#1c1e22', eodHelm: '#4e5c40' };
   const o = { s: 1.05, body: look[0], skin: '#d9b48f', helmet: hel ? HEL[hel.key] : null, legs: look[1], aim: p.aim, flash: p.hurtT > 0, walk: moving ? G.time : 0,
     eyes: hel && hel.key === 'gasmask' ? '#7fff6a' : hel && hel.key === 'exoHelm' ? '#6cf' : null, hair: '#2a2420' };
   // 고강화(+7) 장비가 있으면 발밑에 빛
@@ -1227,12 +1246,10 @@ function enemyCloaked(e) {
     && dist(e, G.player) > 150;
 }
 // v1.32 맞은 반응: 휘청(맞은 쪽 반대로 기울었다 돌아옴) · 넘어짐(쓰러졌다가 일어남)
-// v1.46 적 표시: 발밑 붉은 고리(쫓아올 때 진하게) + 작은 빛 (어두운 곳·어지러운 바닥에서도 보이게)
+// v1.46 적 표시: 작은 빛 (어두운 곳·어지러운 바닥에서도 보이게) · v1.98.8 발밑 붉은 고리는 뺌 (붉은 윤곽선과 겹쳐 오히려 바닥이 지저분해 보임 — 테스터 의견)
 function enemyMark(e, sx, sy, k, hz) {
   if (Settings.outline === false) return;
-  const ch = e.state === 'chase', rx = e.r * 1.25 / k, ry = e.r * 0.62 / k;
-  ctx.strokeStyle = ch ? 'rgba(235,60,40,0.75)' : 'rgba(220,70,50,0.38)'; ctx.lineWidth = ch ? 2 : 1.4;
-  ctx.beginPath(); ctx.ellipse(sx, sy, rx, ry, 0, 0, TAU); ctx.stroke(); ctx.lineWidth = 1;
+  const ch = e.state === 'chase';
   if (Light.list.length < 90) addLight(sx, sy - 14 - (hz || 0), 52, ch ? 0.5 : 0.35);
 }
 function drawEnemy(e) {

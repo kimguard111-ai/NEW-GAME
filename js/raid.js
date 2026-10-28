@@ -18,7 +18,7 @@ const MAP_SMS = {
   lab: '[방역 당국] 지하 연구시설 격리 해제 경보. 생물학적 위험. 즉시 대피하십시오.',
 };
 const Raid = {
-  unlocked(id) { const d = MAPS[id]; return !!d && (V2_OPEN || id !== 'hangang') && (d.chapter === undefined || G.player.quest.ch >= d.chapter) && (!d.minLv || G.player.level >= d.minLv) && (!d.needLab || (G.player.labKills || 0) >= 1); }, // v1.77 연구소는 Lv30부터 · v1.78 타워는 키메라 처치 뒤
+  unlocked(id) { const d = MAPS[id]; return !!d && (V2_MAP || id !== 'hangang') && (d.chapter === undefined || G.player.quest.ch >= d.chapter) && (!d.minLv || G.player.level >= d.minLv) && (!d.needLab || (G.player.labKills || 0) >= 1); }, // v1.77 연구소는 Lv30부터 · v1.78 타워는 키메라 처치 뒤
   inRaid() { return World.map !== 'camp'; },
 
   // 출격 지도 (작전 장교 대화)
@@ -56,6 +56,7 @@ const Raid = {
     if (!med && p.credits < 120 && addItem(makeConsumable('medkit', 2))) log('작전 장교 윤씨: "빈손으로 보낼 순 없지." (비상 구급상자 2개)', '#8cf');
     for (const t of gunAmmoTypes(p)) if ((p.ammo[t] || 0) < AMMO[t].pack / 2) { addAmmo(p, t, AMMO[t].pack); log(`작전 장교 윤씨: 비상 ${AMMO[t].name} ${AMMO[t].pack}발 지급`, '#8cf'); }
     if (Camp.medkits() && addItem(makeConsumable('medkit', Camp.medkits()))) log(`의무실: 구급상자 ${Camp.medkits()}개 지급`, '#8cf'); // v1.13
+    if (perk('supplyLine')) { for (const t of Object.keys(AMMO)) p.ammo[t] = Math.max(p.ammo[t] || 0, ammoCap(p, t)); if (addItem(makeConsumable('medkit', 2))) log('보급선: 탄약 가득 · 구급상자 2개', '#8cf'); } // v2.x
     saveGame();
     if (MAPS[id].lab) this.labFloor(1, id); // v1.77 첫 층부터 (v1.78 타워 포함)
     World.generate(id);
@@ -86,7 +87,7 @@ const Raid = {
     log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? "비상구" : "끝"}.`, '#8cf'); // v1.39
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출
     if (World.def.lab) { this.labLiftEvent(); const D = DUNGEONS[id]; p[D.best] = Math.max(p[D.best] || 0, 1); } // v1.77 승강기
-    Pop.generate(start); // v1.16 맵 인구 (무한 스폰 없음)
+    Pop.generate(start); Bosses.echo(); // v1.16 맵 인구 (무한 스폰 없음) · v1.98.11 던전 첫 층 메아리 보스
     Hangang.reset(); // v2.0
     G.fade = { t: 0, life: 1.4, text: MAPS[id].name + (p.raid.diff ? ' · ' + DIFFS[p.raid.diff].name : '') + (p.raid.floor ? ' ' + DUNGEONS[id].label(p.raid.floor) : ''), sub: `Lv${ZONES[MAPS[id].zone].lvl[0]}~${ZONES[MAPS[id].zone].lvl[1]} · 적 약 ${Pop.total || '?'} · 탈출 지점 ${G.exits.length}곳` }; // v1.17
     if (World.def.lab) log(World.def.tower ? `스카이타워 20층. 바벨의 뿌리가 벽을 타고 올라간다. 가운데 방의 위층 계단(미니맵 ▲)으로 오를수록 강해진다 · 옥상에 무언가 있다 · 어느 층이든 비상구(초록 원) 한 곳으로 나갈 수 있다.` : `비상 전원만 남은 연구소 B1. 가운데 방의 승강기(미니맵 하늘색)로 내려갈수록 강해진다 · B${LAB_FLOORS} 격리실에 무언가 있다 · 어느 층이든 비상구(초록 원) 한 곳으로 나갈 수 있다.`, '#ff8a8a'); // v1.77 · v1.78
@@ -120,7 +121,7 @@ const Raid = {
     G.grave = p.graves[id] && (p.graves[id].floor || 1) === r.floor ? p.graves[id] : null; // 이 층에서 쓰러졌던 가방
     if (G.grave) { let best = null, bd = 1e9; for (let ty = 1; ty < World.H - 1; ty++) for (let tx = 1; tx < World.W - 1; tx++) { if (World.tiles[ty * World.W + tx] !== T.LFLOOR) continue; const d = Math.hypot(tx * TILE + 16 - G.grave.x, ty * TILE + 16 - G.grave.y); if (d < bd) { bd = d; best = [tx * TILE + 16, ty * TILE + 16]; } } if (best) [G.grave.x, G.grave.y] = best; log(`${ICON('skull')} 이 층에 지난번 시체 가방이 있다. (미니맵 붉은 ✚)`, '#ff8a8a'); }
     if (G.comp && G.comp.state !== 'gone' && G.comp.state !== 'down') { G.comp.x = p.x + 30; G.comp.y = p.y + 20; }
-    Scavenge.generate(); RaidEvents.generate(); this.labLiftEvent(); Pop.generate(start);
+    Scavenge.generate(); RaidEvents.generate(); this.labLiftEvent(); Pop.generate(start); Bosses.echo(); // v1.98.11 층마다 메아리 보스
     const bossName = id === 'tower' ? '바벨 원형체' : '키메라';
     G.fade = { t: 0, life: 1.6, text: `${MAPS[id].name} ${D.label(r.floor)}`, sub: `적 Lv${ZONES[MAPS[id].zone].lvl[0]}${last() ? ` · 마지막 층 · ${D.bossRoom}에 ${bossName}` : ''} · 층 보상 ₵${fmt(bonus)} (탈출해야 내 것)` };
     if (rec) setTimeout(() => UI.toast(`신기록 · ${MAPS[id].name} ${D.label(r.floor)}`, last() ? '마지막 층' : '최고 기록 갱신'), 1700);

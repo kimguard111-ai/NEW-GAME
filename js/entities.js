@@ -39,7 +39,7 @@ function makeWeapon(key, ilvl, rarity) {
   ilvl = Math.max(ilvl, b.lvl || 1); // v1.84.2 외부 점검: 표시 레벨(ilvl)과 능력치 계산 레벨을 같게
   const scale = r.mul * (1 + (ilvl - 1) * 0.07);
   const it = {
-    id: nextItemId++, kind: 'weapon', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0, v181: true, v127: true, v1402: true, // v181: 근접 피해 보정이 이미 반영된 새 수치
+    id: nextItemId++, kind: 'weapon', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0, v181: true, v127: true, v1402: true, v19810: true, // v181: 근접 피해 보정이 이미 반영된 새 수치
     name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     dmg: Math.round(b.dmg * scale * 10) / 10,
     affixes: rollAffixes('weapon', key, rarity, ilvl), isNew: true,
@@ -138,16 +138,18 @@ function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
     if (sid) { const slot = pick(['weapon', 'weapon', 'armor', 'helmet']), key = SETS[sid].pieces[slot]; if (GEAR_DEFS(key).lvl <= level + 2) return makeSetPiece(sid, slot, level, r); }
   }
   if (bias && Math.random() < 0.5) {
-    const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2);
+    const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2 && tierOK(k, level)); // v2.0 지역 특산도 단계에 맞는 것만
     if (keys.length) return makeGear(pick(keys), level, r);
   }
   if (Math.random() < 0.7) {
     const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2 && !WEAPONS[k].myth); // v1.52 불법 무기는 박씨에게서만
     return makeWeapon(pick(keys), level, r);
   }
-  if (Math.random() < 0.4) return makeHelmet(pick(Object.keys(HELMETS).filter(k => HELMETS[k].lvl <= level + 2)), level, r);
+  // v2.0 맵 레벨에 맞는 단계: 가장 높은 단계 80% · 한 단계 아래 20% (Lv34 맵에서 방탄 조끼가 나오던 것)
+  const tier = defs => { const ks = gearTier(defs, level); return ks.length > 1 && Math.random() < 0.2 ? ks[1] : ks[0]; };
+  if (Math.random() < 0.4) return makeHelmet(V2_OPEN ? tier(HELMETS) : pick(Object.keys(HELMETS).filter(k => HELMETS[k].lvl <= level + 2)), level, r);
   const keys = Object.keys(ARMORS).filter(k => ARMORS[k].lvl <= level + 2);
-  return makeArmor(pick(keys), level, r);
+  return makeArmor(V2_OPEN ? tier(ARMORS) : pick(keys), level, r);
 }
 
 // 강화 단계가 반영된 이름 / 수치
@@ -252,7 +254,7 @@ const PlayerStats = {
   dmgReduce: p => { const d = PlayerStats.def(p); return d / (d + 40 + 8 * p.level); }, // v1.0: 고레벨일수록 같은 방어력의 효과 감소 (Lv5 기존과 동일)
   gunMul: p => (1 + (p.stats.dex - 5) * 0.04) * (pas('a2') ? 1.06 : 1),
   meleeMul: p => (1 + (p.stats.str - 5) * 0.06) * (pas('a1') ? 1.06 : 1),
-  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.25 : 0) + (setOn('blacksun', 2) ? 0.08 : 0) + (pas('a3') ? 0.03 : 0),
+  crit: (p, w) => 0.05 + (p.stats.agi - 5) * 0.008 + gearBonus(p, 'crit', w) + (w && WEAPONS[w.key] && WEAPONS[w.key].critBonus || 0) /* v1.98.10 권총 */ + (p.buffs.rapid > 0 && smod('rapid') === 'a' ? 0.2 : 0) + (setOn('blacksun', 2) ? 0.08 : 0) + (pas('a3') ? 0.03 : 0),
   critMul: (p, w) => ((w && WEAPONS[w.key].critMul) || 1.8) + gearBonus(p, 'critDmg', w) + (armorLegend('hunterEye') ? 0.35 : 0) + ((p.bsT || 0) > G.time ? 0.5 : 0) + (pas('a4') ? 0.15 : 0),
   agiMul: p => Math.min(0.3, (p.stats.agi - 5) * 0.008),
   speed: p => {
@@ -260,7 +262,7 @@ const PlayerStats = {
     return 88 /* v1.30 175 → 150 · v1.32 → 125 · v1.33 → 88 (-30% · 초속 약 4.4m) */ * (1 + PlayerStats.agiMul(p) + gearBonus(p, 'move')) * (w ? WEAPONS[w.key].move || 1 : 1) * (p.buffs.adren > 0 ? 1.35 : 1) * (perk('runner') ? 1.08 : 1) * (pas('t4') ? 1.04 : 1) * (setOn('vigil', 2) ? 1.06 : 1) * (p.buffs.stim > 0 ? 1.2 : 1) * (wornUnique('shade') && G.time - ((p.lastRoll || -9) + 0.28) < 1.5 ? 1.4 : 1);
   },
   // 공격 간격 배율 (작을수록 빠름)
-  rateMul: (p, w) => (p.buffs.rapid > 0 ? (smod('rapid') === 'a' ? 0.85 : 0.72) : 1) /* v1.50.7 집중 사격 ×2 → ×1.4 (+ 총 피해 20%) */ / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1) / (p.buffs.stim > 0 ? 1.15 : 1),
+  rateMul: (p, w) => (G.time < (p.ocT || 0) ? 1 / 1.2 : 1) /* v2.x 과부하 */ * (p.buffs.rapid > 0 ? 0.72 : 1) /* v1.50.7 집중 사격 ×2 → ×1.4 (+ 총 피해 20%) */ / (1 + PlayerStats.agiMul(p) * 0.75 + gearBonus(p, 'rate', w)) / (perk('killStreak') && (G.combo || 0) >= 5 && G.time - (G.comboT || -9) < 3 ? 1.15 : 1) / ((p.vigilT || 0) > G.time ? 1.15 : 1) / (p.buffs.stim > 0 ? 1.15 : 1),
   reloadMul: (p, w) => (p.buffs.adren > 0 ? 0.7 : 1) / (1 + Math.max(0, p.stats.dex - 5) * 0.015 + gearBonus(p, 'reload', w)) / (perk('bulletStorm') ? 1.2 : 1) / (pas('t1') ? 1.1 : 1),
   regen: p => Math.max(0, p.stats.vit - 5) * 0.25 + (pas('s3') ? 1 : 0) + gearBonus(p, 'regen') + (armorLegend('filter') ? 2 : 0) + (wornUnique('chimera') ? (p.hp < PlayerStats.maxHp(p) * 0.5 ? 9 : 3) : 0),
   expMul: p => 1 + gearBonus(p, 'exp') + (pas('t5') ? 0.05 : 0),
@@ -273,15 +275,15 @@ const PlayerStats = {
 const STAT_NAMES = { str: '근력', dex: '사격', vit: '체력', agi: '민첩' };
 const statUp = (p, k) => Math.max(0, p.stats[k] - 5);
 const SkillCalc = {
-  rapidDur: p => (4 + Math.min(4, statUp(p, 'agi') * 0.1) + (stree('rapid', 'r1') ? 1.5 : 0)) * (smod('rapid') === 'b' ? 0.75 : 1) * rankMul('rapid'),
+  rapidDur: p => (4 + Math.min(4, statUp(p, 'agi') * 0.1) + (stree('rapid', 'r1') ? 1.5 : 0)) * (smod('rapid') === 'b' ? 1.25 : 1) * rankMul('rapid'), // v1.98.10 갈래 b = 사냥 본능 (지속 +25%)
   grenadeR: p => (110 + Math.min(50, statUp(p, 'dex') * 2)) * (perk('demolition') ? 1.3 : 1) * (stree('grenade', 'r1') ? 1.15 : 1),
   grenadeDmg: p => (30 + p.level * 6) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5) * rankMul('grenade'), // v1.16 너프: 45+레벨×9 · 사격 능력치 전부 → 30+레벨×6 · 절반만
   healPct: p => Math.min(0.6, 0.35 + statUp(p, 'vit') * 0.006) * rankMul('heal') + (stree('heal', 'r1') ? 0.1 : 0),
-  adrenDur: p => 8 + (stree('adren', 'r1') ? 2 : 0), // v1.22
-  turretDmg: p => (6 + p.level * 2.4) * (1 + (PlayerStats.gunMul(p) - 1) * 0.5) * Camp.dmgMul() * rankMul('turret'), // v1.26 포탑 한 발
-  turretDur: p => 14 + (stree('turret', 'r1') ? 6 : 0),
+  adrenDur: p => 10 + (stree('adren', 'r1') ? 2 : 0), // v1.22 · v1.98.10 8 → 10
+  turretDmg: p => (8 + p.level * 3.4) /* v1.98.10 ×1.4 */ * (1 + (PlayerStats.gunMul(p) - 1) * 0.5) * Camp.dmgMul() * rankMul('turret'), // v1.26 포탑 한 발
+  turretDur: p => 18 + (stree('turret', 'r1') ? 6 : 0), // v1.98.10 14 → 18
   cdMul: id => (1 - gearBonus(G.player, 'cdr')) * (stree(id, 'r2') ? 0.85 : 1) * (pas('t3') ? 0.94 : 1) * (branchOn('tac') ? 0.9 : 1), // v1.22 숙달 · v1.23 전술 단련·갈래 보너스
-  adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.5 : 1) * rankMul('adren'),
+  adrenDmg: p => Math.min(0.6, 0.3 + statUp(p, 'str') * 0.01) * (smod('adren') === 'b' ? 0.75 : 1) * rankMul('adren'), // v1.98.10 진통제 피해 증가 절반 → 3/4
 };
 const srank = id => { const p = G.player; return p && p.skills && p.skills[id] ? Math.max(1, (p.srank && p.srank[id]) || 1) : 0; }; // v1.26 스킬 등급
 const rankMul = id => 1 + RANK_BONUS * Math.max(0, srank(id) - 1);
@@ -302,7 +304,7 @@ function skillBaseDesc(s, p) {
     case 'grenade': return `반경 ${SkillCalc.grenadeR(p)} 폭발, 피해 ${Math.round(SkillCalc.grenadeDmg(p))}`;
     case 'heal': return `즉시 최대 체력 ${pc(SkillCalc.healPct(p))} 회복`;
     case 'turret': return `${SkillCalc.turretDur(p)}초 동안 자동 포탑 (한 발 ${Math.round(SkillCalc.turretDmg(p))} · 사거리 ${TURRET.range}) · 커서 근처에 설치`;
-    case 'adren': return `${SkillCalc.adrenDur(p)}초간 이동속도 +35%, 피해 +${pc(SkillCalc.adrenDmg(p))}, 재장전 +30%`;
+    case 'adren': return `${SkillCalc.adrenDur(p)}초간 이동속도 +35%, 피해 +${pc(SkillCalc.adrenDmg(p))}, 재장전 +30%, 받는 피해 -20%`;
   }
   return '';
 }
@@ -391,7 +393,7 @@ function makeEnemy(type, x, y, level) {
 function ammoOf(w) { return w && WEAPONS[w.key] && WEAPONS[w.key].ammo || null; }
 function gunAmmoTypes(p) { return [...new Set(['w1', 'w2'].map(k => ammoOf(p.equip[k])).filter(Boolean))]; }
 // v1.98 탄약 최대 소지량 (테스터: 후반엔 탄이 9천 발 남아돌아 재장전 · 탄 관리 의미가 없음) — 종류마다 기본값, 큰 탄창 총을 들면 탄창 4개분까지
-const AMMO_CAP = { pistol: 240, auto: 720, shell: 150 };
+const AMMO_CAP = { pistol: 240, auto: 720, shell: 220 }; // v1.98.10 산탄 150 → 220
 function ammoCap(p, t) { let m = 0; for (const k of ['w1', 'w2']) { const w = p.equip && p.equip[k], b = w && WEAPONS[w.key]; if (b && b.ammo === t && !b.melee) m = Math.max(m, magSize(w)); } return Math.max(AMMO_CAP[t] || 300, m * 4); }
 function addAmmo(p, t, n) { const room = Math.max(0, ammoCap(p, t) - (p.ammo[t] || 0)), a = Math.min(room, Math.max(1, Math.round(n))); p.ammo[t] = (p.ammo[t] || 0) + a; return a; }
 // v1.98 소모품 한 묶음 최대 (CONSUMABLES.stack — 있었지만 안 쓰이던 것: 구급상자 20 · 탄약 상자 20 · 나머지 10)

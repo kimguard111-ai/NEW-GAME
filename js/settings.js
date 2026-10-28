@@ -16,7 +16,7 @@ const Settings = {
   reverb: !(('ontouchstart' in window) || navigator.maxTouchPoints > 0), // v1.37 울림 (모바일은 기본 끔 — CPU)
   ambient: true, // v1.37 환경음
   xray: true,    // v1.37 건물에 가려진 적 투시 윤곽
-  outline: true, // v1.46 적 붉은 윤곽선 · 발밑 고리
+  outline: true, // v1.46 적 붉은 윤곽선 (v1.98.8 발밑 고리는 뺌)
   mip: true,     // v1.49 그림 축소 캐시 (끄면 원본을 매번 줄여 그림 — 문제 확인용)
   keys: null,    // v1.37 조작 키 (null = 기본)
   textScale: null, // v1.64 글자 크기 (null = 기본: PC 1.15 · 모바일 1.0) — 「글자가 너무 작다」 피드백

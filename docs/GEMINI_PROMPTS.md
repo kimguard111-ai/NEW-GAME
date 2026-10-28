@@ -21,6 +21,18 @@
 | 오른쪽을 봄, 전신, 프레임 사이 넓은 간격 | 왼쪽은 게임이 뒤집어 만듦. 도구가 발 기준으로 정렬 |
 | 오른쪽 아래 비우기 | Gemini ✦ 표시 자리 (도구가 지움) |
 
+### 가로세로 비율 (v1.98.8 · Gemini 비율 설정)
+| 그림 종류 | 비율 |
+|---|---|
+| 캐릭터 · 보스 시트 (줄마다 동작) | **16:9** |
+| 소품 3×3 · 질감 3×2 격자 | **16:9** |
+| 가로로 늘어선 소품 (아치 3종 등) | **16:9** |
+| 랜드마크 건물 (보통) | **1:1** |
+| 아주 높은 건물 (타워) | **9:16** |
+| 아이콘 한 장 · 던전 카드 | **1:1** |
+| 타이틀 · 엔딩 · 결과 배경 | **16:9** |
+앞으로 새 프롬프트 제목에 📐 비율을 같이 적음.
+
 ### 순서
 1. 회색 상자 복사 → Gemini (📎 표시가 있으면 그 그림도 첨부)
 2. `tools/sprite-tool.html` 열기 → **🔧 도구 이름** 선택 → 그림 끌어다 놓기
@@ -1295,7 +1307,7 @@ Match the art style of the attached concept image. Create ONE wide 16:9 cinemati
 
 ---
 
-## 51. v2.0 한강 다리 (Lv30~34 · 7장) — 🔒 지금은 잠겨 있음 · **그림이 다 오면 엶**
+## 51. v2.0 한강 다리 (Lv30~34 · 7장) — 🔒 지금은 잠겨 있음 · ✅ v1.98.7 51-1~51-5 반영 (가로등 · 51-6 은 다시)
 게임에는 다 들어가 있고 `js/data.js` 의 `V2_READY = false` 로 닫혀 있습니다 (주소 끝에 `?v2` 를 붙이면 미리 열려서 그림 확인 가능).
 지금은 다른 그림에 물빛 색만 입혀 임시로 씁니다. 아래 4장이 오면 임시 줄을 바꾸고 `V2_READY = true`.
 
@@ -1343,9 +1355,48 @@ Match the art style of the attached concept image. Create ONE image with 6 separ
 Match the art style of the attached concept image. Create ONE image with 9 separate isometric game props arranged in a 3 by 3 grid with wide empty gaps between them, every prop on a square diamond-shaped footprint viewed from the south corner: 1. a tall rusty steel arch truss segment of a large river bridge, rising high, 2. the same steel arch truss segment but broken and bent, 3. a thick concrete bridge pier rising out of the water with water stains, 4. a tall double-arm bridge street lamp with a warm orange light, 5. the same street lamp bent and dark, 6. a steel bridge guardrail section with a small rusty sign plate (no text), 7. a bridge observation deck bench with a broken coin binocular viewer, 8. a toll-booth-like small bridge control booth, windows broken, 9. a hanging cable stay anchor with snapped steel cables. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. No people, no shadow, no ground, no water, no text, no logos, no brand names. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the props.
 ```
 
+#### 51-5c · 대교 옆 아치 (측면 트러스) 3종 · `props_arch.png` (가로로 3개) · 📐 **16:9** — v1.98.8 아치 다시
+51-5b 의 아치는 **바닥까지 있는 작은 다리**라 난간에 세우면 옆에 다리가 또 붙은 것처럼 보였음 → **한쪽 난간에 세우는 아치 한 줄만** (바닥 · 도로 없음). 게임이 다리 양옆에 이어 붙여 긴 아치교를 만듦.
+```
+Match the art style of the attached concept image. Create ONE wide image with 3 separate pieces side by side with wide empty gaps between them, all drawn in the same isometric 3/4 top-down view, each piece running diagonally from the bottom-left to the top-right of its own area (like a fence seen from the south corner): 1. ONE side of a steel arch bridge: a single tall curved steel arch rib made of riveted dark rusty steel lattice beams, with thin vertical steel hanger rods dropping from the arch down to a straight horizontal steel bottom beam, both ends resting on small square concrete bases; 2. the same single arch side but broken in the middle, the arch rib snapped and bent down, some hanger rods hanging loose; 3. a short square steel end post with a warm orange warning lamp on top. Only the thin side structure: no bridge deck, no road surface, no floor, no ground, no water, no second parallel arch, no shadow, no text, no logos. Detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the structure.
+```
+
 ### 51-6 (선택) · 한강 소품 9종 · `props_hangang.png` (3×3) · 12절과 같은 방식
+⚠ v1.98.7: 첫 결과는 소품마다 **검은 바닥 판**이 붙어 와서 못 씀 → 프롬프트 끝에 이 문장을 붙여 다시: `Each prop stands alone on the magenta background: do not draw any floor tile, base plate, platform or ground under the props.` (51-5b 다리 소품의 가로등도 같은 이유로 보류 — 가로등 2개만 이 문장을 붙여 다시 뽑으면 바로 넣음)
 ```
 Match the art style of the attached concept image. Create ONE image with 9 separate isometric game props arranged in a 3 by 3 grid with wide empty gaps between them, every prop on a square diamond-shaped footprint viewed from the south corner: 1. a broken concrete bridge railing section with bent steel bars, 2. a rusty swan-shaped pedal boat lying on its side, 3. a toppled row of public rental bicycles, 4. a faded orange life ring on a short post, 5. a riverside convenience store folding table with two plastic chairs and a broken parasol, 6. a stack of sandbags with a flood warning light, 7. a half-sunken rusty patrol boat bow, 8. a tangle of river reeds and floating trash, 9. a cracked concrete bridge pillar stump. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. No people, no shadow, no ground, no text, no logos, no brand names. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. Do not use pink or magenta on the props.
+```
+
+---
+
+## 52. v2.0 장비 단계 — 몸은 색 바꾸기 (✅ 자동) · **단계마다 헬멧 + 아이콘 1장만**
+장비 단계: 방탄 조끼 Lv1 → 전술 조끼 10 → 군용 강화복 20 → **방호 강화복 30** → 블랙선 전투복 40 → 처리반 강화복 50 → 외골격 60 (최종). 그림이 오기 전엔 군용 강화복 몸에 색만 바꿔 씀.
+📎 **군용 강화복 몸 시트(`assets/player_military*.png`)를 마젠타 배경에 깐 것을 그대로 첨부** → 같은 동작 · 같은 칸에 옷만 바꿔 그림 (가공이 쉬움). 장마다 새 대화.
+
+> ⛔ **52-1 은 안 해도 됨** (v1.98.8): 몸은 `tools/art/recolor_armor.py` 가 군용 강화복 그림에서 갑옷 색만 바꿔 만듦 (방호 노랑 · 블랙선 흑연 · 처리반 강철). 아래는 기록용.
+
+### 52-1 · 몸 시트 12장 · 📐 **16:9** · 🔧 player_hazmat · player_hazmat_long · _pistol · _smg · _shotgun · _lmg · _heavy · _blade · _back · _blaster · _f20 · _ox20
+```
+Redraw the attached sprite sheet exactly: keep the same character, the same number of rows and frames in each row, the same poses, the same weapon in his hands and the same frame positions. Only change his outfit to a heavy chemical protection suit: a dirty yellow-olive rubberized hazmat suit with thick folds, gray duct tape sealing the wrists and ankles, a small round filter canister strapped to the chest, a slim air pack on the back, black rubber gloves and black rubber boots, scuffs and grime. Keep his head bare (no helmet, no mask, no hood): the same face and hair as in the attached sheet. Same detailed dark pixel art style, desaturated colors with warm orange highlights, isometric 3/4 top-down view, all facing the same way as in the attached sheet. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border. Do not use pink or magenta on the character.
+```
+
+### 52-2 · 방호 후드 헬멧 + 방호복 아이콘 · 📐 **1:1** · `hazmat_gear.png`
+```
+Match the art style of the attached concept image. Create ONE image with 2 separate items side by side with a wide empty gap between them: 1. a hazmat hood helmet seen from the front-right at a 3/4 angle: a dirty yellow-olive rubber hood with a large clear round face visor and a twin-filter respirator under the visor, gray tape at the neck seal, only the empty head gear (no head or face inside); 2. an inventory icon of the same hazmat suit folded neatly with its round chest filter canister on top. Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no text, no logos. Do not use pink or magenta on the items.
+```
+
+---
+
+### 52-3 ★ · 헬멧 3종 한 장 (1×3) · 📐 **16:9** · `helmets2.png` — 방호 후드 → 블랙선 바이저 → 처리반 헬멧
+📎 콘셉트 아트 + `assets/helmets.png` (기존 헬멧 — 크기 · 각도 맞추기)
+```
+Match the art style of the attached images (the second image shows the existing helmets in this game: use the same size, angle and pixel style). Create ONE image showing exactly 3 separate helmets in a single horizontal row with wide empty space between them. Order from left to right: 1. a chemical protection hood helmet: a dirty mustard-yellow rubberized hood with a large round clear face visor and a twin-filter respirator under the visor, gray tape around the neck seal; 2. a sleek black corporate mercenary helmet with a smooth curved dark visor across the face and a thin yellow stripe running over the top; 3. a heavy bomb-disposal helmet: a thick steel-gray dome with a flat armored glass face plate and a tall padded neck guard collar. Helmets only: no heads, no faces, no people. Each helmet in isometric 3/4 view facing right, as if worn by a character looking right, all the same size. Chunky readable shapes. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no numbers, no labels, no shadow, no border. Do not use pink or magenta on the helmets.
+```
+
+### 52-4 ★ · 갑옷 아이콘 3종 한 장 (1×3) · 📐 **16:9** · `icons_armor2.png` — 방호 강화복 → 블랙선 전투복 → 처리반 강화복
+📎 콘셉트 아트 + `assets/icons_gear.png` (기존 아이콘 — 각도 · 화풍 맞추기)
+```
+Match the art style of the attached images (the second image shows the existing inventory icons in this game: use the same angle, size and pixel style). Create ONE image showing exactly 3 separate inventory item icons in a single horizontal row with wide empty space between them, each a single armor chest piece seen from a slight top-down three-quarter angle with a bold clear silhouette readable at very small size. Order from left to right: 1. a combat armor vest with shoulder guards, coated in dirty mustard-yellow chemical protection rubber, a small round filter canister on the chest; 2. a sleek matte black corporate combat armor vest with sharp plates and thin yellow edge stripes; 3. a heavy steel-gray bomb-disposal armor vest with thick layered chest plates and a high padded collar. Detailed dark pixel art, gritty post-apocalyptic style. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No text, no numbers, no labels, no shadow, no border. Do not use pink or magenta on the items.
 ```
 
 ---

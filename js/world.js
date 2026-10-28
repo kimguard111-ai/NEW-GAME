@@ -141,10 +141,10 @@ const World = {
       }
     }
 
-    // v2.0 한강 (def.river): 맵 위쪽을 가로지르는 깊은 강 (22칸 — 다리를 한참 건너야 함) + 양쪽 둔치(한강공원 풀밭 · 산책로) + 다리 3개
+    // v2.0 한강 (def.river): 맵 위쪽을 가로지르는 깊은 강 (29칸 — 다리를 한참 건너야 함 · v1.98.8 22 → 29) + 양쪽 둔치(한강공원 풀밭 · 산책로) + 다리 3개
     // 가운데 = 넓은 대교 (10칸 · 한가운데 전망 쉼터로 양옆이 넓어짐) · 서쪽 = 6칸 다리 · 동쪽 = 6칸이지만 가운데가 끊김
     if (def.river) {
-      const r0 = Math.floor(H * 0.17), r1 = r0 + 21, mid = (r0 + r1) >> 1, B = [[Math.floor(W * 0.16), 6, false], [(W >> 1) - 5, 10, false], [Math.floor(W * 0.8), 6, true]];
+      const r0 = Math.floor(H * 0.16), r1 = r0 + 28, mid = (r0 + r1) >> 1, B = [[Math.floor(W * 0.16), 6, false], [(W >> 1) - 5, 10, false], [Math.floor(W * 0.8), 6, true]];
       this.river = { r0, r1, mid, bridges: B.map(([x, w, broken]) => ({ x0: x, x1: x + w - 1, broken, cx: x + w / 2 })) };
       for (let y = r0 - 3; y <= r1 + 3; y++) for (let x = 1; x < W - 1; x++) {
         const i = y * W + x; if (y < 1 || y >= H - 1) continue;
@@ -153,15 +153,16 @@ const World = {
         else this.tiles[i] = (y === r0 - 1 || y === r1 + 1) ? T.RUBBLE /* 돌 둑 */ : ((y === r0 - 3 || y === r1 + 3) ? T.WALK /* 산책로 */ : T.GRASS);
       }
       for (const [bx, bw, broken] of B) {
-        const wide = bw >= 10;
+        const wide = bw >= 10, lanes = wide ? [3, 6] : [1, 4], last = {}; // 버려진 차: 안쪽 차선만 (바깥은 난간 · 아치 자리) · 같은 차선은 4칸 띄움
         for (let y = r0 - 3; y <= r1 + 3; y++) {
           const deck = wide && Math.abs(y - mid) <= 2 ? 3 : 0; // 전망 쉼터: 양옆 3칸씩 넓어짐
           for (let x = bx - deck; x < bx + bw + deck; x++) {
             const gap = broken && Math.abs(y - mid) <= 2, edge = x === bx - deck || x === bx + bw + deck - 1;
             if (gap) continue;
             if (broken && Math.abs(y - mid) === 3) { set(x, y, T.RUBBLE); continue; } // 끊긴 끝
-            const lane = x - bx, jam = y >= r0 + 2 && y <= r1 - 2 && !deck && (wide ? (lane === 1 || lane === 8) : (lane === 1 || lane === 4)) && rng() < 0.16; // 버려진 차 (가장자리 차선 · 가운데 차선은 늘 비워 둠)
-            set(x, y, (edge && y >= r0 && y <= r1 && rng() < 0.1) || jam ? T.CAR : T.ROAD);
+            const lane = x - bx, jam = y >= r0 + 2 && y <= r1 - 3 && Math.abs(y - mid) > 4 && !(broken && Math.abs(y - mid) <= 5) && lanes.includes(lane) && y - (last[lane] ?? -99) >= 4 && y - (last.any ?? -99) >= 2 && rng() < 0.22; // 옆 차선 차와도 2칸 엇갈리게
+            if (jam) last[lane] = last.any = y;
+            set(x, y, jam ? T.CAR : T.ROAD);
           }
         }
       }
