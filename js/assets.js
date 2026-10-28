@@ -14,7 +14,7 @@ const ART = {
   height: { player: 44, drowned: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44, deploy: 44, stash: 44,
     // v0.15 보스 전용 그림 (등록하면 기본 적 그림을 키워 쓰는 대신 이 그림 사용)
     glutton: 66, panther: 56, argos: 46, redfang: 50, viper: 58, goliath: 118, warden: 100, sumun: 100, leech: 118, butcher: 58, cerberus: 50, colony: 118, chimera: 120, merc: 44, shield: 48, stalker: 46,
-    raven: 54, babel: 120, root: 124, researcher: 44, guardbot: 48, /* v1.83 */ hawk: 54, shade: 66, anvil: 62, queen: 118,
+    raven: 54, babel: 120, root: 124, researcher: 44, guardbot: 48, /* v1.83 */ hawk: 54, shade: 66, anvil: 62, queen: 118, heuksu: 104 /* v1.98.24 */,
     comp: 44, resident_b: 42, resident_c: 42 }, // v1.49.3 동료·캠프 주민 (resident_c 노인은 허리가 굽음)
   // 플레이어 무기 그림 (옆모습 1장, 총구/날이 오른쪽). 플레이어 몸 그림은 무기 없이 만들고 이 그림을 손에 붙임
   // 없으면 코드로 그린 총·칼을 사용
@@ -441,6 +441,7 @@ const ART = {
     warden: { file: 'warden.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     sumun: { file: 'sumun.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } }, // v2.0 51-3 한강 수문장
     leech: { file: 'leech.png', cell: 128, w: 307, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } }, // v2.0 51-4 거머리
+    heuksu: { file: 'heuksu.png', cell: 128, w: 243, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } }, // v1.98.24 53-1 어설트 보스 흑수
     player_blade: { file: 'player_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] }, headW: 19, heads: { idle: [[4,-104],[4,-99],[4,-95],[4,-99]], walk: [[6,-99],[1,-98],[0,-95],[4,-99],[5,-104],[-2,-98],[1,-99],[1,-95]], attack: [[-11,-99],[-9,-100],[-10,-96],[5,-96]], hit: [[-1,-97],[12,-95]], death: [[-28,-99],[-33,-92],[-44,-82],[-13,-59],[6,-59]] } },
     player_vest_blade: { file: 'player_vest_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 5], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[4,-99],[3,-99],[3,-104],[3,-104]], walk: [[3,-95],[1,-98],[-1,-90],[2,-90],[2,-95],[-2,-98],[1,-90],[-1,-95]], attack: [[-18,-106],[18,-97],[-20,-92],[10,-92],[40,-98]], hit: [[-4,-97],[-1,-95]], death: [[5,-98],[-28,-92],[-27,-80],[-53,-56],[7,-58],[-36,-48]] } },
     player_tactical_blade: { file: 'player_tactical_blade.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] }, headW: 18, heads: { idle: [[4,-99],[4,-99],[4,-104],[4,-99]], walk: [[6,-95],[1,-94],[0,-95],[3,-95],[4,-100],[-3,-98],[3,-95],[1,-100]], attack: [[7,-100],[21,-96],[34,-96],[12,-96]], hit: [[-4,-97],[24,-89]], death: [[-4,-102],[-53,-89],[-40,-82],[-25,-66],[0,-58],[-3,-58]] } },
