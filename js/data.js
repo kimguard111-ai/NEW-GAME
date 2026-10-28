@@ -8,7 +8,7 @@ const TESTERS = ['17사단탈영범', '하누라'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.28' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.29' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
@@ -36,7 +36,7 @@ const NEWS_V2 = { ver: 'v2.0', title: 'v2.0 「한강」 — 서울 편 마지�
 ] };
 // v1.98.22 v2.0 새 시즌: 열리는 순간 모든 진행 초기화 (레벨 · 장비 · 창고 · 이야기 · 업적 · 도감) — 옛 세이브는 기기 안 숨은 백업으로만 · ?s2 = 미리 시험
 const SEASON2 = V2_READY || (typeof location !== 'undefined' && /[?&]s2(&|$)/.test(location.search));
-const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
+const V2_OPEN = V2_READY || TEST_BUILD || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search)); // v1.98.29 시험판(hangang-test 주소)은 v2.0 전부 열림 (새 시즌 초기화는 안 켜짐)
 // 주소 끝 ?hangang = 한강 지도만 열림 (레벨 30 · 7장은 닫힌 채 — 그림 · 지도 테스트용)
 const V2_MAP = TEST_BUILD || V2_OPEN || (typeof location !== 'undefined' && /[?&]hangang(&|$)/.test(location.search));
 const MAX_LEVEL = V2_OPEN ? 40 : 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트) · v2.0 30 → 40 (한강 다리 Lv30~34 · 도전 던전 ~42)

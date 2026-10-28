@@ -1254,7 +1254,13 @@ function enemyMark(e, sx, sy, k, hz) {
   if (Light.list.length < 90) addLight(sx, sy - 14 - (hz || 0), 52, ch ? 0.5 : 0.35);
 }
 function drawEnemy(e) {
-  if (e.seen === false && e.hp > 0) return; // v1.98.27 도전 던전: 벽 너머 적은 안 그림
+  // v1.98.27 도전 던전: 벽 너머 적은 안 그림 · v1.98.29 툭 튀어나오지 않게 어둠 속에서 서서히 (약 0.3초)
+  e.visA = e.visA ?? 1; e.visA += ((e.seen === false && e.hp > 0 ? 0 : 1) - e.visA) * 0.2;
+  if (e.visA < 0.03) return;
+  if (e.visA < 0.97) { const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * e.visA; try { drawEnemyMain(e); } finally { ctx.globalAlpha = a0; } return; }
+  drawEnemyMain(e);
+}
+function drawEnemyMain(e) {
   const down = e.downT > 0 ? e.downT : 0, fl = e.flinchT > 0 ? e.flinchT / 0.16 : 0;
   if (e.joltT > 0) { e.joltT -= 1 / 60; } // v1.40 맞으면 그림이 맞은 쪽으로 툭 밀렸다 돌아옴
   if (e.joltT > 0 && !down && !e.nest) { const d = Iso.dir(e.joltA || 0), k = (e.joltT / 0.09) * (e.joltK || 3); ctx.save(); ctx.translate(d.x * k, d.y * k * 0.6); try { drawEnemyInner(e, down, fl); } finally { ctx.restore(); } return; }
@@ -1289,8 +1295,8 @@ function drawEnemyBody(e) {
   let topY = sy - 44;
   if (e.affix) { // 엘리트 오라
     const c = ELITE_AFFIXES[e.affix].color;
-    ctx.strokeStyle = c; ctx.globalAlpha = 0.55 + Math.sin(G.time * 5 + e.x) * 0.25; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.5, e.r * 0.75, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 1;
+    ctx.strokeStyle = c; ctx.globalAlpha = (e.visA ?? 1) * (0.55 + Math.sin(G.time * 5 + e.x) * 0.25); ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(sx, sy, e.r * 1.5, e.r * 0.75, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = e.visA ?? 1; ctx.lineWidth = 1;
     if (e.affix === 'commander') { ctx.strokeStyle = 'rgba(255,215,106,0.18)'; ctx.beginPath(); ctx.ellipse(sx, sy, 230 * ISO_K, 115 * ISO_K, 0, 0, TAU); ctx.stroke(); }
   }
   // 보스 전용 그림(e.art)이 있으면 그 그림을 제 크기로, 없으면 기본 적 그림을 e.scale 배로
@@ -1413,7 +1419,7 @@ function drawEnemyBody(e) {
 function drawEnemyTags(e, sx, sy, topY) {
   if (e.alertT > 0) { // v1.29 처음 알아챔 「!」 (튀어 오르며 나타남)
     const t = 0.9 - e.alertT, pop = t < 0.12 ? t / 0.12 * 1.3 : t < 0.2 ? 1.3 - (t - 0.12) / 0.08 * 0.3 : 1, by = topY - 20 - Math.min(t, 0.12) * 40;
-    ctx.save(); ctx.globalAlpha = Math.min(1, e.alertT / 0.2); ctx.translate(sx, by); ctx.scale(pop, pop);
+    ctx.save(); ctx.globalAlpha = (e.visA ?? 1) * Math.min(1, e.alertT / 0.2); ctx.translate(sx, by); ctx.scale(pop, pop);
     ctx.fillStyle = FACTION[e.type] === 'machine' ? '#5ad0ff' : '#ff3a2a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.font = '18px BlackHan, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.strokeText('!', 0, 0); ctx.fillText('!', 0, 0); ctx.restore();
   }
