@@ -8,11 +8,11 @@ const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.18' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.19' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
-const NEWS = { ver: 'v1.98.18', title: '업데이트 소식 — 테스터 의견 반영', items: [
+const NEWS = { ver: 'v1.98.19', title: '업데이트 소식 — 테스터 의견 반영', items: [
   '<b>무기 역할</b>: 산탄총 · 권총 · 기관단총 ↑ · 기관총 이동 · 재장전 패널티 ↓ · 근접 무기를 들면 받는 피해 -25%',
   '<b>스킬</b>: 포탑 · 아드레날린 ↑ · 집중 사격의 무한 탄창은 이제 궁극 (갈래 b = 사냥 본능)',
   '<b>지하 연구소 · 스카이타워</b>: 층마다 지역 필드 보스의 「메아리」 — 고유 장비를 엔드게임 레벨로',
@@ -288,7 +288,7 @@ const ZONES = [
     spawns: [['raider', 25], ['brute', 30], ['drone', 20], ['dog', 25]], // v1.96 원거리(약탈자 · 드론) 60% → 45% (테스터: 3스테이지 원거리 잡몹이 너무 많음)
     desc: '경비 드론 편대가 순찰한다', packs: { drone: [2, 3] },
     gear: ['rifle', 'lmg', 'military'], gearText: '돌격소총·기관총·군용 강화복' },
-  { name: '여의도 방사능 지대', maxDist: 999, lvl: [16, 20], dark: 0.6, tint: 'rgba(40,120,30,0.12)',
+  { name: '여의도 방사능 지대', maxDist: 999, lvl: [15, 20], dark: 0.6, tint: 'rgba(40,120,30,0.12)',
     spawns: [['brute', 30], ['drone', 30], ['raider', 20], ['zombie', 20]],
     desc: '방사능 웅덩이. 들어가면 체력이 깎인다', packs: { zombie: [3, 5] },
     gear: ['katana', 'lmg', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },

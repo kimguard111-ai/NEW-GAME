@@ -198,6 +198,7 @@ const Story = {
     }
   },
 
+  expOf: (r, level) => Math.round(r.exp * (1 + Math.min(Math.max(0, (level || 1) - 6), 18) * 0.067) * 2), // v1.98.19 이야기 경험치도 레벨 곡선만큼 (곡선을 늦춘 뒤 6장 보상이 Lv25 한 칸의 15%뿐 → 장 사이 레벨 벽)
   grant(r, level) {
     const p = G.player;
     const cr = Math.round(r.credits * ECON.cr); p.credits += cr; // v1.25 이야기 보상 크레딧도 절반
@@ -206,8 +207,9 @@ const Story = {
     if (r.equip) { const it = give(makeGear(r.equip, Math.max(p.level, 1), 0)); log(`보상 장비: ${it.name}. 인벤토리(I)에서 장착`, '#8cf'); }
     if (r.gear) { let g = null; for (let k = 0; k < 8 && (!g || (g.kind === 'weapon' && WEAPONS[g.key].melee) || [...p.inventory, ...Object.values(p.equip)].some(o => o && o.key === g.key && o.rarity >= g.rarity)); k++) g = randomGear(Math.max(p.level, level), r.gear); // v1.57 이미 가진 것(도끼 등)·근접은 피해서
       const it = give(g); log(`보상 장비: ${itemName(it)}`, RARITIES[it.rarity].color); }
-    log(`보상: EXP ${fmt(r.exp)}, ${fmt(cr)}₵`, '#8cf');
-    gainExp(r.exp);
+    const ex = this.expOf(r, level);
+    log(`보상: EXP ${fmt(ex)}, ${fmt(cr)}₵`, '#8cf');
+    gainExp(ex);
   },
 
   completeStep() {

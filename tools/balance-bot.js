@@ -31,8 +31,8 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       const W = World.W, H = World.H, d = new Int32Array(W * H).fill(-1), q = new Int32Array(W * H);
       let h = 0, n = 0; const gx = Math.floor(x / TILE), gy = Math.floor(y / TILE);
       for (let r = 0; r <= 8 && !n; r++) for (let yy = gy - r; yy <= gy + r; yy++) for (let xx = gx - r; xx <= gx + r; xx++) { // 목표가 막힌 칸(랜드마크)이면 가장 가까운 빈 칸들에서 시작
-        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const i = yy * W + xx; if (d[i] < 0 && !SOLID.has(World.tiles[i])) { d[i] = 0; q[n++] = i; } }
-      while (h < n) { const i = q[h++], cx = i % W; for (const j of [i - 1, i + 1, i - W, i + W]) { if (j < 0 || j >= W * H || d[j] >= 0 || SOLID.has(World.tiles[j])) continue; if ((j === i - 1 && cx === 0) || (j === i + 1 && cx === W - 1)) continue; d[j] = d[i] + 1; q[n++] = j; } }
+        if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const i = yy * W + xx; if (d[i] < 0 && !NAV_BLOCK(World.tiles[i])) { d[i] = 0; q[n++] = i; } }
+      while (h < n) { const i = q[h++], cx = i % W; for (const j of [i - 1, i + 1, i - W, i + W]) { if (j < 0 || j >= W * H || d[j] >= 0 || NAV_BLOCK(World.tiles[j])) continue; if ((j === i - 1 && cx === 0) || (j === i + 1 && cx === W - 1)) continue; d[j] = d[i] + 1; q[n++] = j; } }
       return d;
     };
     B.goField = (f, sp) => {
@@ -45,7 +45,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       return false;
     };
     B.mapFor = () => {
-      const L = p.level, want = L < 5 ? 'myeongdong' : L < 10 ? 'jongno' : L < 15 ? 'yongsan' : L < 20 ? 'yeouido' : L < 25 ? 'gangnam' : 'jamsil';
+      const L = p.level, want = L < 5 ? 'myeongdong' : L < 10 ? 'jongno' : L < 15 ? 'yongsan' : L < 20 ? 'yeouido' : L < 25 ? 'gangnam' : L < 30 || !Raid.unlocked('hangang') ? 'jamsil' : 'hangang';
       const story = CHAPTER_MAP[p.quest.ch]; // 이야기 맵이 열려 있고 레벨이 되면 우선
       const last3 = B.raids.slice(-3); // 3번 연속 사망하면 한 단계 쉬운 맵에서 정비 (사람처럼)
       if (last3.length === 3 && last3.every(r => !r.ok) && !B.retreat) B.retreat = 2;
@@ -210,6 +210,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     for (; shown < r.raids.length; shown++) { const x = r.raids[shown]; console.log(`${x.t.padStart(4)}분 ${x.ok ? '탈출' : '사망'} ${x.map.padEnd(10)} ${x.min}분 처치${x.kills} Lv${x.lv} 장${x.ch} ${x.w} dps${x.dps} 방어${x.def} HP${x.hp} ₵${x.cr}`); }
   }
   const s = await pg.evaluate(() => ({ shop: B.shop || 0, expSrc: B.exp, lvlT: B.lvlT, dodge: `${B.dodges}/${B.dodgeTry}`, enh: B.enh, bought: B.bought, p: G.player.level }));
+  console.log('끝 상태:', JSON.stringify(await pg.evaluate(() => ({ t: (G.time / 60).toFixed(0), map: World.map, ch: G.player.quest.ch + '-' + G.player.quest.step, lv: G.player.level, raidMin: B.cur ? ((G.time - B.cur.t0) / 60).toFixed(1) : null, pos: [Math.round(G.player.x / TILE), Math.round(G.player.y / TILE)], paused: !G.running })))); // v1.98.19 출격이 안 끝나는지 확인
   console.log('레벨 도달(게임 분):', JSON.stringify(s.lvlT));
   console.log('경험치 출처:', JSON.stringify(s.expSrc));
   console.log('사망 원인 (죽기 전 8초 피해 1·2위):'); for (const [k, v] of Object.entries(await pg.evaluate(() => B.cause)).sort((a, b) => b[1] - a[1]).slice(0, 14)) console.log('  ' + k + ' ×' + v);
