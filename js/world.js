@@ -478,9 +478,9 @@ const World = {
   },
 
   // v1.98.31 눈으로 보는 시야: 벽만 가림 (책상 · 장비 · 수조 같은 낮은 소품은 너머가 보임 — 총알 판정 lineOfSight 와 따로)
-  sightLine(a, b) {
-    const d = dist(a, b), steps = Math.ceil(d / 12);
-    for (let i = 1; i < steps; i++) { const t = i / steps, tt = this.tileAt(Math.floor(lerp(a.x, b.x, t) / TILE), Math.floor(lerp(a.y, b.y, t) / TILE)); if (tt === T.LWALL || tt === T.WALL || tt === T.BUILDING) return false; }
+  sightLine(a, b) { // v1.98.34 양 끝(몸 반지름 안)은 안 봄 — 큰 보스는 몸 가운데가 벽 가장자리에 걸쳐 「벽 너머」로 숨던 것
+    const d = dist(a, b), steps = Math.ceil(d / 12), t0 = Math.min(0.45, ((a.r || 12) + 4) / Math.max(1, d)), t1 = Math.max(0.55, 1 - ((b.r || 12) + 6) / Math.max(1, d));
+    for (let i = 1; i < steps; i++) { const t = i / steps; if (t < t0 || t > t1) continue; const tt = this.tileAt(Math.floor(lerp(a.x, b.x, t) / TILE), Math.floor(lerp(a.y, b.y, t) / TILE)); if (tt === T.LWALL || tt === T.WALL || tt === T.BUILDING) return false; }
     return true;
   },
   lineOfSight(a, b) {
