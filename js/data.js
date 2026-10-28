@@ -8,7 +8,7 @@ const TESTERS = ['17사단탈영범', '하누라'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.29' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.30' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
@@ -68,11 +68,11 @@ const AMMO = {
 // role: 플레이어에게 보여줄 무기 성격 한 줄
 const WEAPONS = {
   // v1.55 pipe 삭제 (그림이 있는 무기만 · 세이브의 것은 소방 도끼로 바뀜)
-  pistol:  { ammo: 'pistol', name: 'P-45 권총',    icon: 'pistol', dmg: 24, rate: 0.34, /* v1.98.10 18/0.42 → 24/0.34 (초당 43 → 71) · 치명타 +10% */ /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 0.8, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05, critBonus: 0.1,
+  pistol:  { ammo: 'pistol', name: 'P-45 권총',    icon: 'pistol', dmg: 24, rate: 0.34, /* v1.98.10 18/0.42 → 24/0.34 (초당 43 → 71) · 치명타 +10% */ /* v1.27 보조무기답게 공속↓ (0.26/14 · 실DPS 69 → 58) */ mag: 12, reload: 0.8, spread: 0.03, speed: 950, range: 520, knock: 6, stagger: 0.05, move: 1.05, critBonus: 0.1, critMul: 2.4, hsMul: 1.4 /* v1.98.30 치명타 피해 ×1.8 → ×2.4 · 헤드샷 ×1.4 (일반 적 1.5 → 2.1) */,
              quickDraw: true, lvl: 1, price: 80, role: '권총탄이 흔하고 쌈 · 즉시 꺼내 듦 · 치명타 +10% · 빠른 재장전' },
   axe:     { name: '소방 도끼',     icon: 'axe', melee: true, dmg: 42, rate: 1.0, /* v1.8.1 0.8/44 · v1.72 55 → 42 (Lv1부터 한 번에 셋을 한 방 — 너무 셈) */ range: 64, arc: 1.75, /* v1.95 72 · 2.1 → 64 · 1.75 (테스터: 초반 도끼가 너무 셈 · 범위가 너무 넓음) */ knock: 42, stagger: 0.7, move: 0.98, lvl: 1, price: 220, /* v1.55 쇠파이프 대신 첫 근접 무기 (Lv1~ 초중반) */
              role: '넓은 일격 · 3타째 회전 베기로 주변을 쓸어냄 · 들고 있으면 받는 피해 -25%' },
-  smg:     { ammo: 'auto', name: 'SP-9 기관단총',  icon: 'smg', dmg: 14, rate: 0.13, /* v1.98.10 12 → 14 */ /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.11, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
+  smg:     { ammo: 'auto', name: 'SP-9 기관단총',  icon: 'smg', dmg: 14, rate: 0.13, /* v1.98.10 12 → 14 */ /* v1.50.7 0.1 → 0.13 (한 발 피해는 RATE_COMP로 ×1.2) · v1.40.2 9/0.075 — 너무 빨라 정신없던 것 (초당 피해 유지) */ mag: 32, reload: 1.5, spread: 0.15 /* v1.98.30 0.11 → 0.15 */, speed: 900, range: 380, falloff: true, knock: 3, stagger: 0, move: 1.08,
              lvl: 3, price: 260, role: '근거리 순간 화력 · 이동하며 난사' },
   shotgun: { ammo: 'shell', name: 'R-12 산탄총',   icon: 'shotgun', dmg: 16, /* v1.98.10 10 → 16: 다 맞으면 초당 100 → 160 (소총 122 의 1.3배 · 대신 사거리 260 vs 620 · 봇 강남 분당 처치 소총 7.5 → 산탄 14) */ pellets: 7, rate: 0.7, mag: 6, reload: 1.8, /* v1.27 0.8 · 2.2 (Lv3 기관단총보다 약하던 것) */ spread: 0.3, speed: 800, range: 260, falloff: true, knock: 12, stagger: 0.35, move: 1.0,
              lvl: 5, price: 380, role: '근거리 폭발력 · 코앞에서 쏘면 크게 날려버림' },

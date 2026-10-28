@@ -86,8 +86,9 @@ function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
 function curWeapon() { const p = G.player; return p.equip[p.active]; }
 // v1.49.9 조준 (PC 오른쪽 클릭 누르는 동안): 퍼짐 ↓ · 이동 60% · 시야를 커서 쪽으로 더. 0~1 (부드럽게 들어감)
 function adsOn() { const p = G.player, w = p && curWeapon(); return (!IS_TOUCH || Pad.on) && !!input.aim && !!w && !WEAPONS[w.key].melee && !p.dead && !UI.anyOpen(); }
-function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.spread[wbase(w.key)] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
-const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
+function adsSpreadMul(w) { const hip = (IS_TOUCH && !Pad.on) ? ADS.hip : (ADS.hipPc[wbase(w.key)] ?? ADS.hip); return lerp(hip * attMul(w, 'hipSpread'), (ADS.spread[wbase(w.key)] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
+const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12,
+  hipPc: { sniper: 2.6, rifle: 2.1, lmg: 1.9, smg: 1.9, pistol: 1.8, shotgun: 1.12 } }; // v1.98.30 PC · 패드: 조준(우클릭 · LT) 없이 쏘면 많이 퍼짐 (산탄총은 그대로) · 폰은 조준 버튼이 없어 그대로
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
 // v1.96 보스와 싸우는 중 (타이탄 · 장 보스 · 필드 보스가 가까이) — 이때는 새 적 · 증원이 안 옴 (테스터: 10렙 보스 잡는데 잡몹이 30마리씩)
 function bossFight() { const p = G.player; return [G.boss, G.elite, G.fieldBoss, G.echoBoss].find(b => b && b.hp > 0 && dist(b, p) < 1100) || null; }
@@ -1197,7 +1198,7 @@ function updateBullets(dt) {
             // v1.9 산탄총 코앞 사격: 크게 밀치고 경직
             const pb = wb && wb.pellets && b.maxLife - b.life < 0.1;
             Juice.impact(e, b, Math.atan2(b.vy, b.vx), b.crit); // v1.40 타격감
-            let hs = 1; if (b.headOf === e) { hs = (e.def.boss || e.elite || e.fieldBoss || e.labBoss) ? 1.25 : 1.5; if (perk('deadeye')) hs *= 1.3; /* v2.x 명사수 */ if (G.time - (e.hsTxt || -9) > 0.35) { e.hsTxt = G.time; floatText(e.x, e.y - (ART.height[e.art || e.type] || 44) - 8, '헤드샷!', '#ff5a4a', 15); SFX.play('headshot'); } if (b.w && WEAPONS[b.w.key] && WEAPONS[b.w.key].hsMul) hs *= WEAPONS[b.w.key].hsMul; } // v1.66 헤드샷 (보스 ×1.25) · v1.68 F-20 ×2
+            let hs = 1; if (b.headOf === e) { hs = (e.def.boss || e.elite || e.fieldBoss || e.labBoss) ? 1.25 : 1.5; if (perk('deadeye')) hs *= 1.3; /* v2.x 명사수 */ if (b.w && WEAPONS[b.w.key] && WEAPONS[b.w.key].hsMul) hs *= WEAPONS[b.w.key].hsMul; /* v1.98.30 권총 */ if (G.time - (e.hsTxt || -9) > 0.35) { e.hsTxt = G.time; floatText(e.x, e.y - (ART.height[e.art || e.type] || 44) - 8, '헤드샷!', '#ff5a4a', 15); SFX.play('headshot'); } if (b.w && WEAPONS[b.w.key] && WEAPONS[b.w.key].hsMul) hs *= WEAPONS[b.w.key].hsMul; } // v1.66 헤드샷 (보스 ×1.25) · v1.68 F-20 ×2
             damageEnemy(e, b.dmg * fall * hs, b.crit, Math.atan2(b.vy, b.vx), { knock: wb ? wb.knock * (pb ? 2.2 : 1) : 3, stagger: wb ? wb.stagger + (pb ? 0.2 : 0) : 0, w: b.w, blastKill: pb, ally: b.ally });
             if (b.mark) e.markT = G.time + 5; // v1.44 윤 저격수 전용: 표적 지정
             if (wb && wbase(wb.key) === 'sniper') hitstop(0.045);
