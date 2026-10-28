@@ -34,7 +34,7 @@ const Raid = {
     const card = id => {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id), gr = p.graves[id], lm = d.card ? { file: d.card } : d.landmark && ART.landmarks[d.landmark];
       const ev = ok && Camp.lv('radio') >= 1 ? `<div class="mc-ev">${ICON('radio')} ${Camp.planFor(id).map(k => EVENT_DEFS[k].name).join(' · ')}</div>` : ''; // v1.13 무전실 미리 보기
-      return `<div class="map-card${ok ? ' go' : ' locked'}${id === rec && ok ? ' rec' : ''}${d.lab ? ' wide' : ''}"${ok ? ` data-map="${id}"` : ''}>`
+      return `<div class="map-card${ok ? ' go' : ' locked'}${id === rec && ok ? ' rec' : ''}${d.lab || d.endRow ? ' wide' : ''}"${ok ? ` data-map="${id}"` : ''}>`
         + (lm ? `<img class="mc-art${d.card ? ' scene' : ''}" src="${artURL(lm.file)}" alt="">` : `<div class="mc-art ico-art">${ICON(d.tower ? 'warn' : d.lab ? 'chip' : 'map')}</div>`)
         + `<div class="mc-body"><div class="mc-name">${ok ? '' : ICON('lock') + ' '}${d.name}${id === rec && ok ? ' <span class="mc-rec">추천</span>' : ''}</div>`
         + `<div class="mc-lv">${d.lab ? (D => `도전 · ${D.label(1)}~${D.label(D.floors)} · 적 Lv${D.lv(1)}~${D.lv(D.floors)}${p[D.best] ? ` · 최고 ${D.label(p[D.best])}` : ''}${gr && gr.floor ? ` · 가방 ${D.label(gr.floor)}` : ''}`)(DUNGEONS[id]) : `Lv${z.lvl[0]}~${z.lvl[1]}`}</div><div class="mc-desc">${ok ? z.desc : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</div>`
@@ -42,7 +42,8 @@ const Raid = {
         + (ok && id === DIFF_MAP && diffOpen(p) > 0 ? `<div class="mc-diff">${DIFFS.map((D, i) => i > diffOpen(p) ? `<span class="dbtn off">${ICON('lock')} ${D.name}</span>` : `<span class="dbtn" data-diff="${i}" style="border-color:${D.color};color:${D.color}">${D.name}${i ? ` <small>경험치 ×${D.exp} · 신화 ×${D.myth}</small>` : ''}</span>`).join('')}</div>${diffOpen(p) < 2 ? '<div class="muted" style="font-size:11px">헬: 하드에서 바벨을 쓰러뜨리면</div>' : ''}` : '') // v1.66 잠실 난이도
         + (ok ? '<div class="mc-go">▶ 출격</div>' : '') + '</div></div>';
     };
-    h += `<div class="map-grid">${MAP_ORDER.filter(id => !MAPS[id].lab).map(card).join('')}</div>` + `<div class="map-grid dun">${MAP_ORDER.filter(id => MAPS[id].lab).map(card).join('')}</div>`; // v1.83.1 도전 던전 두 장을 한 줄에
+    const low = id => MAPS[id].lab || MAPS[id].endRow, end = MAP_ORDER.filter(low); // v1.98.12 한강(Lv30+)은 아래 엔드게임 줄로 → 일반 6곳 3×2 + 「한강 · 연구소 · 타워」 한 줄 (한강만 한 줄에 덩그러니 남던 것)
+    h += `<div class="map-grid">${MAP_ORDER.filter(id => !low(id)).map(card).join('')}</div>` + `<div class="map-grid dun${end.length > 2 ? ' three' : ''}">${end.map(card).join('')}</div>`; // v1.83.1 도전 던전 두 장을 한 줄에
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨', h, btns); $('panel-dialog').classList.add('mapdlg');
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격

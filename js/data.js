@@ -8,7 +8,7 @@ const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.11' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.12' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
@@ -327,7 +327,7 @@ const MAPS = {
   gangnam:    { name: '강남 업무지구', zone: 6, size: 108, seed: 1606, landmark: 'coex', chapter: 4, tall: [0.55, 6, 6] } /* v1.21 9~17층 → 6~11층 (층 높이 2.7m) */, // v1.6 유리 고층 빌딩 숲
   jamsil:     { name: '잠실 변이 지대', zone: 7, size: 108, seed: 1707, landmark: 'lotte', chapter: 5, lake: true },      // v1.6 석촌호수 (얕은 물)
   tower:      { name: '스카이타워', zone: 8, size: 66, seed: 1808, lab: true, tower: true, card: 'card_tower.png', minLv: 30, needLab: true, lock: '지하 연구소 B5 키메라 처치 후' }, // v1.78 두 번째 도전 (연구소와 같은 층 구조 · 위로 오름)
-  hangang:    { name: '한강 다리', zone: 9, size: 140, seed: 1909, landmark: 'pump', chapter: 6, river: true }, // v2.0 7장 · 깊은 강 + 다리 3개 (하나는 끊김)
+  hangang:    { name: '한강 다리', zone: 9, size: 140, seed: 1909, landmark: 'pump', chapter: 6, river: true, endRow: true }, // endRow: 출격 지도 아래 엔드게임 줄 (연구소 · 타워와 함께) // v2.0 7장 · 깊은 강 + 다리 3개 (하나는 끊김)
   lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, card: 'card_lab.png', /* v1.83 출격 카드 그림 */ minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
 };
 // v1.77 지하 연구소 = 5층 도전: B1 Lv30 → B5 Lv38 · B1~B4 는 승강기로 내려감 · B5 격리실에 키메라 · 어느 층이든 비상 계단으로 탈출
