@@ -83,7 +83,7 @@ const Raid = {
       if (best) [G.grave.x, G.grave.y] = best;
     }
     if (G.grave) log(`${ICON('skull')} 지난번에 쓰러진 자리에 시체 가방이 남아 있다. (미니맵 붉은 ✚)`, '#ff8a8a');
-    { const D = DIFFS[p.raid.diff]; UI.toast(MAPS[id].name + (p.raid.diff ? ` · ${D.name}` : ''), p.raid.diff ? `적 Lv+${D.lv} · 체력 ×${D.hp} · 피해 ×${D.dmg} · 경험치 ×${D.exp} · 신화 ×${D.myth} · 바벨이 스카이타워에 나타남` : `탈출구 ${G.exits.length}곳, 미니맵 초록 ◎`); } // v1.39 · v1.66 난이도
+    { const D = DIFFS[p.raid.diff]; UI.toast(MAPS[id].name + (p.raid.diff ? ` · ${D.name}` : ''), p.raid.diff ? `적 Lv+${diffLv(D, id)} · 체력 ×${D.hp} · 피해 ×${D.dmg} · 경험치 ×${D.exp} · 신화 ×${D.myth} · 바벨이 스카이타워에 나타남` : `탈출구 ${G.exits.length}곳, 미니맵 초록 ◎`); } // v1.39 · v1.66 난이도
     UI.smsQ = []; if (MAP_SMS[id]) UI.sms(MAP_SMS[id], 2.5); // v1.56 출격 시작 재난문자
     log(`${MAPS[id].name}. 나갈 길은 ${G.exits.filter(e => e.side).map(e => ({ N: '북', E: '동', S: '남', W: '서' })[e.side]).join(', ')}쪽 ${World.def.lab ? "비상구" : "끝"}.`, '#8cf'); // v1.39
     RaidEvents.generate(); // v1.10 돌발 사건 · 특수 탈출

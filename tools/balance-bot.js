@@ -13,6 +13,8 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   await pg.goto('file://' + require('path').resolve(__dirname, '../index.html') + (FIXMAP === 'hangang' || process.env.V2 ? '?v2' : '')); /* v2.0 잠금 중엔 ?v2 로 열어서 측정 */ await pg.evaluate(() => localStorage.clear()); await pg.reload();
   if (process.env.DIFF) await pg.evaluate(d => { window.__DIFF = d; }, +process.env.DIFF); // v1.98.13 던전 하드
   if (process.env.WEAPON) await pg.evaluate(w => { window.__WEAPON = w; }, process.env.WEAPON); // v1.98.10 무기 비교
+  if (process.env.FLOOR) await pg.evaluate(f => { window.__FLOOR = f; }, +process.env.FLOOR);
+  if (process.env.GEARR) await pg.evaluate(r => { window.__GEARR = r; }, +process.env.GEARR);
   if (process.env.QUEST) await pg.evaluate(q => { window.__QUEST = q; }, process.env.QUEST);
   if (process.env.TIER) await pg.evaluate(t => { window.__TIER = t; }, +process.env.TIER); // v1.63 TIER=<위협 등급> (ASSAULT 와 함께)
   await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
@@ -77,7 +79,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
     B.deploy = () => {
       B.camp();
       const id = B.mapFor();
-      if (window.__DIFF) { G.player.labKills = Math.max(1, G.player.labKills || 0); G.player.towerKills = Math.max(1, G.player.towerKills || 0); } Raid.deploy(id, window.__DIFF || 0); $('raid-summary').classList.add('hidden'); // v1.98.13 DIFF=1 던전 하드
+      if (window.__DIFF) { G.player.labKills = Math.max(1, G.player.labKills || 0); G.player.towerKills = Math.max(1, G.player.towerKills || 0); } Raid.deploy(id, window.__DIFF || 0); $('raid-summary').classList.add('hidden'); if (window.__FLOOR && DUNGEONS[id]) for (let f = 1; f < window.__FLOOR; f++) Raid.descend(); // v1.98.21 FLOOR=<층>: 던전 그 층부터 (봇은 계단을 안 내려감) // v1.98.13 DIFF=1 던전 하드
       B.cur = { map: id, t0: G.time, k0: p.totalKills, lv0: p.level, exp0: p.exp, cr0: p.credits, plan: rand(300, 480) };
       B.field = null; B.fieldKey = '';
     };
@@ -196,6 +198,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
         p.equip.belt = makeBelt(3, 20);
       }
       if (window.__WEAPON) { const w = makeWeapon(window.__WEAPON, START, 2); w.plus = 5; p.equip.w1 = w; p.weapon = 'w1'; p.ammo[WEAPONS[w.key].ammo] = ammoCap(p, WEAPONS[w.key].ammo); } // v1.98.10 WEAPON=<총 키>: 그 총만 쓰기 (무기 비교 · 근접은 봇 움직임이 달라 제외)
+      if (window.__GEARR) for (const sl of ['w1', 'armor', 'helmet']) { const o = p.equip[sl]; if (o) { const n = makeGear(o.key, START, window.__GEARR); n.plus = 6; p.equip[sl] = n; } } // v1.98.21 GEARR=<등급>: 장착 장비를 그 등급 +6 으로 (3 = 영웅 · 끝까지 키운 사람 기준)
       p.credits = 5000; UI.closeAll();
     }
     { let c0 = p.credits; B.earned = 0; Object.defineProperty(p, 'credits', { get: () => c0, set: v => { if (v > c0) B.earned += v - c0; c0 = v; }, enumerable: true, configurable: true }); } // v1.31 크레딧 수입 측정

@@ -224,6 +224,8 @@ function startGame(save, name) {
     { const R = { pistol: 24 / 18, smg: 14 / 12, shotgun: 16 / 10 }; // v1.98.10 무기 역할 나누기: 가진 무기도 같은 비율로 (시체 가방 포함)
       const graves = Object.values(P.graves || {}).flatMap(g => g.items || []);
       for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves]) if (it && it.kind === 'weapon' && !it.v19810) { if (R[it.key]) it.dmg = Math.round(it.dmg * R[it.key] * 10) / 10; it.v19810 = true; } }
+    { const graves = Object.values(P.graves || {}).flatMap(g => g.items || []); // v1.98.21 v2.0 이 열리면 외골격이 Lv60 단계가 됨 → 그 전에 얻은 외골격 · 외골격 헬멧은 원래 요구 레벨(Lv16) 그대로 (방어력은 아이템에 저장돼 그대로)
+      for (const it of [...P.inventory, ...Object.values(P.equip), ...(P.stash || []), ...graves]) if (V2_OPEN && it && (it.kind === 'armor' || it.kind === 'helmet') && !it.v2t) { if (it.key === 'exo' || it.key === 'exoHelm') it.reqLv = 16; it.v2t = true; } }
     P.graves = P.graves || {}; G.search = null; G.grave = null; P.tips = P.tips || []; P.playTime = P.playTime || 0; P.deaths = P.deaths || 0; P.bestCombo = P.bestCombo || 0; // v1.0 기록
     P.contract = null; P.cboard = null; // v1.47.1 출격 계약 게시판 삭제 (받아 둔 계약도 정리)
     mythTestGrant(P); // v1.61.2 시험 모드: Lv26 + 신화 3종
@@ -272,7 +274,7 @@ function startGame(save, name) {
   UI.buildHotbar();
   UI.refreshAll();
   G.welcome = false; // v1.45 첫 안내 창 대신 그 순간의 키 그림 (FirstRun)
-  { let seen = null; try { seen = localStorage.getItem('seoul2049-news'); } catch (e) { /* 막힘 */ } // v1.98.16 업데이트 소식 (돌아온 사람만 · 버전마다 한 번)
+  { const NEWS = V2_READY ? NEWS_V2 : NEWS_V1; let seen = null; try { seen = localStorage.getItem('seoul2049-news'); } catch (e) { /* 막힘 */ } // v1.98.16 업데이트 소식 (돌아온 사람만 · 버전마다 한 번)
     if (save && seen !== NEWS.ver) setTimeout(() => { if (!G.running) return; UI.dialog(NEWS.title, `<ul class="news">${NEWS.items.map(t => `<li>${t}</li>`).join('')}</ul><div class="muted" style="font-size:11px">${GAME_VERSION} · 자세한 내용은 커뮤니티 공지</div>`, [['확인', () => UI.close('dialog')]]); }, 1200);
     try { localStorage.setItem('seoul2049-news', NEWS.ver); } catch (e) { /* 막힘 */ } }
   if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았다. (암시장 상인 박씨 「스킬 교범」)`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }

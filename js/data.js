@@ -8,17 +8,26 @@ const TESTERS = ['17사단탈영범', '하누라'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.20' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.21' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
-const NEWS = { ver: 'v1.98.20', title: '업데이트 소식 — 테스터 의견 반영', items: [
+const NEWS_V1 = { ver: 'v1.98.20', title: '업데이트 소식 — 테스터 의견 반영', items: [
   '<b>무기 역할</b>: 산탄총 · 권총 · 기관단총 ↑ · 기관총 이동 · 재장전 패널티 ↓ · 근접 무기를 들면 받는 피해 -25%',
   '<b>스킬</b>: 포탑 · 아드레날린 ↑ · 집중 사격의 무한 탄창은 이제 궁극 (갈래 b = 사냥 본능)',
   '<b>지하 연구소 · 스카이타워</b>: 층마다 지역 필드 보스의 「메아리」 — 고유 장비를 엔드게임 레벨로',
   '<b>난이도</b>: 잠실 하드 · 헬 → 연구소 · 타워 「하드」 (그 던전 보스를 잡으면 열림 · 신화 ×2)',
   '<b>어설트</b>: 위협 6+ 는 내 레벨에 맞춤 · 위협 4+ 클리어하면 고유 장비 확률',
   '<b>성장 속도</b>: Lv7 부터 필요 경험치가 늘었다 (레벨은 그대로 · 경험치 막대만 짧아 보일 수 있음) · 신화 확률 조금 ↓',
+] };
+// v1.98.21 v2.0 이 열릴 때 보여 줄 소식 (V2_READY = true 면 위 소식 대신 · 판 번호가 달라 한 번 뜸)
+const NEWS_V2 = { ver: 'v2.0', title: 'v2.0 「한강」 — 서울 편 마지막 장', items: [
+  '<b>새 지역 「한강 다리」 (Lv30~34)</b>: 다리로만 건너는 넓은 강 · 아치 대교 · 끊긴 다리 · 물귀신 변이체',
+  '<b>제7장 「강을 건너는 것들」</b>: 보스 「한강 수문장」 · 끝나면 서울 편 엔딩',
+  '<b>최대 레벨 30 → 40</b>: 특성 Lv35 · Lv40 단계 (사신 · 보급선 · 강철 의지 / 명사수 · 과부하 · 불사)',
+  '<b>방어구 단계</b>: 10레벨마다 — 방호 강화복 30 · 블랙선 전투복 40 (새 헬멧 · 새 모습) · 맵 레벨에 맞는 단계가 나옴',
+  '<b>연구소 · 스카이타워</b>: Lv40 기준으로 다시 맞춤 · 하드 그대로',
+  '<b>원래 가진 외골격</b>은 요구 레벨 그대로 (Lv16) — 외골격은 이제 마지막 단계 (Lv60)',
 ] };
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
 // 주소 끝 ?hangang = 한강 지도만 열림 (레벨 30 · 7장은 닫힌 채 — 그림 · 지도 테스트용)
@@ -86,10 +95,11 @@ const MYTH_DROP = { babel: { chance: 0.035, pity: 0.012 }, titan: { chance: 0.01
 const DIFF_MAPS = ['lab', 'tower'];
 const DIFFS = [
   { name: '일반', lv: 0, hp: 1, dmg: 1, exp: 1, gear: 0, myth: 1, color: '#cfc6b0' },
-  { name: '하드', lv: 4, hp: 1.4, dmg: 1.2, exp: 1.5, /* v1.98.13 던전 배율과 겹쳐 1.5·1.3 은 봇 사망 67% → 1.4·1.2 */ gear: 0.5, myth: 2, uniq: 1.5, floorCr: 1.5, elite: { chance: 0.005, pity: 0.002 }, color: '#ff9a3a' },
+  { name: '하드', lv: 4, lvAt: { tower: 2 } /* v1.98.21 타워는 원래 연구소보다 4 높아 옥상이 Lv50 → +2 (Lv40 영웅+6 봇 옥상 하드 사망 86%) */, hp: 1.4, dmg: 1.2, exp: 1.5, /* v1.98.13 던전 배율과 겹쳐 1.5·1.3 은 봇 사망 67% → 1.4·1.2 */ gear: 0.5, myth: 2, uniq: 1.5, floorCr: 1.5, elite: { chance: 0.005, pity: 0.002 }, color: '#ff9a3a' },
 ];
 // v1.81 도전 던전 층 배율 (적 체력 · 피해) — 없으면 null
 function dunMul() { const p = typeof G !== 'undefined' && G.player, D = typeof World !== 'undefined' && World.def && World.def.lab && p && p.raid && p.raid.floor ? DUNGEONS[World.map] : null; return D ? { hp: D.hpM(p.raid.floor), dmg: D.dmgM(p.raid.floor) } : null; }
+const diffLv = (D, id) => D.lvAt && id in D.lvAt ? D.lvAt[id] : D.lv; // v1.98.21 던전마다 다른 적 레벨 +
 function curDiff() { const p = typeof G !== 'undefined' && G.player; return p && p.raid && p.raid.diff ? DIFFS[p.raid.diff] : null; }
 function diffOpen(p, id) { return !DIFF_MAPS.includes(id) ? 0 : p.hellOpen || (id === 'lab' ? (p.labKills || 0) : (p.towerKills || 0)) >= 1 ? 1 : 0; } // v1.98.13 잠실 헬까지 열었던 사람은 두 던전 하드 바로
 const wbase = k => (WEAPONS[k] && WEAPONS[k].base) || k; // v1.52 불법 무기 → 같은 계열 총 (소리·손맛·부품)

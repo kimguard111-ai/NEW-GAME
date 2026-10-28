@@ -58,7 +58,7 @@ function makeArmor(key, ilvl, rarity) {
   ilvl = Math.max(ilvl, b.lvl || 1); // v1.84.2 표시 레벨과 계산 레벨을 같게
   const affixes = rollAffixes('armor', key, rarity, ilvl);
   return {
-    id: nextItemId++, kind: 'armor', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
+    id: nextItemId++, kind: 'armor', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0, v2t: V2_OPEN || undefined,
     name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     def: Math.round(b.def * r.mul * (1 + (ilvl - 1) * 0.06)),
     affixes, isNew: true, legend: rarity === 4 ? slotLegend('armor') : undefined, // v1.12 방어구 전설
@@ -71,7 +71,7 @@ function makeHelmet(key, ilvl, rarity) {
   ilvl = Math.max(ilvl, b.lvl || 1); // v1.84.2 표시 레벨과 계산 레벨을 같게
   const affixes = rollAffixes('helmet', key, rarity, ilvl);
   return {
-    id: nextItemId++, kind: 'helmet', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0,
+    id: nextItemId++, kind: 'helmet', key, rarity, ilvl: Math.max(ilvl, b.lvl), plus: 0, v2t: V2_OPEN || undefined,
     name: (rarity > 0 ? r.name + ' ' : '') + b.name,
     def: Math.round(b.def * r.mul * (1 + (ilvl - 1) * 0.06)),
     affixes, isNew: true, legend: rarity === 4 ? slotLegend('helmet') : undefined, // v1.12 헬멧 전설
@@ -163,6 +163,7 @@ function enhanceRate(it) { return Math.min(1, ENHANCE.rates[it.plus] + (it.fails
 
 function itemReqLevel(it) {
   if (it.kind === 'weapon') return MYTH_TEST && WEAPONS[it.key].myth ? Math.min(25, WEAPONS[it.key].lvl) : WEAPONS[it.key].lvl; // v1.61.1 시험 중엔 신화도 Lv25
+  if (it.reqLv) return it.reqLv; // v1.98.21 v2.0 전에 얻은 외골격
   if (it.kind === 'armor') return ARMORS[it.key].lvl;
   if (it.kind === 'helmet') return HELMETS[it.key].lvl;
   if (it.kind === 'belt') return BELTS[it.rarity].lvl;
@@ -177,8 +178,8 @@ function itemDesc(it) {
     if (b.pierce) s += ' · 관통';
     return s + ` · 요구 Lv${b.lvl}`;
   }
-  if (it.kind === 'armor') return `방어력 ${armorDef(it)} · 요구 Lv${ARMORS[it.key].lvl}`;
-  if (it.kind === 'helmet') return `방어력 ${armorDef(it)}${HELMETS[it.key].radRes ? ` · 방사능 피해 -${HELMETS[it.key].radRes * 100}%` : ''} · 요구 Lv${HELMETS[it.key].lvl}`;
+  if (it.kind === 'armor') return `방어력 ${armorDef(it)} · 요구 Lv${itemReqLevel(it)}`;
+  if (it.kind === 'helmet') return `방어력 ${armorDef(it)}${HELMETS[it.key].radRes ? ` · 방사능 피해 -${HELMETS[it.key].radRes * 100}%` : ''} · 요구 Lv${itemReqLevel(it)}`;
   if (it.kind === 'belt') return `핫바 ${BELTS[it.rarity].slots}칸 · 칸마다 스킬·구급상자·소모품 등록 · 요구 Lv${BELTS[it.rarity].lvl}`;
   if (it.kind === 'att') return ATTACHMENTS[it.key].desc;
   return CONSUMABLES[it.key].desc;
@@ -374,7 +375,7 @@ function isUpgrade(p, it) {
 // ---------------- 적 ----------------
 function makeEnemy(type, x, y, level) {
   const d = ENEMIES[type], D = curDiff(); // v1.66 잠실 하드·헬
-  if (D) level += D.lv;
+  if (D) level += diffLv(D, World.map);
   const lt = Math.max(0, level - 10); // v1.51 후반 점검: 봇이 Lv8 이후 사망 0% → Lv11부터 점점 단단하고 아프게 (Lv20 체력 +15%·피해 +8% · Lv30 +42%·+12%)
   const hpMul = 1 + (level - 1) * 0.38 + lt * lt * 0.012, dmgMul = 1 + (level - 1) * 0.26 + lt * 0.05;
   const hp = Math.round(d.hp * (d.boss ? 1 : hpMul));
