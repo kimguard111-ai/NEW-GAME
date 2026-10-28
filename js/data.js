@@ -8,9 +8,18 @@ const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.15' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.16' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
+// v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
+const NEWS = { ver: 'v1.98.16', title: '업데이트 소식 — 테스터 의견 반영', items: [
+  '<b>무기 역할</b>: 산탄총 · 권총 · 기관단총 ↑ · 기관총 이동 · 재장전 패널티 ↓ · 근접 무기를 들면 받는 피해 -25%',
+  '<b>스킬</b>: 포탑 · 아드레날린 ↑ · 집중 사격의 무한 탄창은 이제 궁극 (갈래 b = 사냥 본능)',
+  '<b>지하 연구소 · 스카이타워</b>: 층마다 지역 필드 보스의 「메아리」 — 고유 장비를 엔드게임 레벨로',
+  '<b>난이도</b>: 잠실 하드 · 헬 → 연구소 · 타워 「하드」 (그 던전 보스를 잡으면 열림 · 신화 ×2)',
+  '<b>어설트</b>: 위협 6+ 는 내 레벨에 맞춤 · 위협 4+ 클리어하면 고유 장비 확률',
+  '<b>성장 속도</b>: Lv7 부터 필요 경험치가 늘었다 (레벨은 그대로 · 경험치 막대만 짧아 보일 수 있음) · 신화 확률 조금 ↓',
+] };
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
 // 주소 끝 ?hangang = 한강 지도만 열림 (레벨 30 · 7장은 닫힌 채 — 그림 · 지도 테스트용)
 const V2_MAP = TEST_BUILD || V2_OPEN || (typeof location !== 'undefined' && /[?&]hangang(&|$)/.test(location.search));

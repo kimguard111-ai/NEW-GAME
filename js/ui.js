@@ -191,7 +191,7 @@ const UI = {
     for (const slot of ['throw', 'util']) { const el = $(slot + 'cnt'); if (el) { const n = Gadgets.count(Gadgets.sel(slot)); el.textContent = n; el.parentNode.classList.toggle('empty', !n); el.parentNode.classList.toggle('none', !GADGET_SLOTS[slot].some(k => Gadgets.count(k))); } } // v1.48.2 가진 게 없으면 칸을 비움 // v1.14
 
     // 보스 바
-    const fb = G.fieldBoss && dist(G.fieldBoss, p) < 900 ? G.fieldBoss : G.labBoss && G.labBoss.hp > 0 && dist(G.labBoss, p) < 900 ? G.labBoss : null;
+    const fb = G.fieldBoss && dist(G.fieldBoss, p) < 900 ? G.fieldBoss : G.echoBoss && G.echoBoss.hp > 0 && dist(G.echoBoss, p) < 900 ? G.echoBoss /* v1.98.16 메아리 */ : G.labBoss && G.labBoss.hp > 0 && dist(G.labBoss, p) < 900 ? G.labBoss : null;
     const boss = (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 900) ? G.boss : (G.assault && G.assault.boss) || fb || G.elite; // 보스 · 어설트 보스 · 필드 보스 · 네임드
     if (boss && boss.hp > 0 && dist(boss, p) < 900) {
       $('boss-bar').classList.remove('hidden');
@@ -210,6 +210,7 @@ const UI = {
     // 임무 추적 (챕터)
     const tut = Tut.on() && Tut.html(); // v1.54 처음 할 일이 끝날 때까지는 그것만
     $('quest-tracker').classList.toggle('tut', !!tut);
+    $('quest-tracker').classList.toggle('boss', !!(G.running && bossFight() && !G.assault)); // v1.98.16 보스전엔 흐리게 (보스 이름 · 몸을 가리던 것)
     UI.html('quest-tracker', G.assault ? Assault.trackerHtml() : tut ? tut + Raid.trackerLine() : UI.trackerHtml(p) + Raid.trackerLine() + RaidEvents.trackerLine() + Bounty.trackerLine());
   },
 

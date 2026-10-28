@@ -2112,6 +2112,7 @@ function drawMinimapIso(mm) {
   for (const n of G.npcs) dot(n.x, n.y, '#ffd76a', 3);
   for (const e of G.enemies) if (!enemyCloaked(e)) dot(e.x, e.y, e.def.boss ? '#d4f' : '#f44', e.def.boss ? 6 : 2.5); // 은신 중이면 미니맵에도 없음
   if (G.fieldBoss && Math.sin(G.time * 8) > -0.3) dot(G.fieldBoss.x, G.fieldBoss.y, '#ff3020', 8); // 필드 보스 깜빡임
+  if (G.echoBoss && G.echoBoss.hp > 0 && Math.sin(G.time * 8) > -0.3) dot(G.echoBoss.x, G.echoBoss.y, '#ff3020', 8); // v1.98.16 던전 메아리 보스
   if (World.bossTile) dot(World.bossTile.x * TILE, World.bossTile.y * TILE, 'rgba(80,255,90,0.85)', 5);
   const lb = World.labBoss; // v1.5 격리실 (키메라를 잡기 전까지 붉은 테두리)
   if (lb && !G.labBossDone) { g.strokeStyle = `rgba(255,50,40,${0.5 + Math.sin(G.time * 5) * 0.3})`; g.lineWidth = 1; g.strokeRect(lb.x0, lb.y0, lb.x1 - lb.x0 + 1, lb.y1 - lb.y0 + 1); }

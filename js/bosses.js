@@ -66,7 +66,7 @@ const Bosses = {
       e.bossName = def.name + ' (메아리)'; e.art = def.art; e.fieldBoss = z; e.echo = true; e.patterns = def.patterns; e.scale = def.scale; e.expMul = 6;
       e.hp = e.maxHp = Math.round(e.maxHp * def.hpMul * 0.55); e.dmg *= def.dmgMul; // 던전 체력 배율이 이미 붙어서 원래보다 낮게
       e.r = Math.round(e.r * def.scale); e.fireMul = def.fireMul || 1; e.weight = e.def.weight * 6; e.skillT = 2;
-      G.enemies.push(e);
+      G.enemies.push(e); G.echoBoss = e; // 체력바 · 미니맵 · 보스전
       log(`${ICON('warn')} 이 층 어딘가에 ${def.name}의 메아리가 있다 · 처치하면 「${def.name}」 고유 장비가 나올 수 있다`, '#ff7a5a');
       return;
     }

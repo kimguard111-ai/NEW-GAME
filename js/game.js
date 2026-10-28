@@ -90,7 +90,7 @@ function adsSpreadMul(w) { return lerp(ADS.hip * attMul(w, 'hipSpread'), (ADS.sp
 const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12 };
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
 // v1.96 보스와 싸우는 중 (타이탄 · 장 보스 · 필드 보스가 가까이) — 이때는 새 적 · 증원이 안 옴 (테스터: 10렙 보스 잡는데 잡몹이 30마리씩)
-function bossFight() { const p = G.player; return [G.boss, G.elite, G.fieldBoss].find(b => b && b.hp > 0 && dist(b, p) < 1100) || null; }
+function bossFight() { const p = G.player; return [G.boss, G.elite, G.fieldBoss, G.echoBoss].find(b => b && b.hp > 0 && dist(b, p) < 1100) || null; }
 function hitstop(t) { G.hitstop = Math.max(G.hitstop, t); Haptic.big(t); } // v1.90 큰 순간엔 폰 진동
 const MIN_FIRE = 0.06; // v1.50.7 총 연사 하한 (초)
 const KB_RATE = 18; // v1.49.7 밀려나는 속도가 줄어드는 빠르기 (총 거리 = 처음 속도 / KB_RATE)
@@ -209,7 +209,7 @@ function startGame(save, name) {
     G.welcome = true; // v1.15 첫 플레이 안내
   }
   G.enemies = []; G.bullets = []; G.drops = []; G.particles = []; G.texts = []; G.effects = []; G.decals = []; G.grenades = []; G.fires = []; G.mines = []; G.turrets = []; G.corpses = []; Juice.reset();
-  G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.fbT = 150; G.inside = null;
+  G.boss = null; G.elite = null; G.strikes = []; G.pools = []; G.assault = null; G.fieldBoss = null; G.echoBoss = null; G.fbT = 150; G.inside = null;
   G.player.assaults = G.player.assaults || {}; // v0.9 어설트 기록
   G.exits = []; G.extractT = 0;
   const P = G.player; P.stam = 100; // v1.8.1 근접 무기 공속↓·피해↑: 이미 가진 근접 무기도 같은 비율로 피해 보정 (초당 피해 유지)
@@ -272,6 +272,9 @@ function startGame(save, name) {
   UI.buildHotbar();
   UI.refreshAll();
   G.welcome = false; // v1.45 첫 안내 창 대신 그 순간의 키 그림 (FirstRun)
+  { let seen = null; try { seen = localStorage.getItem('seoul2049-news'); } catch (e) { /* 막힘 */ } // v1.98.16 업데이트 소식 (돌아온 사람만 · 버전마다 한 번)
+    if (save && seen !== NEWS.ver) setTimeout(() => { if (!G.running) return; UI.dialog(NEWS.title, `<ul class="news">${NEWS.items.map(t => `<li>${t}</li>`).join('')}</ul><div class="muted" style="font-size:11px">${GAME_VERSION} · 자세한 내용은 커뮤니티 공지</div>`, [['확인', () => UI.close('dialog')]]); }, 1200);
+    try { localStorage.setItem('seoul2049-news', NEWS.ver); } catch (e) { /* 막힘 */ } }
   if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았다. (암시장 상인 박씨 「스킬 교범」)`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }
   if (G.autoStory) { G.autoStory = false; Story.start(G.player); }
   saveGame();
