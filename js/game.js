@@ -275,7 +275,7 @@ function startGame(save, name) {
   UI.refreshAll();
   G.welcome = false; // v1.45 첫 안내 창 대신 그 순간의 키 그림 (FirstRun)
   { const NEWS = V2_READY ? NEWS_V2 : NEWS_V1; let seen = null; try { seen = localStorage.getItem('seoul2049-news'); } catch (e) { /* 막힘 */ } // v1.98.16 업데이트 소식 (돌아온 사람만 · 버전마다 한 번)
-    if (save && seen !== NEWS.ver) setTimeout(() => { if (!G.running) return; UI.dialog(NEWS.title, `<ul class="news">${NEWS.items.map(t => `<li>${t}</li>`).join('')}</ul><div class="muted" style="font-size:11px">${GAME_VERSION} · 자세한 내용은 커뮤니티 공지</div>`, [['확인', () => UI.close('dialog')]]); }, 1200);
+    if (save && seen !== NEWS.ver) setTimeout(() => { if (!G.running) return; UI.dialog(NEWS.title, `<ul class="news">${NEWS.items.map(t => `<li>${t}</li>`).join('')}</ul><div class="muted" style="font-size:11px">${GAME_VERSION} · 자세한 내용은 커뮤니티 공지</div>`, [['확인', () => UI.close('dialog')]]); $('panel-dialog').classList.add('newsdlg'); }, 1200);
     try { localStorage.setItem('seoul2049-news', NEWS.ver); } catch (e) { /* 막힘 */ } }
   if (G.skillRefund) { const r = G.skillRefund; G.skillRefund = 0; setTimeout(() => { UI.toast('스킬은 이제 배워서 씁니다', `배웠던 스킬 값 ₵${fmt(r)}을 돌려받았다. (암시장 상인 박씨 「스킬 교범」)`); log(`${ICON('tip')} 스킬은 상인에게서 배워야 쓸 수 있도록 바뀌었습니다. 이전 스킬·갈래 값 ₵${fmt(r)} 반환.`, '#7fd'); }, 1200); }
   if (G.autoStory) { G.autoStory = false; Story.start(G.player); }
@@ -1604,7 +1604,7 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     if (done !== '2') { let had = false;
       try { for (const n of [1, 2, 3]) for (const sfx of ['', '-bak']) { const k = slotKey(n) + sfx, raw = localStorage.getItem(k); if (!raw) continue; had = true; if (!localStorage.getItem('seoul2049-s1-' + n + sfx)) localStorage.setItem('seoul2049-s1-' + n + sfx, raw); localStorage.removeItem(k); }
         localStorage.setItem('seoul2049-season', '2'); localStorage.setItem('seoul2049-news', NEWS_V2.ver); } catch (e) { /* 막힘 */ }
-      if (had) setTimeout(() => UI.dialog('v2.0 「한강」 — 새 시즌', `<p>서울 편 마지막 장이 열리면서 <b>모든 진행을 처음부터</b> 다시 시작합니다 (레벨 · 장비 · 창고 · 이야기 · 업적 · 도감). 설정은 그대로예요.</p><ul class="news">${NEWS_V2.items.map(t => `<li>${t}</li>`).join('')}</ul><div class="muted" style="font-size:11px">함께 해 주셔서 고맙습니다 · ${GAME_VERSION}</div>`, [['새로 시작', () => UI.close('dialog')]]), 600); }
+      if (had) setTimeout(() => UI.dialog('v2.0 「한강」 — 새 시즌', `<p>서울 편 마지막 장이 열리면서 <b>모든 진행을 처음부터</b> 다시 시작합니다 (레벨 · 장비 · 창고 · 이야기 · 업적 · 도감). 설정은 그대로예요.</p><ul class="news">${NEWS_V2.items.map(t => `<li>${t}</li>`).join('')}</ul><div class="muted" style="font-size:11px">함께 해 주셔서 고맙습니다 · ${GAME_VERSION}</div>`, [['새로 시작', () => UI.close('dialog')]]) || $('panel-dialog').classList.add('newsdlg'), 600); }
   }
   if (document.fonts) for (const f of ['12px BlackHan', '12px Typer', '12px Pen']) document.fonts.load(f); // v1.39 캔버스 글씨용 글꼴 미리 읽기
   Sprites.loadAll();

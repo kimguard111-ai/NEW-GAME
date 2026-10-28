@@ -711,3 +711,11 @@ body.touch.shop-open #inv-grid.bag-grid { --bag-cell: 30px; }
 #hud-buffs .bf { white-space: nowrap; } /* v1.98.18 효과 하나가 두 줄로 쪼개지지 않게 */
 .jb-line { margin: 2px 0 8px; padding: 5px 8px; border: 1px solid #5a4a22; background: rgba(255,215,106,.07); color: #e8dcc0; font-size: 12px; line-height: 1.5; } .jb-line b { color: #ffd76a; } /* v1.98.22 업적 · 도감 영구 보너스 */
 body.touch .jb-line { font-size: 10.5px; padding: 3px 6px; margin-bottom: 4px; }
+/* v1.98.25 업데이트 소식 · 새 시즌 안내: 화면 가운데 크게 (PC 에서 아래쪽에 작게 몰려 있던 것) */
+body:not(.touch) #panel-dialog.newsdlg { width: min(760px, calc(100vw - 48px)); bottom: auto; top: 50%; transform: translate(-50%, -50%); max-height: calc((100vh - 60px) / var(--tsp)); }
+body:not(.touch) #panel-dialog.newsdlg #dialog-name { font-size: 20px; }
+body:not(.touch) #panel-dialog.newsdlg #dialog-text { font-size: 16px; line-height: 1.6; padding: 18px 24px 10px; max-height: none; }
+body:not(.touch) #panel-dialog.newsdlg ul.news li { margin: 8px 0; }
+body:not(.touch) #panel-dialog.newsdlg #dialog-buttons { padding: 4px 24px 20px; justify-content: center; }
+body:not(.touch) #panel-dialog.newsdlg #dialog-buttons button { padding: 8px 40px; font-size: 15px; }
+body.touch #panel-dialog.newsdlg { width: calc(100vw - 24px); }
