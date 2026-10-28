@@ -1614,8 +1614,7 @@ function render() {
     const a = Math.min(1, (pl.life - pl.t) / 0.6);
     if (pl.gas) { const fl = 1 + Math.sin(G.time * 2 + pl.x) * 0.06; drawVfx('scorch', pl.x, pl.y, pl.r * 2.6 * ISO_K, 0.35 * a, 0.5, false, 'rgba(120,50,170,0.85)'); drawVfx('smoke', pl.x, pl.y, pl.r * 2.3 * ISO_K * fl, 0.55 * a, 0.75, pl.x % 2 > 1, 'rgba(150,80,210,0.6)'); } // v1.84 독가스: 보라 연기
     if (pl.gas ? !(ART.vfx && ART.vfx.smoke.ready) : !drawVfx('acid', pl.x, pl.y, pl.r * 2.9 * ISO_K, 0.85 * a, 0.5, pl.x % 2 > 1)) { ctx.fillStyle = pl.gas ? `rgba(150,70,200,${0.4 * a})` : `rgba(230,90,30,${0.38 * a})`; ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.fill(); } /* v1.64 초록 → 주황·빨강 · v1.83 산성은 그림 · 독가스는 보라 */
-    ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU);
-    ctx.strokeStyle = `rgba(255,50,40,${(0.55 + Math.sin(G.time * 8) * 0.2) * a})`; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
+    if (Settings.cb) { ctx.beginPath(); ctx.arc(pl.x, pl.y, pl.r, 0, TAU); ctx.strokeStyle = `rgba(255,50,40,${(0.55 + Math.sin(G.time * 8) * 0.2) * a})`; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1; } // v1.98.35 장판 그림 밖 빨간 원은 뺌 (그림이 곧 범위) · 색약 모드에서만
   }
   for (const s of G.strikes) { // 예고 원: 테두리 + 안쪽이 차오름
     const k = Math.min(1, s.t / s.delay);
