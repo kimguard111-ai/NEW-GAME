@@ -12,7 +12,7 @@ function affixPool(kind, key) {
     const sl = AFFIXES[k].slot;
     if (AFFIXES[k].weapons && !AFFIXES[k].weapons.includes(wbase(key)) && !AFFIXES[k].weapons.includes(key)) return false; // 계열 전용 옵션
     if (kind === 'belt') return sl === 'belt'; // v1.25
-    return kind !== 'weapon' ? sl === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee); // 헬멧은 방어구 옵션
+    return kind !== 'weapon' ? sl === 'armor' || AFFIXES[k].also === 'armor' : sl === 'weapon' || (sl === 'gun' && !melee); // 헬멧은 방어구 옵션 · v1.98.32 also
   });
 }
 // 옵션 하나의 수치. 높은 등급일수록 좋은 수치가 나올 확률이 높음
@@ -304,7 +304,7 @@ function skillBaseDesc(s, p) {
     case 'rapid': return `${SkillCalc.rapidDur(p).toFixed(1)}초간 연사 +40% · 총 피해 +20%`;
     case 'grenade': return `반경 ${SkillCalc.grenadeR(p)} 폭발, 피해 ${Math.round(SkillCalc.grenadeDmg(p))}`;
     case 'heal': return `즉시 최대 체력 ${pc(SkillCalc.healPct(p))} 회복`;
-    case 'turret': return `${SkillCalc.turretDur(p)}초 동안 자동 포탑 (한 발 ${Math.round(SkillCalc.turretDmg(p))} · 사거리 ${TURRET.range}) · 커서 근처에 설치`;
+    case 'turret': return `${SkillCalc.turretDur(p)}초 동안 자동 포탑 (한 발 ${Math.round(SkillCalc.turretDmg(p))} · 사거리 ${TURRET.range}) · 맞은 적은 3초 동안 표적 지정 (받는 피해 +15% · 둔화 20%) · 커서 근처에 설치`;
     case 'adren': return `${SkillCalc.adrenDur(p)}초간 이동속도 +35%, 피해 +${pc(SkillCalc.adrenDmg(p))}, 재장전 +30%, 받는 피해 -20%`;
   }
   return '';

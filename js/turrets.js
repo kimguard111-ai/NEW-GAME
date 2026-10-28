@@ -42,17 +42,17 @@ const Turrets = {
         for (const e of G.enemies) {
           if (e.hp <= 0 || Math.hypot(e.x - t.x, e.y - t.y) > R + e.r || !World.lineOfSight(t, e)) continue; // v1.84.2 외부 점검: 벽 너머로 불길이 닿던 것 (수류탄 폭발과 같은 규칙)
           const da = Math.abs(((Math.atan2(e.y - t.y, e.x - t.x) - a + Math.PI * 3) % TAU) - Math.PI);
-          if (da < 0.6) damageEnemy(e, dmg * 0.8, false, a, /* v1.98.10 0.55 → 0.8 · 폭 0.55 → 0.6 */ { knock: 1, noProc: true, fire: true });
+          if (da < 0.6) e.tagT = G.time + 3; if (da < 0.6) damageEnemy(e, dmg * 0.8, false, a, /* v1.98.10 0.55 → 0.8 · 폭 0.55 → 0.6 */ { knock: 1, noProc: true, fire: true });
         }
         for (let i = 0; i < 4; i++) { const q = a + rand(-0.45, 0.45), v = rand(200, 420); G.particles.push({ x: t.x, y: t.y, vx: Math.cos(q) * v, vy: Math.sin(q) * v, t: 0, life: 0.35, color: i % 2 ? '#ff8a2a' : '#ffd27a', size: 4 }); }
       } else if (t.mod === 'b') { // 박격: 포물선으로 날아가 범위 폭발
         t.cd = TURRET.mortarRate;
-        G.grenades.push({ sx: t.x, sy: t.y, x: t.x, y: t.y, tx: best.x, ty: best.y, t: 0, dur: 0.6, tdmg: dmg * 3.2, tr: 85 }); // v1.98.10 2.4 → 3.2 · 반경 70 → 85
+        G.grenades.push({ sx: t.x, sy: t.y, x: t.x, y: t.y, tx: best.x, ty: best.y, t: 0, dur: 0.6, tdmg: dmg * 3.2, tr: 85, tag: true }); // v1.98.10 2.4 → 3.2 · 반경 70 → 85
         SFX.play('boom', 0.25);
       } else { // 기본: 기관포
         t.cd = TURRET.rate;
         const s = 900, life = R / s * 1.15;
-        G.bullets.push({ x: t.x + Math.cos(a) * 12, y: t.y + Math.sin(a) * 12, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, dmg, crit: false, pierce: 0, hit: [], color: '#9fe0ff' });
+        G.bullets.push({ x: t.x + Math.cos(a) * 12, y: t.y + Math.sin(a) * 12, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, dmg, crit: false, pierce: 0, hit: [], color: '#9fe0ff', tag: true }); // v1.98.32 표적 지정
         SFX.play('shoot', 0.25);
       }
       t.flash = 0.06;

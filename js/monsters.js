@@ -3,7 +3,7 @@
 // 엘리트 접두어. types 가 있으면 그 적에게만 붙음
 const ELITE_AFFIXES = {
   berserk:   { name: '광폭한',   color: '#ff5a3a', desc: '빠르고 공격이 잦음' },
-  armored:   { name: '중장갑',   color: '#9fb2c8', desc: '매우 단단하고 밀리지 않음' },
+  armored:   { name: '중장갑',   color: '#9fb2c8', desc: '단단하고 밀리지 않음 · 폭발(수류탄 · 유탄)에 2배로 약함' },
   volatile:  { name: '폭발하는', color: '#ffb040', desc: '죽으면 잠시 뒤 폭발' },
   splitter:  { name: '분열하는', color: '#7fff6a', desc: '죽으면 둘로 나뉨', types: ['zombie', 'dog', 'brute'] },
   commander: { name: '지휘관',   color: '#ffd76a', desc: '주변 적의 속도·공격력 +30%' },
@@ -24,7 +24,7 @@ const Monsters = {
     e.affix = affix; e.expMul = 4; e.scale = 1.2; e.r = Math.round(e.r * 1.15);
     let hpMul = 3;
     e.weight = e.def.weight * 2;
-    if (affix === 'armored') { hpMul = 6; e.weight = e.def.weight * 6; }
+    if (affix === 'armored') { hpMul = 4; e.weight = e.def.weight * 6; } // v1.98.32 체력 ×6 → ×4 · 폭발 피해 ×2 (하누라님: 막스테이지에서 깡체력이 너무 높음 · 방패병과 겹치면 템포만 늘어짐)
     if (affix === 'berserk') { e.speed *= 1.45; e.atkMul = 0.6; e.fireMul = 0.6; }
     e.hp = e.maxHp = Math.round(e.maxHp * hpMul);
     e.dmg *= 1.3;

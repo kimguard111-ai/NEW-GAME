@@ -133,7 +133,8 @@ const Journal = {
   // v1.68 도감 적 목록: g = 등급 (0 일반 · 1 정예 · 2 필드 보스 · 3 어설트 보스 · 4 최종) · art = 초상화 그림 키
   foeList() {
     if (this._foes) return this._foes;
-    const L = [], seen = new Set(), add = (name, art, g, hint) => { if (!seen.has(name)) { seen.add(name); L.push({ name, art, g, hint }); } };
+    const V2X = V2_OPEN ? [] : ['drowned', 'sumun', 'leech', 'heuksu']; // v1.98.32 v2.0 잠겨 있을 땐 v2.0 적은 도감에서 뺌 (하누라님: 일반 · 정예 · 필드 보스 칸 하나씩이 안 채워짐)
+    const L = [], seen = new Set(), add = (name, art, g, hint) => { if (!seen.has(name) && !V2X.includes(art)) { seen.add(name); L.push({ name, art, g, hint }); } };
     for (const [k, d] of Object.entries(ENEMIES)) if (!d.boss) add(d.name, d.art || k, 0);
     for (const [k, d] of Object.entries(ELITES)) add(d.name, k, 1, '??? · 이야기 중 나타나는 정예');
     for (const d of Object.values(FIELD_BOSSES)) add(d.name, d.art, 2, '??? · 지역 어딘가의 필드 보스');

@@ -8,7 +8,7 @@ const TESTERS = ['17사단탈영범', '하누라'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v1.98.31' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v1.98.32' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
@@ -139,8 +139,9 @@ const AFFIXES = {
   move:    { name: '이동 속도',   slot: 'armor',  min: 0.03, max: 0.08, pct: true },
   regen:   { name: '체력 재생',   slot: 'armor',  min: 1, max: 3, perLvl: 0.15, unit: '/초' },
   exp:     { name: '경험치 획득', slot: 'armor',  min: 0.05, max: 0.15, pct: true },
+  guard:   { name: '받는 피해 감소', slot: 'armor', min: 0.02, max: 0.06, pct: true }, // v1.98.32 방어구 옵션이 4종뿐이라 전설(옵션 4개)은 「옵션 변경」이 안 되던 것 → 6종
   // v1.25 벨트 전용 옵션
-  medHeal: { name: '구급상자 회복', slot: 'belt', min: 0.10, max: 0.30, pct: true },
+  medHeal: { name: '구급상자 회복', slot: 'belt', also: 'armor', min: 0.10, max: 0.30, pct: true }, // v1.98.32 방어구에도
   gadDmg:  { name: '투척물 피해',   slot: 'belt', min: 0.10, max: 0.35, pct: true },
   cdr:     { name: '스킬 재사용 단축', slot: 'belt', min: 0.04, max: 0.10, pct: true },
   rollStam:{ name: '회피 재사용 감소', slot: 'belt', min: 0.08, max: 0.20, pct: true },
@@ -384,7 +385,7 @@ const LANDMARKS = [
 const SKILLS = [
 // stat: 스킬을 강화하는 능력치 (v0.3)
 // v1.16 스킬은 레벨만 되면 생기지 않고 암시장 상인 박씨에게서 크레딧으로 배움 (price) · 갈래도 따로 삼 (modPrice)
-  { id: 'rapid',   name: '집중 사격', icon: 'rapid', lvl: 1,  cd: 14, stat: 'agi', price: 200,  modPrice: 2500 },
+  { id: 'rapid',   name: '집중 사격', icon: 'rapid', lvl: 1,  cd: 30, /* v1.98.32 14 → 30: 쿨감 맞추면 거의 무한 지속 (하누라님) */ stat: 'agi', price: 200,  modPrice: 2500 },
   { id: 'grenade', name: '수류탄',   icon: 'grenade', lvl: 3,  cd: 11, /* v1.16 8→11 */ stat: 'dex', price: 1200, modPrice: 3500 },
   { id: 'heal',    name: '응급 처치', icon: 'heal',  lvl: 6,  cd: 22, stat: 'vit', price: 2000, modPrice: 3500 },
   { id: 'adren',   name: '아드레날린', icon: 'adren', lvl: 10, cd: 40, stat: 'str', price: 5000, modPrice: 5000 },

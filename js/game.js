@@ -516,6 +516,7 @@ function glRecharge(p, dt) { // 들고 있지 않은 총도 쿨타임이 돎
 function explode(x, y, dmg, r, opts = {}) {
   for (const e of G.enemies) {
     const d = Math.hypot(e.x - x, e.y - y);
+    if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e) && opts.tag) e.tagT = G.time + 3;
     if (e.hp > 0 && d < r + e.r && World.lineOfSight({ x, y }, e)) damageEnemy(e, dmg * (d < r * 0.45 ? 1 : 0.7), false, Math.atan2(e.y - y, e.x - x), { knock: opts.knock || 0, stagger: opts.stagger || 0, noProc: true, blast: true });
   }
   G.effects.push({ type: 'boom', x, y, t: 0, life: 0.45, r });
@@ -687,6 +688,7 @@ function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이
   if (perk('lastStand') && p.hp < PlayerStats.maxHp(p) * 0.35) tk *= 0.85;
   if (perk('ghost') && G.time - ((p.lastRoll || -9) + ROLL.dur) < 1) tk *= 0.5;
   if (perk('ironWill')) tk *= 0.88; // v2.x 강철 의지
+  tk *= 1 - Math.min(0.3, gearBonus(p, 'guard')); // v1.98.32 방어구 옵션 「받는 피해 감소」
   if (p.jb) tk *= 1 - p.jb.dr; // v1.98.22 도감 영구 보너스
   { const cw = curWeapon(); if (cw && WEAPONS[cw.key] && WEAPONS[cw.key].melee) tk *= 0.75; } // v1.98.10 근접 무기를 들면 받는 피해 -25% (붙어 싸우는 대가 · 하누라님 피드백)
   if (p.buffs.adren > 0) tk *= 0.8; // v1.98.10 아드레날린 기본 받는 피해 -20%
@@ -765,6 +767,8 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (perk('apex') && bigE) dmg *= 1.2; // v1.11
   if (setOn('rad', 3) && bigE) dmg *= 1.15; // v1.12 방사능 사냥꾼 3세트
   if ((e.markT || 0) > G.time) dmg *= 1.25; // v1.12 매의 표식
+  if ((e.tagT || 0) > G.time) dmg *= 1.15; // v1.98.32 포탑 표적 지정: 맞은 적은 3초 동안 모든 피해 +15% · 둔화 (하누라님: 딜보다 버프·디버프로)
+  if (e.affix === 'armored' && hit.blast) dmg *= 2; // v1.98.32 중장갑은 폭발(수류탄 · 유탄 · 박격)에 약함
   if (e.armorMut) dmg *= 0.8; // v1.15 변형 규칙: 장갑
   if (!hit.noProc && ((e.windT || 0) > 0 || (e.aimT || 0) > 0)) { dmg *= 1.5; if (G.time - (e.gapTxt || -9) > 0.6) { e.gapTxt = G.time; floatText(e.x, e.y - e.r - 14, '빈틈!', '#ffd76a', 13); } } // v1.65 공격 준비 중(조준선·휘두르기 예고)인 적은 피해 +50%
   if (w && w.unique === 'hawk') e.markT = G.time + 5;
@@ -1040,7 +1044,7 @@ function updateEnemies(dt) {
       const a = angleTo(e, p);
       if (e.def.shield && !e.bossName) { const df = angDiff(a, e.face || 0), tr = 2.2 * dt; e.face = (e.face || 0) + clamp(df, -tr, tr); } // v1.6 방패병은 천천히 돌아섬 → 회피로 뒤를 잡을 수 있음
       else e.face = a;
-      let moveA = a, spd = e.speed * Monsters.buff(e) * ((e.slowT || 0) > G.time ? 0.65 : 1); // v1.12 독사 둔화
+      let moveA = a, spd = e.speed * Monsters.buff(e) * ((e.slowT || 0) > G.time ? 0.65 : 1) * ((e.tagT || 0) > G.time ? 0.8 : 1); // v1.12 독사 둔화
       const hold = !e.def.boss && Monsters.attack(e, dt, d, a); // v0.16 예고 공격 (예고·도약 중엔 정지)
       // 시야가 막혔으면 길찾기 지도를 따라 건물을 돌아서 접근 (드론은 날아서 직선)
       const seen = e.def.flying || d < 70 || World.lineOfSight(e, p);
@@ -1170,10 +1174,11 @@ function hoverEnemy(mx, my) {
   let best = null, bd = 1e9;
   for (const e of G.enemies) {
     if (e.hp <= 0 || (typeof enemyCloaked === 'function' && enemyCloaked(e))) continue;
-    const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y), H = enemyScreenH(e), W = Math.max(e.r * 2.4, H * 0.45);
+    const hz = e.def.flying ? 40 * ISO_K : 0; // v1.98.32 드론은 공중에 그려짐 — 그림 위를 겨눠도 맞게 (하누라님: 드론 아래 빈 자리를 쏴야 맞음)
+    const sx = Iso.sx(e.x, e.y), sy = Iso.sy(e.x, e.y), H = enemyScreenH(e) + hz, W = Math.max(e.r * 2.4, H * 0.45);
     if (mx < sx - W / 2 || mx > sx + W / 2 || my < sy - H - 4 || my > sy + 6) continue;
     const d = Math.abs(mx - sx) + Math.abs(my - (sy - H / 2));
-    if (d < bd) { bd = d; best = { e, head: my < sy - H * 0.78 && H >= 30 }; }
+    if (d < bd) { bd = d; best = { e, head: !e.def.flying && my < sy - H * 0.78 && H >= 30 }; }
   }
   return best;
 }
@@ -1191,7 +1196,7 @@ function updateBullets(dt) {
         for (const e of G.enemies) {
           if (e.hp <= 0 || b.hit.includes(e)) continue;
           if ((e.x - b.x) ** 2 + (e.y - b.y) ** 2 < (e.r + 3) ** 2) {
-            b.hit.push(e);
+            b.hit.push(e); if (b.tag) e.tagT = G.time + 3; // v1.98.32 포탑 표적 지정
             // 산탄총·기관단총: 사거리 후반부 피해 감소 (최대 -50%)
             const fall = b.falloff ? clamp(1 - Math.max(0, (1 - b.life / b.maxLife) - 0.5), 0.5, 1) : 1;
             const wb = b.w && WEAPONS[b.w.key];
@@ -1226,7 +1231,7 @@ function updateGrenades(dt) {
     if (k >= 1) {
       g.done = true;
       if (g.kind) { Gadgets.land(g); continue; } // v1.14 화염병 · 섬광탄
-      if (g.tdmg) { explode(g.x, g.y, g.tdmg, g.tr, { small: true, knock: 14, stagger: 0.3 }); continue; } // v1.26 박격 포탑
+      if (g.tdmg) { explode(g.x, g.y, g.tdmg, g.tr, { small: true, knock: 14, stagger: 0.3, tag: g.tag }); continue; } // v1.26 박격 포탑
       const base = SkillCalc.grenadeDmg(p) * (p.buffs.adren > 0 ? 1 + SkillCalc.adrenDmg(p) : 1) * (perk('demolition') ? 1.3 : 1);
       const dmg = base * (g.child ? 0.35 : g.mod === 'b' ? 0.8 : 1) * (g.second ? 0.5 : 1), r = SkillCalc.grenadeR(p) * (g.child ? 0.55 : g.second ? 0.8 : 1);
       if (g.echo && !g.child) later.push({ sx: g.x, sy: g.y, x: g.x, y: g.y, tx: g.x, ty: g.y, t: 0, dur: 1, second: true }); // v1.22 연쇄 폭발
