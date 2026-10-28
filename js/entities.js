@@ -268,7 +268,7 @@ const PlayerStats = {
   expMul: p => 1 + gearBonus(p, 'exp') + (pas('t5') ? 0.05 : 0),
   // v1.0: 처치 템포(v0.16)에 맞춰 상향 (45·lvl^1.65 → 70·lvl²)
   // v1.7: 밸런스 봇 측정 결과 Lv30까지 너무 빠름 → Lv5부터 점점 더 많이 (Lv10 ×1.65 · Lv20 ×2.4 · Lv30 ×3.0)
-  expNext: lvl => Math.floor(70 * lvl * lvl * Math.max(1, Math.pow(lvl / 4, 0.55)) * (lvl >= 3 ? 1.5 : 1) * (1 + Math.max(0, lvl - 14) * 0.04)), // v1.51 Lv15부터 조금씩 더 (Lv20 ×1.24 · Lv29 ×1.6) // v1.25 Lv3부터 ×1.5
+  expNext: lvl => Math.floor(70 * lvl * lvl * Math.max(1, Math.pow(lvl / 4, 0.55)) * (lvl >= 3 ? 1.5 : 1) * (1 + Math.max(0, lvl - 14) * 0.04) * (1 + Math.min(Math.max(0, lvl - 6), 24) * 0.067)), // v1.98.14 Lv7부터 점점 더 (Lv10 ×1.27 · Lv20 ×1.94 · Lv30+ ×2.6 — 봇 측정 Lv30 까지 출격 182분 → 약 320분 · 「30렙까지 너무 빨리 오름」) // v1.51 Lv15부터 조금씩 더 (Lv20 ×1.24 · Lv29 ×1.6) // v1.25 Lv3부터 ×1.5
 };
 
 // 스킬 수치: 각 스킬은 연동 능력치 하나를 따라 강해짐
