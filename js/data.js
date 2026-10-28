@@ -6,12 +6,14 @@ const ENEMY_SPEED = 0.6; // 적 이동 속도 전체 배율 — v1.32 0.85 · v1
 // 예: const TESTERS = ['17사단탈영범', 'OhSara'];
 const TESTERS = ['17사단탈영범'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
-const GAME_VERSION = 'v1.98.10 · 한강 테스트';
+// v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
+const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
+const GAME_VERSION = 'v1.98.11' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = false;
 const V2_OPEN = V2_READY || (typeof location !== 'undefined' && /[?&]v2(&|$)/.test(location.search));
 // 주소 끝 ?hangang = 한강 지도만 열림 (레벨 30 · 7장은 닫힌 채 — 그림 · 지도 테스트용)
-const V2_MAP = true /* ⚠ 테스트 브랜치(claude/hangang-test) 전용: 주소 없이도 한강 열림 — 본 브랜치로 옮길 때 이 true 를 빼야 함 */ || V2_OPEN || (typeof location !== 'undefined' && /[?&]hangang(&|$)/.test(location.search));
+const V2_MAP = TEST_BUILD || V2_OPEN || (typeof location !== 'undefined' && /[?&]hangang(&|$)/.test(location.search));
 const MAX_LEVEL = V2_OPEN ? 40 : 30; // 레벨 상한 (본편 Lv20 + 위협 등급 어설트) · v2.0 30 → 40 (한강 다리 Lv30~34 · 도전 던전 ~42)
 
 const RARITIES = [
