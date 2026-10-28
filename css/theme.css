@@ -91,9 +91,9 @@ button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #000; }
 .title-main h2 { font-family: 'Typer', monospace; font-size: 13px !important; letter-spacing: 1px !important; color: #b8ae96 !important; margin: 14px 0 16px !important; font-weight: normal; }
 .title-main #version-label { position: fixed; right: 14px; bottom: 10px; color: #6d6656; font-size: 12px; margin: 0 !important; }
 .roster { position: relative; background: var(--tape), linear-gradient(#0000 0 30px, rgba(0,0,0,.08) 30px 31px, #0000 31px) 0 6px / 100% 31px, var(--paper);
-  color: var(--ink); padding: 34px 18px 12px; transform: rotate(-1.2deg); box-shadow: 6px 8px 0 rgba(0,0,0,.6); border: 1px solid #000; margin-bottom: 16px; }
+  color: var(--ink); padding: 34px 18px 12px; box-shadow: 6px 8px 0 rgba(0,0,0,.6); border: 1px solid #000; margin-bottom: 16px; }
 .roster::before { content: '시청역 캠프 · 생존자 명단'; position: absolute; left: 12px; top: 6px; font-family: 'BlackHan', sans-serif; font-size: 15px; letter-spacing: 1px; color: var(--rust); }
-.roster::after { content: ''; position: absolute; right: 26px; top: -10px; width: 70px; height: 20px; background: rgba(220,210,170,.55); transform: rotate(6deg); box-shadow: 0 1px 0 rgba(0,0,0,.2); } /* 테이프 */
+.roster::after { content: ''; position: absolute; right: 26px; top: -10px; width: 70px; height: 20px; background: rgba(220,210,170,.55); transform: rotate(3deg); box-shadow: 0 1px 0 rgba(0,0,0,.2); } /* 테이프 */
 #slot-row { display: block !important; margin: 0 0 6px !important; }
 #slot-row .slot { display: flex; width: 100%; align-items: baseline; gap: 10px; background: transparent !important; border: 0 !important; box-shadow: none !important;
   color: var(--ink) !important; text-align: left !important; padding: 2px 4px !important; opacity: 1 !important; font-size: 13px; line-height: 1.6; }
@@ -320,7 +320,7 @@ body:not(.touch) #tip { top: 62px; bottom: auto; } /* 도움말은 위쪽 가운
 body.touch .st2 { font-size: 11px; gap: 2px 12px; } body.touch .st2 .stat-eff, body.touch .st2-sum, body.touch .pk-row { font-size: 10px; }
 body.touch .st2 .stat-row button { padding: 0 6px; }
 /* 모바일 가방: 장비 | 가방 칸 | 아이템 설명 — 설명이 칸 아래로 밀려 안 보이던 것 */
-body.touch .bag { display: grid; grid-template-columns: minmax(0, 238px) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 8px; flex: 1; min-width: 0; }
+body.touch .bag { display: grid; grid-template-columns: max-content minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 8px; flex: 1; min-width: 0; }
 body.touch .bag .bag-head { grid-column: 1; grid-row: 1; }
 body.touch .bag #inv-grid { grid-column: 1; grid-row: 2; align-content: start; }
 body.touch .bag #item-detail { grid-column: 2; grid-row: 1 / 3; border-top: 0; border-left: 1px solid #2f2b22; padding: 2px 8px; min-height: 0; overflow-y: auto; font-size: 11px; line-height: 1.45; }
@@ -509,7 +509,8 @@ body.touch #panel-dialog.mapdlg { top: 6px !important; transform: translateX(-50
 #quest-tracker.tut::before { content: '처음 할 일' !important; }
 #quest-tracker .tut-now { color: #7fe08a; font-weight: bold; } #quest-tracker .tut-how { display: block; color: #cfc6b0; font-size: 11px; }
 #quest-tracker .tut-list { margin-top: 4px; font-size: 11px; color: #777; } #quest-tracker .tut-list .ok { color: #6a8f6e; } #quest-tracker .tut-list .cur { color: #e8dcc0; }
-body.touch #quest-tracker.tut.min .tut-list { display: none; } body.touch #quest-tracker.tut.min { max-height: none !important; }
+/* v1.98.17 모바일: 접으면 '▶ 지금 할 일' 한 줄만 */
+body.touch #quest-tracker.tut.min :is(.tut-list, .tut-how, .tut-dots, br) { display: none; } body.touch #quest-tracker.tut.min { max-height: calc(1.3em + 24px) !important; }
 #ctl-guide { position: absolute; inset: 0; z-index: 40; pointer-events: none; } /* 조작을 막지 않음 · 해 보면 사라짐 */
 #ctl-guide .cg-l, #ctl-guide .cg-r { position: absolute; top: 18%; bottom: 18%; width: 38%; border: 2px dashed rgba(127,224,138,.55); background: rgba(10,20,12,.35); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #e8dcc0; gap: 4px; }
 #ctl-guide .cg-l { left: 4%; } #ctl-guide .cg-r { right: 4%; border-color: rgba(255,200,90,.6); }
@@ -702,3 +703,8 @@ body.touch #settings-body { font-size: 11.5px !important; line-height: 1.4 !impo
 
 /* v1.98.16 업데이트 소식 */ ul.news { margin: 4px 0 8px 18px; padding: 0; } ul.news li { margin: 3px 0; line-height: 1.45; }
 #quest-tracker.boss { opacity: .35; transition: opacity .3s; } #quest-tracker.boss:hover { opacity: 1; } /* v1.98.16 보스전 */
+
+/* v1.98.17 모바일: 타이틀 조작 안내 숨김 · 가방 칸 크게(잘림 없이 8칸) · 설명은 남는 폭 */
+body.touch .title-main .controls { display: none; }
+body.touch #inv-grid.bag-grid { --bag-cell: 34px; }
+body.touch.shop-open #inv-grid.bag-grid { --bag-cell: 30px; }
