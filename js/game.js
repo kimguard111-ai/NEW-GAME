@@ -37,7 +37,7 @@ canvas.addEventListener('wheel', e => { e.preventDefault(); setZoom(ZOOM + (e.de
 window.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
   const k = e.key.toLowerCase();
-  input.keys[k] = true;
+  input.keys[k] = true; (input.codeKey = input.codeKey || {})[e.code] = k; // v1.98.33 뗄 때 한/영이 바뀌어도 같은 키로 풀리게
   if (k === 'escape' && G.paused) { Pause.toggle(); return; }
   if (!G.running || G.player.dead || G.paused) return;
   if (UI.keyCapture) return; // v1.37 설정에서 키 바꾸는 중
@@ -60,7 +60,9 @@ window.addEventListener('keydown', e => {
   else if (act === 'useMed') quickMedkit(); // v1.48 소모품은 벨트와 따로
   else if (act === 'gl') fireGL(); // v1.52 OX-20 유탄
 });
-window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; });
+window.addEventListener('keyup', e => { input.keys[e.key.toLowerCase()] = false; const k0 = input.codeKey && input.codeKey[e.code]; if (k0) input.keys[k0] = false; });
+function clearInput() { input.keys = {}; input.down = false; input.aim = false; } // v1.98.33 죽거나 캠프로 돌아올 때 눌린 키 정리 (사망 뒤 한쪽으로 계속 걸어가던 것)
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearInput(); });
 canvas.addEventListener('mousemove', e => { input.mx = e.clientX / ZOOM; input.my = e.clientY / ZOOM; });
 canvas.addEventListener('mousedown', e => { if (e.button === 0) input.down = true; else if (e.button === 2) { if (Settings.rmbAim) input.aim = true; else if (G.running && !G.paused && !G.player.dead) dodge(); } }); // v1.49.9 오른쪽 클릭 = 조준 (설정에서 끄면 v1.48 회피)
 window.addEventListener('mouseup', e => { if (e.button === 0) input.down = false; else if (e.button === 2) input.aim = false; });
@@ -735,7 +737,7 @@ function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이
 
 function playerDie() {
   const p = G.player;
-  p.hp = 0; p.dead = true; input.down = false; p.deaths++; Haptic.die(); // v1.90
+  p.hp = 0; p.dead = true; clearInput(); p.rollT = 0; p.kbx = p.kby = 0; p.deaths++; Haptic.die(); // v1.90
   burst(p.x, p.y, '#a00', 30, 160, 0.8, 4);
   const rr = p.raid, msg = Raid.onDeath() || '캠프로 돌아갑니다.'; // v1.3: 이번 출격에서 주운 것만 잃음 · v1.4 시체 가방
   if (rr) { Raid.summary(false, rr, Raid.lastDeath.items); Journal.onMythSecured(Raid.lastDeath.kept || []); } // v1.69 장착해서 지킨 신화도 도감 등록
@@ -747,6 +749,7 @@ function playerDie() {
 }
 
 function respawn() {
+  clearInput(); G.flash = null; G.slowT = 0; const pp = G.player; pp.rollT = 0; pp.kbx = pp.kby = 0; // v1.98.33
   if (World.map !== 'camp') { Raid.toCamp(); document.getElementById('death-screen').classList.add('hidden'); saveGame(); return; } // 출격 맵에서 죽으면 캠프로
   const p = G.player, c = World.campCenter();
   p.x = c.x; p.y = c.y; p.dead = false; p.hp = PlayerStats.maxHp(p); p.reloadT = 0; p.hurtT = 0;
@@ -1391,6 +1394,9 @@ function update(dt) {
   Tut.update(); // v1.54 처음 할 일
   UI.smsUpdate(dt); // v1.56 긴급재난문자
   Camp.broadcast && Camp.broadcast(dt); // v1.56 캠프 안내방송
+  if (!Number.isFinite(p.x) || !Number.isFinite(p.y) || p.x < 0 || p.y < 0 || p.x > World.W * TILE || p.y > World.H * TILE) { // v1.98.33 위치가 깨지거나 맵 밖이면 안전한 곳으로 (사망 뒤 화면이 텅 비던 것 방어)
+    const c = World.map === 'camp' ? World.campCenter() : (World.edgePts && World.edgePts[0]) || World.campCenter(); p.x = c.x; p.y = c.y; p.rollT = 0; p.kbx = p.kby = 0; clearInput();
+  }
   if (!p.dead) {
     const mv = moveInput();
     if (p.rollT > 0) { // 회피 중: 빠르게 미끄러지다 감속

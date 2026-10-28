@@ -199,7 +199,7 @@ const Raid = {
     const p = G.player;
     World.generate('camp');
     this.resetWorld();
-    Object.assign(p, World.campCenter());
+    Object.assign(p, World.campCenter()); clearInput(); p.rollT = 0; p.kbx = p.kby = 0; // v1.98.33
     G.fade = { t: 0, life: 1.1, text: '시청역 생존자 캠프', sub: '' }; // v1.17
     p.dead = false; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 돌아와도 체력 그대로 → 의무병 이씨(무료 · 바로) 또는 캠프에서 천천히 회복
     if (p.hp < PlayerStats.maxHp(p) * 0.7) log('의무병 이씨에게 가면 바로 치료해 준다. (캠프에 있으면 천천히 회복)', '#8f8');
