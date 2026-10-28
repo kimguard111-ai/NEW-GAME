@@ -477,6 +477,12 @@ const World = {
     return moved;
   },
 
+  // v1.98.31 눈으로 보는 시야: 벽만 가림 (책상 · 장비 · 수조 같은 낮은 소품은 너머가 보임 — 총알 판정 lineOfSight 와 따로)
+  sightLine(a, b) {
+    const d = dist(a, b), steps = Math.ceil(d / 12);
+    for (let i = 1; i < steps; i++) { const t = i / steps, tt = this.tileAt(Math.floor(lerp(a.x, b.x, t) / TILE), Math.floor(lerp(a.y, b.y, t) / TILE)); if (tt === T.LWALL || tt === T.WALL || tt === T.BUILDING) return false; }
+    return true;
+  },
   lineOfSight(a, b) {
     const d = dist(a, b), steps = Math.ceil(d / 12);
     for (let i = 1; i < steps; i++) {

@@ -1005,7 +1005,7 @@ function updateEnemies(dt) {
   Monsters.auras();
   for (const e of G.enemies) {
     if (e.hp <= 0) continue;
-    if (!dunVis) e.seen = true; else if ((e.seenT = (e.seenT || 0) - dt) <= 0) { e.seenT = 0.1; e.seen = e.def.flying && dist(e, p) < 200 || dist(e, p) < DUN_NEAR || World.lineOfSight(p, e); } // 시야: 보이는 적만 그리고 · 보여야 알아챔 (바로 옆은 소리로)
+    if (!dunVis) e.seen = true; else if ((e.seenT = (e.seenT || 0) - dt) <= 0) { e.seenT = 0.1; e.seen = e.def.flying && dist(e, p) < 200 || dist(e, p) < DUN_NEAR || World.sightLine(p, e); } // 시야: 보이는 적만 그리고 · 보여야 알아챔 (바로 옆은 소리로)
     if (e.nest) { RaidEvents.nestTick(e, dt, dist(e, p)); continue; } // v1.10 변이 둥지 (움직이지 않음)
     if (e.regenMut) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.02 * dt); // v1.15 변형 규칙: 재생
     if (e.state !== 'chase' && !e.def.boss && !e.fieldBoss && !e.labBoss && Math.abs(e.x - p.x) + Math.abs(e.y - p.y) > 2200) continue; // v1.16 멀리 있는 적은 쉼 (사라지지 않음)
