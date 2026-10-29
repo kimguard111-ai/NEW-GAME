@@ -28,7 +28,8 @@ const Raid = {
       + `<div class="prep">출격 준비: 체력 <b style="color:${p.hp < PlayerStats.maxHp(p) * 0.7 ? '#ff8a8a' : 'inherit'}">${Math.round(p.hp)}/${PlayerStats.maxHp(p)}</b>${p.hp < PlayerStats.maxHp(p) * 0.7 ? ' <span style="color:#ff8a8a">(의무병 이씨에게 치료부터)</span>' : ''} · ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${Bag.used()}/${Bag.cells()}칸</b> · ₵${fmt(p.credits)}</div>`;
     const m3 = medPrice(p.level) * 3; btns.push([`${ICON('medkit')} +3 (${fmt(m3)}₵)`, () => { if (p.credits < m3) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= m3; SFX.play('coin'); this.openMap(); }]);
     for (const [k, a] of Object.entries(AMMO)) btns.push([`${ICON('ammo_' + k)} ${a.name} +${a.pack} (${a.price}₵)`, () => { if ((p.ammo[k] || 0) >= ammoCap(p, k)) return log(`${a.name}은(는) 더 들 수 없다 (최대 ${ammoCap(p, k)})`, '#f88'); if (p.credits < a.price) return log('크레딧이 부족합니다.', '#f88'); addAmmo(p, k, a.pack); p.credits -= a.price; SFX.play('ammo'); this.openMap(); }]); // v1.33 탄약 4종
-    h += `<div class="sum-head">${ICON('map')} 출격할 곳</div>`; // v1.45.2 맵 목록을 먼저 · 계약은 그 아래
+    const TAB = Ops.on() ? (this.mapTab || 'go') : 'go', nOps = Ops.on() ? Ops.list(p).length : 0; // v2.0.4 출격 · 작전 · 도전 탭
+    if (Ops.on()) h += `<div class="jtabs mtabs">${[['go', '출격'], ['ops', `작전${nOps ? ` ${nOps}` : ''}`], ['chal', '도전']].map(([id, n]) => `<button class="jtab${TAB === id ? ' on' : ''}" data-mtab="${id}">${n}</button>`).join('')}</div>`;
     // v1.53.1 3×2 카드 (지하 연구소는 아래 가로 한 줄) · 지금 갈 곳에 「추천」 — 한 줄 목록이라 출격 버튼을 못 찾던 것
     const story = CHAPTER_MAP[p.quest.ch], rec = story && this.unlocked(story) ? story : [...MAP_ORDER].reverse().find(id => !MAPS[id].lab && this.unlocked(id) && ZONES[MAPS[id].zone].lvl[0] <= p.level) || 'myeongdong';
     const card = id => {
@@ -42,12 +43,17 @@ const Raid = {
         + (ok && diffOpen(p, id) > 0 ? `<div class="mc-diff">${DIFFS.map((D, i) => `<span class="dbtn" data-diff="${i}" style="border-color:${D.color};color:${D.color}">${D.name}${i ? ` <small>경험치 ×${D.exp} · 신화 ×${D.myth}</small>` : ''}</span>`).join('')}</div>` : ok && DIFF_MAPS.includes(id) ? `<div class="muted" style="font-size:11px">${ICON('lock')} 하드: ${id === 'lab' ? 'B5 키메라' : '옥상 뿌리'}를 쓰러뜨리면</div>` : '') // v1.98.13 던전 하드 (전: 잠실 하드 · 헬)
         + (ok ? '<div class="mc-go">▶ 출격</div>' : '') + '</div></div>';
     };
-    const low = id => MAPS[id].lab || MAPS[id].endRow, end = MAP_ORDER.filter(low); // v1.98.12 한강(Lv30+)은 아래 엔드게임 줄로 → 일반 6곳 3×2 + 「한강 · 연구소 · 타워」 한 줄 (한강만 한 줄에 덩그러니 남던 것)
-    h += `<div class="map-grid">${MAP_ORDER.filter(id => !low(id)).map(card).join('')}</div>` + `<div class="sum-head eg-head">${ICON('warn')} 엔드게임 <span class="muted">한강 다리 · 도전 던전 (연구소 · 스카이타워는 층마다 강해짐 · 클리어하면 하드)</span></div>` + `<div class="map-grid dun${end.length > 2 ? ' three' : ''}">${end.map(card).join('')}</div>` + Ops.html(p); // v1.98.28 작전 // v1.83.1 도전 던전 두 장을 한 줄에
+    const norm = MAP_ORDER.filter(id => !MAPS[id].lab), chal = MAP_ORDER.filter(id => MAPS[id].lab);
+    const soon = (t, d) => `<div class="map-card locked"><div class="mc-art ico-art">${ICON('lock')}</div><div class="mc-body"><div class="mc-name">${ICON('lock')} ${t}</div><div class="mc-lv">${d}</div></div></div>`;
+    if (TAB === 'ops') h += `<div class="mc-intro muted" style="margin:6px 0">출격 중에 찾은 거점으로 바로 가서 점령하는 작전이야. 클리어하면 헬기로 돌아와.</div>` + Ops.html(p);
+    else if (TAB === 'chal') h += `<div class="sum-head">서울 · 여의도 지하 · 스카이타워 <span class="muted">층마다 강해지는 도전 · 클리어하면 하드</span></div><div class="map-grid dun">${chal.map(card).join('')}</div>`
+      + `<div class="sum-head">다른 도시 <span class="muted">새 도시가 열리면 여기에 도전이 하나씩 생겨</span></div><div class="map-grid dun">${soon('??? 도전', '인천 편에서 공개')}${soon('??? 도전', '부산 편에서 공개')}</div>`;
+    else h += `<div class="map-grid">${norm.map(card).join('')}</div>`; // v2.0.4 한강은 일반 지역 카드 (엔드게임 줄 · 머리글 삭제)
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨', h, btns); $('panel-dialog').classList.add('mapdlg');
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격
     Ops.bind($('dialog-text'));
+    $('dialog-text').querySelectorAll('[data-mtab]').forEach(b => { b.onclick = () => { this.mapTab = b.dataset.mtab; this.openMap(); }; });
     $('dialog-text').querySelectorAll('[data-diff]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); UI.close('dialog'); FirstRun.rules(() => this.deploy(b.closest('[data-map]').dataset.map, +b.dataset.diff)); }; }); // v1.66 난이도 골라 출격
   },
 

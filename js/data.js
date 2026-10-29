@@ -8,14 +8,14 @@ const TESTERS = ['17사단탈영범', '하누라', '수도안양절대사수'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v2.0.3' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v2.0.4' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = true; // v2.0 출시 (금요일 공개) — 한강 · 7장 · Lv40 · 작전 · 새 시즌 초기화가 한꺼번에 켜짐
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
 const NEWS_V1 = { ver: 'v1.98.20', title: '업데이트 소식 — 테스터 의견 반영', items: [
   '<b>무기 역할</b>: 산탄총 · 권총 · 기관단총 ↑ · 기관총 이동 · 재장전 패널티 ↓ · 근접 무기를 들면 받는 피해 -25%',
   '<b>스킬</b>: 포탑 · 아드레날린 ↑ · 집중 사격의 무한 탄창은 이제 궁극 (갈래 b = 사냥 본능)',
-  '<b>지하 연구소 · 스카이타워</b>: 층마다 지역 필드 보스의 「메아리」 — 고유 장비를 엔드게임 레벨로',
+  '<b>여의도 지하 연구소 · 스카이타워</b>: 층마다 지역 필드 보스의 「메아리」 — 고유 장비를 엔드게임 레벨로',
   '<b>난이도</b>: 잠실 하드 · 헬 → 연구소 · 타워 「하드」 (그 던전 보스를 잡으면 열림 · 신화 ×2)',
   '<b>어설트</b>: 위협 6+ 는 내 레벨에 맞춤 · 위협 4+ 클리어하면 고유 장비 확률',
   '<b>성장 속도</b>: Lv7 부터 필요 경험치가 늘었다 (레벨은 그대로 · 경험치 막대만 짧아 보일 수 있음) · 신화 확률 조금 ↓',
@@ -97,7 +97,7 @@ const WEAPONS = {
 const MYTH_LIVE = true; // v1.55 고유 그림이 와서 켬
 const MYTH_TEST = false; // v1.61.2 시험 모드: 새 게임·불러오기 모두 바로 Lv26 + 신화 3종 · 이 동안 신화 레벨 제한 25 — 출시 전 false
 const MYTH_DROP = { babel: { chance: 0.035, pity: 0.012 }, titan: { chance: 0.018, pity: 0.006 }, chimera: { chance: 0.025, pity: 0.009 }, tower: { chance: 0.045, pity: 0.017 }, /* v1.78 스카이타워 옥상 */ assault: { chance: 0.035, pity: 0.012, tier: 5, rank: 'A' } }; // v1.98.13 신화 확률 약 0.6배 (너무 쉽게 나온다는 의견) // v1.63 어설트는 위협 5+ A 등급 이상 (S만이면 최상급 장비로도 거의 못 함)
-// v1.98.13 난이도: 잠실 하드 · 헬 → 도전 던전(지하 연구소 · 스카이타워) 「하드」 하나로 — 엔드게임은 던전에 모음
+// v1.98.13 난이도: 잠실 하드 · 헬 → 도전 던전(여의도 지하 연구소 · 스카이타워) 「하드」 하나로 — 엔드게임은 던전에 모음
 // 그 던전 보스(키메라 · 뿌리)를 한 번 쓰러뜨리면 그 던전 하드가 열림 · 적 레벨·체력·피해 ↑ · 경험치 · 장비 등급 · 신화 ×2 · 층 보상 · 메아리 고유 장비 ×1.5 · 엘리트 · 필드 보스도 아주 낮은 확률로 신화
 const DIFF_MAPS = ['lab', 'tower'];
 const DIFFS = [
@@ -275,7 +275,7 @@ const ENEMIES = {
   brute:  { name: '변이 거한', hp: 190, dmg: 22, speed: 56,  r: 20, exp: 45, weight: 2.5, color: '#7a4f8a', atkCd: 1.5, aggro: 360 },
   drone:  { name: '경비 드론', hp: 60,  dmg: 7.5, /* v1.62 9 → 7.5 · 쏘는 간격 0.9 → 1.1: 봇 완주 측정 용산 사망률 78% (사망 원인 1위 드론 총알) */ speed: 115, r: 11, exp: 26, weight: 0.8, color: '#8fa3b8', atkCd: 1.0, aggro: 440,
             ranged: true, range: 290, fireCd: 1.1, bulletSpeed: 480, flying: true },
-  // v1.5 지하 연구소
+  // v1.5 여의도 지하 연구소
   subject: { name: '탈주 실험체', hp: 70, dmg: 13, speed: 128, r: 12, exp: 30, weight: 0.9, color: '#c8b8b0', atkCd: 0.8, aggro: 400 },
   spitter: { name: '산성 실험체', hp: 85, dmg: 16, speed: 70,  r: 13, exp: 34, weight: 1.1, color: '#8fd14a', atkCd: 1.0, aggro: 440,
              ranged: true, lob: true, range: 340, fireCd: 2.6 },
@@ -314,8 +314,8 @@ const ZONES = [
     spawns: [['brute', 30], ['drone', 30], ['raider', 20], ['zombie', 20]],
     desc: '방사능 웅덩이. 들어가면 체력이 깎인다', packs: { zombie: [3, 5] },
     gear: ['katana', 'lmg', 'exo', 'gasmask', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 슈트·방독면 헬멧' },
-  // v1.5 지하 연구소 (실내 던전): 방과 복도, 붉은 비상등만 켜진 어둠
-  { name: '지하 연구소', maxDist: 999, lvl: [30, 31], /* v1.77 층마다 바뀜 (Raid.labFloor) */ dark: 0.82, tint: 'rgba(70,0,0,0.10)',
+  // v1.5 여의도 지하 연구소 (실내 던전): 방과 복도, 붉은 비상등만 켜진 어둠
+  { name: '여의도 지하 연구소', maxDist: 999, lvl: [30, 31], /* v1.77 층마다 바뀜 (Raid.labFloor) */ dark: 0.82, tint: 'rgba(70,0,0,0.10)',
     spawns: [['subject', 40], ['spitter', 25], ['sentry', 15], ['drone', 20]],
     desc: '5층 도전 · 층마다 강해짐 · 승강기로 내려가거나 비상구 한 곳으로 탈출 · B5 키메라', packs: { subject: [2, 4] },
     gear: ['katana', 'lmg', 'exo', 'exoHelm'], gearText: '고주파 블레이드·기관총·외골격 장비' },
@@ -356,11 +356,11 @@ const MAPS = {
   yeouido:    { name: '여의도 방사능 지대', zone: 4, size: 108, seed: 1404, landmark: 'tower63', chapter: 3, boss: true, hazards: true },
   gangnam:    { name: '강남 업무지구', zone: 6, size: 108, seed: 1606, landmark: 'coex', chapter: 4, tall: [0.55, 6, 6] } /* v1.21 9~17층 → 6~11층 (층 높이 2.7m) */, // v1.6 유리 고층 빌딩 숲
   jamsil:     { name: '잠실 변이 지대', zone: 7, size: 108, seed: 1707, landmark: 'lotte', chapter: 5, lake: true },      // v1.6 석촌호수 (얕은 물)
-  tower:      { name: '스카이타워', zone: 8, size: 66, seed: 1808, lab: true, tower: true, short: '5층 · 오를수록 강해짐 · 옥상 뿌리', card: 'card_tower.png', minLv: 30, needLab: true, lock: '지하 연구소 B5 키메라 처치 후' }, // v1.78 두 번째 도전 (연구소와 같은 층 구조 · 위로 오름)
+  tower:      { name: '스카이타워', zone: 8, size: 66, seed: 1808, lab: true, tower: true, short: '5층 · 오를수록 강해짐 · 옥상 뿌리', card: 'card_tower.png', minLv: 30, needLab: true, lock: '여의도 지하 연구소 B5 키메라 처치 후' }, // v1.78 두 번째 도전 (연구소와 같은 층 구조 · 위로 오름)
   hangang:    { name: '한강 다리', zone: 9, size: 140, seed: 1909, landmark: 'pump', chapter: 6, river: true, endRow: true, short: '다리로만 건너는 강 · 물귀신' }, // endRow: 출격 지도 아래 엔드게임 줄 (연구소 · 타워와 함께) // v2.0 7장 · 깊은 강 + 다리 3개 (하나는 끊김)
-  lab:        { name: '지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, short: '5층 · 내려갈수록 강해짐 · B5 키메라', card: 'card_lab.png', /* v1.83 출격 카드 그림 */ minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
+  lab:        { name: '여의도 지하 연구소', zone: 5, size: 66, seed: 1505, lab: true, short: '5층 · 내려갈수록 강해짐 · B5 키메라', card: 'card_lab.png', /* v1.83 출격 카드 그림 */ minLv: 30, lock: 'Lv30부터 · 엔드게임 도전' }, // v1.5 실내 던전 (출격마다 구조가 바뀜) · v1.77 5층 도전 던전 (Lv30+)
 };
-// v1.77 지하 연구소 = 5층 도전: B1 Lv30 → B5 Lv38 · B1~B4 는 승강기로 내려감 · B5 격리실에 키메라 · 어느 층이든 비상 계단으로 탈출
+// v1.77 여의도 지하 연구소 = 5층 도전: B1 Lv30 → B5 Lv38 · B1~B4 는 승강기로 내려감 · B5 격리실에 키메라 · 어느 층이든 비상 계단으로 탈출
 // v2.x 엔드게임 다시 맞춤 (v2.0 잠금이 풀릴 때 같이 켜짐 · V2_OPEN): 연구소 B1~B5 Lv34 → 42 · 타워 Lv38 → 46 (적 레벨만 +4 — 배율까지 올리면 봇 사망률 100%) · 연구소 몹 수 +20% (pop.js) · 보스 레벨 +4 (bosses.js)
 const LAB_FLOORS = 5, labFloorLv = f => (V2_OPEN ? 32 : 28) + 2 * f;
 // v1.78 도전 던전 공통: floors 층 수 · lv 층별 적 레벨 · label 층 이름 · lift 다음 층으로 가는 것 · best 최고 기록 키

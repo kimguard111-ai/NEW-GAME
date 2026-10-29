@@ -10,9 +10,9 @@ const FIELD_BOSSES = {
   7: { name: '은신 포식자 「그림자」', art: 'shade', base: 'stalker', level: 28, hpMul: 20, dmgMul: 1.3, scale: 1.5, patterns: ['dash', 'howl', 'dash', 'quake'] },
 };
 const FIELD_BOSS_CD = 360;
-// v1.98.11 지하 연구소 · 스카이타워 B1~B4 (마지막 층 빼고) 층마다 지역 필드 보스의 「메아리」 하나 — 그 층 레벨로 · 고유 장비도 그 레벨로 (하누라님 피드백: 낮은 맵 뺑뺑이 대신)
+// v1.98.11 여의도 지하 연구소 · 스카이타워 B1~B4 (마지막 층 빼고) 층마다 지역 필드 보스의 「메아리」 하나 — 그 층 레벨로 · 고유 장비도 그 레벨로 (하누라님 피드백: 낮은 맵 뺑뺑이 대신)
 const ECHO_ARTS = ['redfang', 'viper', 'goliath', 'hawk', 'shade']; // 처치 후 다음 출현까지 (초)
-// v1.5 지하 연구소 격리실 보스 (출격마다 한 번)
+// v1.5 여의도 지하 연구소 격리실 보스 (출격마다 한 번)
 // v1.78 스카이타워 옥상 보스 (바벨 그림 · 바벨 패턴 + 내려찍기 · 돌진 · 실험체 호출)
 const TOWER_BOSS = { name: '바벨 원형체 「뿌리」', art: 'root', base: 'brute', level: V2_OPEN ? 46 : 42, hpMul: 12, dmgMul: 1.4, scale: 2.1, patterns: ['babel', 'quake', 'dash', 'brood'] };
 const LAB_BOSS = { name: '최종 실험체 「키메라」', art: 'chimera', base: 'brute', level: V2_OPEN ? 42 : 38, hpMul: 14, dmgMul: 1.35, /* v1.77 B5 (Lv24 → 38 · 체력 배율 20 → 14 로 맞춤) */ scale: 1.9, patterns: ['glutton', 'dash', 'brood', 'quake'] };
@@ -142,7 +142,7 @@ const Bosses = {
     rollMyth('chimera', e.level, dropAt); // v1.53 신화
     for (const o of G.enemies) if (o.guardOf === e) o.hp = 0;
     p.labKills = (p.labKills || 0) + 1;
-    if (p.labKills === 1 && !p.hellOpen) { UI.toast('지하 연구소 하드 개방', '출격 지도에서 「하드」 — 적 Lv+4 · 경험치 ×1.5 · 신화 ×2'); log('키메라를 쓰러뜨렸다 — 지하 연구소 하드가 열렸다.', '#ff9a3a'); } // v1.98.13
+    if (p.labKills === 1 && !p.hellOpen) { UI.toast('여의도 지하 연구소 하드 개방', '출격 지도에서 「하드」 — 적 Lv+4 · 경험치 ×1.5 · 신화 ×2'); log('키메라를 쓰러뜨렸다 — 여의도 지하 연구소 하드가 열렸다.', '#ff9a3a'); } // v1.98.13
     Workshop.gain(14, 6, '실험 장비 잔해 회수');
     Bounty.on('fieldBoss');
     hitstop(0.2); G.shake = Math.max(G.shake, 16);
