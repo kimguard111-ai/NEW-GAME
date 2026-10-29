@@ -1168,8 +1168,8 @@ function dunWallTex(tx, ty, ht) {
 // v1.79 던전 장비 그림 (41 · 44-3): 낮은 칸 = 작업대 · 책상류, 높은 칸 = 수조 · 서류장류
 function dunPropArt(tx, ty, x0, y0, h) {
   const tall = tileHeight(tx, ty) >= 30, T2 = World.def && World.def.tower;
-  const set = T2 ? (tall ? ['tw_cabinet', 'tw_cooler', 'tw_copier', 'tw_cabinet'] : ['tw_desk', 'tw_desk', 'tw_meeting', 'tw_boxes', 'tw_plant', 'tw_roots'])
-    : (tall ? ['lab_tank', 'lab_server', 'lab_term', 'lab_term2', 'lab_cage'] : ['lab_bench', 'lab_cryo', 'lab_drums', 'lab_surgery', 'lab_shelf']);
+  const set = T2 ? (tall ? ['tw_cabinet', 'tw_cooler', 'tw_copier', 'tw2_vending', 'tw2_server', 'tw2_trophy', 'tw2_window'] : ['tw_desk', 'tw_desk', 'tw_meeting', 'tw_boxes', 'tw_plant', 'tw_roots', 'tw2_reception', 'tw2_cubicles', 'tw2_ceiling', 'tw2_cocoon'])
+    : (tall ? ['lab_tank', 'lab_server', 'lab_term', 'lab_term2', 'lab_cage', 'lab_jars', 'lab_hazmat', 'lab_shower', 'lab_cell'] : ['lab_bench', 'lab_cryo', 'lab_drums', 'lab_surgery', 'lab_shelf', 'lab_barrels', 'lab_centrifuge', 'lab_gurney', 'lab_rail', 'lab_power']);
   const key = set[Math.floor(hash2(tx * 7 + 3, ty * 5 + 1) * set.length)], sx = Iso.sx(x0 + TILE / 2, y0 + TILE / 2), sy = Iso.sy(x0 + TILE / 2, y0 + TILE / 2);
   if (!drawPropArt(key, sx, sy, h > 0.5)) return false;
   if (key === 'lab_tank' && Settings.light && Light.list.length < LIGHT_CAP) addLight(sx, sy - 24, 70, 0.5, 'rgba(90,220,210,A)');

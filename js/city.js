@@ -159,19 +159,25 @@ const City = {
     const cwSum = Object.values(CW).reduce((a, b) => a + b, 0); let acc = 0;
     const CURB = Object.entries(CW).map(([k, w]) => [k, acc += w / cwSum * 0.07]);
     // v2.0.10 장면 배치: 소품 하나씩 흩뿌리는 대신 그 동네다운 묶음으로 (명동 노점 · 종로 포차 골목 · 용산 검문소 · 여의도 정류장 · 강남 유흥가 · 잠실 놀이공원 입구) — [그림 키, 따라가는 칸 a, 도로에서 멀어지는 칸 c, 막는지]
-    const SCENES = { myeongdong: [[['kiosk', 0, 0], ['handcart', 2, 0], ['clothesbin', 4, 0], ['bikes', 2, 2]], [['fishcart', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0]]],
-      jongno: [[['handcart', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0], ['phonebooth', 2, 2]], [['fishcart', 0, 0], ['kiosk', 2, 0], ['clothesbin', 4, 0]]],
-      yongsan: [[['barricades', 0, 0, 1], ['hg_sandbag', 2, 0], ['barricades', 4, 0, 1], ['floodlight', 2, 2, 1]], [['hg_sandbag', 0, 0], ['barricades', 2, 0, 1], ['hg_sandbag', 4, 0]]],
-      yeouido: [[['busshelter', 0, 0], ['mailbox', 2, 0], ['phonebooth', 4, 0], ['bikes', 2, 2], ['delivery', 4, 2]], [['bikes', 0, 0], ['parasol', 2, 0], ['recycle', 4, 0]]],
-      gangnam: [[['billboard', 0, 0, 1], ['busshelter', 3, 0], ['recycle', 5, 0], ['delivery', 1, 2], ['trashpile', 5, 2]], [['delivery', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0]]],
-      jamsil: [[['ticketbooth', 0, 0, 1], ['kiosk', 2, 0], ['parasol', 4, 0], ['bikes', 2, 2]], [['bikes', 0, 0], ['parasol', 2, 0], ['kiosk', 4, 0]]] }[map] || [];
+    const SCENES = { myeongdong: [[['kiosk', 0, 0], ['handcart', 2, 0], ['clothesbin', 4, 0], ['bikes', 2, 2]], [['fishcart', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0]],
+        [['md_stall', 0, 0], ['md_board', 3, 0], ['md_vending', 5, 0], ['md_bags', 3, 2]], [['md_luggage', 0, 0], ['md_flowercart', 3, 0], ['md_amp', 5, 0], ['md_neonpole', 2, 2]], [['md_shutter', 0, 0], ['md_neonpole', 3, 0], ['md_vending', 5, 0]]],
+      jongno: [[['handcart', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0], ['phonebooth', 2, 2]], [['fishcart', 0, 0], ['kiosk', 2, 0], ['clothesbin', 4, 0]],
+        [['jn_pocha', 0, 0], ['jn_lights', 4, 0], ['trashpile', 6, 0]], [['jn_marketstall', 0, 0], ['jn_antique', 3, 0], ['jn_drum', 5, 0]], [['jn_lantern', 0, 0], ['jn_haetae', 3, 0], ['jn_stairs', 5, 0]], [['jn_gate', 0, 0, 1], ['jn_lantern', 4, 0], ['jn_lantern', 6, 0]]],
+      yongsan: [[['barricades', 0, 0, 1], ['hg_sandbag', 2, 0], ['barricades', 4, 0, 1], ['floodlight', 2, 2, 1]], [['hg_sandbag', 0, 0], ['barricades', 2, 0, 1], ['hg_sandbag', 4, 0]],
+        [['ys_booth', 0, 0, 1], ['ys_barrier', 3, 0, 1], ['ys_wire', 6, 0], ['ys_nest', 3, 2, 1]], [['ys_camonet', 0, 0], ['ys_crates', 4, 0, 1], ['ys_generator', 7, 0], ['ys_radio', 4, 2]], [['ys_jeep', 0, 0, 1], ['ys_barrier', 4, 0, 1], ['ys_wire', 7, 0]]],
+      yeouido: [[['busshelter', 0, 0], ['mailbox', 2, 0], ['phonebooth', 4, 0], ['bikes', 2, 2], ['delivery', 4, 2]], [['bikes', 0, 0], ['parasol', 2, 0], ['recycle', 4, 0]],
+        [['yd_shelter', 0, 0], ['yd_ticker', 4, 0], ['yd_bikes', 6, 0]], [['yd_newsvan', 0, 0, 1], ['yd_gate', 4, 0], ['yd_planter', 7, 0]], [['yd_flag1', 0, 0], ['yd_flag2', 2, 0], ['yd_flag3', 4, 0], ['yd_planter', 6, 0]]],
+      gangnam: [[['billboard', 0, 0, 1], ['busshelter', 3, 0], ['recycle', 5, 0], ['delivery', 1, 2], ['trashpile', 5, 2]], [['delivery', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0]],
+        [['gn_billboard', 0, 0, 1], ['gn_club', 4, 0], ['gn_valet', 8, 0]], [['gn_coupe', 0, 0, 1], ['gn_valet', 4, 0], ['gn_scooters', 6, 0]], [['gn_clinic', 0, 0], ['gn_led', 3, 0], ['gn_tea', 5, 0], ['gn_window', 8, 0]]],
+      jamsil: [[['ticketbooth', 0, 0, 1], ['kiosk', 2, 0], ['parasol', 4, 0], ['bikes', 2, 2]], [['bikes', 0, 0], ['parasol', 2, 0], ['kiosk', 4, 0]],
+        [['js_booth', 0, 0, 1], ['js_turnstile', 3, 0], ['js_balloon', 6, 0]], [['js_cotton', 0, 0], ['js_horse', 3, 0], ['js_mascot', 5, 0], ['js_lampbench', 7, 0]], [['js_swanrack', 0, 0], ['js_fireworks', 4, 0], ['js_lampbench', 6, 0]]] }[map] || [];
     this.scenes = 0;
-    if (SCENES.length) for (let k = 0, n = 0, want = Math.round(W * H / 650); k < 4000 && n < want; k++) {
+    if (SCENES.length) for (let k = 0, n = 0, want = Math.round(W * H / 260); k < 30000 && n < want; k++) {
       const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)), lx = x % B, ly = y % B, curb = lx === RW || ly === RW;
       if (!curb || lx === ly || at(x, y) !== T.WALK || near(x, y) || inRiver(y)) continue;
-      const side = lx === RW ? 'x' : 'y', sc = SCENES[Math.floor(rng() * SCENES.length)], flip = rng() < 0.5; let got = 0;
-      for (const [key, a, c, solid] of sc) { const px = side === 'x' ? x + c : x + a, py = side === 'x' ? y + a : y + c; if (at(px, py) === T.WALK && free(px, py, 1, open) && put(key, px, py, 1, !!solid, { side, flip: flip !== (key === 'bikes') })) got++; }
-      if (got >= 2) n++;
+      const side = lx === RW ? 'x' : 'y', nn = map === 'jongno' ? 4 : 3, sc = SCENES[rng() < 0.75 ? SCENES.length - nn + Math.floor(rng() * nn) : Math.floor(rng() * SCENES.length)] /* 새 그림 묶음을 많이 */, flip = rng() < 0.5; let got = 0;
+      for (const [key, a, c, solid] of sc) { const cc = c + 1, px = side === 'x' ? x + cc : x + a, py = side === 'x' ? y + a : y + cc; /* 도로 바로 옆 줄은 가로등 · 전봇대 자리라 한 칸 안쪽부터 */ if (at(px, py) === T.WALK && free(px, py, 1, open) && put(key, px, py, 1, !!solid, { side, flip: flip !== (key === 'bikes') })) got++; }
+      if (got >= 2) { n++; this.scenes = n; }
     }
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
       if (at(x, y) !== T.WALK || occ.has(y * W + x) || near(x, y) || inRiver(y)) continue;
@@ -189,7 +195,7 @@ const City = {
       if (n > 40 && g / n > 0.9) parks.push([x0, y0, x1, y1]);
     }
     const SMALL = ['gym', 'gym2', 'bust', 'fountain'].concat(zone === 2 ? ['haechi', 'haechi', 'pavilion', 'palacewall'] : zone === 1 ? ['pavilion', 'haechi'] : [],
-      zone === 4 || zone === 7 ? ['parasol', 'parasol'] : [], zone === 3 || zone === 6 ? ['barricades', 'barricades'] : []);
+      zone === 4 || zone === 7 ? ['parasol', 'parasol'] : [], map === 'yeouido' ? ['yd_tree', 'yd_tree', 'yd_picnic'] : [], zone === 3 || zone === 6 ? ['barricades', 'barricades'] : []);
     const BIG = { // [키, 막는 칸 n, 맵당 개수]
       jamsil: [['carousel', 2, 1], ['coaster', 3, 1], ['gondola', 1, 2], ['ticketbooth', 1, 2], ['floodlight', 1, 3]],
       gangnam: [['billboard', 1, 4]], yongsan: [['tank', 2, 2], ['floodlight', 1, 2]], yeouido: [['riverboat', 2, 1], ['floodlight', 1, 1]],
@@ -234,6 +240,9 @@ const City = {
       scatter(['hg_ring', 'hg_ring', 'hg_reeds', 'hg_reeds', 'hg_stump', 'hg_rail'], bankStone, [T.RUBBLE], Math.round(W / 7), false);
       scatter(['hg_table', 'hg_bikes', 'hg_sandbag', 'parasol'], bankGrass.concat(walkRow), [T.GRASS, T.WALK], Math.round(W / 8), false);
       scatter(['hg_swan', 'hg_swan', 'hg_boat'], water, [T.DEEP], 7, false);
+      scatter(['hg2_angler', 'hg2_gym', 'hg2_noodle', 'hg2_tent', 'hg2_valve', 'hg2_lifebuoy'], bankGrass.concat(walkRow), [T.GRASS, T.WALK], Math.round(W / 8), false); // v2.0.12 둔치 소품 (낚시 · 운동기구 · 컵라면 · 텐트 · 수문 밸브 · 구명환)
+      scatter(['hg2_lifebuoy', 'hg2_valve', 'hg2_pontoon'], bankStone, [T.RUBBLE], Math.round(W / 14), false);
+      scatter(['hg2_boat', 'hg2_pontoon'], water, [T.DEEP], 3, false);
     }
     if (map === 'jamsil') for (let i = 0, k = 0; i < 4 && k < 400; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)); if (free(x, y, 1, t => t === T.WATER) && put('swanboat', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
   },
