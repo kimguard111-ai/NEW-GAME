@@ -887,7 +887,7 @@ const UI = {
       G.shopLevel = p.level;
       const stock = [];
       const rr = p.level >= 10 ? 1 : 0; // v1.25 상점은 일반·고급까지만 (좋은 장비는 파밍으로)
-      const smgOpen = p.quest.ch > 0 || p.quest.step >= 2; // v2.0.7 기관단총은 1장 「성당 신호」 보상을 받은 뒤부터 상점에 나옴
+      const smgOpen = !smgLocked(); // v2.0.7 기관단총은 1장 「성당 신호」 보상을 받은 뒤부터 상점에 나옴
       for (const k of Object.keys(WEAPONS)) if (WEAPONS[k].lvl <= p.level + 2 && !WEAPONS[k].myth && (k !== 'smg' || smgOpen)) stock.push(makeWeapon(k, p.level, rr));
       for (const k of Object.keys(ARMORS)) if (ARMORS[k].lvl <= p.level + 2 && tierOK(k, p.level)) stock.push(makeArmor(k, p.level, rr)); // v2.0 단계에 맞는 것만
       for (const k of Object.keys(HELMETS)) if (HELMETS[k].lvl <= p.level + 2 && tierOK(k, p.level)) stock.push(makeHelmet(k, p.level, rr));

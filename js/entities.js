@@ -130,6 +130,7 @@ function makeConsumable(key, count = 1) {
 
 // 레벨에 맞는 랜덤 장비
 // bias: 지역 특산 장비 키 목록 (절반 확률로 이 중에서 고름)
+const smgLocked = () => !!(G.player && G.player.quest && G.player.quest.ch === 0 && G.player.quest.step < 2); // v2.0.7 1장 「성당 신호」 보상 전엔 기관단총이 드랍 · 상점에 안 나옴
 function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
   const r = Math.max(minRarity, rollRarity(rarityBonus));
   // v1.12 세트: 출격 중 그 지역의 희귀 이상 장비 중 15%는 세트 조각
@@ -138,11 +139,11 @@ function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
     if (sid) { const slot = pick(['weapon', 'weapon', 'armor', 'helmet']), key = SETS[sid].pieces[slot]; if (GEAR_DEFS(key).lvl <= level + 2) return makeSetPiece(sid, slot, level, r); }
   }
   if (bias && Math.random() < 0.5) {
-    const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2 && tierOK(k, level)); // v2.0 지역 특산도 단계에 맞는 것만
+    const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2 && tierOK(k, level) && !(k === 'smg' && smgLocked())); // v2.0 지역 특산도 단계에 맞는 것만
     if (keys.length) return makeGear(pick(keys), level, r);
   }
   if (Math.random() < 0.7) {
-    const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2 && !WEAPONS[k].myth); // v1.52 불법 무기는 박씨에게서만
+    const keys = Object.keys(WEAPONS).filter(k => WEAPONS[k].lvl <= level + 2 && !WEAPONS[k].myth && !(k === 'smg' && smgLocked())); // v1.52 불법 무기는 박씨에게서만
     return makeWeapon(pick(keys), level, r);
   }
   // v2.0 맵 레벨에 맞는 단계: 가장 높은 단계 80% · 한 단계 아래 20% (Lv34 맵에서 방탄 조끼가 나오던 것)
