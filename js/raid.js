@@ -57,6 +57,17 @@ const Raid = {
     Ops.bind($('dialog-text'));
     $('dialog-text').querySelectorAll('[data-mtab]').forEach(b => { b.onclick = () => { this.mapTab = b.dataset.mtab; this.openMap(); }; });
     $('dialog-text').querySelectorAll('[data-diff]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); UI.close('dialog'); FirstRun.rules(() => this.deploy(b.closest('[data-map]').dataset.map, +b.dataset.diff)); }; }); // v1.66 난이도 골라 출격
+    this.fitMap();
+  },
+  // v2.0.19 출격창이 낮은 화면에서 스크롤 없이 한눈에 보이게: 1) 소개글 숨김 · 카드 줄임 2) 더 줄임 3) 그래도 넘치면 통째로 축소
+  fitMap() {
+    const dlg = $('panel-dialog'), el = $('dialog-text'); if (!dlg || !el) return;
+    dlg.classList.remove('mc1', 'mc2'); el.style.removeProperty('--mfit');
+    const over = () => el.scrollHeight > el.clientHeight;
+    if (!over()) return; dlg.classList.add('mc1');
+    if (!over()) return; dlg.classList.add('mc2');
+    if (!over()) return;
+    const k = Math.max(0.5, Math.floor(el.clientHeight / el.scrollHeight * 100) / 100); el.style.setProperty('--mfit', k);
   },
 
   deploy(id, diff = 0) {

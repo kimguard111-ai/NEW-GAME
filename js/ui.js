@@ -595,7 +595,7 @@ const UI = {
 
   // ---------------- NPC ----------------
   dialog(name, text, buttons) {
-    $('panel-dialog').classList.remove('mapdlg', 'newsdlg'); // v1.53.1 출격 지도만 넓게 · v1.98.25 업데이트 소식은 가운데 크게
+    $('panel-dialog').classList.remove('mapdlg', 'newsdlg', 'mc1', 'mc2'); // v1.53.1 출격 지도만 넓게 · v1.98.25 업데이트 소식은 가운데 크게
     $('dialog-name').textContent = name;
     $('dialog-text').innerHTML = text;
     const box = $('dialog-buttons');

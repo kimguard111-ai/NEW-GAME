@@ -757,3 +757,11 @@ body.touch .map-grid.chal .map-card { min-height: 60px; } body.touch .map-grid.c
 /* v2.0.11 엔딩 · 시즌 화면이 창보다 길면 스크롤 (위 · 아래 글이 잘리던 것) */
 #ending-screen, #season-screen { overflow-y: auto; align-items: flex-start; }
 #ending-screen .title-box, #season-screen .title-box { margin: auto; }
+
+/* v2.0.19 출격창 한눈에 (낮은 화면): fitMap() 이 넘칠 때만 mc1 → mc2 → 축소 순서로 켬 */
+#panel-dialog.mapdlg #dialog-text > * { zoom: var(--mfit, 1); }
+#panel-dialog.mc1 .mc-intro { display: none; } #panel-dialog.mc1 .prep { padding: 4px 8px; } #panel-dialog.mc1 .map-grid { gap: 5px; margin: 4px 0 5px; }
+#panel-dialog.mc1 .map-card { min-height: 54px; padding: 5px 7px; gap: 6px; } #panel-dialog.mc1 .mc-art { width: 44px; height: 44px; } #panel-dialog.mc1 .map-grid.one .map-card { padding: 6px 12px; min-height: 0; } #panel-dialog.mc1 .map-grid.one .mc-art { width: 52px; height: 52px; }
+#panel-dialog.mc1 .map-grid.chal .map-card { min-height: 64px; } #panel-dialog.mc1 #dialog-text { padding-top: 6px; padding-bottom: 6px; }
+#panel-dialog.mc2 .mc-desc { display: none; } #panel-dialog.mc2 .map-card { min-height: 44px; padding: 3px 6px; } #panel-dialog.mc2 .mc-art { width: 34px; height: 34px; } #panel-dialog.mc2 .map-grid.one .mc-art { width: 40px; height: 40px; }
+#panel-dialog.mc2 .mc-name { font-size: 13px; } #panel-dialog.mc2 .map-grid.chal .map-card { min-height: 50px; } #panel-dialog.mc2 .map-grid.chal .map-card .mc-desc { display: block; font-size: 10px; }
