@@ -234,7 +234,7 @@ const RaidEvents = {
     if (!e.nest) return;
     if (e.egg) { burst(e.x, e.y, '#6a1a2a', 12, 130, 0.4); floatText(e.x, e.y - 30, '알 파괴', '#ff9a3a', 13); return; } // v1.34
     Weekly.on('events'); Journal.onEvent(); // v1.15
-    if (Math.random() < 0.5) dropAt('item', { item: randomGear(e.level, 1.2, 1, this.gearBias()) }); // v1.25 확정 → 50%
+    if (Math.random() < 0.25) dropAt('item', { item: randomGear(e.level, 1.2, 1, this.gearBias()) }); // v1.25 확정 → 50% · v2.0.21 25%
     dropAt('credits', { amount: e.level * 50 });
     for (const k of e.kids) if (k.hp > 0) { k.hp = 0; killFx(k); burst(k.x, k.y, '#6a1a2a', 10, 120, 0.4); }
     UI.toast(`${e.def.name} 파괴`, '근처에서 태어난 것들도 함께 쓰러졌다');

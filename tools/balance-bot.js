@@ -17,7 +17,8 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   if (process.env.GEARR) await pg.evaluate(r => { window.__GEARR = r; }, +process.env.GEARR);
   if (process.env.QUEST) await pg.evaluate(q => { window.__QUEST = q; }, process.env.QUEST);
   if (process.env.TIER) await pg.evaluate(t => { window.__TIER = t; }, +process.env.TIER); // v1.63 TIER=<위협 등급> (ASSAULT 와 함께)
-  await pg.click('#btn-new'); await pg.waitForTimeout(900); await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
+  await pg.click('#btn-new'); await pg.waitForTimeout(900);
+  if (process.env.GEARDBG) await pg.evaluate(() => { window.__gc = {}; const o = randomGear; randomGear = function (...a) { const st = (new Error().stack.split('\n')[2] || '').trim().replace(/^at /, '').replace(/\(.*[\/\\]/, '(').slice(0, 70); window.__gc[st] = (window.__gc[st] || 0) + 1; return o.apply(this, a); }; }); // v2.0.21 장비 생성 출처 집계 (GEARDBG=1) await pg.evaluate(() => UI.close('dialog')); // v1.15 첫 안내 창 닫기
   await pg.evaluate(([DODGE, START, FIXMAP, FULL, COMP, AS]) => {
     window.AS_TIER = +(window.__TIER || 1);
     Settings.tips = false;
@@ -224,6 +225,7 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
   const by = {}; for (const x of R) { const o = by[x.map] = by[x.map] || { n: 0, die: 0, min: 0, kills: 0 }; o.n++; if (!x.ok) o.die++; o.min += +x.min; o.kills += x.kills; }
   for (const k in by) { const o = by[k]; console.log(`${k.padEnd(10)} 출격 ${o.n} · 사망률 ${Math.round(100 * o.die / o.n)}% · 평균 ${(o.min / o.n).toFixed(1)}분 · 분당 처치 ${(o.kills / o.min).toFixed(1)}`); }
   for (const a of await pg.evaluate(() => B.as)) console.log('어설트', JSON.stringify(a));
+  if (process.env.GEARDBG) console.log('장비 생성 출처:', JSON.stringify(await pg.evaluate(() => window.__gc), null, 1));
   console.log(errs.length ? 'ERRORS:\n' + [...new Set(errs)].slice(0, 8).join('\n') : 'NO ERRORS');
   await b.close();
 })();
