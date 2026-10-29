@@ -18,24 +18,24 @@ const CHAPTERS = [
     outro: '먹보를 쓰러뜨렸다고? 명동이 숨을 돌리겠군. 다음은 종로야. 준비되면 캠프로 오게.',
     steps: [
       { type: 'kill', target: 'zombie', count: 8, text: '캠프 밖 명동 잔해의 감염자를 정리하라.',
-        reward: { exp: 90, credits: 150, items: [['medkit', 2]], equip: 'vest' } },
+        reward: { exp: 90, credits: 410 } },
       { type: 'reach', landmark: 'cathedral', text: '정찰조의 마지막 신호가 잡힌 언덕 위 성당으로 가라.',
-        reward: { exp: 150, credits: 150, equip: 'smg' } }, // v1.30 정찰조가 남긴 기관단총 — 권총만으로 버티는 초반을 짧게
+        reward: { exp: 150, credits: 350 } }, // v1.30 정찰조가 남긴 기관단총 — 권총만으로 버티는 초반을 짧게
       { type: 'hunt', elite: 'glutton', text: '성당에 둥지를 튼 거대 감염체 「먹보」를 처치하라.',
-        reward: { exp: 400, credits: 400, gear: 1 } },
+        reward: { exp: 400, credits: 560 } },
     ] },
   { title: '제2장 · 약탈자의 거리', minLevel: 5,
     intro: '종로의 약탈자들이 우리 보급로를 끊었네. 길을 열고, 빼앗긴 보급품을 되찾아 오게.',
     outro: '흑표가 쓰러졌으니 종로 보급로가 다시 열렸어. 용산 쪽에서 이상한 기계음이 들린다더군.',
     steps: [
       { type: 'kill', target: 'dog', count: 8, text: '보급로를 막고 있는 변이견 무리를 처치하라.',
-        reward: { exp: 300, credits: 300, items: [['ammo', 3]], equip: 'shotgun' } }, // v1.46 개떼엔 산탄총 — Lv1~10 무기 흐름: 권총 → 기관단총(1장) → 산탄총(2장) → 소총(Lv8 상점·드랍)
+        reward: { exp: 300, credits: 560 } }, // v1.46 개떼엔 산탄총 — Lv1~10 무기 흐름: 권총 → 기관단총(1장) → 산탄총(2장) → 소총(Lv8 상점·드랍)
       { type: 'collect', from: 'raider', item: '약탈당한 보급품', count: 6, chance: 0.4, text: '종로의 약탈자에게서 빼앗긴 보급품을 되찾아라.',
         reward: { exp: 700, credits: 600 } },
       { type: 'reach', landmark: 'bosingak', text: '약탈자들의 거점, 보신각으로 가라.',
         reward: { exp: 600, credits: 300 } },
       { type: 'hunt', elite: 'panther', text: '약탈자 두목 「흑표」를 처치하라.',
-        reward: { exp: 1500, credits: 1200, gear: 2 } },
+        reward: { exp: 1500, credits: 1680 } },
     ] },
   { title: '제3장 · 기계의 눈', minLevel: 10,
     intro: '용산 기지의 경비 시스템이 아직 살아 있어. 드론을 움직이는 중앙 기체가 있을 거야. 놈을 찾아 꺼 주게.',
@@ -48,7 +48,7 @@ const CHAPTERS = [
       { type: 'reach', landmark: 'base', text: '신호가 모이는 버려진 용산 기지로 가라.',
         reward: { exp: 2000, credits: 800 } },
       { type: 'hunt', elite: 'argos', text: '기지를 지키는 자율 전투 드론 「아르고스」를 격추하라.',
-        reward: { exp: 6000, credits: 3000, gear: 3 } },
+        reward: { exp: 6000, credits: 4200 } },
     ] },
   { title: '제4장 · 방사능 지대', minLevel: 15,
     intro: '여의도는 방사능 웅덩이투성이야. 방독면 헬멧 없이는 오래 못 버티니 꼭 챙기게. 그리고... 타이탄을 끝내 주게.',
@@ -59,7 +59,7 @@ const CHAPTERS = [
       { type: 'collect', from: 'brute', zone: 4, item: '방사능 시료', count: 5, chance: 0.5, text: '여의도의 변이 거한에게서 방사능 시료를 채취하라.',
         reward: { exp: 8000, credits: 3000 } },
       { type: 'kill', target: 'boss', count: 1, text: '방사능 군주 타이탄을 처치하라.',
-        reward: { exp: 20000, credits: 10000, gear: 4 } },
+        reward: { exp: 20000, credits: 14000 } },
     ] },
   // v1.6 강남 · 잠실
   { title: '제5장 · 강남의 그림자', minLevel: 20,
@@ -67,13 +67,13 @@ const CHAPTERS = [
     outro: '레이븐의 단말기에 잠실 좌표가 찍혀 있었네. 스카이타워 꼭대기에서 신호가 나와. 모든 변이의 근원이 거기 있어.',
     steps: [
       { type: 'kill', target: 'merc', count: 12, text: '강남 업무지구의 블랙선 용병을 처치하라.',
-        reward: { exp: 9000, credits: 4000, items: [['medkit', 3]] } },
+        reward: { exp: 9000, credits: 4060 } },
       { type: 'collect', from: 'merc', item: '블랙선 반출 기록', count: 6, chance: 0.4, text: '용병에게서 실험체 반출 기록을 회수하라.',
         reward: { exp: 12000, credits: 5000 } },
       { type: 'reach', landmark: 'coex', text: '블랙선 본부가 있는 무너진 무역센터로 가라.',
         reward: { exp: 8000, credits: 3000 } },
       { type: 'hunt', elite: 'raven', text: '블랙선 용병대장 「레이븐」을 처치하라.',
-        reward: { exp: 25000, credits: 12000, gear: 3 } },
+        reward: { exp: 25000, credits: 16800 } },
     ] },
   { title: '제6장 · 바벨의 탑', minLevel: 25, ending: true, // v2.0 첫 엔딩은 6장 끝 (7장이 생겨도)
     intro: '잠실은 변이체 소굴이야. 눈에 안 보이는 놈들도 있다더군. 공기가 일렁이면 바로 몸을 날려 피하게. 석촌호수 물가에선 발이 느려지니 조심하고.',
@@ -86,7 +86,7 @@ const CHAPTERS = [
       { type: 'reach', landmark: 'lotte', text: '신호가 나오는 스카이타워 잔해로 가라.',
         reward: { exp: 12000, credits: 5000 } },
       { type: 'hunt', elite: 'babel', text: '모든 변이의 근원, 변이 군주 「바벨」을 처치하라.',
-        reward: { exp: 40000, credits: 20000, gear: 4 } },
+        reward: { exp: 40000, credits: 28000 } },
     ] },
   // v2.0 7장 · 한강 (Lv30~) — 바벨이 쓰러진 뒤에도 강 건너에서 신호가 남음
   { title: '제7장 · 강을 건너는 것들', minLevel: 30, finale: true,
@@ -100,7 +100,7 @@ const CHAPTERS = [
       { type: 'reach', landmark: 'pump', text: '신호가 나오는 한강 배수 펌프장으로 가라.',
         reward: { exp: 50000, credits: 8000 } },
       { type: 'hunt', elite: 'sumun', text: '펌프장을 틀어막은 「한강 수문장」을 처치하라.',
-        reward: { exp: 150000, credits: 30000, gear: 4 } },
+        reward: { exp: 150000, credits: 42000 } },
     ] },
 ];
 if (!V2_OPEN) CHAPTERS.length = 6; // v2.0 잠금 (7장)
@@ -204,7 +204,8 @@ const Story = {
     const cr = Math.round(r.credits * ECON.cr); p.credits += cr; // v1.25 이야기 보상 크레딧도 절반
     const give = it => { if (!addItem(it)) G.drops.push({ x: p.x, y: p.y + 20, kind: 'item', item: it, t: 0 }); return it; };
     if (r.items) for (const [k, n] of r.items) give(makeConsumable(k, n)); // v1.84.4 외부 점검: 가방이 차면 아이템 보상이 사라지던 것 → 발밑에
-    if (r.equip) { G.shopLevel = -1; const it = give(makeGear(r.equip, Math.max(p.level, 1), 0)); log(`보상 장비: ${it.name}. 인벤토리(I)에서 장착`, '#8cf'); }
+    G.shopLevel = -1; // v2.0.22 상점 목록 다시 (기관단총은 성당 도착 뒤부터 상점에 나옴)
+    if (r.equip) { const it = give(makeGear(r.equip, Math.max(p.level, 1), 0)); log(`보상 장비: ${it.name}. 인벤토리(I)에서 장착`, '#8cf'); }
     if (r.gear) { let g = null; for (let k = 0; k < 8 && (!g || (g.kind === 'weapon' && WEAPONS[g.key].melee) || [...p.inventory, ...Object.values(p.equip)].some(o => o && o.key === g.key && o.rarity >= g.rarity)); k++) g = randomGear(Math.max(p.level, level), r.gear); // v1.57 이미 가진 것(도끼 등)·근접은 피해서
       const it = give(g); log(`보상 장비: ${itemName(it)}`, RARITIES[it.rarity].color); }
     const ex = this.expOf(r, level);

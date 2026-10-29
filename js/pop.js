@@ -13,7 +13,7 @@ const Pop = {
   generate(start) {
     this.cells = []; this.total = 0; this.killed = 0; this.half = false; this.done = false;
     if (World.map === 'camp') return;
-    const rk = FirstRun.rookie(), W = World.W, H = World.H, z = World.zoneIndex(), dens = (POP_DENS[z] || 0.03) * (rk ? 0.7 : 1); // v1.45 첫 출격: 적 30% 적게
+    const rk = FirstRun.rookie(), W = World.W, H = World.H, z = World.zoneIndex(), dens = (POP_DENS[z] || 0.03) * (rk ? 0.7 : 1) * (World.def && World.def.lab ? 1 : POP_MUL); // v1.45 첫 출격: 적 30% 적게
     const open = t => t === T.ROAD || t === T.WALK || t === T.RUBBLE || t === T.GRASS || t === T.LFLOOR || t === T.WATER;
     for (let cy = 0; cy < H; cy += POP_CELL) for (let cx = 0; cx < W; cx += POP_CELL) {
       const tiles = [];

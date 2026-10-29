@@ -876,7 +876,7 @@ function killEnemy(e) {
   if (p.buffs.adren > 0 && smod('adren') === 'a' && (p.adrenExt || 0) < 8) { p.buffs.adren += 1.5; p.adrenExt = (p.adrenExt || 0) + 1.5; } // 광폭
   const comboMul = 1 + Math.min(0.5, Math.max(0, (G.combo || 1) - 1) * 0.05);
   SFX.play(e.def.boss || e.fieldBoss || e.elite ? 'roar' : 'kill', e.def.boss ? 1 : 0.8);
-  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul * (p.raid ? 1.4 : 1) * (World.def && World.def.lab ? 1.5 : 1)); // v1.31 연구소: 적이 적어(분당 처치 3.2) 경험치 ×1.5 // 엘리트 4배 · v1.16 출격 맵 처치 경험치 ×1.4 (적이 무한히 나오지 않는 만큼)
+  const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul * (p.raid ? 1.4 : 1) * (World.def && World.def.lab ? 1.5 : 1) * KILL_EXP); // v2.0.22 처치 경험치 ×0.4 (렙업을 늦춤) // v1.31 연구소: 적이 적어(분당 처치 3.2) 경험치 ×1.5 // 엘리트 4배 · v1.16 출격 맵 처치 경험치 ×1.4 (적이 무한히 나오지 않는 만큼)
   gainExp(Math.round(exp * ((curDiff() || {}).exp || 1))); // v1.66 난이도 경험치
   p.totalKills++;
   const ck = e.art && Sprites.get(e.art) ? e.art : e.type; // 보스 전용 그림이면 그 그림으로 쓰러짐
@@ -930,7 +930,7 @@ function killEnemy(e) {
   if (e.elite) { // 네임드: 장비 확정 + 크레딧
     G.elite = null;
     log(`${ELITES[e.elite].name} 처치!`, '#ffa53a');
-    if (Math.random() < 0.3) dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) }); // v1.25 확정 → 50% · v2.0.21 30%
+    if (Math.random() < 0.15) dropAt('item', { item: randomGear(e.level, 1.5, 2, ZONES[World.zoneIndex(e.x, e.y)].gear) }); // v1.25 확정 → 50% · v2.0.21 30% · v2.0.22 15%
     dropAt('credits', { amount: e.level * 40 });
     rollUnique(e.elite, e.level, dropAt); // v1.12 레이븐 · 바벨
     if (e.elite === 'babel') rollMyth('babel', e.level, dropAt); // v1.53 신화
