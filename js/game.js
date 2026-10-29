@@ -38,6 +38,7 @@ window.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
   const k = e.key.toLowerCase();
   input.keys[k] = true; (input.codeKey = input.codeKey || {})[e.code] = k; // v1.98.33 뗄 때 한/영이 바뀌어도 같은 키로 풀리게
+  if (TEST_BUILD && k === 'f9' && G.running && G.player.god !== undefined) { G.player.god = !G.player.god; UI.toast(G.player.god ? '무적 켜짐' : '무적 꺼짐', 'F9 로 바꿈 (시험판)'); return; } // v2.0.9
   if (k === 'escape' && G.paused) { Pause.toggle(); return; }
   if (!G.running || G.player.dead || G.paused) return;
   if (UI.keyCapture) return; // v1.37 설정에서 키 바꾸는 중
@@ -675,6 +676,7 @@ function damagePlayer(dmg, srcX, srcY, by) { // v1.70 by = 때린 적(또는 이
   const p = G.player;
   if (p.dead || World.inSafe(p.x, p.y)) return;
   if (p.invT > 0) return; // v1.11 두 번째 숨 무적
+  if (p.god) return; // v2.0.9 테스트 계정 무적 (F9)
   if (p.rollT > 0) { // 회피 무적
     if (G.time - (p.lastRoll || -9) < PERFECT_DODGE && p.perfRoll !== p.lastRoll) { // v1.65 완벽 회피: 구르기 시작 직후에 맞을 뻔함 → 잠깐 느려지고 3초 동안 피해 +30%
       p.perfRoll = p.lastRoll; p.buffs.perfect = 3; G.slowT = 0.45; p.dodgeTxt = G.time;
@@ -1269,6 +1271,21 @@ function mythTestGrant(P) {
   setTimeout(() => { if (G.player !== P) return; UI.toast('시험 모드: Lv26 · 신화 무기 3종', '가방(꽉 차면 창고)에 래피드 블래스터 · F-20 · OX-20 · 능력치(C)·스킬(K) 포인트도 같이'); log('시험 모드: Lv26 · 신화 무기 3종을 받았다.', '#ff8a3d'); UI.refreshInventory(); }, 2000);
   return true;
 }
+// v2.0.9 만렙 테스트 계정 (시험판 주소 hangang-test 에서만 보임 · 슬롯 3 · 실서버 저장과 따로) — 전 지역 탐방용: Lv40 · 장비 풀세트 · 무적 (F9 로 켜고 끔)
+function makeTester() {
+  const P = newPlayer('테스터'), L = 40;
+  P.level = L; P.exp = 0; P.credits = 999999; P.statPoints = 0; P.sp = L; P.mapV = 4;
+  P.stats = { str: 5 + 29, dex: 5 + 29, vit: 5 + 29, agi: 5 + 30 }; // 레벨마다 3점 = 117점을 고르게
+  P.quest = { ch: CHAPTERS.length, step: 0, active: false, progress: 0 }; // 이야기 끝 (모든 지역 열림)
+  P.labKills = 1; P.towerKills = 1; P.hellOpen = 1; P.god = true; P.tips = Object.keys(TIPS); P.hints = [];
+  const w = (k, r) => { const it = makeWeapon(k, L, r); return it; };
+  P.equip = { w1: w('rifle', 4), w2: w('shotgun', 4), armor: makeArmor('bsuit', L, 4), helmet: makeHelmet('bvisor', L, 4), belt: makeBelt(2) };
+  P.stash = [w('smg', 4), w('lmg', 4), makeMyth('blaster', L), makeMyth('f20', L), makeMyth('ox20', L), makeArmor('eod', L, 4), makeHelmet('eodHelm', L, 4)];
+  P.inventory = [makeConsumable('medkit', 20), makeConsumable('ammo', 20)];
+  for (const k of Object.keys(AMMO)) P.ammo[k] = AMMO_CAP[k] || 300;
+  P.hp = PlayerStats.maxHp(P);
+  return P;
+}
 function makeMyth(key, level) { const w = makeWeapon(key, Math.max(level, WEAPONS[key].lvl), 5); w.name = WEAPONS[key].name; return w; }
 function rollMyth(src, level, dropAt) {
   const p = G.player, DF = curDiff(), D = src === 'hard' ? DF && DF.elite : MYTH_DROP[src]; // v1.66 하드·헬 엘리트 신화
@@ -1698,6 +1715,16 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     startGame(null, name);
   };
   btnC.onclick = () => save && startGame(save);
+  const btnT = document.getElementById('btn-tester'); // v2.0.9 시험판 전용
+  if (TEST_BUILD && btnT) {
+    btnT.classList.remove('hidden');
+    btnT.onclick = () => {
+      const old = loadSave(3);
+      if (old && !Ask.ok(`슬롯 3의 「${old.p.name} Lv${old.p.level}」 저장이 지워지고 만렙 테스트 계정이 만들어집니다. 계속할까요?`, () => btnT.onclick())) return;
+      SAVE_SLOT = 3; try { localStorage.setItem('seoul2049-slot', 3); } catch (e) { /* */ }
+      startGame(null, '테스터'); G.player = Object.assign(G.player, makeTester()); G.player.hp = PlayerStats.maxHp(G.player); saveGame();
+    };
+  }
   document.getElementById('btn-title-import').onclick = () => { // v1.83.1 다른 기기·주소의 세이브를 타이틀에서 바로 (설정 → 세이브 코드 만들기로 받은 것)
     const code = prompt(`세이브 코드를 붙여넣으세요 (슬롯 ${SAVE_SLOT}에 들어갑니다)`); if (!code || !code.trim()) return;
     try {
