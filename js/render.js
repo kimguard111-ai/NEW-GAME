@@ -1168,8 +1168,12 @@ function dunWallTex(tx, ty, ht) {
 // v1.79 던전 장비 그림 (41 · 44-3): 낮은 칸 = 작업대 · 책상류, 높은 칸 = 수조 · 서류장류
 function dunPropArt(tx, ty, x0, y0, h) {
   const tall = tileHeight(tx, ty) >= 30, T2 = World.def && World.def.tower;
-  const set = T2 ? (tall ? ['tw_cabinet', 'tw_cooler', 'tw_copier', 'tw2_vending', 'tw2_server', 'tw2_trophy', 'tw2_window'] : ['tw_desk', 'tw_desk', 'tw_meeting', 'tw_boxes', 'tw_plant', 'tw_roots', 'tw2_reception', 'tw2_cubicles', 'tw2_ceiling', 'tw2_cocoon'])
-    : (tall ? ['lab_tank', 'lab_server', 'lab_term', 'lab_term2', 'lab_cage', 'lab_jars', 'lab_hazmat', 'lab_shower', 'lab_cell'] : ['lab_bench', 'lab_cryo', 'lab_drums', 'lab_surgery', 'lab_shelf', 'lab_barrels', 'lab_centrifuge', 'lab_gurney', 'lab_rail', 'lab_power']);
+  // v2.0.15 방마다 주제가 있게: 4칸 구역마다 한 주제의 집기만 (이웃 칸이 서로 이어진 장면이 되게) — 연구소: 표본실 · 사고 현장 · 장비실 · 병상 / 타워: 서버실 · 로비 · 사무실 · 뿌리 발원지
+  const THEMES = T2 ? (tall ? [['tw2_server', 'tw_cabinet', 'tw_copier', 'tw2_server', 'tw2_window'], ['tw2_vending', 'tw2_trophy', 'tw_cooler', 'tw_cabinet']]
+      : [['tw2_cocoon', 'tw_roots', 'tw2_ceiling', 'tw_boxes', 'tw2_cocoon'], ['tw2_cubicles', 'tw_desk', 'tw_meeting', 'tw_plant'], ['tw2_reception', 'tw_desk', 'tw_boxes', 'tw2_ceiling']])
+    : (tall ? [['lab_jars', 'lab_hazmat', 'lab_tank', 'lab_shower', 'lab_jars'], ['lab_cell', 'lab_cage', 'lab_cell', 'lab_term'], ['lab_server', 'lab_term', 'lab_term2', 'lab_server']]
+      : [['lab_gurney', 'lab_surgery', 'lab_bench', 'lab_cryo'], ['lab_barrels', 'lab_rail', 'lab_drums', 'lab_barrels', 'lab_shelf'], ['lab_centrifuge', 'lab_bench', 'lab_power', 'lab_shelf']]);
+  const set = THEMES[Math.floor(hash2((tx >> 2) + 11, (ty >> 2) + 5) * THEMES.length)];
   const key = set[Math.floor(hash2(tx * 7 + 3, ty * 5 + 1) * set.length)], sx = Iso.sx(x0 + TILE / 2, y0 + TILE / 2), sy = Iso.sy(x0 + TILE / 2, y0 + TILE / 2);
   if (!drawPropArt(key, sx, sy, h > 0.5)) return false;
   if (key === 'lab_tank' && Settings.light && Light.list.length < LIGHT_CAP) addLight(sx, sy - 24, 70, 0.5, 'rgba(90,220,210,A)');
