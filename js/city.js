@@ -35,7 +35,7 @@ const City = {
     const near = (x, y) => World.distTiles(x * TILE + 16, y * TILE + 16) < World.safeR + 2; // 캠프 안은 비움
     const add = (type, x, y, extra) => this.props.push({ type, x, y, ...extra });
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-      const t = at(x, y), h = hash2(x * 3 + 7, y * 5 + 11), zone = World.zoneIndex(x * TILE, y * TILE);
+      const t = at(x, y), h = hash2(x * 3 + 7, y * 5 + 11), zone = World.zoneIndex(x * TILE, y * TILE), junk = hash2((x >> 2) + 31, (y >> 2) + 17) > 0.62; // v2.0.13 쓰레기 · 드럼통은 군데군데 모여 있게 (고르게 뿌려져 있던 것)
       if (near(x, y)) continue;
       if (t === T.WALK) {
         const lx = x % B, ly = y % B, curb = lx === RW || ly === RW; // 도로와 맞닿은 보도
@@ -48,13 +48,13 @@ const City = {
         else if (lx === RW && ly === RW && h < 0.6) add('signal', x * TILE + 8, y * TILE + 8, { ph: h * 10 }); // v1.11 교차로 모서리 신호등
         else if (curb && h > 0.3 && h < 0.33) add('bench', x * TILE + 16, y * TILE + 16, { side: lx === RW ? 'x' : 'y' });
         else if (curb && h > 0.4 && h < 0.415) add('hydrant', x * TILE + 16, y * TILE + 16);
-        else if (h > 0.935 && h < 0.955) add('paper', x * TILE + 16, y * TILE + 16, { s: h });
-        else if (h > 0.965) add('trash', x * TILE + rand2(h, 8, 24), y * TILE + rand2(h * 7, 8, 24), { n: 2 + Math.floor(h * 100) % 3 });
-        else if (h > 0.955 && zone >= 1) add('barrel', x * TILE + 16, y * TILE + 16);
+        else if (junk && h > 0.86 && h < 0.9) add('paper', x * TILE + 16, y * TILE + 16, { s: h });
+        else if (junk && h > 0.9) add('trash', x * TILE + rand2(h, 8, 24), y * TILE + rand2(h * 7, 8, 24), { n: 2 + Math.floor(h * 100) % 3 });
+        else if (junk && h > 0.83 && h < 0.86 && zone >= 1) add('barrel', x * TILE + 16, y * TILE + 16);
       } else if (t === T.RUBBLE && h > 0.9) add('deco', x * TILE + 16, y * TILE + 16, { key: ['rubble_a', 'rubble_b', 'slab', 'debris', 'tires'][Math.floor(h * 1000) % 5] }); // v1.18 잔해 장식 (그림이 있을 때만 보임)
       else if (t === T.WALK && h > 0.88 && h < 0.885) add('deco', x * TILE + 16, y * TILE + 16, { key: 'cart' });
       else if (t === T.GRASS && h < 0.12) add('tree', x * TILE + 16, y * TILE + 16, { dead: zone >= 3, s: 1 + h * 3 });
-      else if (t === T.ROAD && h > 0.985) add('cone', x * TILE + 16, y * TILE + 16);
+      else if (t === T.ROAD && (h > 0.997 || (h > 0.9 && [[-2, 0], [2, 0], [0, -2], [0, 2], [-1, -1], [1, 1]].some(([dx, dy]) => at(x + dx, y + dy) === T.CAR)))) add('cone', x * TILE + 16, y * TILE + 16); // 고깔은 사고 난 차 둘레에
     }
     // 버스: 도로 한 차선 위 5칸 (v1.21 실제 스케일: 3칸 → 5칸 ≈ 8m · 막힌 칸으로 만들어 엄폐물이 됨)
     for (let n = 0, tries = 0; n < 12 && tries < 600; tries++) {
@@ -171,11 +171,12 @@ const City = {
         [['gn_billboard', 0, 0, 1], ['gn_club', 4, 0], ['gn_valet', 8, 0]], [['gn_coupe', 0, 0, 1], ['gn_valet', 4, 0], ['gn_scooters', 6, 0]], [['gn_clinic', 0, 0], ['gn_led', 3, 0], ['gn_tea', 5, 0], ['gn_window', 8, 0]]],
       jamsil: [[['ticketbooth', 0, 0, 1], ['kiosk', 2, 0], ['parasol', 4, 0], ['bikes', 2, 2]], [['bikes', 0, 0], ['parasol', 2, 0], ['kiosk', 4, 0]],
         [['js_booth', 0, 0, 1], ['js_turnstile', 3, 0], ['js_balloon', 6, 0]], [['js_cotton', 0, 0], ['js_horse', 3, 0], ['js_mascot', 5, 0], ['js_lampbench', 7, 0]], [['js_swanrack', 0, 0], ['js_fireworks', 4, 0], ['js_lampbench', 6, 0]]] }[map] || [];
-    this.scenes = 0;
+    this.scenes = 0; let gates = 0;
     if (SCENES.length) for (let k = 0, n = 0, want = Math.round(W * H / 260); k < 30000 && n < want; k++) {
       const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)), lx = x % B, ly = y % B, curb = lx === RW || ly === RW;
       if (!curb || lx === ly || at(x, y) !== T.WALK || near(x, y) || inRiver(y)) continue;
       const side = lx === RW ? 'x' : 'y', nn = map === 'jongno' ? 4 : 3, sc = SCENES[rng() < 0.75 ? SCENES.length - nn + Math.floor(rng() * nn) : Math.floor(rng() * SCENES.length)] /* 새 그림 묶음을 많이 */, flip = rng() < 0.5; let got = 0;
+      if (sc.some(it => it[0] === 'jn_gate')) { if (gates >= 1) continue; gates++; } /* 한옥 문은 맵에 하나만 */
       for (const [key, a, c, solid] of sc) { const cc = c + 1, px = side === 'x' ? x + cc : x + a, py = side === 'x' ? y + a : y + cc; /* 도로 바로 옆 줄은 가로등 · 전봇대 자리라 한 칸 안쪽부터 */ if (at(px, py) === T.WALK && free(px, py, 1, open) && put(key, px, py, 1, !!solid, { side, flip: flip !== (key === 'bikes') })) got++; }
       if (got >= 2) { n++; this.scenes = n; }
     }
@@ -191,8 +192,8 @@ const City = {
     const parks = [];
     for (let by = 0; by * B < H; by++) for (let bx = 0; bx * B < W; bx++) {
       const x0 = bx * B + RW + 1, y0 = by * B + RW + 1, x1 = Math.min(W - 2, bx * B + B - 2), y1 = Math.min(H - 2, by * B + B - 2);
-      let g = 0, n = 0; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { n++; if (at(x, y) === T.GRASS || at(x, y) === T.WALK || at(x, y) === T.WATER) g++; }
-      if (n > 40 && g / n > 0.9) parks.push([x0, y0, x1, y1]);
+      let g = 0, n = 0, lot = false; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { n++; if (at(x, y) === T.GRASS || at(x, y) === T.WALK || at(x, y) === T.WATER) g++; else if (at(x, y) === T.CAR) lot = true; } // v2.0.13 차가 서 있는 광장은 주차장이라 공원 시설을 안 놓음
+      if (n > 40 && g / n > 0.9 && !lot) parks.push([x0, y0, x1, y1]);
     }
     const SMALL = ['gym', 'gym2', 'bust', 'fountain'].concat(zone === 2 ? ['haechi', 'haechi', 'pavilion', 'palacewall'] : zone === 1 ? ['pavilion', 'haechi'] : [],
       zone === 4 || zone === 7 ? ['parasol', 'parasol'] : [], map === 'yeouido' ? ['yd_tree', 'yd_tree', 'yd_picnic'] : [], zone === 3 || zone === 6 ? ['barricades', 'barricades'] : []);
@@ -201,9 +202,11 @@ const City = {
       gangnam: [['billboard', 1, 4]], yongsan: [['tank', 2, 2], ['floodlight', 1, 2]], yeouido: [['riverboat', 2, 1], ['floodlight', 1, 1]],
       jongno: [['gate', 7, 1], ['pavilion', 2, 1]], myeongdong: [['fountain', 2, 1]] }[map] || [];
     const SIZE = { pavilion: 2, fountain: 2, palacewall: 2 }, SOLIDK = new Set(['bust', 'haechi', 'fountain', 'pavilion', 'palacewall', 'barricades']);
+    const PARKONLY = new Set(['gym', 'gym2', 'bust', 'fountain', 'haechi', 'pavilion', 'palacewall', 'yd_tree', 'yd_picnic']);
     const tryPut = (key, n, solid, tries) => {
       for (let k = 0; k < tries; k++) {
-        const pk = parks.length && rng() < 0.75 ? parks[Math.floor(rng() * parks.length)] : null;
+        const pk = parks.length && (PARKONLY.has(key) || rng() < 0.75) ? parks[Math.floor(rng() * parks.length)] : null;
+        if (PARKONLY.has(key) && !pk) return false; // v2.0.13 공원 시설은 공원에만 (주차장 광장에 해태 · 운동기구가 서 있던 것)
         const x = pk ? pk[0] + 1 + Math.floor(rng() * Math.max(1, pk[2] - pk[0] - n - 1)) : 2 + Math.floor(rng() * (W - 4 - n)), y = pk ? pk[1] + 1 + Math.floor(rng() * Math.max(1, pk[3] - pk[1] - n - 1)) : 2 + Math.floor(rng() * (H - 4 - n));
         if (!pk && at(x, y) !== T.WALK) continue; // 공원 밖이면 보도/광장 위만
         if (free(x, y, n, open) && put(key, x, y, n, solid, { flip: rng() < 0.5 })) return true;
@@ -454,7 +457,7 @@ function drawCityProp(o) {
   if (ak && propArt(ak)) { // v1.18 그림
     let px = sx, py = sy;
     if (o.type === 'police') { const tx = Math.floor(o.x / TILE) * TILE + 16, ty = Math.floor(o.y / TILE) * TILE + 16; px = Iso.sx(tx, ty); py = Iso.sy(tx, ty); }
-    if (!o.noShadow) drawShadow(px, py, (ART.propFit[ak] || { w: 40 }).w * 0.4 * (o.k || 1));
+    if (!o.noShadow) drawShadow(px, py, o.type === 'lamp' || o.type === 'signal' ? 9 : o.type === 'pole' ? 7 : (ART.propFit[ak] || { w: 40 }).w * 0.4 * (o.k || 1)); // v2.0.13 가느다란 기둥은 작은 그림자 (가로등 밑에 큰 검은 타원이 깔리던 것)
     const fw = (ART.propFit[ak] || { w: 40 }).w;
     const fade = o.type === 'tree' ? Behind.alpha(o, px, py, fw * (o.s || 1), fw * (o.s || 1) * 1.6) // v1.46
       : o.type === 'deco' && fw >= 200 ? Behind.big(o, px, py, fw, fw * 0.6) : o.type === 'deco' && fw >= 70 ? Behind.alpha(o, px, py, fw, fw * 1.2) // v1.58 큰 소품(회전목마·탱크 등) 뒤도 반투명
