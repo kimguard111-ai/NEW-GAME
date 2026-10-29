@@ -585,7 +585,8 @@ function useItem(it) {
     p.hp = Math.min(mh, p.hp + amt);
     floatText(p.x, p.y - 30, '+' + amt, '#6f6', 16);
   } else if (it.key === 'ammo') {
-    const [t, n] = giveAmmoUnits(p, 120); log(n ? `${AMMO[t].name} +${n}` : `${AMMO[t].name}이(가) 가득 차 있다 (최대 ${ammoCap(p, t)})`, '#cc8');
+    const [t, n] = giveAmmoUnits(p, 120); if (!n) { log(`${AMMO[t].name}이(가) 가득 차 있다 (최대 ${ammoCap(p, t)}) — 탄약 상자는 그대로`, '#cc8'); return; } // v2.0.11 가득이면 상자를 쓰지 않음
+    log(n ? `${AMMO[t].name} +${n}` : `${AMMO[t].name}이(가) 가득 차 있다 (최대 ${ammoCap(p, t)})`, '#cc8');
   } else if (CONSUMABLES[it.key].slot) { // v1.14 투척물·보조: 가방에서 누르면 그 칸에 선택
     const slot = CONSUMABLES[it.key].slot; p.gsel = p.gsel || {}; p.gsel[slot] = it.key;
     const on = Hotbar.autoAdd(it.key); log(`${it.name}${on ? `을(를) 벨트 ${G.player.hotbar.indexOf(it.key) + 1}번 칸에 올렸다.` : '. 벨트 칸이 가득 (B로 바꾸기)'}`, '#cfe'); // v1.50 벨트 = 소모품

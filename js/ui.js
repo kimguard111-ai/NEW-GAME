@@ -193,7 +193,8 @@ const UI = {
     // 보스 바
     const fb = G.fieldBoss && dist(G.fieldBoss, p) < 900 ? G.fieldBoss : G.echoBoss && G.echoBoss.hp > 0 && dist(G.echoBoss, p) < 900 ? G.echoBoss /* v1.98.16 메아리 */ : G.labBoss && G.labBoss.hp > 0 && dist(G.labBoss, p) < 900 ? G.labBoss : null;
     const boss = (G.boss && G.boss.hp > 0 && dist(G.boss, p) < 900) ? G.boss : (G.assault && G.assault.boss) || fb || G.elite; // 보스 · 어설트 보스 · 필드 보스 · 네임드
-    if (boss && boss.hp > 0 && dist(boss, p) < 900) {
+    const bx = boss ? Iso.sx(boss.x, boss.y) : 0, by = boss ? Iso.sy(boss.x, boss.y) : 0, onScr = boss && bx > -60 && bx < VW + 60 && by > -60 && by < VH + 60; // v2.0.11 화면 밖의 보스는 체력바도 숨김 (바는 뜨는데 보스는 안 보이던 것)
+    if (boss && boss.hp > 0 && dist(boss, p) < 900 && (onScr || dist(boss, p) < 360 || G.assault)) {
       $('boss-bar').classList.remove('hidden');
       $('boss-name').textContent = `Lv${boss.level} ${boss.bossName || (boss.elite ? ELITES[boss.elite].name : boss.def.name)}${boss.def.boss ? ` · ${Bosses.titanPhase(boss)}페이즈${boss.invulnT > 0 ? ' (무적)' : ''}` : ''}  ${fmt(boss.hp)} / ${fmt(boss.maxHp)}`;
       $('boss-fill').style.width = (100 * boss.hp / boss.maxHp) + '%';

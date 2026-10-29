@@ -753,3 +753,7 @@ body.touch .sum-head.eg-head { margin-top: 4px; font-size: 11px; } body.touch .s
 .map-grid.chal .map-card.wide .mc-body { display: block; } .map-grid.chal .map-card .mc-lv, .map-grid.chal .map-card .mc-desc { display: block; margin-top: 2px; }
 .map-grid.chal .map-card.wide .mc-go { margin: 4px 0 0; text-align: right; } .map-grid.chal .map-card .mc-body { flex: 1; min-width: 0; }
 body.touch .map-grid.chal .map-card { min-height: 60px; } body.touch .map-grid.chal .mc-desc { display: block; font-size: 10px; }
+
+/* v2.0.11 엔딩 · 시즌 화면이 창보다 길면 스크롤 (위 · 아래 글이 잘리던 것) */
+#ending-screen, #season-screen { overflow-y: auto; align-items: flex-start; }
+#ending-screen .title-box, #season-screen .title-box { margin: auto; }
