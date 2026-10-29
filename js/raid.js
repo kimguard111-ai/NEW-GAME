@@ -28,14 +28,14 @@ const Raid = {
       + `<div class="prep">출격 준비: 체력 <b style="color:${p.hp < PlayerStats.maxHp(p) * 0.7 ? '#ff8a8a' : 'inherit'}">${Math.round(p.hp)}/${PlayerStats.maxHp(p)}</b>${p.hp < PlayerStats.maxHp(p) * 0.7 ? ' <span style="color:#ff8a8a">(의무병 이씨에게 치료부터)</span>' : ''} · ${ICON('medkit')} 구급상자 <b>${med}</b> · 탄약 ${Object.entries(AMMO).map(([k, a]) => `${a.name} <b>${fmt(p.ammo[k] || 0)}</b>`).join(' ')} · 가방 <b>${Bag.used()}/${Bag.cells()}칸</b> · ₵${fmt(p.credits)}</div>`;
     const m3 = medPrice(p.level) * 3; btns.push([`${ICON('medkit')} +3 (${fmt(m3)}₵)`, () => { if (p.credits < m3) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= m3; SFX.play('coin'); this.openMap(); }]);
     for (const [k, a] of Object.entries(AMMO)) btns.push([`${ICON('ammo_' + k)} ${a.name} +${a.pack} (${a.price}₵)`, () => { if ((p.ammo[k] || 0) >= ammoCap(p, k)) return log(`${a.name}은(는) 더 들 수 없다 (최대 ${ammoCap(p, k)})`, '#f88'); if (p.credits < a.price) return log('크레딧이 부족합니다.', '#f88'); addAmmo(p, k, a.pack); p.credits -= a.price; SFX.play('ammo'); this.openMap(); }]); // v1.33 탄약 4종
-    const TAB = Ops.on() ? (this.mapTab || 'go') : 'go', nOps = Ops.on() ? Ops.list(p).length : 0; // v2.0.4 출격 · 작전 · 도전 탭
-    if (Ops.on()) h += `<div class="jtabs mtabs">${[['go', '출격'], ['ops', `작전${nOps ? ` ${nOps}` : ''}`], ['chal', '도전']].map(([id, n]) => `<button class="jtab${TAB === id ? ' on' : ''}" data-mtab="${id}">${n}</button>`).join('')}</div>`;
+    const TAB = Ops.on() ? (this.mapTab || 'go') : 'go', opList = Ops.on() ? Ops.list(p) : [], opNew = opList.some(id => !(p.opSeen || []).includes(id)); // v2.0.5 새 작전을 발견하면 탭에 「!」 // v2.0.4 출격 · 작전 · 도전 탭
+    if (Ops.on()) h += `<div class="jtabs mtabs">${[['go', '출격'], ['ops', `작전${opNew && TAB !== 'ops' ? ' <b class="mtab-new">!</b>' : ''}`], ['chal', '도전']].map(([id, n]) => `<button class="jtab${TAB === id ? ' on' : ''}" data-mtab="${id}">${n}</button>`).join('')}</div>`;
     // v1.53.1 3×2 카드 (지하 연구소는 아래 가로 한 줄) · 지금 갈 곳에 「추천」 — 한 줄 목록이라 출격 버튼을 못 찾던 것
     const story = CHAPTER_MAP[p.quest.ch], rec = story && this.unlocked(story) ? story : [...MAP_ORDER].reverse().find(id => !MAPS[id].lab && this.unlocked(id) && ZONES[MAPS[id].zone].lvl[0] <= p.level) || 'myeongdong';
-    const card = id => {
+    const card = (id, feat) => {
       const d = MAPS[id], z = ZONES[d.zone], ok = this.unlocked(id), gr = p.graves[id], lm = d.card ? { file: d.card } : d.landmark && ART.landmarks[d.landmark];
       const ev = ok && Camp.lv('radio') >= 1 ? `<div class="mc-ev">${ICON('radio')} ${Camp.planFor(id).map(k => EVENT_DEFS[k].name).join(' · ')}</div>` : ''; // v1.13 무전실 미리 보기
-      return `<div class="map-card${ok ? ' go' : ' locked'}${id === rec && ok ? ' rec' : ''}${d.lab || d.endRow ? ' wide' : ''}"${ok ? ` data-map="${id}"` : ''}>`
+      return `<div class="map-card${ok ? ' go' : ' locked'}${id === rec && ok ? ' rec' : ''}${d.lab || feat ? ' wide' : ''}"${ok ? ` data-map="${id}"` : ''}>`
         + (lm ? `<img class="mc-art${d.card ? ' scene' : ''}" src="${artURL(lm.file)}" alt="">` : `<div class="mc-art ico-art">${ICON(d.tower ? 'warn' : d.lab ? 'chip' : 'map')}</div>`)
         + `<div class="mc-body"><div class="mc-name">${ok ? '' : ICON('lock') + ' '}${d.name}${d.lab ? ' <span class="mc-chal">도전</span>' : ''}${id === rec && ok ? ' <span class="mc-rec">추천</span>' : ''}</div>`
         + `<div class="mc-lv">${d.lab ? (D => `도전 · ${D.label(1)}~${D.label(D.floors)} · 적 Lv${D.lv(1)}~${D.lv(D.floors)}${p[D.best] ? ` · 최고 ${D.label(p[D.best])}` : ''}${gr && gr.floor ? ` · 가방 ${D.label(gr.floor)}` : ''}`)(DUNGEONS[id]) : `Lv${z.lvl[0]}~${z.lvl[1]}`}</div><div class="mc-desc"${ok && d.short ? ` title="${z.desc}"` : ''}>${ok ? (d.short || z.desc) : d.lock || `「${CHAPTERS[d.chapter].title}」에서 해금`}</div>`
@@ -48,10 +48,12 @@ const Raid = {
     if (TAB === 'ops') h += `<div class="mc-intro muted" style="margin:6px 0">출격 중에 찾은 거점으로 바로 가서 점령하는 작전이야. 클리어하면 헬기로 돌아와.</div>` + Ops.html(p);
     else if (TAB === 'chal') h += `<div class="sum-head">서울 · 여의도 지하 · 스카이타워 <span class="muted">층마다 강해지는 도전 · 클리어하면 하드</span></div><div class="map-grid dun">${chal.map(card).join('')}</div>`
       + `<div class="sum-head">다른 도시 <span class="muted">새 도시가 열리면 여기에 도전이 하나씩 생겨</span></div><div class="map-grid dun">${soon('??? 도전', '인천 편에서 공개')}${soon('??? 도전', '부산 편에서 공개')}</div>`;
-    else h += `<div class="map-grid">${norm.map(card).join('')}</div>`; // v2.0.4 한강은 일반 지역 카드 (엔드게임 줄 · 머리글 삭제)
+    else { const fe = norm.includes(rec) && this.unlocked(rec) ? rec : null; // v2.0.5 지금 갈 곳 추천 1개를 위에 크게 + 나머지 6개를 3×2 (지역 7곳 = 이야기 7장 — 지울 수 없어 배치로 맞춤)
+      h += (fe ? `<div class="map-grid one">${card(fe, true)}</div>` : '') + `<div class="map-grid">${norm.filter(id => id !== fe).map(id => card(id)).join('')}</div>`; }
     btns.push(['닫기', () => UI.close('dialog')]);
     UI.dialog('작전 장교 윤씨', h, btns); $('panel-dialog').classList.add('mapdlg');
     $('dialog-text').querySelectorAll('[data-map]').forEach(r => { r.onclick = () => { UI.close('dialog'); FirstRun.rules(() => this.deploy(r.dataset.map)); }; }); // v1.22 맵 이름을 눌러 바로 출격
+    if (TAB === 'ops') p.opSeen = opList.slice(); // 작전 탭을 열면 새 작전 표시 끔
     Ops.bind($('dialog-text'));
     $('dialog-text').querySelectorAll('[data-mtab]').forEach(b => { b.onclick = () => { this.mapTab = b.dataset.mtab; this.openMap(); }; });
     $('dialog-text').querySelectorAll('[data-diff]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); UI.close('dialog'); FirstRun.rules(() => this.deploy(b.closest('[data-map]').dataset.map, +b.dataset.diff)); }; }); // v1.66 난이도 골라 출격
