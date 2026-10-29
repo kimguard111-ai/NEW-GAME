@@ -86,7 +86,10 @@ const Raid = {
     G.exits = pts.filter(q => q !== start);
     if (MAPS[id].lab) G.exits = [dunExitPick(G.exits, start)];
     else { const n = FirstRun.rookie() ? 2 : Math.random() < 0.5 ? 1 : 2; G.exits = G.exits.sort(() => Math.random() - 0.5).slice(0, n); } // v1.82 일반 맵 탈출 지점 3 → 1~2 (첫 출격은 2) // v1.81 도전 던전: 탈출구 하나 (시작 자리에서 가장 먼 방)
-    p.x = start.x; p.y = start.y; p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 출격 때 체력을 채워 주지 않음 (의무병 · 구급상자 의미)
+    p.x = start.x; p.y = start.y;
+    { const Wd = World.W, tx0 = Math.floor(p.x / TILE), ty0 = Math.floor(p.y / TILE), bad = (x, y) => SOLID.has(World.tiles[y * Wd + x]) || World.tiles[y * Wd + x] === T.DEEP; // v2.0.20 시작 칸이 막혀 있으면 가장 가까운 빈 칸으로 (안전장치)
+      if (bad(tx0, ty0)) for (let r = 1, done = false; r <= 8 && !done; r++) for (let dy = -r; dy <= r && !done; dy++) for (let dx = -r; dx <= r && !done; dx++) if (Math.max(Math.abs(dx), Math.abs(dy)) === r && !bad(tx0 + dx, ty0 + dy)) { p.x = (tx0 + dx) * TILE + 16; p.y = (ty0 + dy) * TILE + 16; done = true; } }
+    p.hp = Math.max(1, Math.min(p.hp, PlayerStats.maxHp(p))); p.stam = 100; // v1.57 출격 때 체력을 채워 주지 않음 (의무병 · 구급상자 의미)
     p.raid = { map: id, credits: 0, items: 0, t: 0, kills: 0, diff: Math.max(0, Math.min(diff, diffOpen(p, id))), floor: MAPS[id].lab ? 1 : 0 }; // v1.66 잠실 난이도 · v1.77 연구소 층
     if (FirstRun.rookie()) G.fbT = 1e9; // v1.45 첫 출격엔 필드 보스 없음
     G.extractT = 0; G.search = null;

@@ -32,8 +32,9 @@ const City = {
     const W = World.W, H = World.H, rng = mulberry32(seed + 99), T_ = World.tiles, B = World.BLOCK, RW = World.ROADW;
     this.props = []; this.signs = new Map(); this.banners = new Map(); this.carSkip = new Set(); this.busCells = new Set(); this.groundOf = new Map(); // v1.56 현수막·전단지 · v1.58 주석이 뒤 코드를 삼켜 맵이 바뀌어도 차량 칸 기록이 안 지워지던 것
     const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? T.BUILDING : T_[y * W + x]);
-    const near = (x, y) => World.distTiles(x * TILE + 16, y * TILE + 16) < World.safeR + 2; // 캠프 안은 비움
+    const near = (x, y) => World.distTiles(x * TILE + 16, y * TILE + 16) < World.safeR + 2 || (World.edgePts || []).some(e => Math.abs(e.x / TILE - x) < 5 && Math.abs(e.y / TILE - y) < 5); // 캠프 안 · 출격 · 탈출 지점 둘레(5칸)는 비움 — 버스 · 차와 겹쳐 시작하면 못 움직이던 것
     const add = (type, x, y, extra) => this.props.push({ type, x, y, ...extra });
+    for (const e of World.edgePts || []) { const ex = Math.floor(e.x / TILE), ey = Math.floor(e.y / TILE); for (let y = ey - 4; y <= ey + 4; y++) for (let x = ex - 4; x <= ex + 4; x++) if (x > 0 && y > 0 && x < W - 1 && y < H - 1 && T_[y * W + x] === T.CAR) T_[y * W + x] = T.ROAD; } // v2.0.20 출격 · 탈출 지점 곁의 폐차는 치움 (차 · 버스와 겹쳐 시작해 못 움직이던 것)
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
       const t = at(x, y), h = hash2(x * 3 + 7, y * 5 + 11), zone = World.zoneIndex(x * TILE, y * TILE), junk = hash2((x >> 2) + 31, (y >> 2) + 17) > 0.62; // v2.0.13 쓰레기 · 드럼통은 군데군데 모여 있게 (고르게 뿌려져 있던 것)
       if (near(x, y)) continue;
