@@ -748,3 +748,8 @@ body.touch .sum-head.eg-head { margin-top: 4px; font-size: 11px; } body.touch .s
 .map-grid.one { grid-template-columns: 1fr; margin-bottom: 0; } .map-grid.one .map-card { padding: 10px 14px; } .map-grid.one .mc-art { width: 76px; height: 76px; }
 .mtab-new { display: inline-block; margin-left: 5px; padding: 0 6px; background: #ffd76a; color: #1a1408; border-radius: 9px; font-size: 12px; animation: mtabPulse 1.2s ease-in-out infinite; }
 @keyframes mtabPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+/* v2.0.6 도전 탭: 카드 두 장 · 자리 모양을 똑같이 (이름 · 정보 · 설명 · 버튼을 세로로) */
+.map-grid.chal { align-items: stretch; } .map-grid.chal .map-card { min-height: 92px; }
+.map-grid.chal .map-card.wide .mc-body { display: block; } .map-grid.chal .map-card .mc-lv, .map-grid.chal .map-card .mc-desc { display: block; margin-top: 2px; }
+.map-grid.chal .map-card.wide .mc-go { margin: 4px 0 0; text-align: right; } .map-grid.chal .map-card .mc-body { flex: 1; min-width: 0; }
+body.touch .map-grid.chal .map-card { min-height: 60px; } body.touch .map-grid.chal .mc-desc { display: block; font-size: 10px; }

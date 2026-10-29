@@ -46,8 +46,8 @@ const Raid = {
     const norm = MAP_ORDER.filter(id => !MAPS[id].lab), chal = MAP_ORDER.filter(id => MAPS[id].lab);
     const soon = (t, d) => `<div class="map-card locked"><div class="mc-art ico-art">${ICON('lock')}</div><div class="mc-body"><div class="mc-name">${ICON('lock')} ${t}</div><div class="mc-lv">${d}</div></div></div>`;
     if (TAB === 'ops') h += `<div class="mc-intro muted" style="margin:6px 0">출격 중에 찾은 거점으로 바로 가서 점령하는 작전이야. 클리어하면 헬기로 돌아와.</div>` + Ops.html(p);
-    else if (TAB === 'chal') h += `<div class="sum-head">서울 · 여의도 지하 · 스카이타워 <span class="muted">층마다 강해지는 도전 · 클리어하면 하드</span></div><div class="map-grid dun">${chal.map(card).join('')}</div>`
-      + `<div class="sum-head">다른 도시 <span class="muted">새 도시가 열리면 여기에 도전이 하나씩 생겨</span></div><div class="map-grid dun">${soon('??? 도전', '인천 편에서 공개')}${soon('??? 도전', '부산 편에서 공개')}</div>`;
+    else if (TAB === 'chal') h += `<div class="sum-head">서울 · 여의도 지하 · 스카이타워 <span class="muted">층마다 강해지는 도전 · 클리어하면 하드</span></div><div class="map-grid dun chal">${chal.map(card).join('')}</div>`
+      + `<div class="sum-head">다른 도시 <span class="muted">새 도시가 열리면 여기에 도전이 하나씩 생겨</span></div><div class="map-grid dun chal">${soon('??? 도전', '인천 편에서 공개')}${soon('??? 도전', '부산 편에서 공개')}</div>`;
     else { const fe = norm.includes(rec) && this.unlocked(rec) ? rec : null; // v2.0.5 지금 갈 곳 추천 1개를 위에 크게 + 나머지 6개를 3×2 (지역 7곳 = 이야기 7장 — 지울 수 없어 배치로 맞춤)
       h += (fe ? `<div class="map-grid one">${card(fe, true)}</div>` : '') + `<div class="map-grid">${norm.filter(id => id !== fe).map(id => card(id)).join('')}</div>`; }
     btns.push(['닫기', () => UI.close('dialog')]);
