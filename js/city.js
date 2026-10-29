@@ -149,10 +149,30 @@ const City = {
     if (map === 'camp' || (World.def && World.def.lab)) return;
     const zone = World.zoneIndex(), open = t => t === T.WALK || t === T.GRASS || t === T.RUBBLE;
     // 길가: 우체통 · 의류수거함 · 공중전화 · 가판대 · 재활용 더미 · 쓰레기봉투 더미 · 공공자전거 · 리어카 · 배달 오토바이 · 생선 손수레(시장 동네) · 실외기(건물 옆)
-    const CURB = [['mailbox', 0.010], ['clothesbin', 0.018], ['phonebooth', 0.023], ['recycle', 0.031], ['trashpile', 0.040], ['bikes', 0.046], ['delivery', 0.052], ['handcart', 0.057]];
-    if (zone === 1 || zone === 2) CURB.push(['kiosk', 0.062]);
-    if (zone === 1 || zone === 2 || zone === 7) CURB.push(['fishcart', 0.066]);
-    if (zone === 6 || zone === 4) CURB.push(['busshelter', 0.07]);
+    // v2.0.10 지역마다 다른 길가 소품 비율 (전체 밀도 7%는 그대로) — 명동·종로: 노점 · 수레 · 의류수거함 / 용산: 군 지역이라 민간 소품 거의 없음 / 여의도·강남: 정류장 · 우체통 · 공중전화 · 배달 / 잠실: 매표소 · 공공자전거
+    const CW = { myeongdong: { mailbox: 1, clothesbin: 3, phonebooth: 1.5, recycle: 2, trashpile: 2, bikes: 1.5, delivery: 1, handcart: 2, kiosk: 3, fishcart: 2 },
+      jongno: { mailbox: 1, clothesbin: 2, phonebooth: 1, recycle: 2, trashpile: 3, bikes: 1, delivery: 1, handcart: 3, kiosk: 2, fishcart: 3 },
+      yongsan: { mailbox: 0.3, recycle: 1, trashpile: 3, handcart: 1 },
+      yeouido: { mailbox: 2, phonebooth: 2, recycle: 1, trashpile: 1, bikes: 2, delivery: 2, busshelter: 3 },
+      gangnam: { mailbox: 1, phonebooth: 1.5, recycle: 2, trashpile: 3, bikes: 1, delivery: 3, busshelter: 2 },
+      jamsil: { mailbox: 1, phonebooth: 1, recycle: 1.5, trashpile: 1.5, bikes: 3, delivery: 1, kiosk: 2, busshelter: 1.5 } }[map] || { mailbox: 1, clothesbin: 1.5, phonebooth: 1.5, recycle: 2, trashpile: 2, bikes: 1.5, delivery: 1, handcart: 1.5 };
+    const cwSum = Object.values(CW).reduce((a, b) => a + b, 0); let acc = 0;
+    const CURB = Object.entries(CW).map(([k, w]) => [k, acc += w / cwSum * 0.07]);
+    // v2.0.10 장면 배치: 소품 하나씩 흩뿌리는 대신 그 동네다운 묶음으로 (명동 노점 · 종로 포차 골목 · 용산 검문소 · 여의도 정류장 · 강남 유흥가 · 잠실 놀이공원 입구) — [그림 키, 따라가는 칸 a, 도로에서 멀어지는 칸 c, 막는지]
+    const SCENES = { myeongdong: [[['kiosk', 0, 0], ['handcart', 2, 0], ['clothesbin', 4, 0], ['bikes', 2, 2]], [['fishcart', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0]]],
+      jongno: [[['handcart', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0], ['phonebooth', 2, 2]], [['fishcart', 0, 0], ['kiosk', 2, 0], ['clothesbin', 4, 0]]],
+      yongsan: [[['barricades', 0, 0, 1], ['hg_sandbag', 2, 0], ['barricades', 4, 0, 1], ['floodlight', 2, 2, 1]], [['hg_sandbag', 0, 0], ['barricades', 2, 0, 1], ['hg_sandbag', 4, 0]]],
+      yeouido: [[['busshelter', 0, 0], ['mailbox', 2, 0], ['phonebooth', 4, 0], ['bikes', 2, 2], ['delivery', 4, 2]], [['bikes', 0, 0], ['parasol', 2, 0], ['recycle', 4, 0]]],
+      gangnam: [[['billboard', 0, 0, 1], ['busshelter', 3, 0], ['recycle', 5, 0], ['delivery', 1, 2], ['trashpile', 5, 2]], [['delivery', 0, 0], ['trashpile', 2, 0], ['recycle', 4, 0]]],
+      jamsil: [[['ticketbooth', 0, 0, 1], ['kiosk', 2, 0], ['parasol', 4, 0], ['bikes', 2, 2]], [['bikes', 0, 0], ['parasol', 2, 0], ['kiosk', 4, 0]]] }[map] || [];
+    this.scenes = 0;
+    if (SCENES.length) for (let k = 0, n = 0, want = Math.round(W * H / 650); k < 4000 && n < want; k++) {
+      const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)), lx = x % B, ly = y % B, curb = lx === RW || ly === RW;
+      if (!curb || lx === ly || at(x, y) !== T.WALK || near(x, y) || inRiver(y)) continue;
+      const side = lx === RW ? 'x' : 'y', sc = SCENES[Math.floor(rng() * SCENES.length)], flip = rng() < 0.5; let got = 0;
+      for (const [key, a, c, solid] of sc) { const px = side === 'x' ? x + c : x + a, py = side === 'x' ? y + a : y + c; if (at(px, py) === T.WALK && free(px, py, 1, open) && put(key, px, py, 1, !!solid, { side, flip: flip !== (key === 'bikes') })) got++; }
+      if (got >= 2) n++;
+    }
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
       if (at(x, y) !== T.WALK || occ.has(y * W + x) || near(x, y) || inRiver(y)) continue;
       const h = hash2(x * 11 + 5, y * 7 + 13), lx = x % B, ly = y % B, curb = lx === RW || ly === RW, side = lx === RW ? 'x' : 'y';
