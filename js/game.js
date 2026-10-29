@@ -1654,11 +1654,12 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
   // v1.98.3 주소 이사 (이름이 「폐허의 도시」로 바뀜): 브라우저 저장은 주소마다 따로라서, 옛 주소에선 「세이브 들고 새 주소로」 한 번에
   //   옛 주소: 세이브 3칸 · 설정 · 확대를 한 덩어리로 묶어 새 주소 뒤(#move=…)에 붙여 엶 (서버로 보내는 것 없음 — 주소창 안에서만)
   //   새 주소: #move= 를 읽어 빈 칸엔 바로 넣고, 이미 저장이 있는 칸은 물어봄 → 주소창에서 지움
-  const MOVE = { from: ['seoul2049.vercel.app'], to: 'https://cityofruins.vercel.app/' };
+  const MOVE = { from: ['seoul2049.vercel.app'], to: 'https://cityofruins-guard4.vercel.app/' }; // v2.0 버셀이 cityofruins.vercel.app 를 배정하지 않아 (이미 쓰이는 이름) 실제 배정된 주소(Assigned Domains)로 — 예전 값은 남의 사이트일 수 있어 세이브를 실어 보내면 안 됨
   if (MOVE.from.includes(location.hostname)) {
     const w = document.getElementById('addr-warn'); w.classList.remove('hidden'); w.classList.add('move');
-    w.innerHTML = '게임 이름이 <b>「폐허의 도시」</b>로 바뀌면서 주소를 옮겼어요. <button id="btn-move">세이브 들고 새 주소로 가기</button>';
+    w.innerHTML = SEASON2 ? '게임 이름이 <b>「폐허의 도시」</b>로 바뀌면서 새 주소를 쓰고 있어요. <button id="btn-move">새 주소로 가기</button>' : '게임 이름이 <b>「폐허의 도시」</b>로 바뀌면서 주소를 옮겼어요. <button id="btn-move">세이브 들고 새 주소로 가기</button>';
     document.getElementById('btn-move').onclick = () => {
+      if (SEASON2) { location.href = MOVE.to; return; } // v2.0 새 시즌: 옮길 세이브 없음 (옛 세이브는 초기화 · 백업) — 세이브를 주소에 싣지 않음
       const pack = { v: 1, slots: {}, settings: null, zoom: null };
       try { for (const n of [1, 2, 3]) { const r = localStorage.getItem(slotKey(n)); if (r) pack.slots[n] = r; } pack.settings = localStorage.getItem('seoul2049-settings'); pack.zoom = localStorage.getItem('seoul2049-zoom'); } catch (e) { /* 저장 불가 */ }
       location.href = MOVE.to + '#move=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(pack)))));
@@ -1678,6 +1679,9 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
       next();
     }
   }
+  // v2.0 타이틀이 화면 높이보다 크면 통째로 줄여서 맞춤 (폰 가로 전체 화면에서 위 · 아래가 잘리던 것 — 옛 주소 안내줄 · 감사 줄이 늘어난 뒤)
+  { const m = document.querySelector('.title-main'); if (m) { const fit = () => { m.style.transform = ''; const s = Math.max(0.5, Math.min(1, (innerHeight - 8) / (m.offsetHeight || 1))); m.style.transformOrigin = 'center center'; if (s < 0.995) m.style.transform = `scale(${s.toFixed(3)})`; };
+      fit(); window.addEventListener('resize', fit); window.addEventListener('orientationchange', () => setTimeout(fit, 200)); if (window.ResizeObserver) new ResizeObserver(fit).observe(m); setTimeout(fit, 600); setTimeout(fit, 2500); } }
   // v1.98.1 크레딧은 타이틀 「크레딧」에서 (설정 화면 맨 아래에 있던 것)
   { const th = document.getElementById('title-thanks'); if (th && TESTERS.length) { th.innerHTML = `<span class="tt-h">테스트에 도움 주신 분들</span><span class="tt-n">${TESTERS.join(' · ')}</span><span class="tt-s">고맙습니다</span>`; th.classList.remove('hidden'); } } // v1.98.38 타이틀에도 (크레딧 링크가 작아 잘 안 보였음)
   document.getElementById('btn-credits').onclick = () => {
