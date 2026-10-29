@@ -81,6 +81,7 @@ const City = {
     }
     // v1.58 서울 거리 소품 2 · 공원/광장 오마주 · 지역 대형 소품 (프롬프트 28~31절 — 그림이 등록된 것만, 빈 칸에만)
     this.seoulProps(at, near, add, rng);
+    if (World.map !== 'camp') this.tidy(); // v2.0.8 겹친 소품 정리 (전봇대 전선 잇기 전에)
     // v1.21 전봇대끼리 전선 잇기 (같은 줄, 9칸 간격)
     const poles = this.props.filter(p => p.type === 'pole');
     for (const p of poles) p.next = poles.find(q => q !== p && q.side === p.side && (p.side === 'x' ? q.x === p.x && q.y > p.y && q.y - p.y <= 9 * TILE + 1 : q.y === p.y && q.x > p.x && q.x - p.x <= 9 * TILE + 1)) || null;
@@ -215,6 +216,33 @@ const City = {
       scatter(['hg_swan', 'hg_swan', 'hg_boat'], water, [T.DEEP], 7, false);
     }
     if (map === 'jamsil') for (let i = 0, k = 0; i < 4 && k < 400; k++) { const x = 2 + Math.floor(rng() * (W - 4)), y = 2 + Math.floor(rng() * (H - 4)); if (free(x, y, 1, t => t === T.WATER) && put('swanboat', x, y, 1, false, { flip: rng() < 0.5 })) i++; }
+  },
+
+  // v2.0.8 소품이 서로·차 위에 뜬금없이 겹치는 것 정리: 차 · 버스 위의 소품 삭제, 가까운 것끼리는 우선순위 낮은 쪽을 치움 (나무 뭉침 · 가로등+전봇대 · 쓰레기+나무)
+  tidy() {
+    const W = World.W, T_ = World.tiles, ground = new Set(['rubble_a', 'rubble_b', 'slab', 'debris', 'tires', 'cart']);
+    const KEEP = new Set(['bus', 'car', 'subway']);
+    const RANK = { signal: 0, lamp: 1, pole: 2, busstop: 3, pocha: 4, bench: 5, hydrant: 6, barrel: 7, scooter: 8, tree: 9, cone: 11, trash: 12, paper: 13 };
+    const rk = p => p.type === 'deco' ? (ground.has(p.key) ? 10 : 3.5) : RANK[p.type] ?? 5;
+    const minD = (a, b) => (a.type === 'tree' && b.type === 'tree') ? 46 : (rk(a) >= 11 || rk(b) >= 11) ? 26 : 36;
+    const cars = this.props.filter(p => p.type === 'car' || p.type === 'bus');
+    const underCar = p => { // 차 · 버스 몸통 위 (길이 방향 · 폭 방향 타원)
+      for (const c of cars) { const al = c.type === 'bus' ? 92 : 44, ac = c.type === 'bus' ? 38 : 26, dx = Math.abs(p.x - c.x), dy = Math.abs(p.y - c.y), along = c.vertical ? dy : dx, across = c.vertical ? dx : dy; if (along < al && across < ac) return true; }
+      return false;
+    };
+    let list = this.props.filter(p => !KEEP.has(p.type));
+    const gone = new Set();
+    for (const p of list) if (p.type !== 'deco' && (T_[Math.floor(p.y / TILE) * W + Math.floor(p.x / TILE)] === T.CAR || underCar(p))) gone.add(p);
+    list = list.filter(p => !gone.has(p)).sort((a, b) => rk(a) - rk(b)); // 우선순위 높은 것부터 자리 잡기
+    const grid = new Map();
+    for (const p of list) {
+      const cx = Math.floor(p.x / 64), cy = Math.floor(p.y / 64); let bad = false;
+      for (let dx = -1; dx <= 1 && !bad; dx++) for (let dy = -1; dy <= 1 && !bad; dy++) for (const q of grid.get((cx + dx) + ',' + (cy + dy)) || []) if (Math.hypot(p.x - q.x, p.y - q.y) < minD(p, q)) { bad = true; break; }
+      if (bad && (p.type !== 'deco' || ground.has(p.key))) { gone.add(p); continue; } // 큰 소품(deco)은 자리를 비워 두고 놓았으니 그대로
+      const k = cx + ',' + cy; (grid.get(k) || grid.set(k, []).get(k)).push(p);
+    }
+    this.props = this.props.filter(p => !gone.has(p));
+    this.tidied = gone.size;
   },
 
   // ---------------- 그리기 ----------------
