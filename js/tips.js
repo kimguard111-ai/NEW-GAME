@@ -54,6 +54,7 @@ const Tips = {
     const near = (e, r) => e.hp > 0 && dist(e, p) < r;
     const w = curWeapon(), mh = PlayerStats.maxHp(p);
     if (World.map === 'camp' && !p.tips.includes('growth') && ((p.rec && p.rec.extracts) || p.deaths)) return Growth.show(); // v1.30 첫 출격 뒤 성장 안내 (한 번)
+    if (World.map === 'camp' && p.smgGift && p.tips.includes('growth') && !p.tips.includes('smgGift') && !UI.anyOpen()) return SmgGuide.show(); // v2.0.23 기관단총 지급 안내
     if (!p.tips.includes('sp') && (p.sp || 0) >= 1 && SKILLS.some(s => (!p.skills[s.id] && p.level >= s.lvl) || (p.skills[s.id] && srank(s.id) < SKILL_RANKS && p.level >= rankLvl(s, srank(s.id) + 1))) && !UI.anyOpen()) return this.show('sp');
     if (!p.tips.includes('belt') && BELT_ITEMS.some(k => k !== 'ammo' && consCount(k) && !p.hotbar.slice(0, beltSlots(p)).includes(k)) && !p.hotbar.slice(0, beltSlots(p)).includes(null)) return this.show('belt'); // v1.50
     if (World.map === 'camp' && p.level >= 5 && p.credits >= FAC_COST[0].credits && !Object.values(p.camp || {}).some(Boolean) && !p.tips.includes('camp')) return this.show('camp');
@@ -96,5 +97,20 @@ const Growth = {
       + row('map', '캠프 시설', '나한테 오면 의무실이나 사격장 같은 걸 지을 수 있어.')
       + `</div><span class="muted">"좋은 물건은 가게보다 밖에서 나와. 대신 살아서 돌아와야 네 거다."</span>`, [['알겠어요', () => UI.close('dialog')]]);
     SFX.play('ui');
+  },
+};
+
+// v2.0.23 첫 탈출 선물: 정찰조가 남긴 기관단총 — 처음 만지는 사람이 막히지 않게 장착 · 탄약 · 쓰는 법을 한 화면에
+const SmgGuide = {
+  show() {
+    const p = G.player; if (UI.anyOpen()) return; p.tips.push('smgGift');
+    const lv = WEAPONS.smg.lvl || 3, row = (ic, t, d) => `<div class="gw-row">${ICON(ic)} <b>${t}</b><span>${d}</span></div>`;
+    UI.dialog('생존자 대장 한씨', `"성당에서 정찰조가 남긴 게 있더군. 첫 탈출 선물이다. <b>SP-9 기관단총</b> — 받아 둬."<div class="growth">`
+      + row('bag', `가방 ${tipKey('(I)', '')}에서 장착`, `가방에 들어 있다. <b>Lv${lv}</b>부터 쓸 수 있고, 주무기 칸에 끼우면 권총 대신 든다. 전환은 ${tipKey('Q', 'Q 버튼')}.`)
+      + row('ammo', '탄은 기관총탄', '권총탄과 달라. 기관총탄은 <b>기관단총 · 소총 · 기관총</b>이 같이 쓴다. 윤씨에게서 120발에 45₵.')
+      + row('smg', '쏘는 법', '연사가 빠르지만 탄이 퍼진다. 가까운 놈은 갈기고, 먼 놈은 오른쪽 클릭(조준)으로 모아서.')
+      + row('tip', `재장전 ${tipKey('(R)', '')}`, '탄창 32발. 비기 전에 갈아 끼우는 게 안전해.')
+      + `</div><span class="muted">"권총은 머리를 노릴 때, 이건 떼로 올 때. 상황 봐서 바꿔 들어."</span>`, [['고맙습니다', () => UI.close('dialog')], ['가방 열기', () => { UI.close('dialog'); UI.toggle ? UI.toggle('inventory') : 0; }]]);
+    SFX.play('quest');
   },
 };

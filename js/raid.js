@@ -186,10 +186,12 @@ const Raid = {
     Settlement.onExtract(r); // v1.43 구한 사람 합류 · 캠프 사람들이 물건을 모아 둠
     const items = this.allItems().filter(it => it.raid);
     for (const it of items) delete it.raid;
+    const firstExtract = !(p.rec && p.rec.extracts) && !p.smgGift; // v2.0.23 첫 탈출 → 정찰조 기관단총 지급
     Journal.onExtract(r, r.credits); // v1.15 기록
     p.raid = null;
     this.toCamp();
     this.summary(true, r, items);
+    if (firstExtract) { p.smgGift = true; const g = makeGear('smg', Math.max(p.level, WEAPONS.smg.lvl || 3), 0); g.isNew = true; if (!addItem(g)) { p.stash = p.stash || []; p.stash.push(g); } log(`정찰조가 남긴 장비를 받았다: ${g.name}`, '#ffd76a'); }
     Journal.onMythSecured(items); // v1.63 신화 확보 (캠프로 돌아온 뒤 — 출격 중이면 알림이 밀림)
     log(`탈출 성공! 이번 출격: 장비 ${items.length}개, 크레딧 ${fmt(r.credits)} 확보.`, '#7fe08a');
     SFX.play('quest'); Music.sting('sting_extract'); // v1.76 탈출 음악
