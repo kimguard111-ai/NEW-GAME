@@ -43,13 +43,13 @@ const City = {
         else if (curb && h < 0.06) add('tree', x * TILE + 16, y * TILE + 16, { dead: zone >= 3 || h < 0.02, s: 0.8 + h * 4 });
         else if (curb && (lx === RW ? y : x) % 9 === 4 && lx !== ly && h > 0.25) add('pole', x * TILE + 16, y * TILE + 16, { side: lx === RW ? 'x' : 'y', tf: h > 0.8 }); // v1.21 전봇대 (전선은 다음 전봇대까지)
         else if (curb && h > 0.6 && h < 0.615) add('busstop', x * TILE + 16, y * TILE + 16, { side: lx === RW ? 'x' : 'y', n: 100 + Math.floor(h * 9000) % 700 });
-        else if (!curb && h > 0.7 && h < 0.708 && (zone === 1 || zone === 2 || zone === 7)) add('pocha', x * TILE + 16, y * TILE + 16, { c: Math.floor(h * 1000) % 2 });
+        else if (!curb && h > 0.7 && h < 0.708 && (zone === 1 || zone === 2 || zone === 7) && !(World.lots && World.lots.has(Math.floor(y / B) * 1000 + Math.floor(x / B)))) add('pocha', x * TILE + 16, y * TILE + 16, { c: Math.floor(h * 1000) % 2 });
         else if (h > 0.5 && h < 0.507) add('scooter', x * TILE + 16, y * TILE + 16, { a: h * 40 });
         else if (lx === RW && ly === RW && h < 0.6) add('signal', x * TILE + 8, y * TILE + 8, { ph: h * 10 }); // v1.11 교차로 모서리 신호등
         else if (curb && h > 0.3 && h < 0.33) add('bench', x * TILE + 16, y * TILE + 16, { side: lx === RW ? 'x' : 'y' });
         else if (curb && h > 0.4 && h < 0.415) add('hydrant', x * TILE + 16, y * TILE + 16);
-        else if (junk && h > 0.86 && h < 0.9) add('paper', x * TILE + 16, y * TILE + 16, { s: h });
-        else if (junk && h > 0.9) add('trash', x * TILE + rand2(h, 8, 24), y * TILE + rand2(h * 7, 8, 24), { n: 2 + Math.floor(h * 100) % 3 });
+        else if (junk && h > 0.86 && h < (curb ? 0.9 : 0.875)) add('paper', x * TILE + 16, y * TILE + 16, { s: h });
+        else if (junk && h > (curb ? 0.9 : 0.955)) add('trash', x * TILE + rand2(h, 8, 24), y * TILE + rand2(h * 7, 8, 24), { n: 2 + Math.floor(h * 100) % 3 });
         else if (junk && h > 0.83 && h < 0.86 && zone >= 1) add('barrel', x * TILE + 16, y * TILE + 16);
       } else if (t === T.RUBBLE && h > 0.9) add('deco', x * TILE + 16, y * TILE + 16, { key: ['rubble_a', 'rubble_b', 'slab', 'debris', 'tires'][Math.floor(h * 1000) % 5] }); // v1.18 잔해 장식 (그림이 있을 때만 보임)
       else if (t === T.WALK && h > 0.88 && h < 0.885) add('deco', x * TILE + 16, y * TILE + 16, { key: 'cart' });
@@ -59,7 +59,7 @@ const City = {
     // 버스: 도로 한 차선 위 5칸 (v1.21 실제 스케일: 3칸 → 5칸 ≈ 8m · 막힌 칸으로 만들어 엄폐물이 됨)
     for (let n = 0, tries = 0; n < 12 && tries < 600; tries++) {
       const vert = rng() < 0.5, bx = Math.floor(rng() * (W / B)) * B, by = Math.floor(rng() * (H / B)) * B;
-      const lane = 1 + Math.floor(rng() * 2), off = RW + 2 + Math.floor(rng() * (B - RW - 8));
+      const lane = 1 + Math.floor(rng() * 2), off = RW + 3 + Math.floor(rng() * (B - RW - 9)); /* 교차로 횡단보도에서 한 칸 더 띄움 */
       // v1.47.1 버스 폭도 2칸 (그림이 2칸 폭이라 1칸만 막으면 옆구리로 파고들던 것)
       const cells = [];
       for (const w of [0, 1]) for (let k = 0; k < 5; k++) cells.push(vert ? [bx + lane + w, by + off + k] : [bx + off + k, by + lane + w]);
@@ -185,6 +185,17 @@ const City = {
       const h = hash2(x * 11 + 5, y * 7 + 13), lx = x % B, ly = y % B, curb = lx === RW || ly === RW, side = lx === RW ? 'x' : 'y';
       if (curb) { const c = CURB.find(([, p]) => h < p); if (c && put(c[0], x, y, 1, false, { side, flip: (side === 'x') !== (h * 1000 % 2 < 1) })) continue; }
       else if (h < 0.05 && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) === T.BUILDING)) put('vent', x, y, 1, false, { flip: h < 0.025 });
+    }
+    // v2.0.14 가게 문 앞 소품: 가게 이름에 맞는 것을 문 옆(문을 막지 않게 2칸 옆) 보도에 — 카페 파라솔 · 편의점 자전거 · 세탁소 의류수거함 등
+    const FRONT = { 카페: 'parasol', 분식집: 'kiosk', 편의점: 'bikes', 마트: 'recycle', 세탁소: 'clothesbin', 서점: 'handcart', 학원: 'bikes', 'PC방': 'delivery', 노래방: 'delivery', 약국: 'mailbox', 파출소: 'barricades', 병원: 'busshelter', 전자상가: 'handcart', 은행: 'phonebooth', 미용실: 'clothesbin' };
+    for (const b of World.buildings || []) {
+      const key = FRONT[b.name]; if (!key || !b.door || !b.door[0]) continue;
+      const [d0x, d0y] = b.door[0], [d1x, d1y] = b.door[1] || b.door[0], south = d0y === b.y1, out = south ? [0, 1] : [1, 0], along = south ? [1, 0] : [0, 1];
+      for (const sgn of rng() < 0.5 ? [1, -1] : [-1, 1]) {
+        const base = sgn > 0 ? [Math.max(d0x, d1x), Math.max(d0y, d1y)] : [Math.min(d0x, d1x), Math.min(d0y, d1y)];
+        const px = base[0] + out[0] + along[0] * sgn * 2, py = base[1] + out[1] + along[1] * sgn * 2;
+        if (at(px, py) === T.WALK && !near(px, py) && !edge(px, py) && !inRiver(py) && ![-1, 0, 1].some(dy => [-1, 0, 1].some(dx => occ.has((py + dy) * W + px + dx))) && put(key, px, py, 1, key === 'barricades', { side: south ? 'y' : 'x', flip: rng() < 0.5 })) break;
+      }
     }
     // 길가 죽은 나무 몇 그루 → 전선이 감긴 나무
     for (const p of this.props) if (p.type === 'tree' && p.dead && has('wiretree') && at(Math.floor(p.x / TILE), Math.floor(p.y / TILE)) === T.WALK && hash2(Math.floor(p.x), Math.floor(p.y)) < 0.2) { p.type = 'deco'; p.key = 'wiretree'; }
