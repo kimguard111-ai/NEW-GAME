@@ -77,8 +77,19 @@ const City = {
       if (at(nx, ny) === T.ROAD && !near(nx, ny)) { T_[ny * W + nx] = T.CAR; cells.push([nx, ny]); }
       for (const [cx, cy] of cells) this.carSkip.add(cy * W + cx);
       const h = hash2(x * 5 + 3, y * 9 + 1), zone = World.zoneIndex(x * TILE, y * TILE), [lx, ly] = cells[cells.length - 1];
-      add('car', (x + lx + 1) / 2 * TILE, (y + ly + 1) / 2 * TILE, { vertical: vert, front: lx + ly, len: cells.length, h, police: h < 0.12 && zone >= 1, burnt: isBurningCar(x, y), tx: x, ty: y });
+      add('car', (x + lx + 1) / 2 * TILE, (y + ly + 1) / 2 * TILE, { vertical: vert, front: lx + ly, len: cells.length, h, police: h < 0.12 && zone >= 1, burnt: isBurningCar(x, y), tx: x, ty: y, cells });
     }
+    // v2.0.16 자동차끼리 그림이 겹치지 않게: 칸은 달라도 그림(길이 약 3칸)이 겹쳐 보이던 것 → 겹치는 차는 치움 (버스는 그대로, 차를 치움)
+    { const GARB = (cx, cy) => ((cx % B) < RW || (cy % B) < RW ? T.ROAD : T.WALK), keep = this.props.filter(q => q.type === 'bus');
+      const hit = (a, b) => { // 차 · 버스 그림 상자 (길이 방향 반 · 폭 반)
+        const hl = o => o.type === 'bus' ? 84 : 48, hw = o => o.type === 'bus' ? 34 : 24, dx = Math.abs(a.x - b.x), dy = Math.abs(a.y - b.y);
+        if (!!a.vertical === !!b.vertical) { const al = a.vertical ? dy : dx, ac = a.vertical ? dx : dy; return al < hl(a) + hl(b) && ac < hw(a) + hw(b); }
+        return Math.hypot(dx, dy) < Math.max(hl(a), hl(b)) + Math.min(hw(a), hw(b)) * 0.6; // 서로 직각이면 대략 원으로
+      };
+      for (const c of this.props.filter(q => q.type === 'car')) {
+        if (keep.some(k => hit(c, k))) { for (const [cx, cy] of c.cells) { const i = cy * W + cx; T_[i] = GARB(cx, cy); this.carSkip.delete(i); } c.gone = true; } else keep.push(c);
+      }
+      this.props = this.props.filter(q => !q.gone); }
     // v1.58 서울 거리 소품 2 · 공원/광장 오마주 · 지역 대형 소품 (프롬프트 28~31절 — 그림이 등록된 것만, 빈 칸에만)
     this.seoulProps(at, near, add, rng);
     if (World.map !== 'camp') this.tidy(); // v2.0.8 겹친 소품 정리 (전봇대 전선 잇기 전에)
