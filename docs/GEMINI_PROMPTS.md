@@ -1411,6 +1411,51 @@ Match the art style of the attached concept image. Create ONE sprite sheet image
 ```
 **등록할 때:** `new` 폴더에 `heuksu.png` 로 올려 주면 제가 잘라서 `js/assets.js` 에 넣고 `ASSAULTS.pump.boss.art` 를 `heuksu` 로 바꿈 (크기도 ×2.7 → 그림에 맞게).
 
+## 54. 지역마다 특색 소품 (v2.0.10 후속) · 한 장에 9개 (3×3) · 6장
+피드백 「지역마다 특색이 없다 · 오브젝트 배치가 적재적소여야 한다」. v2.0.10 에서 **장면(묶음) 배치와 지역별 소품 비율**은 코드가 먼저 해 두었고, 지금은 **기존 그림을 돌려 쓰는 상태**입니다. 이 6장이 오면 지역마다 **그 동네에만 있는 소품**이 생깁니다.
+📐 **16:9** · 📎 콘셉트 아트 첨부 · 글자·상표 없음 (간판 글씨는 게임이 씀)
+
+| 장 | 파일 이름 | 지역 | 연결될 자리 (코드) |
+|---|---|---|---|
+| 54-1 | `props_myeongdong.png` | 명동 (쇼핑 · 관광 거리 · Lv1~4) | kiosk · fishcart · handcart · clothesbin 자리 (노점 줄) |
+| 54-2 | `props_jongno.png` | 종로 (옛 서울 · 궁궐 · 포차 골목 · Lv5~9) | handcart · fishcart · phonebooth · 포차 골목 |
+| 54-3 | `props_yongsan.png` | 용산 (군사구역 · Lv10~15) | barricades · hg_sandbag · floodlight 자리 (검문소) |
+| 54-4 | `props_yeouido.png` | 여의도 (금융 · 방송국 · 한강 공원 · Lv15~22) | busshelter · mailbox · phonebooth · bikes · delivery 자리 (정류장) |
+| 54-5 | `props_gangnam.png` | 강남 (유흥 · 성형외과 · 고급 상가 · Lv22~26) | billboard · delivery · trashpile 자리 (유흥가) |
+| 54-6 | `props_jamsil.png` | 잠실 (놀이공원 · 호수 · 야구장 · Lv25~30) | ticketbooth · kiosk · parasol · bikes 자리 (놀이공원 입구) |
+
+**등록할 때:** `new` 폴더에 파일 이름대로 올려 주면 제가 9개를 잘라 `js/assets.js` 에 넣고, `js/city.js` 의 지역별 장면(`SCENES`)과 길가 비율(`CW`)에 연결합니다. 9개가 다 쓰이지 않아도 괜찮아요 (맘에 안 드는 칸은 비워 두면 건너뜀).
+
+### 54-1 · 명동 (쇼핑 · 관광 거리 · Lv1~4) · `props_myeongdong.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street objects from a ruined crowded Seoul shopping street (Myeongdong), each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), objects seen from the front-left so they read clearly. In order, left to right, top to bottom: a Korean street-food stall with a striped faded awning, a grill and skewers; a cosmetics shop sandwich-board stand with a blank panel; a tourist gift-and-flower cart with wilted flowers; a collapsed shop roll shutter with two dusty mannequins behind it; a bent blank neon sign pole; a pile of abandoned tourist suitcases and a rolling luggage cart; a dented drink vending machine with a cracked front; a street musician's busking amp and speaker on a small crate; a stack of colorful shopping bags and boxes spilling onto the pavement. Detailed dark pixel art, desaturated colors with warm orange highlights, worn, dusty and abandoned. NO text, NO letters, NO logos, NO brand names anywhere (signs and banners must be blank or just color shapes). Plain solid magenta #FF00FF background, no shadows, no ground, no grid lines, leave the bottom-right corner empty.
+```
+
+### 54-2 · 종로 (옛 서울 · 궁궐 · 포차 골목 · Lv5~9) · `props_jongno.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street objects from a ruined old-town Seoul (Jongno) next to a palace, each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), objects seen from the front-left so they read clearly. In order, left to right, top to bottom: a pojangmacha tent stall with an orange tarp roof, plastic stools and a few green soju bottles on a folding table; a small curved-roof hanok gate fragment (traditional Korean tile roof on two wooden posts, partly collapsed); a traditional stone lantern; a stone guardian base pedestal with chipped carvings; a pole with a string of faded paper lanterns; an old traditional-market stall with hanging dried fish and cloth bundles under a tarp; an antique and jewelry shop sidewalk display shelf with a dusty glass case; a low stone stair bench with moss; a big traditional wooden drum on a stand with a torn skin. Detailed dark pixel art, desaturated colors with warm orange highlights, worn, dusty and abandoned. NO text, NO letters, NO logos, NO brand names anywhere (signs and banners must be blank or just color shapes). Plain solid magenta #FF00FF background, no shadows, no ground, no grid lines, leave the bottom-right corner empty.
+```
+
+### 54-3 · 용산 (군사구역 · Lv10~15) · `props_yongsan.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street objects from a ruined Korean military zone in Yongsan, each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), objects seen from the front-left so they read clearly. In order, left to right, top to bottom: a small military checkpoint guard booth with a red-and-white striped barrier arm; a row of concrete jersey barriers with faded paint; a coil section of razor wire fence on posts; a sandbag machine-gun nest with an empty tripod; a stack of olive military supply crates under a tarp; a camouflage-net tent over a field table; a portable generator beside a floodlight tripod; an abandoned olive military jeep with flat tires; a field radio table with antenna and a folding chair. Detailed dark pixel art, desaturated colors with warm orange highlights, worn, dusty and abandoned. NO text, NO letters, NO logos, NO brand names anywhere (signs and banners must be blank or just color shapes). Plain solid magenta #FF00FF background, no shadows, no ground, no grid lines, leave the bottom-right corner empty.
+```
+
+### 54-4 · 여의도 (금융 · 방송국 · 한강 공원 · Lv15~22) · `props_yeouido.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street objects from a ruined Seoul financial district and riverside park (Yeouido), each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), objects seen from the front-left so they read clearly. In order, left to right, top to bottom: an office-district bus stop with a cracked glass shelter and a blank route board; a broadcast news van with a bent satellite dish on the roof; a stock-ticker pole kiosk with a dead dark screen; a dead cherry-blossom tree with a few pale pink petals; a riverside picnic mat with an overturned cooler and a folding chair; a row of three broken flagpoles with tattered flags; large office-lobby planters with dead shrubs; a security turnstile gate with a cracked glass panel; a pile of rental bicycles tangled together. Detailed dark pixel art, desaturated colors with warm orange highlights, worn, dusty and abandoned. NO text, NO letters, NO logos, NO brand names anywhere (signs and banners must be blank or just color shapes). Plain solid magenta #FF00FF background, no shadows, no ground, no grid lines, leave the bottom-right corner empty.
+```
+
+### 54-5 · 강남 (유흥 · 성형외과 · 고급 상가 · Lv22~26) · `props_gangnam.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street objects from a ruined luxury nightlife district in Gangnam, Seoul, each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), objects seen from the front-left so they read clearly. In order, left to right, top to bottom: a tall blank neon-frame billboard tower with dead lights; a nightclub entrance with a velvet rope, chrome bollards and a dusty red carpet; an abandoned low sports coupe with a smashed windshield; a valet stand podium with a bunch of keys on a board; a clinic standing banner frame with a blank face-shaped panel and a rolling stool; a cluster of food-delivery scooters with boxes on the back; a snapped LED-screen pole with a shattered screen; a bubble-tea and coffee kiosk with a broken glass counter; a smashed designer storefront window with a mannequin in a torn evening dress. Detailed dark pixel art, desaturated colors with warm orange highlights, worn, dusty and abandoned. NO text, NO letters, NO logos, NO brand names anywhere (signs and banners must be blank or just color shapes). Plain solid magenta #FF00FF background, no shadows, no ground, no grid lines, leave the bottom-right corner empty.
+```
+
+### 54-6 · 잠실 (놀이공원 · 호수 · 야구장 · Lv25~30) · `props_jamsil.png`
+```
+Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate street objects from a ruined amusement park and lake park in Jamsil, Seoul, each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), objects seen from the front-left so they read clearly. In order, left to right, top to bottom: a striped amusement-park ticket booth with a blank window; a balloon vendor cart with deflated faded balloons hanging; a cotton-candy cart with a rusted spinning bowl; a broken carousel horse on a bent pole; a baseball-stadium turnstile with faded pennant flags; a giant cartoon mascot costume head lying on its side (generic bear-like, no logo); a rack of paddle swan boats stacked on the lakeshore; a park bench with a bent lamp post; a few stacked fireworks launch crates with burnt fuses. Detailed dark pixel art, desaturated colors with warm orange highlights, worn, dusty and abandoned. NO text, NO letters, NO logos, NO brand names anywhere (signs and banners must be blank or just color shapes). Plain solid magenta #FF00FF background, no shadows, no ground, no grid lines, leave the bottom-right corner empty.
+```
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
