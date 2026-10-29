@@ -350,6 +350,13 @@ const World = {
   makeShop(x0, y0, x1, y1, shade, rng) {
     const W = this.W, id = this.buildings.length;
     if (x1 >= W - 1 || y1 >= this.H - 1) return;
+    // v2.0.17 출입문이 맵 끝(바깥은 허공)을 보면 못 들어가던 것 → 문 앞 2칸이 맵 안의 길(보도 · 도로 · 풀)인 쪽으로, 양쪽 다 아니면 상가를 안 만듦
+    const openOut = (x, y) => x >= 1 && y >= 1 && x < W - 1 && y < this.H - 1 && [T.WALK, T.ROAD, T.GRASS, T.RUBBLE].includes(this.tiles[y * W + x]);
+    const sdx = Math.floor((x0 + x1) / 2), sdy = Math.floor((y0 + y1) / 2);
+    const inMap = (x, y) => x >= 1 && y >= 1 && x < W - 1 && y < this.H - 1; // 두 번째 칸은 이웃 블록이라 아직 안 깔렸을 수 있어 맵 안인지만
+    const southOK = openOut(sdx, y1 + 1) && openOut(sdx + 1, y1 + 1) && inMap(sdx, y1 + 2) && inMap(sdx + 1, y1 + 2);
+    const eastOK = openOut(x1 + 1, sdy) && openOut(x1 + 1, sdy + 1) && inMap(x1 + 2, sdy) && inMap(x1 + 2, sdy + 1);
+    if (!southOK && !eastOK) return;
     const h = FLOOR_H * (2 + Math.floor(rng() * 2));
     const put = (x, y, t) => { const i = y * W + x; this.tiles[i] = t; this.bid[i] = id; this.height[i] = h; this.shade[i] = shade; };
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) put(x, y, x === x0 || x === x1 || y === y0 || y === y1 ? T.WALL : T.FLOOR);
@@ -360,7 +367,7 @@ const World = {
     const ax = left ? x0 + 1 : mx + 1, bx2 = left ? mx - 1 : x1 - 1, gx = ax + Math.floor(rng() * Math.max(1, bx2 - ax - 1));
     for (let x = ax; x <= bx2; x++) if (x !== gx && x !== gx + 1) put(x, my, T.WALL);
     // 출입문: 화면에서 보이는 남쪽 또는 동쪽 벽 가운데
-    const south = rng() < 0.5, door = [];
+    const south = southOK && eastOK ? rng() < 0.5 : southOK, door = [];
     if (south) { const dx = Math.floor((x0 + x1) / 2); door.push([dx, y1], [dx + 1, y1]); }
     else { const dy = Math.floor((y0 + y1) / 2); door.push([x1, dy], [x1, dy + 1]); }
     for (const [x, y] of door) {
