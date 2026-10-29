@@ -1617,7 +1617,9 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     if (done !== '2') { let had = false;
       try { for (const n of [1, 2, 3]) for (const sfx of ['', '-bak']) { const k = slotKey(n) + sfx, raw = localStorage.getItem(k); if (!raw) continue; had = true; if (!localStorage.getItem('seoul2049-s1-' + n + sfx)) localStorage.setItem('seoul2049-s1-' + n + sfx, raw); localStorage.removeItem(k); }
         localStorage.setItem('seoul2049-season', '2'); localStorage.setItem('seoul2049-news', NEWS_V2.ver); } catch (e) { /* 막힘 */ }
-      if (had) setTimeout(() => UI.dialog('v2.0 「한강」 — 새 시즌', `<p>서울 편 마지막 장이 열리면서 <b>모든 진행을 처음부터</b> 다시 시작합니다 (레벨 · 장비 · 창고 · 이야기 · 업적 · 도감). 설정은 그대로예요.</p><ul class="news">${NEWS_V2.items.map(t => `<li>${t}</li>`).join('')}</ul><div class="muted" style="font-size:11px">함께 해 주셔서 고맙습니다 · ${GAME_VERSION}</div>`, [['새로 시작', () => UI.close('dialog')]]) || $('panel-dialog').classList.add('newsdlg'), 600); }
+      if (had) { const b = document.getElementById('season-body'), sc = document.getElementById('season-screen'); // v1.98.39 타이틀 위에 안내 (대화창은 타이틀에선 안 보였음)
+        b.innerHTML = `<p style="line-height:1.7">서울 편 마지막 장이 열리면서 <b style="color:#ffd76a">모든 진행을 처음부터</b> 다시 시작합니다.<br><span class="muted">레벨 · 장비 · 창고 · 크레딧 · 이야기 · 업적 · 도감이 초기화돼요 (설정은 그대로). 그동안 밸런스를 크게 바꿔서 다 같이 새로 출발하는 게 맞다고 봤어요. 양해 부탁드려요 🙏</span></p><div class="cr-head">v2.0 에서 달라진 것</div><ul class="news">${NEWS_V2.items.filter(t => !t.includes('새 시즌')).map(t => `<li>${t}</li>`).join('')}</ul>`;
+        sc.classList.remove('hidden'); document.getElementById('btn-season-close').onclick = () => sc.classList.add('hidden'); } }
   }
   if (document.fonts) for (const f of ['12px BlackHan', '12px Typer', '12px Pen']) document.fonts.load(f); // v1.39 캔버스 글씨용 글꼴 미리 읽기
   Sprites.loadAll();

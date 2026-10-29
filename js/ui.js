@@ -18,7 +18,7 @@ const Pause = {
     const h2 = $('ending-h2'), lore = $('ending-lore');
     const note = $('ending-note');
     if (!this.endTxt) this.endTxt = [h2.textContent, lore.innerHTML, note.innerHTML];
-    if (kind === 'seoul') { h2.textContent = '서울 편 끝 — 강 너머'; lore.innerHTML = '수문장이 쓰러지고 배수 펌프장이 20년 만에 다시 돌았다. 한강의 물길이 열리자 펌프장 통신기에 흐릿한 목소리가 걸렸다.<br>「…인천항… 배가 남아 있다… 바다로…」<br>시청역 캠프는 처음으로 서울 밖을 이야기하기 시작했다. <b>— 파트 2: 인천으로 이어집니다</b>'; note.innerHTML = '서울에서 할 일은 남아 있다. 지하 연구소 · 스카이타워 · 어설트 · 잠실 헬 난이도 — 그리고 바다 건너 다음 도시를 기다리며.'; }
+    if (kind === 'seoul') { h2.textContent = '서울 편 끝 — 강 너머'; lore.innerHTML = '수문장이 쓰러지고 배수 펌프장이 20년 만에 다시 돌았다. 한강의 물길이 열리자 펌프장 통신기에 흐릿한 목소리가 걸렸다.<br>「…인천항… 배가 남아 있다… 바다로…」<br>시청역 캠프는 처음으로 서울 밖을 이야기하기 시작했다. <b>— 파트 2: 인천으로 이어집니다</b>'; note.innerHTML = '서울에서 할 일은 남아 있다. 지하 연구소 · 스카이타워 하드 · 어설트 · 작전 — 그리고 바다 건너 다음 도시를 기다리며.'; }
     else { h2.textContent = this.endTxt[0]; lore.innerHTML = this.endTxt[1]; note.innerHTML = this.endTxt[2]; }
     const p = G.player, best = Object.values(p.assaults).reduce((a, r) => Math.max(a, r.tier || 1), 0);
     G.paused = true; input.down = false;

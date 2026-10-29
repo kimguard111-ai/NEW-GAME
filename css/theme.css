@@ -734,3 +734,9 @@ body.touch .ops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4p
 #title-thanks .tt-n { display: block; font-size: 15px; color: #ffd76a; text-shadow: 0 0 6px rgba(255,200,80,.35); }
 #title-thanks .tt-s { display: block; font-size: 11px; color: #8d8470; }
 body.touch #title-thanks { margin-top: 6px; padding: 3px 8px; } body.touch #title-thanks .tt-h { display: inline; font-size: 10px; } body.touch #title-thanks .tt-s { display: none; } body.touch #title-thanks .tt-n { display: inline; font-size: 12px; margin: 0 6px; }
+/* v1.98.39 새 시즌 안내 오버레이 */
+#season-screen { z-index: 72; } #season-screen .season-box { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow-y: auto; text-align: left; }
+#season-screen h1 { text-align: center; font-size: 22px; } #season-screen .cr-head { margin: 8px 0 2px; color: #ffd76a; }
+#season-screen ul.news { font-size: 14px; } #season-screen button { display: block; margin: 12px auto 4px; padding: 8px 40px; }
+body.touch #season-screen .season-box { padding: 8px 12px; } body.touch #season-screen h1 { font-size: 16px; margin: 2px 0 4px; } body.touch #season-screen ul.news { font-size: 11px; margin: 2px 0 4px 14px; } body.touch #season-screen p { font-size: 11px; margin: 4px 0; }
+#season-screen .season-box { display: flex; flex-direction: column; overflow: hidden; } #season-screen #season-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; } #season-screen button { flex: 0 0 auto; }
