@@ -1655,7 +1655,7 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
   //   옛 주소: 세이브 3칸 · 설정 · 확대를 한 덩어리로 묶어 새 주소 뒤(#move=…)에 붙여 엶 (서버로 보내는 것 없음 — 주소창 안에서만)
   //   새 주소: #move= 를 읽어 빈 칸엔 바로 넣고, 이미 저장이 있는 칸은 물어봄 → 주소창에서 지움
   const MOVE = { from: ['seoul2049.vercel.app'], to: 'https://cityofruins-guard4.vercel.app/' }; // v2.0 버셀이 cityofruins.vercel.app 를 배정하지 않아 (이미 쓰이는 이름) 실제 배정된 주소(Assigned Domains)로 — 예전 값은 남의 사이트일 수 있어 세이브를 실어 보내면 안 됨
-  if (MOVE.from.includes(location.hostname)) {
+  if (false && MOVE.from.includes(location.hostname)) { // v2.0.2 새 주소(cityofruins-guard4)가 버셀 로그인 벽 뒤에 있어 테스터가 접근 요청 메일을 보냄 — 공개 확인 전까지 안내줄을 숨김 (옛 주소 seoul2049 는 그대로 잘 열림)
     const w = document.getElementById('addr-warn'); w.classList.remove('hidden'); w.classList.add('move');
     w.innerHTML = SEASON2 ? '게임 이름이 <b>「폐허의 도시」</b>로 바뀌면서 새 주소를 쓰고 있어요. <button id="btn-move">새 주소로 가기</button>' : '게임 이름이 <b>「폐허의 도시」</b>로 바뀌면서 주소를 옮겼어요. <button id="btn-move">세이브 들고 새 주소로 가기</button>';
     document.getElementById('btn-move').onclick = () => {

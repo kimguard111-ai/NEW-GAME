@@ -740,3 +740,7 @@ body.touch #title-thanks { margin-top: 6px; padding: 3px 8px; } body.touch #titl
 #season-screen ul.news { font-size: 14px; } #season-screen button { display: block; margin: 12px auto 4px; padding: 8px 40px; }
 body.touch #season-screen .season-box { padding: 8px 12px; } body.touch #season-screen h1 { font-size: 16px; margin: 2px 0 4px; } body.touch #season-screen ul.news { font-size: 11px; margin: 2px 0 4px 14px; } body.touch #season-screen p { font-size: 11px; margin: 4px 0; }
 #season-screen .season-box { display: flex; flex-direction: column; overflow: hidden; } #season-screen #season-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; } #season-screen button { flex: 0 0 auto; }
+/* v2.0.2 출격 지도: 엔드게임 줄 머리글 · 도전 이름표 */
+.sum-head.eg-head { margin-top: 8px; font-size: 13px; } .sum-head.eg-head .muted { font-size: 11px; font-weight: normal; }
+.mc-chal { display: inline-block; font-size: 10px; padding: 0 5px; margin-left: 4px; border: 1px solid #ff9a5a; color: #ffb27a; vertical-align: middle; }
+body.touch .sum-head.eg-head { margin-top: 4px; font-size: 11px; } body.touch .sum-head.eg-head .muted { display: none; }

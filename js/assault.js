@@ -20,7 +20,7 @@ const ASSAULTS = {
 ASSAULTS.coex = { name: '무역센터 탈환전', level: 24, minLevel: 21, par: 85, limit: 300,
   waves: [{ merc: 4, shield: 2 }, { merc: 4, drone: 3, shield: 2 }, { merc: 4, shield: 3, drone: 2, elites: 2 }],
   boss: { name: '블랙선 중화기병 「모루」', art: 'anvil', base: 'shield', hpMul: 10, dmgMul: 1.3, scale: 1.4, patterns: ['quake', 'dash', 'fan'] } };
-ASSAULTS.lotte = { name: '스카이타워 정화 작전', level: 29, minLevel: 26, par: 90, limit: 300,
+ASSAULTS.lotte = { name: '잠실 쇼핑몰 탈환전', /* v2.0.2 도전 던전 「스카이타워」와 이름이 겹쳐 헷갈림 — 타워 바깥(쇼핑몰 · 광장) 진압 */ level: 29, minLevel: 26, par: 90, limit: 300,
   waves: [{ stalker: 4, zombie: 6 }, { stalker: 4, brute: 2, spitter: 3 }, { stalker: 5, brute: 3, zombie: 4, elites: 3 }],
   boss: { name: '포식 변이체 「여왕」', art: 'queen', base: 'brute', hpMul: 10, dmgMul: 1.35, scale: 1.7, patterns: ['glutton', 'brood', 'quake'] } };
 // v1.98.23 한강 (v2.0): 배수 펌프장 — 한강에만 어설트가 없던 것 · 보스 그림 heuksu (v1.98.24 · GEMINI 53-1)
