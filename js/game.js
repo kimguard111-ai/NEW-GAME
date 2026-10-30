@@ -318,6 +318,9 @@ function dodge() {
   p.rollT = ROLL.dur; p.rollCd = p.rollCdMax = rollCdMax(p); p.rollA = a; p.lastRoll = G.time;
   SFX.play('dodge'); burst(p.x, p.y, '#8a8070', 8, 90, 0.35, 3);
 }
+// v2.0.24 쿼터뷰라 화면 위아래 이동은 같은 속도여도 가로의 절반으로 보임 (2:1) → 위아래 성분만큼 속도 ×최대 1.5 (화면 위아래 속도가 가로의 0.75배가 되게)
+const VERT_BOOST = 0.5;
+function vertMul(wx, wy) { const l = Math.hypot(wx, wy) || 1, dx = wx / l, dy = wy / l, sx = Math.abs(dx - dy) * 0.9, sy = Math.abs(dx + dy) * 0.45; return 1 + VERT_BOOST * sy / (Math.hypot(sx, sy) || 1); }
 // 현재 이동 입력 (월드 방향, 정규화 안 됨). 없으면 null
 function moveInput() {
   let mx = 0, my = 0, amt = 1;
@@ -1425,7 +1428,7 @@ function update(dt) {
       for (let i = 0; i < 2; i++) G.particles.push({ x: p.x + rand(-5, 5), y: p.y + rand(-5, 5), vx: -Math.cos(p.rollA) * rand(20, 60) + rand(-20, 20), vy: -Math.sin(p.rollA) * rand(20, 60) + rand(-20, 20), t: 0, life: rand(0.3, 0.55), color: 'rgba(150,140,120,0.55)', size: rand(4, 7), z: 2, vz: 14 }); // 바닥 먼지
     } else if (mv) {
       const { wx, wy, amt } = mv;
-      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt * World.slow(p.x, p.y) * (1 - ADS.k * (1 - clamp(0.6 * attMul(curWeapon(), 'adsMove'), 0.3, 1))) * attMul(curWeapon(), 'move'); // v1.50 앵글 손잡이 · 4배 · 드럼 // v1.6 물속은 느림
+      const l = Math.hypot(wx, wy), sp = PlayerStats.speed(p) * dt * amt * vertMul(wx, wy) * World.slow(p.x, p.y) * (1 - ADS.k * (1 - clamp(0.6 * attMul(curWeapon(), 'adsMove'), 0.3, 1))) * attMul(curWeapon(), 'move'); // v1.50 앵글 손잡이 · 4배 · 드럼 // v1.6 물속은 느림
       World.move(p, wx / l * sp, wy / l * sp);
       p.walkT = (p.walkT || 0) + dt;
     }

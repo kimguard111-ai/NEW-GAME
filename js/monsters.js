@@ -209,7 +209,7 @@ const Monsters = {
       if (e.nadeT <= 0 && d > 140 && d < (e.def.nade === 'weak' ? 300 : 380) && (los || flush)) {
         e.nadeT = (e.def.nade === 'weak' ? rand(18, 26) : rand(9, 13)) * (e.fireMul || 1); e.lastAtk = G.time;
         const tx = p.x + rand(-15, 15), ty = p.y + rand(-15, 15);
-        this.strike(tx, ty, 72, 1.2, e.dmg * (e.def.nade === 'weak' ? 1.3 : 2.2) * b, 'rgba(255,150,50,');
+        this.strike(tx, ty, 60 /* v2.0.24 72 → 60 */, 1.2, e.dmg * (e.def.nade === 'weak' ? 1.3 : 2.2) * b, 'rgba(255,150,50,');
         G.effects.push({ type: 'nade', x: e.x, y: e.y, x2: tx, y2: ty, t: 0, life: 0.75 }); // 날아가는 수류탄
         floatText(e.x, e.y - 40, '수류탄!', '#ffb040', 13);
         return true;
