@@ -520,7 +520,7 @@ const UI = {
         + `<b>세이브 백업</b> <span class="muted">다른 기기·브라우저로 옮길 때</span><br>`
         + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button><br>`
         + `<b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`
-        + `<b>내 데이터 삭제</b> <span class="muted">이 기기에 저장된 세이브 · 설정을 모두 지움 (되돌릴 수 없음 · 세이브 코드를 먼저 만들어 두세요)</span><br><button id="btn-wipe">내 데이터 전부 삭제</button><br>`
+        + `<br><b>내 데이터 삭제</b> <span class="muted">이 기기에 저장된 세이브 · 설정을 모두 지움 (되돌릴 수 없음 · 세이브 코드를 먼저 만들어 두세요)</span><br><button id="btn-wipe">내 데이터 전부 삭제</button><br>`
         + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
         + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`
       );
