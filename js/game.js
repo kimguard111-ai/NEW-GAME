@@ -89,9 +89,11 @@ function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
 function curWeapon() { const p = G.player; return p.equip[p.active]; }
 // v1.49.9 조준 (PC 오른쪽 클릭 누르는 동안): 퍼짐 ↓ · 이동 60% · 시야를 커서 쪽으로 더. 0~1 (부드럽게 들어감)
 function adsOn() { const p = G.player, w = p && curWeapon(); return (!IS_TOUCH || Pad.on) && !!input.aim && !!w && !WEAPONS[w.key].melee && !p.dead && !UI.anyOpen(); }
-function adsSpreadMul(w) { const hip = (IS_TOUCH && !Pad.on) ? ADS.hip : (ADS.hipPc[wbase(w.key)] ?? ADS.hip); return lerp(hip * attMul(w, 'hipSpread'), (ADS.spread[wbase(w.key)] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
+function adsSpreadMul(w) { const hip = (IS_TOUCH && !Pad.on) ? ADS.hip : ((Settings.rmbAim || Pad.on) ? ADS.hipPc : ADS.hipPcOld)[wbase(w.key)] ?? ADS.hip; return lerp(hip * attMul(w, 'hipSpread'), (ADS.spread[wbase(w.key)] ?? 0.6) * attMul(w, 'adsSpread'), ADS.k); } // v1.50 조준경 · 레이저
 const ADS = { k: 0, spread: { sniper: 0.3, rifle: 0.5, lmg: 0.6, smg: 0.6, shotgun: 0.75, pistol: 0.55 }, hip: 1.12,
-  hipPc: { sniper: 2.6, rifle: 2.1, lmg: 1.9, smg: 1.9, pistol: 1.8, shotgun: 1.12 } }; // v1.98.30 PC · 패드: 조준(우클릭 · LT) 없이 쏘면 많이 퍼짐 (산탄총은 그대로) · 폰은 조준 버튼이 없어 그대로
+  // v2.0.26 덕코프처럼: PC에서 조준(우클릭 · LT) 없이 쏘면 크게 퍼짐 → 조준 사격이 기본 (권총 ±8.6° · 소총 ±11° · 기관단총 ±20° · 기관총 ±21° · 산탄총 ±27°). 조준하면 ±1~13°. 오른쪽 클릭 조준을 꺼 둔 사람은 예전 값
+  hipPc: { sniper: 4.0, rifle: 5.0, lmg: 4.0, smg: 2.4, pistol: 5.0, shotgun: 1.6 },
+  hipPcOld: { sniper: 2.6, rifle: 2.1, lmg: 1.9, smg: 1.9, pistol: 1.8, shotgun: 1.12 } }; // v1.98.30 PC · 패드: 조준(우클릭 · LT) 없이 쏘면 많이 퍼짐 (산탄총은 그대로) · 폰은 조준 버튼이 없어 그대로
 // 타격감: 아주 짧게 게임을 멈춤 (렌더는 계속)
 // v1.96 보스와 싸우는 중 (타이탄 · 장 보스 · 필드 보스가 가까이) — 이때는 새 적 · 증원이 안 옴 (테스터: 10렙 보스 잡는데 잡몹이 30마리씩)
 function bossFight() { const p = G.player; return [G.boss, G.elite, G.fieldBoss, G.echoBoss].find(b => b && b.hp > 0 && dist(b, p) < 1100) || null; }
@@ -467,7 +469,7 @@ function playerAttack() {
   if (wbase(w.key) === 'lmg') p.heat = w.unique === 'titan' ? 1 : Math.min(1, (p.heat || 0) + 0.04); // v1.12 타이탄 심장포: 항상 예열
   const frag = w.unique === 'raven' && (p.ravenN = (p.ravenN || 0) + 1) % 3 === 0; // v1.12 레이븐: 3발째 파편
   p.lastShot = G.time;
-  const spread = b.spread * adsSpreadMul(w) * attMul(w, 'spread') * (rapid ? attMul(w, 'autoSpread') : 1) * (1 - gearBonus(p, 'accuracy', w)) * (wbase(w.key) === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? 0.15 : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
+  const spread = b.spread * adsSpreadMul(w) * attMul(w, 'spread') * (rapid ? attMul(w, 'autoSpread') : 1) * (1 - gearBonus(p, 'accuracy', w)) * (wbase(w.key) === 'lmg' ? 1 - 0.55 * (p.heat || 0) : 1) * (first ? (IS_TOUCH && !Pad.on ? 0.15 : 0.15 + 0.85 * (1 - ADS.k)) : 1), pierce = (b.pierce || 0) + gearBonus(p, 'pierce', w) + (w.unique === 'hawk' ? 2 : 0);
   const mz = gunMuzzle(p, w), mx = mz.x, my = mz.y, aim0 = mz.a;
   const life = b.range / b.speed;
   const sid = (G.shotId = (G.shotId || 0) + 1); // v1.40 같은 한 발(산탄 여러 알) 표시

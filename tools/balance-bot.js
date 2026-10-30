@@ -119,13 +119,13 @@ const START = +process.argv[4] || 0, FIXMAP = process.argv[5] || ''; // 시나�
       else if (!goal && !G.assault && tg && st && (st.type === 'reach' || st.type === 'hunt' || (st.type === 'kill' && st.target === 'boss')) && !(st.type === 'hunt' && G.elite && dist(G.elite, p) < 500) && !(st.target === 'boss' && G.boss && dist(G.boss, p) < 500)) goal = ['st' + st.type, tg.x, tg.y];
       // 목표(탈출·이야기)가 있으면 이동은 목표 쪽, 사격은 따로 (사람처럼 쏘면서 이동). 바로 붙은 적만 상대
       if (goal && !(best && bd < 140)) {
-        if (best && bd < 600) { input.mx = Iso.sx(best.x, best.y); input.my = Iso.sy(best.x, best.y, 20); input.down = World.lineOfSight(p, best) && bd < range + best.r; } else input.down = false;
+        if (best && bd < 600) { input.mx = Iso.sx(best.x, best.y); input.my = Iso.sy(best.x, best.y, 20); input.down = World.lineOfSight(p, best) && bd < range + best.r; } else input.down = false; input.aim = !!input.down; // v2.0.26 PC 는 조준 사격이 기본 (조준 안 하면 크게 퍼짐)
         const key = goal[0] + Math.round(goal[1]) + ',' + Math.round(goal[2]);
         if (B.fieldKey !== key) { B.field = B.makeField(goal[1], goal[2]); B.fieldKey = key; }
         B.goField(B.field, sp * 0.85);
       } else if (best && bd < (leave ? 220 : 650)) {
         input.mx = Iso.sx(best.x, best.y) + Math.sin(G.time * 3.1) * 30; input.my = Iso.sy(best.x, best.y, 20) + Math.cos(G.time * 2.3) * 20;
-        const los = World.lineOfSight(p, best); input.down = los && bd < range + best.r;
+        const los = World.lineOfSight(p, best); input.down = los && bd < range + best.r; input.aim = !!input.down;
         const a = angleTo(p, best);
         if (!input.down) { if (!World.move(p, Math.cos(a) * sp, Math.sin(a) * sp)) World.move(p, Math.cos(a + 1.2) * sp, Math.sin(a + 1.2) * sp); }
         else if (bd < 120 && !W.melee) World.move(p, -Math.cos(a) * sp * 0.8, -Math.sin(a) * sp * 0.8);
