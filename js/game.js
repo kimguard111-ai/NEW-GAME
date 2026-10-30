@@ -5,6 +5,8 @@ let VW = 0, VH = 0;
 
 // v1.37 세이브 슬롯 3개: 1번 = 예전 저장 자리 그대로 (기존 세이브 유지)
 const SAVE_BASE = 'seoul2049-save-v1';
+// v2.0.27 이 기기에 저장된 모든 것 삭제 (세이브 슬롯 · 백업 · 이전 시즌 보관 · 설정 · 확대 · 소식) 뒤 새로고침
+const GameData = { wiped: false, wipe() { this.wiped = true; G.running = false; try { const del = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf('seoul2049') === 0) del.push(k); } del.forEach(k => localStorage.removeItem(k)); } catch (e) { /* 저장 불가 */ } try { if (window.caches) caches.keys().then(ks => ks.forEach(k => caches.delete(k))); } catch (e) { /* */ } setTimeout(() => { location.replace(location.pathname); }, 200); } };
 let SAVE_SLOT = 1; try { SAVE_SLOT = +localStorage.getItem('seoul2049-slot') || 1; } catch (e) { /* 저장 불가 */ }
 const slotKey = n => n === 1 ? SAVE_BASE : `${SAVE_BASE}-s${n}`;
 function saveKey() { return slotKey(SAVE_SLOT); }
@@ -102,7 +104,7 @@ const MIN_FIRE = 0.06; // v1.50.7 총 연사 하한 (초)
 const KB_RATE = 18; // v1.49.7 밀려나는 속도가 줄어드는 빠르기 (총 거리 = 처음 속도 / KB_RATE)
 
 // ---------------- 저장 ----------------
-function saveGame(silent = true) {
+function saveGame(silent = true) { if (GameData.wiped) return; /* v2.0.27 삭제 뒤엔 저장 안 함 (닫을 때 저장이 다시 만들던 것 방지) */
   if (!G.player) return;
   try {
     const p = { ...G.player, reloadT: 0, atkT: 0 }, key = saveKey();
@@ -1711,7 +1713,7 @@ window.addEventListener('unhandledrejection', e => ErrNote.show(e.reason));
     const row = (k, v) => `<div class="cr-row"><span>${k}</span><b>${v}</b></div>`;
     document.getElementById('credits-body').innerHTML = row('제작 · 기획 · 아트 디렉션', 'GuardK111') + row('프로그래밍', 'Claude Code') + row('그림 · 배경 음악', 'Gemini (AI 생성 · 가공)') + row('코드 점검', 'ChatGPT')
       + (TESTERS.length ? `<div class="cr-head">테스트에 도움 주신 분</div><div class="cr-names">${TESTERS.join(' · ')}</div><div class="muted">고맙습니다</div>` : '')
-      + `<div class="muted cr-ver">${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></div>`;
+      + `<div class="muted cr-ver">${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a> · <a href="terms.html" target="_blank" rel="noopener">이용약관</a></div>`;
     document.getElementById('credits-screen').classList.remove('hidden');
   };
   document.getElementById('btn-credits-close').onclick = () => document.getElementById('credits-screen').classList.add('hidden');

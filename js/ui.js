@@ -520,6 +520,7 @@ const UI = {
         + `<b>세이브 백업</b> <span class="muted">다른 기기·브라우저로 옮길 때</span><br>`
         + `<button id="btn-export">세이브 코드 만들기</button> <button id="btn-import">세이브 코드 불러오기</button><br>`
         + `<b>테스트 피드백</b> <span class="muted">기기 · 프레임 · 진행 · 오류를 한 번에 복사 → 댓글에 붙여 넣기 (어디로도 보내지 않음)</span><br><button id="btn-feedback">피드백 복사</button>`
+        + `<b>내 데이터 삭제</b> <span class="muted">이 기기에 저장된 세이브 · 설정을 모두 지움 (되돌릴 수 없음 · 세이브 코드를 먼저 만들어 두세요)</span><br><button id="btn-wipe">내 데이터 전부 삭제</button><br>`
         + `<textarea id="save-code" class="hidden" rows="3" spellcheck="false"></textarea>`
         + `<div class="muted">${IS_TOUCH ? '확대는 오른쪽 ＋/－ 버튼으로도 조절됩니다.' : '확대는 마우스 휠로도 조절됩니다.'} 설정은 이 기기에 저장됩니다. · ${GAME_VERSION} · <a href="privacy.html" target="_blank" rel="noopener" style="color:#9fd0ff">개인정보처리방침</a></div>`
       );
@@ -531,6 +532,7 @@ const UI = {
     $('mus-range').oninput = e => { Settings.musicVol = +e.target.value; Settings.save(); $('mus-val').textContent = Math.round(Settings.musicVol * 100) + '%'; };
     $('vol-range').oninput = e => { Settings.volume = +e.target.value; Settings.save(); SFX.setVolume(); $('vol-val').textContent = Math.round(Settings.volume * 100) + '%'; SFX.play('coin'); };
     $('btn-feedback').onclick = () => Feedback.copy($('save-code')); // v1.89
+    $('btn-wipe').onclick = () => Ask.show('이 기기에 저장된 모든 캐릭터(슬롯 1~3) · 이전 시즌 보관본 · 설정을 삭제합니다.\n되돌릴 수 없습니다. 정말 지울까요?', () => Ask.show('한 번 더 확인합니다. 모든 데이터를 지우고 처음부터 시작합니다.', () => GameData.wipe())); // v2.0.27 개인정보 삭제 요청 대응 (데이터가 이 기기에만 있으므로 직접 삭제)
     $('btn-export').onclick = () => {
       saveGame(); const ta = $('save-code'), raw = localStorage.getItem(saveKey()) || '';
       ta.value = btoa(unescape(encodeURIComponent(raw))); ta.classList.remove('hidden'); ta.select();
