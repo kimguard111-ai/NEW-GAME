@@ -262,7 +262,7 @@ const Assault = {
 const OPS_SHOP = [
   { name: '구급상자 2개', cost: 2, give: p => makeConsumable('medkit', 2) },
   { name: '작전 보급 상자 · 영웅 이상 장비 (내 레벨)', cost: 8, give: p => randomGear(p.level, 2, 3) },
-  { name: '고유 장비 · 무작위 (내 레벨)', cost: 25, give: p => makeUnique(pick(Object.keys(UNIQUES)), p.level) },
+  { name: '고유 장비 · 아직 없는 것부터 (내 레벨)', cost: 25, give: p => { const all = Object.keys(UNIQUES), had = (p.codex && p.codex.uniq) || {}, fresh = all.filter(k => !had[k]); return makeUnique(pick(fresh.length ? fresh : all), p.level); } }, // v2.0.25 아직 없는 것부터
   { name: '신화 무기 · 아직 없는 것부터', cost: 100, /* v2.0.3 60 → 100 */ give: p => { const all = Object.keys(WEAPONS).filter(k => WEAPONS[k].myth), had = (p.codex && p.codex.myth) || {}, fresh = all.filter(k => !had[k]); return makeMyth(pick(fresh.length ? fresh : all), p.level); } },
 ];
 const Ops = {

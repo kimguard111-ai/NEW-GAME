@@ -91,7 +91,7 @@ const Workshop = {
       h += `<b class="r${it.rarity}">${itemIcon(it)} ${itemName(it)}</b><br>${itemHtml(it)}<br>분해 시 ${ICON('scrap')} 고철 ${y.scrap}${y.chip ? `, ${ICON('chip')} 전자 부품 ${y.chip}` : ''}`
         + `<div class="btns"><button id="ws-salvage">분해</button></div>`;
     } else h += '<span class="muted">분해할 장비가 없습니다.</span>';
-    h += `<div class="btns"><button id="ws-bulk">일반·고급 일괄 분해</button></div><hr style="border-color:#333">소모품 제작`;
+    h += `<div class="btns"><button id="ws-bulk">일반·고급 일괄 분해</button><button id="ws-bulkall" title="잠금하지 않은 장비를 전부 (장착한 것 · 소모품 · 총기 부품 제외)">잠금 안 한 장비 전부 분해</button></div><hr style="border-color:#333">소모품 제작`;
     for (const k of Object.keys(CRAFTS)) {
       const need = CRAFTS[k].bench || 0;
       if (need > Camp.lv('bench')) { h += `<div class="btns"><button disabled>${ICON(CONSUMABLES[k].icon)} ${CONSUMABLES[k].name} <span class="muted">작업대 ${need}단계 필요</span></button></div>`; continue; }
@@ -107,6 +107,7 @@ const Workshop = {
     box.querySelectorAll('button[data-att]').forEach(b => { b.onclick = () => this.craftAtt(b.dataset.att); });
     if (it) $('ws-salvage').onclick = () => this.salvage(it);
     $('ws-bulk').onclick = () => this.bulkSalvage();
+    $('ws-bulkall').onclick = () => this.bulkSalvageAll();
     box.querySelectorAll('button[data-craft]').forEach(b => { b.onclick = () => this.craft(b.dataset.craft); });
   },
   salvage(it) {
@@ -125,6 +126,18 @@ const Workshop = {
     let s = 0, c = 0;
     for (const it of junk) { const y = this.salvageYield(it); s += y.scrap; c += y.chip; removeItem(it); }
     this.gain(s, c, `장비 ${junk.length}개 일괄 분해`);
+    this.sel = null; this.after();
+  },
+  // v2.0.25 잠금하지 않은 장비를 전부 분해 (장착 중 · 소모품 · 총기 부품 제외) — 확인창에 개수 · 등급 · 얻는 재료를 보여 줌 (하누라님 제안)
+  bulkSalvageAll() {
+    const p = G.player, eq = Object.values(p.equip), list = p.inventory.filter(it => it.kind !== 'cons' && it.kind !== 'att' && !it.locked && !eq.includes(it));
+    if (!list.length) { log('분해할 장비가 없습니다. (잠금한 장비 · 장착 중인 장비는 제외)', '#aaa'); return; }
+    let s = 0, c = 0; const by = [0, 0, 0, 0, 0, 0];
+    for (const it of list) { const y = this.salvageYield(it); s += y.scrap; c += y.chip; by[it.rarity]++; }
+    const names = RARITIES.map((r, i) => by[i] ? `${r.name} ${by[i]}` : '').filter(Boolean).join(' · '), hi = by[3] + by[4] + by[5];
+    if (!Ask.ok(`잠금하지 않은 장비 ${list.length}개 (${names})를 모두 분해할까요?\n고철 ${s}${c ? ` · 전자 부품 ${c}` : ''}을 얻습니다.${hi ? `\n⚠ 영웅 이상 ${hi}개가 들어 있어요. 아끼는 건 먼저 잠그세요.` : ''}\n되돌릴 수 없습니다.`, () => this.bulkSalvageAll())) return;
+    for (const it of list) removeItem(it);
+    this.gain(s, c, `장비 ${list.length}개 전부 분해`);
     this.sel = null; this.after();
   },
   // v1.50 부품 제작: 등급별 재료 · 작업대 단계

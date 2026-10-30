@@ -131,14 +131,21 @@ function makeConsumable(key, count = 1) {
 // 레벨에 맞는 랜덤 장비
 // bias: 지역 특산 장비 키 목록 (절반 확률로 이 중에서 고름)
 const smgLocked = () => !!(G.player && G.player.quest && G.player.quest.ch === 0 && G.player.quest.step < 2); // v2.0.7 1장 「성당 신호」 보상 전엔 기관단총이 드랍 · 상점에 안 나옴
+// v2.0.25 드랍이 같은 것만 나오던 것 (하누라님): 이미 가진 종류(가방 · 장착 · 창고)가 나오면 최대 2번 다시 굴림 · 지역 특산 비중 50% → 35%
+function ownedGearKeys() { const p = G.player; if (!p) return new Set(); const s = new Set(); for (const it of [...(p.inventory || []), ...Object.values(p.equip || {}), ...(p.stash || [])]) if (it && it.key && it.kind !== 'cons') s.add(it.key); return s; }
 function randomGear(level, rarityBonus = 0, minRarity = 0, bias = null) {
+  const own = ownedGearKeys(); let g;
+  for (let i = 0; i < 3; i++) { g = randomGear0(level, rarityBonus, minRarity, bias); if (!own.has(g.key) || g.set || g.unique) break; }
+  return g;
+}
+function randomGear0(level, rarityBonus = 0, minRarity = 0, bias = null) {
   const r = Math.max(minRarity, rollRarity(rarityBonus));
   // v1.12 세트: 출격 중 그 지역의 희귀 이상 장비 중 15%는 세트 조각
   if (r >= 2 && typeof World !== 'undefined' && World.map !== 'camp' && Math.random() < 0.15) {
     const z = World.zoneIndex(), sid = Object.keys(SETS).find(k => SETS[k].zones.includes(z));
     if (sid) { const slot = pick(['weapon', 'weapon', 'armor', 'helmet']), key = SETS[sid].pieces[slot]; if (GEAR_DEFS(key).lvl <= level + 2) return makeSetPiece(sid, slot, level, r); }
   }
-  if (bias && Math.random() < 0.5) {
+  if (bias && Math.random() < 0.35) {
     const keys = bias.filter(k => GEAR_DEFS(k).lvl <= level + 2 && tierOK(k, level) && !(k === 'smg' && smgLocked())); // v2.0 지역 특산도 단계에 맞는 것만
     if (keys.length) return makeGear(pick(keys), level, r);
   }
