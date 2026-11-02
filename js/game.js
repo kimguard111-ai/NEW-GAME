@@ -886,7 +886,7 @@ function killEnemy(e) {
   const exp = Math.round((e.def.boss ? e.def.exp : e.def.exp * e.level) * PlayerStats.expMul(p) * (e.minion ? 0.2 : 1) * (e.expMul || 1) * comboMul * (p.raid ? 1.4 : 1) * (World.def && World.def.lab ? 1.5 : 1) * KILL_EXP); // v2.0.22 처치 경험치 ×0.4 (렙업을 늦춤) // v1.31 연구소: 적이 적어(분당 처치 3.2) 경험치 ×1.5 // 엘리트 4배 · v1.16 출격 맵 처치 경험치 ×1.4 (적이 무한히 나오지 않는 만큼)
   gainExp(Math.round(exp * ((curDiff() || {}).exp || 1))); // v1.66 난이도 경험치
   p.totalKills++;
-  const ck = e.art && Sprites.get(e.art) ? e.art : e.type; // 보스 전용 그림이면 그 그림으로 쓰러짐
+  const ck = foeKey(e); // 보스 전용 그림이면 그 그림으로 · v2.0.33 지역 감염자 외형
   if (Sprites.get(ck) && ART.sprites[ck].anims.death) {
     const h = e.lastHit || {}, a = h.a ?? 0, c = { key: ck, x: e.x, y: e.y, face: e.face || 0, t0: G.time, z: 0, vx: 0, vy: 0, vz: 0, kind: '' };
     // v1.32 죽는 모습: 폭발 = 날아가며 돎 · 강한 한 방 = 뒤로 미끄러짐 · 불 = 검게 그을림 · 근접 마무리 = 빨리 쓰러짐 · 드론 = 떨어지며 연기
@@ -1182,7 +1182,7 @@ function updateRadiation(dt) {
 // ---------------- 투사체 / 수류탄 / 드랍 ----------------
 // v1.66 화면에 그려진 적 그림 사각형 (발 기준 위로 키만큼) 안에 마우스가 있으면 그 적 · 위쪽 22% = 머리
 const MOBILE_HS_T = 0.45; // v1.69 모바일 헤드샷 조준 시간(초)
-function enemyScreenH(e) { const k = e.art && ART.height[e.art] ? e.art : e.type; return (ART.height[k] || 44) * (ART.charScale || 1) * (k === e.type ? (e.scale || 1) : 1); }
+function enemyScreenH(e) { const k = e.art && ART.height[e.art] ? e.art : foeKey(e); return (ART.height[k] || 44) * (ART.charScale || 1) * (k === e.type || k === ZONE_ZOMBIE[World.map] ? (e.scale || 1) : 1); }
 function hoverEnemy(mx, my) {
   let best = null, bd = 1e9;
   for (const e of G.enemies) {

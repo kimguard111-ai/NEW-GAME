@@ -11,7 +11,7 @@ const ART = {
   fps: { idle: 6, walk: 8, /* v1.33 10 → 8 (느려진 걸음에 맞춰) */ attack: 16, hit: 12, death: 10 },
   // 화면에 표시할 대기 자세 키 (px)
   // player_vest 등 방어구별 몸 그림은 player 키를 따름
-  height: { player: 44, drowned: 44, zombie: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44, deploy: 44, stash: 44,
+  height: { player: 44, drowned: 44, zombie: 44, zombie_myeongdong: 44, zombie_jongno: 44, zombie_yongsan: 44, zombie_yeouido: 44, zombie_gangnam: 44, zombie_jamsil: 44, dog: 26, raider: 44, brute: 74, drone: 26, subject: 44, spitter: 50, sentry: 30, boss: 120, merchant: 44, captain: 44, medic: 44, mechanic: 44, deploy: 44, stash: 44,
     // v0.15 보스 전용 그림 (등록하면 기본 적 그림을 키워 쓰는 대신 이 그림 사용)
     glutton: 66, panther: 56, argos: 46, redfang: 50, viper: 58, goliath: 118, warden: 100, sumun: 100, leech: 118, butcher: 58, cerberus: 50, colony: 118, chimera: 120, merc: 44, shield: 48, stalker: 46,
     raven: 54, babel: 120, root: 124, researcher: 44, guardbot: 48, /* v1.83 */ hawk: 54, shade: 66, anvil: 62, queen: 118, heuksu: 104 /* v1.98.24 */,
@@ -378,6 +378,12 @@ const ART = {
     player_exo: { file: 'player_exo.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], hit: [2, 2], death: [3, 5] }, headW: 19, heads: { idle: [[4,-100],[4,-101],[5,-101],[4,-100]], walk: [[5,-96],[-1,-99],[-2,-95],[3,-96],[4,-95],[-3,-96],[2,-95],[-1,-95]], hit: [[-9,-99],[14,-96]], death: [[11,-96],[-41,-88],[-53,-77],[-52,-58],[-54,-55]] } },
     // v1.7.3 Gemini 아트: 적 12종 · NPC 3명
     zombie: { file: 'zombie.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5, [0, 2, 3, 4]] } },
+    // v2.0.33 지역별 감염자 외형 (능력치 · 동작은 같음 — foeKey 가 지역에 맞는 그림을 고름)
+    zombie_myeongdong: { file: 'zombie_myeongdong.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    zombie_yeouido: { file: 'zombie_yeouido.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    zombie_gangnam: { file: 'zombie_gangnam.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    zombie_jongno: { file: 'zombie_jongno.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
+    zombie_yongsan: { file: 'zombie_yongsan.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     dog: { file: 'dog.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 6], attack: [2, 4], hit: [3, 2], death: [4, 5] } },
     raider: { file: 'raider.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6, [0, 2, 3, 4, 5]] } },
     brute: { file: 'brute.png', cell: 128, w: 192, anims: { idle: [0, 4], walk: [1, 8], attack: [2, 4], hit: [3, 2], death: [4, 6] } },
@@ -497,3 +503,6 @@ for (const nk of ['hazmat', 'bsuit', 'eod'])
   for (const k of Object.keys(ART.sprites)) if (k === 'player_military' || k.startsWith('player_military_')) { const n = k.replace('military', nk); if (!ART.sprites[n]) ART.sprites[n] = { ...ART.sprites[k], file: ART.sprites[k].file.replace('military', nk) }; }
 for (const [nk, from] of [['hazHood', 'gasmask'], ['bvisor', 'tacHelmet'], ['eodHelm', 'exoHelm']]) if (!ART.helmets[nk] && ART.helmets[from]) ART.helmets[nk] = { ...ART.helmets[from] };
 
+
+// v2.0.33 지역별 감염자: 맵 → 감염자 그림 키. 그림이 없으면(잠실 등) 기본 감염자 그대로
+const ZONE_ZOMBIE = { myeongdong: 'zombie_myeongdong', jongno: 'zombie_jongno', yongsan: 'zombie_yongsan', yeouido: 'zombie_yeouido', gangnam: 'zombie_gangnam', jamsil: 'zombie_jamsil' };

@@ -1305,8 +1305,8 @@ function drawEnemyBody(e) {
     if (e.affix === 'commander') { ctx.strokeStyle = 'rgba(255,215,106,0.18)'; ctx.beginPath(); ctx.ellipse(sx, sy, 230 * ISO_K, 115 * ISO_K, 0, 0, TAU); ctx.stroke(); }
   }
   // 보스 전용 그림(e.art)이 있으면 그 그림을 제 크기로, 없으면 기본 적 그림을 e.scale 배로
-  const ak = e.art && Sprites.get(e.art) ? e.art : e.type;
-  const k = ak === e.type ? e.scale || 1 : 1; // 네임드·엘리트: 크게
+  const ak = foeKey(e);
+  const k = ak === e.type || ak === ZONE_ZOMBIE[World.map] ? e.scale || 1 : 1; // 네임드·엘리트: 크게
   if (k !== 1) { ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k); ctx.translate(-sx, -sy); }
   if (Sprites.get(ak)) {
     const hz = e.def.flying ? (34 + Math.sin(G.time * 5 + e.x) * 4) * ISO_K : 0;
@@ -2140,4 +2140,11 @@ function drawMinimapIso(mm) {
   if (tg && Math.sin(G.time * 6) > -0.3) { g.strokeStyle = '#ffd76a'; g.lineWidth = 0.8; g.beginPath(); g.arc(tg.x / TILE, tg.y / TILE, 4, 0, TAU); g.stroke(); }
   dot(p.x, p.y, '#fff', 4);
   g.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+// v2.0.33 적 그림 고르기: 보스 전용 그림 > 지역 감염자 외형 > 기본 그림
+function foeKey(e) {
+  if (e.art && Sprites.get(e.art)) return e.art;
+  if (e.type === 'zombie') { const v = ZONE_ZOMBIE[World.map]; if (v && Sprites.get(v)) return v; }
+  return e.type;
 }
