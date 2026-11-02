@@ -1483,6 +1483,29 @@ Match the art style of the attached concept image. Create ONE image with a 3 by 
 Match the art style of the attached concept image. Create ONE image with a 3 by 3 grid of 9 separate objects from a ruined Han River bridge deck and riverside park in Seoul after the great collapse, with river mud and rust everywhere, each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), same lighting from the upper left. In order, left to right, top to bottom: an angler's spot with a folding chair, a bucket of dead fish and two rods leaning on a rail; a riverside outdoor exercise machine set (two pieces on one base) with rusted handles; a plastic picnic table with several empty instant-noodle cups, chopsticks and a convenience-store noodle cooking machine beside it; a flood-gate valve wheel on a rusty pipe stand with a puddle; a lifebuoy post with a throw-rope box, one buoy missing; a rusted floating ferry dock pontoon section with mooring bollards and a coiled rope; a muddy abandoned family tent camp with a folding wagon and a tipped cooler; a bridge maintenance gantry cart with a rusted cable spool and orange safety cones; a half-sunken police patrol boat tilted at the bank with its blue light bar broken. Detailed dark pixel art, desaturated teal, river-mud brown and rusty iron colors with warm orange highlights. NO text, NO letters, NO numbers, NO logos, NO brand names anywhere (labels, screens and signs must be blank or plain color shapes). Plain solid magenta #FF00FF background, no shadows, no ground, no grid lines, leave the bottom-right corner empty. Do not use pink or magenta inside the objects.
 ```
 
+## 56. 외형(스킨) 세트 1차 — 머리 장식 9종 · `heads_cosmetic.png` (v2.0.30 후속 · 한 장에 9개 · 3×3)
+**성능은 하나도 안 바뀌는 순수 외형**입니다. 몸 그림은 방어구 단계 × 무기별 12장이 구워져 있어 스킨마다 몸을 새로 그리면 너무 많아서, **머리 위에 얹는 장식**(이미 헬멧이 쓰는 겹침 방식)으로 갑니다. 색 염색 · 총알 궤적 색은 그림 없이 코드로 만듭니다.
+📐 **16:9** · 🎨 배경 단색 마젠타 `#FF00FF` · 📎 `assets/helmets.png`(기존 헬멧 — 크기 · 각도 · 화풍 맞추기) + 콘셉트 아트 · 글자 · 상표 · 로고 없음
+
+| 칸 | 장식 | 느낌 |
+|---|---|---|
+| 1 | 털모자 | 빛바랜 회색 털모자, 반사 띠 한 줄 |
+| 2 | 반다나 + 선글라스 | 붉은 두건, 이마 위로 올린 금 간 선글라스 |
+| 3 | 복면 | 검은 니트 복면, 눈 구멍 |
+| 4 | 야구 모자 | 바랜 모자를 뒤로 씀, 앞면은 빈 판 |
+| 5 | 안전모 + 랜턴 | 노란 안전모, 이마의 헤드랜턴 |
+| 6 | 여우 가면 | 금 간 플라스틱 여우 가면을 머리 위로 밀어 올림 |
+| 7 | 밀짚모자 | 낡은 챙 넓은 밀짚모자 (농부) |
+| 8 | 비행모 + 고글 | 가죽 비행모, 이마 위 고글 |
+| 9 | 베레모 | 계급장 없는 짙은 녹색 베레모 |
+
+### 56-1 · 머리 장식 9종 · `heads_cosmetic.png`
+```
+Match the art style of the attached concept image, and use the same size, viewing angle and pixel style as the existing helmets in the second attached image. Create ONE image showing exactly 9 separate head accessories arranged in a neat 3 by 3 grid with wide empty space between them, on a solid flat magenta (#FF00FF) background. Each item is shown alone as if worn on an invisible head, seen from a slight top-down three-quarter angle, with a bold clear silhouette that stays readable at very small size. All are worn, dirty and patched in a post-apocalyptic ruined Seoul style, with no text, no logos and no brand marks. In order, left to right, top to bottom: 1. a faded gray wool beanie with one thin reflective stripe; 2. a dirty red bandana tied around the head with a pair of cracked sunglasses pushed up on the forehead; 3. a black knit balaclava with an eye opening; 4. a faded baseball cap worn backwards with a blank front panel; 5. a yellow construction hard hat with a small headlamp on the front; 6. a cracked plastic fox mask pushed up on top of the head; 7. a worn wide-brim straw farmer hat; 8. a brown leather aviator cap with goggles pushed up on the forehead; 9. a dark green military beret with no insignia.
+```
+
+**등록할 때:** `art_raw/new/heads_cosmetic.png` 로 올려 주세요. 9개를 잘라 `js/assets.js` 의 `ART.heads` 에 넣고, 외형 고르기 창은 코드로 만듭니다 (맘에 안 드는 칸은 비워 두면 건너뜀).
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
