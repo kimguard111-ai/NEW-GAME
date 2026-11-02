@@ -1,23 +1,24 @@
 // v2.0.30 외형(스킨) · 성능은 하나도 안 바뀌는 꾸미기 — 머리 장식 9종 + 총알 궤적 색 5종
-// 해금은 저장하지 않고 조건으로 바로 계산 (레벨 · 처치 · 보스 · 도전 던전). 고른 것만 p.look 에 저장
+// 해금은 레벨(털모자 · 야구 모자) 아니면 업적 달성(p.ach)으로 계산 — 따로 저장하지 않음. 고른 것만 p.look 에 저장
 // 나중에 일부를 판매 아이템으로 돌릴 땐 각 항목의 ok 조건 앞에 「p.owned 에 있으면 해금」 한 줄만 더하면 됨
+const ach = id => p => !!(p.ach && p.ach[id]); // 업적(도감 · 업적 창)을 달성했는지 — 달성은 저장되고 이미 한 것도 인정
 const LOOK_HEADS = [
-  { key: 'beanie',    name: '털모자',          desc: '레벨 5',                ok: p => p.level >= 5 },
-  { key: 'bandana',   name: '반다나 · 선글라스', desc: '적 100마리 처치',        ok: p => p.totalKills >= 100 },
-  { key: 'cap',       name: '야구 모자',        desc: '레벨 10',               ok: p => p.level >= 10 },
-  { key: 'balaclava', name: '복면',            desc: '보스 5마리 처치',        ok: p => p.bossKills >= 5 },
-  { key: 'hardhat',   name: '안전모 · 랜턴',    desc: '지하 연구소 키메라 처치',  ok: p => (p.labKills || 0) >= 1 },
-  { key: 'fox',       name: '여우 가면',        desc: '레벨 20',               ok: p => p.level >= 20 },
-  { key: 'straw',     name: '밀짚모자',         desc: '적 1,000마리 처치',      ok: p => p.totalKills >= 1000 },
-  { key: 'aviator',   name: '비행모 · 고글',    desc: '레벨 30',               ok: p => p.level >= 30 },
-  { key: 'beret',     name: '베레모',          desc: '레벨 40 (만렙)',         ok: p => p.level >= 40 },
+  { key: 'beanie',    name: '털모자',          desc: '레벨 5',                         ok: p => p.level >= 5 },
+  { key: 'cap',       name: '야구 모자',        desc: '레벨 15',                        ok: p => p.level >= 15 },
+  { key: 'bandana',   name: '반다나 · 선글라스', desc: '적 1,000마리 처치',               ok: ach('k1000') },
+  { key: 'balaclava', name: '복면',            desc: '필드 보스 25마리 처치',            ok: ach('fb25') },
+  { key: 'fox',       name: '여우 가면',        desc: '탈출 50회',                      ok: ach('ext50') },
+  { key: 'hardhat',   name: '안전모 · 랜턴',    desc: '지하 연구소 B5 도달',              ok: ach('labB5') },
+  { key: 'straw',     name: '밀짚모자',         desc: '적 5,000마리 처치',               ok: ach('k5000') },
+  { key: 'aviator',   name: '비행모 · 고글',    desc: '스카이타워 옥상 보스 처치',         ok: ach('towerTop') },
+  { key: 'beret',     name: '베레모',          desc: '제7장 완료 · 서울 편 끝',          ok: ach('seoulEnd') },
 ];
 const LOOK_TRACE = [
-  { key: '',       name: '황금 (기본)', color: '#ffd27a', desc: '기본',                 ok: () => true },
-  { key: 'cyan',   name: '청록',       color: '#6fe3ff', desc: '적 300마리 처치',        ok: p => p.totalKills >= 300 },
-  { key: 'violet', name: '보라',       color: '#c58aff', desc: '레벨 15',               ok: p => p.level >= 15 },
-  { key: 'pink',   name: '분홍',       color: '#ff8ad0', desc: '보스 10마리 처치',       ok: p => p.bossKills >= 10 },
-  { key: 'white',  name: '순백',       color: '#ffffff', desc: '레벨 35',               ok: p => p.level >= 35 },
+  { key: '',       name: '황금 (기본)', color: '#ffd27a', desc: '기본',                  ok: () => true },
+  { key: 'cyan',   name: '청록',       color: '#6fe3ff', desc: '연속 처치 25',            ok: ach('combo25') },
+  { key: 'violet', name: '보라',       color: '#c58aff', desc: '출격 맵의 적 모두 처치',   ok: ach('clear1') },
+  { key: 'pink',   name: '분홍',       color: '#ff8ad0', desc: '어설트 위협 5 클리어',     ok: ach('tier5') },
+  { key: 'white',  name: '순백',       color: '#ffffff', desc: '연속 처치 50',            ok: ach('combo50') },
 ];
 const Looks = {
   head(p) { const k = p.look && p.look.head; const h = k && LOOK_HEADS.find(x => x.key === k); return h && h.ok(p) ? h : null; },
