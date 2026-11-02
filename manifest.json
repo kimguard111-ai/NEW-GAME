@@ -33,5 +33,40 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "assets/app/shot1.jpg",
+      "sizes": "1200x700",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "용산 검문소"
+    },
+    {
+      "src": "assets/app/shot2.jpg",
+      "sizes": "1200x700",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "여의도 정류장"
+    },
+    {
+      "src": "assets/app/shot3.jpg",
+      "sizes": "1200x700",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "한강 텐트 캠프"
+    },
+    {
+      "src": "assets/app/shot4.jpg",
+      "sizes": "1200x700",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "잠실 놀이공원 입구"
+    }
+  ],
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "prefer_related_applications": false
 }
