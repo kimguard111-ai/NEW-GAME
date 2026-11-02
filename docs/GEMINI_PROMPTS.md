@@ -1506,6 +1506,51 @@ Match the art style of the attached concept image, and use the same size, viewin
 
 **등록할 때:** `art_raw/new/heads_cosmetic.png` 로 올려 주세요. 9개를 잘라 `js/assets.js` 의 `ART.heads` 에 넣고, 외형 고르기 창은 코드로 만듭니다 (맘에 안 드는 칸은 비워 두면 건너뜀).
 
+## 57. 지역별 감염자 외형 변종 (v2.0.33 후속) · 6장 · 성능은 그대로, 겉모습만
+피드백 「지역마다 특색이 없다」의 후속. 지금은 모든 지역이 같은 감염자 그림을 씁니다. **가장 자주 마주치는 감염자**를 지역마다 다른 사람으로 바꾸면 한눈에 지역이 달라 보입니다. 능력치 · 동작 · 칸 수는 원래 감염자와 같고(코드가 그림만 바꿔 끼움), 한강은 이미 「물귀신」이 있어서 뺐습니다.
+📐 **16:9** · 🎨 배경 단색 마젠타 `#FF00FF` · 📎 **콘셉트 아트 + `assets/zombie.png`**(기존 감염자 시트 — 크기 · 칸 구성 · 동작 맞추기) · 🔢 모두 `idle 4, walk 6, attack 4, hit 2, death 5` · 글자 · 상표 · 로고 없음
+
+| 장 | 파일 이름 | 지역 | 누구 |
+|---|---|---|---|
+| 57-1 | `zombie_myeongdong.png` | 명동 | 관광객 감염자 |
+| 57-2 | `zombie_jongno.png` | 종로 | 포차 상인 감염자 |
+| 57-3 | `zombie_yongsan.png` | 용산 | 군복 감염자 |
+| 57-4 | `zombie_yeouido.png` | 여의도 | 방송국 스태프 감염자 |
+| 57-5 | `zombie_gangnam.png` | 강남 | 정장 감염자 |
+| 57-6 | `zombie_jamsil.png` | 잠실 | 놀이공원 마스코트 감염자 |
+
+**등록할 때:** `art_raw/new/` 에 파일 이름대로 올려 주세요. 제가 `tools/art/tool.js` 로 칸을 맞춰 `js/assets.js` 에 등록하고, 지역에 들어가면 그 지역 감염자가 이 그림으로 보이게 연결합니다 (엘리트 · 네임드 표시는 그대로). 6장이 다 안 와도 온 것만 먼저 적용돼요.
+
+### 57-1 · 명동 · 관광객 감염자 · `zombie_myeongdong.png`
+```
+Match the art style of the attached concept image, and use exactly the same size, pose layout and row structure as the attached existing zombie sprite sheet. Create ONE sprite sheet image of an infected zombie of a rotting tourist: pale gray-green skin, a faded bucket hat, a small backpack with a torn strap, a camera strap around the neck, a ripped shopping bag still hanging from one hand, a wrinkled windbreaker and shorts, glowing red eyes, hunched posture, arms reaching forward. Rows: row 1: 4 frames of idle swaying; row 2: 6 frames of a slow shambling walk; row 3: 4 frames of raising both arms then a claw attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same zombie in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border, no logos or brand marks. Do not use pink or magenta on the character.
+```
+
+### 57-2 · 종로 · 포차 상인 감염자 · `zombie_jongno.png`
+```
+Match the art style of the attached concept image, and use exactly the same size, pose layout and row structure as the attached existing zombie sprite sheet. Create ONE sprite sheet image of an infected zombie of a rotting street-food stall vendor: pale gray-green skin, a stained white apron over a quilted jacket, a folded towel tied around the head, rubber boots, a bent metal ladle in one hand, glowing red eyes, hunched posture, arms reaching forward. Rows: row 1: 4 frames of idle swaying; row 2: 6 frames of a slow shambling walk; row 3: 4 frames of raising both arms then a claw attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same zombie in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border, no logos or brand marks. Do not use pink or magenta on the character.
+```
+
+### 57-3 · 용산 · 군복 감염자 · `zombie_yongsan.png`
+```
+Match the art style of the attached concept image, and use exactly the same size, pose layout and row structure as the attached existing zombie sprite sheet. Create ONE sprite sheet image of an infected zombie of a rotting soldier: pale gray-green skin, a torn olive camouflage uniform with a dented empty helmet strap hanging, an empty ammo pouch belt, dog tags around the neck, scuffed combat boots, glowing red eyes, hunched posture, arms reaching forward. Rows: row 1: 4 frames of idle swaying; row 2: 6 frames of a slow shambling walk; row 3: 4 frames of raising both arms then a claw attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same zombie in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border, no logos or brand marks. Do not use pink or magenta on the character.
+```
+
+### 57-4 · 여의도 · 방송국 스태프 감염자 · `zombie_yeouido.png`
+```
+Match the art style of the attached concept image, and use exactly the same size, pose layout and row structure as the attached existing zombie sprite sheet. Create ONE sprite sheet image of an infected zombie of a rotting broadcast crew member: pale gray-green skin, a headset hanging off one ear, a vest with many pockets, tangled black cables wrapped around the arms, a crushed clipboard in one hand, glowing red eyes, hunched posture, arms reaching forward. Rows: row 1: 4 frames of idle swaying; row 2: 6 frames of a slow shambling walk; row 3: 4 frames of raising both arms then a claw attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same zombie in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border, no logos or brand marks. Do not use pink or magenta on the character.
+```
+
+### 57-5 · 강남 · 정장 감염자 · `zombie_gangnam.png`
+```
+Match the art style of the attached concept image, and use exactly the same size, pose layout and row structure as the attached existing zombie sprite sheet. Create ONE sprite sheet image of an infected zombie of a rotting office-district businessman: pale gray-green skin, a torn dark suit with a loosened tie, one shoe missing, an expensive-looking briefcase dragging by one finger, glowing red eyes, hunched posture, arms reaching forward. Rows: row 1: 4 frames of idle swaying; row 2: 6 frames of a slow shambling walk; row 3: 4 frames of raising both arms then a claw attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same zombie in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border, no logos or brand marks. Do not use pink or magenta on the character.
+```
+
+### 57-6 · 잠실 · 놀이공원 마스코트 감염자 · `zombie_jamsil.png`
+```
+Match the art style of the attached concept image, and use exactly the same size, pose layout and row structure as the attached existing zombie sprite sheet. Create ONE sprite sheet image of an infected zombie of a rotting amusement-park mascot performer: a faded, torn, generic cartoon bunny costume with the big head hanging half-off to reveal pale gray-green rotting skin, a stained striped vest, oversized worn-out gloves, glowing red eyes, hunched posture, arms reaching forward. The costume must not resemble any real brand mascot. Rows: row 1: 4 frames of idle swaying; row 2: 6 frames of a slow shambling walk; row 3: 4 frames of raising both arms then a claw attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same zombie in every frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border, no logos or brand marks. Do not use pink or magenta on the character.
+```
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
