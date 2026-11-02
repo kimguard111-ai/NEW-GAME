@@ -765,3 +765,11 @@ body.touch .map-grid.chal .map-card { min-height: 60px; } body.touch .map-grid.c
 #panel-dialog.mc1 .map-grid.chal .map-card { min-height: 64px; } #panel-dialog.mc1 #dialog-text { padding-top: 6px; padding-bottom: 6px; }
 #panel-dialog.mc2 .mc-desc { display: none; } #panel-dialog.mc2 .map-card { min-height: 44px; padding: 3px 6px; } #panel-dialog.mc2 .mc-art { width: 34px; height: 34px; } #panel-dialog.mc2 .map-grid.one .mc-art { width: 40px; height: 40px; }
 #panel-dialog.mc2 .mc-name { font-size: 13px; } #panel-dialog.mc2 .map-grid.chal .map-card { min-height: 50px; } #panel-dialog.mc2 .map-grid.chal .map-card .mc-desc { display: block; font-size: 10px; }
+
+/* v2.0.28 터치 버튼 키우기: 구글 권장 최소 터치 크기(약 44~48) 맞추기 — 눈에 보이는 크기는 조금만 키우고 보이지 않는 터치 영역을 사방으로 넓힘 */
+body.touch #menu-buttons { gap: 7px !important; }
+body.touch #menu-buttons button { width: 38px !important; height: 38px !important; position: relative; }
+body.touch #menu-buttons button::before { content: ''; position: absolute; inset: -5px; }
+body.touch #touch-side { gap: 8px; }
+body.touch #touch-side button { width: 38px; height: 38px; position: relative; }
+body.touch #touch-side button::before { content: ''; position: absolute; inset: -5px; border-radius: 50%; }
