@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.guardk111.cityofruins",
+    "sha256_cert_fingerprints": ["D3:5A:F8:F5:BB:5B:F9:AE:AC:28:7B:19:6F:D5:CE:35:6D:34:DC:25:7E:45:10:C1:6B:BD:74:32:71:E5:FA:FE"]
+  }
+}]
