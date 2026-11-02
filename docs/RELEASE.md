@@ -2,8 +2,8 @@
 
 순서: **① 웹 주소로 한국 커뮤니티 공개 테스트** → (동시에) **② 구글 플레이 준비 · 비공개 테스트 12명 14일** → ③ 정식 출시 · itch는 덤.
 
-- 게임 주소: `https://seoul2049.vercel.app` → **새 이름 주소로 옮기기 추천** (Vercel → Settings → Domains 에 `cityofruins.vercel.app` **추가** · 옛 주소는 **지우지 말고 둠** — v1.98.3부터 옛 주소 타이틀에 「세이브 들고 새 주소로 가기」 버튼이 떠서 세이브가 한 번에 넘어감). 아래 글의 주소는 옮긴 뒤 바꿔 쓰기
-- 개인정보처리방침: `https://seoul2049.vercel.app/privacy.html` (문의 kimguard111@gmail.com)
+- 게임 주소 (확정): `https://cityofruins-guard4.vercel.app` — `cityofruins.vercel.app` 은 이 프로젝트 소유가 아니라(다른 사람이 쓰는 이름) 쓰지 않음. 옛 주소 `seoul2049.vercel.app` 은 지우지 말고 둠 (기존 테스터 세이브가 있음). 나중에 개인 도메인으로 바꾸면 앱을 다시 올려야 하므로 스팀 출시 전에 결정
+- 개인정보처리방침: `https://cityofruins-guard4.vercel.app/privacy.html` (문의 kimguard111@gmail.com)
 - 스크린샷 8장: `docs/store/screens/` (1920×1080 가로 · 플레이 스토어 규격 맞음)
 - 스토어 큰 그림: `docs/store/feature_1024x500.png` · 앱 아이콘: `docs/store/app_icon_1024.png` (스토어용은 512×512 — `assets/app/icon512.png`)
 
@@ -31,7 +31,7 @@
 > - 캠프가 자람: 구한 사람들이 캠프에 남고, 시설을 올리면 출격이 편해짐
 > - 동료 3명, 스킬 5갈래, 장비 옵션 · 강화 · 세트 · 총기 부품
 >
-> **설치 없이 브라우저에서 바로:** https://seoul2049.vercel.app
+> **설치 없이 브라우저에서 바로:** https://cityofruins-guard4.vercel.app
 > 폰은 가로로 돌려서, 홈 화면에 추가하면 앱처럼 전체 화면으로 됩니다. 한 번 켠 뒤로는 인터넷 없이도 실행돼요.
 >
 > 아직 테스트 중이라 버그 · 밸런스 의견 주시면 바로 고칩니다. **설정 → 「피드백 복사」**를 누르면 기종 · 프레임 · 진행 · 오류가 한 번에 복사돼요. 댓글에 붙여 넣고 한마디만 적어 주시면 큰 도움이 됩니다. (어디로도 전송되지 않고 복사만 돼요)
@@ -44,7 +44,7 @@
 **Title:** I made CITY OF RUINS: Extraction, a browser extraction RPG set in ruined Seoul (free, phone & PC) — Korean text only for now
 
 > Isometric action RPG: deploy from a survivor camp under Seoul City Hall station, loot, and make it to an extraction point alive — die and your gear stays in a body bag you can recover next run. Six districts, two endgame challenge dungeons, three mythic weapons.
-> Play in the browser: https://seoul2049.vercel.app (landscape on phones; works offline after the first launch)
+> Play in the browser: https://cityofruins-guard4.vercel.app (landscape on phones; works offline after the first launch)
 > The UI is Korean only for now. Feedback on performance (Settings → "프레임 표시" shows FPS) is very welcome!
 
 ### 받을 피드백 정리 칸 (제게 그대로 붙여 주세요)
@@ -61,7 +61,7 @@
 - **신규 개인 계정 규칙**: 정식 출시 전에 **비공개 테스트에 12명 이상이 14일 연속** 참여해야 함 → ①의 커뮤니티에서 모집
 
 ### 2. 앱 묶기 (TWA — 웹 게임을 그대로 앱으로)
-1. https://www.pwabuilder.com 에 `https://seoul2049.vercel.app` 입력 → 점수 확인 (manifest · 서비스 워커 · 아이콘 준비됨)
+1. https://www.pwabuilder.com 에 `https://cityofruins-guard4.vercel.app` 입력 → 점수 확인 (manifest · 서비스 워커 · 아이콘 준비됨)
 2. **Package For Stores → Android** → 설정
    - Package ID: **`com.guardk111.cityofruins`** (확정 · 한 번 정하면 못 바꿈 — 이름 변경으로 seoul2049 에서 바꿈, 아직 업로드 전이라 괜찮음)
    - App name: `폐허의 도시: 익스트랙션` · Launcher name: `폐허의 도시`
@@ -124,7 +124,7 @@
 | 광고 포함 | 아니요 |
 | 앱 내 구매 | 없음 |
 | 데이터 보안 | **수집하는 데이터 없음 · 공유하는 데이터 없음** (세이브는 기기에만) |
-| 개인정보처리방침 URL | `https://seoul2049.vercel.app/privacy.html` |
+| 개인정보처리방침 URL | `https://cityofruins-guard4.vercel.app/privacy.html` |
 | 콘텐츠 등급 (IARC) | 폭력: 사람 형태의 적(약탈자 · 용병)과 괴물에게 총기 사용 · 피 표현 있음 · 선정성 · 도박 · 약물 · 욕설 없음 → 예상 **15세 이용가 / Teen** 정도 (설문 결과대로) |
 | 대상 연령 | 13세 이상 (아동 대상 아님) |
 | 정부 앱 · 뉴스 앱 · 코로나 앱 | 아니요 |
@@ -132,7 +132,7 @@
 ### 5. 비공개 테스트 모집 글 (네이버 카페 · 디시)
 > 「폐허의 도시」 구글 플레이 비공개 테스트 참여자 12명 구합니다.
 > 구글 정책상 14일 동안 설치만 유지해 주시면 됩니다 (매일 안 하셔도 돼요).
-> 지메일 주소를 댓글/쪽지로 주시면 테스트 링크를 보내 드립니다. 웹 버전은 지금도 https://seoul2049.vercel.app 에서 할 수 있어요.
+> 지메일 주소를 댓글/쪽지로 주시면 테스트 링크를 보내 드립니다. 웹 버전은 지금도 https://cityofruins-guard4.vercel.app 에서 할 수 있어요.
 
 ---
 
