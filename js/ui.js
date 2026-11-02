@@ -433,7 +433,8 @@ const UI = {
       <div class="stat-row"><span>이동 속도 · 재생</span><span>${PlayerStats.speed(p).toFixed(0)} · ${PlayerStats.regen(p).toFixed(1)}/초</span></div>
       ${gearBonus(p, 'exp') ? `<div class="stat-row"><span>경험치 획득</span><span>+${pc(gearBonus(p, 'exp'))}</span></div>` : ''}
       <div class="stat-row" title="몬스터 장비 드랍이 ${PITY_DROPS}번 연속 영웅 미만이면 다음은 영웅 이상 확정"><span>영웅 장비 확정까지</span><span class="r3">${Math.max(0, PITY_DROPS - (p.pity || 0))}개</span></div>
-      <div class="stat-row"><span>처치</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div></div>`;
+      <div class="stat-row"><span>처치</span><span>${fmt(p.totalKills)} (보스 ${p.bossKills})</span></div>
+      <div class="stat-row"><span>외형 <span class="muted">성능 변화 없음</span></span><button id="btn-look" class="smod">머리 장식 · 궤적 색</button></div></div>`;
     // 특성: 단계마다 한 줄 (고르는 건 패시브 트리에서)
     let R = `<div class="st2-head">특성 <button id="btn-ptree" class="smod">패시브 트리${PERK_TIERS.some((t, i) => p.level >= t.lvl && !p.perks[i]) ? ' <b class="r2">고를 것 있음</b>' : ''}</button></div>`;
     PERK_TIERS.forEach((t, i) => {
@@ -452,6 +453,7 @@ const UI = {
     R += `<div class="muted" style="margin-top:6px">능력치 초기화: 의무병 이씨 (${respecCost(p) ? fmt(respecCost(p)) + '₵' : '첫 1회 무료'})</div>`;
     const h = `<div class="st2"><div class="st2-a">${L}</div><div class="st2-m">${M}</div><div class="st2-r">${R}</div></div>`;
     $('stats-body').innerHTML = h;
+    { const bl = $('btn-look'); if (bl) bl.onclick = () => Looks.open(); } // v2.0.30 외형
     $('stats-body').querySelectorAll('button[data-perkpick]').forEach(b => { b.onclick = () => UI.passiveTree(); }); // v1.48 특성은 패시브 트리에서 고름
     $('btn-stree').onclick = () => UI.skillTree(); // v1.22
     $('btn-ptree').onclick = () => UI.passiveTree(); // v1.23

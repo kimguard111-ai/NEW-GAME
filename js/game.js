@@ -482,7 +482,7 @@ function playerAttack() {
     G.bullets.push({
       x: mx, y: my, vx: Math.cos(a) * s, vy: Math.sin(a) * s, from: 'p', life, maxLife: life, falloff: b.falloff,
       dmg: dmg * (crit ? critMul : 1), crit, pierce, hit: [], w, frag: frag && i === 0, sid, headOf: p.aimHead ? p.aimTarget : null, // v1.66 머리를 겨눈 탄
-      color: crit ? '#ffef7a' : w.legend === 'boom' ? '#ff8a3a' : '#ffd27a',
+      color: crit ? '#ffef7a' : w.legend === 'boom' ? '#ff8a3a' : Looks.bulletColor(p, '#ffd27a'), /* v2.0.30 외형: 총알 궤적 색 */
     });
   }
   p.recoilT = 0.07;

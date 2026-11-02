@@ -57,6 +57,18 @@ const ART = {
     // v2.0 52-3 갑옷 단계 헬멧
     hazHood: { file: 'helmets2.png', rect: [4, 4, 232, 264] }, bvisor: { file: 'helmets2.png', rect: [240, 4, 204, 238] }, eodHelm: { file: 'helmets2.png', rect: [448, 4, 216, 264] },
   },
+  // v2.0.30 외형(스킨) 머리 장식 9종 (한 장) — 성능 없는 꾸미기. k = 머리 폭 대비 크기 배율 · up = 위로 더 올림 (헬멧 폭 비율)
+  heads: {
+    beanie: { file: 'heads_cosmetic.png', rect: [4, 4, 181, 159], k: 1.0, up: 0 },
+    bandana: { file: 'heads_cosmetic.png', rect: [189, 4, 183, 163], k: 1.0, up: 0 },
+    balaclava: { file: 'heads_cosmetic.png', rect: [376, 4, 125, 184], k: 0.85, up: 0.05 },
+    cap: { file: 'heads_cosmetic.png', rect: [505, 4, 233, 153], k: 1.05, up: 0 },
+    hardhat: { file: 'heads_cosmetic.png', rect: [742, 4, 201, 150], k: 1.0, up: 0 },
+    fox: { file: 'heads_cosmetic.png', rect: [4, 192, 126, 178], k: 0.8, up: 0.25 },
+    beret: { file: 'heads_cosmetic.png', rect: [134, 192, 198, 106], k: 1.1, up: 0.05 },
+    straw: { file: 'heads_cosmetic.png', rect: [336, 192, 256, 187], k: 1.3, up: 0 },
+    aviator: { file: 'heads_cosmetic.png', rect: [596, 192, 160, 189], k: 0.95, up: 0 },
+  },
   helmetFit: { w: 1.35, up: 0.18 }, // 헬멧 폭 = 머리 폭 × w, 머리 꼭대기보다 (헬멧 폭 × up) 만큼 위에서 시작
 
   // v1.18 소품 그림 (가공 도구의 「v1.18 … 소품」 한 장 모드). 등록한 것만 코드 그림 대신 그림으로 바뀜

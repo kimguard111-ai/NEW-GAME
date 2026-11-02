@@ -773,3 +773,14 @@ body.touch #menu-buttons button::before { content: ''; position: absolute; inset
 body.touch #touch-side { gap: 8px; }
 body.touch #touch-side button { width: 38px; height: 38px; position: relative; }
 body.touch #touch-side button::before { content: ''; position: absolute; inset: -5px; border-radius: 50%; }
+
+/* v2.0.30 외형 고르기 창 */
+.look-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.look-it { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; padding: 5px 2px; min-height: 92px; background: rgba(20,19,15,.75); border: 1px solid var(--bd, #4a4638); color: #cfc6b0; font-size: 11px; cursor: pointer; }
+.look-it canvas { width: 64px; height: 64px; image-rendering: pixelated; }
+.look-it span { text-align: center; line-height: 1.2; word-break: keep-all; }
+.look-it.sel { border-color: var(--acc, #e0b23a); box-shadow: 0 0 0 1px var(--acc, #e0b23a); color: #fff; }
+.look-it.lock { opacity: .55; cursor: default; }
+.look-tr { min-height: 64px; justify-content: center; }
+.look-tr i { display: block; width: 44px; height: 6px; border-radius: 3px; box-shadow: 0 0 8px currentColor; margin-top: 6px; }
+@media (max-height: 460px) { .look-grid { grid-template-columns: repeat(10, 1fr); gap: 4px; } .look-grid + .st2-head + .look-grid, .look-grid.tr { grid-template-columns: repeat(5, 1fr); } .look-it { min-height: 66px; font-size: 9px; padding: 3px 1px; } .look-it canvas { width: 38px; height: 38px; } .look-tr { min-height: 40px; } .look-tr i { width: 36px; margin-top: 2px; } #dialog-text .st2-head { margin: 4px 0 3px !important; } }

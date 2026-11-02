@@ -668,7 +668,7 @@ const Sprites = {
   },
   loadAll() { // 무기·헬멧 그림까지 포함
     const cache = {}; // 한 파일에 여러 무기·헬멧(rect)이 들어 있으면 한 번만 읽음
-    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {}), ...Object.values(ART.icons || {}), ...Object.values(ART.signs || {}), ...Object.values(ART.vfx || {})]) { // v1.18 소품 · v1.19 건물 질감 · v1.35.1 아이콘 포함
+    for (const s of [...Object.values(ART.weapons), ...Object.values(ART.helmets), ...Object.values(ART.heads || {}), ...Object.values(ART.props || {}), ...Object.values(ART.tex || {}), ...Object.values(ART.icons || {}), ...Object.values(ART.signs || {}), ...Object.values(ART.vfx || {})]) { // v1.18 소품 · v1.19 건물 질감 · v1.35.1 아이콘 포함
       let im = cache[s.file];
       if (!im) {
         im = cache[s.file] = new Image(); im.users = []; Sprites.total++;
@@ -881,7 +881,8 @@ function drawPlayerBody(p, ui = false) { // ui: 초상화·장비창용 (이름�
     const back = ui ? ad.y < -0.15 : p.gunBack, fr = Sprites.frame(bodyKey, anim, at, face), hold = w && !heldKey && !p.dead && fr.anim.indexOf('death') < 0;
     if (back && hold) drawWeaponOverlay(sx, sy, w, p, fr);
     const info = Sprites.draw(bodyKey, anim, at, sxb, sy, face, p.hurtT > 0);
-    if (hel && info.anim.indexOf('death') < 0) drawHelmetOverlay(sxb, sy, info, hel, o.helmet);
+    { const ch = Looks.head(p), ca = ch && ART.heads[ch.key]; // v2.0.30 외형 머리 장식 (고르면 헬멧 대신 보임 · 성능은 그대로)
+      if ((ca && ca.ready || hel) && info.anim.indexOf('death') < 0) drawHelmetOverlay(sxb, sy, info, hel, o.helmet, ca && ca.ready ? ca : null); }
     if (!back && hold) drawWeaponOverlay(sx, sy, w, p, info);
   } else drawHuman(sx, sy, o);
   if (p.buffs.adren > 0 || p.buffs.rapid > 0) {
@@ -1036,14 +1037,14 @@ function drawWeaponIcon(cv, w) {
 }
 
 // 몸 그림의 머리 위치에 헬멧 씌우기 (헬멧 그림이 없으면 코드로 그린 반구)
-function drawHelmetOverlay(sx, sy, info, hel, color) {
+function drawHelmetOverlay(sx, sy, info, hel, color, over) {
   const sc = info.sc, hd = info.head || { x: 0, y: -(ART.height.player || 44) / sc, w: 20 };
-  const hx = sx + hd.x * sc * (info.flip ? -1 : 1), hy = sy + hd.y * sc, hw = hd.w * sc * ART.helmetFit.w;
-  const art = ART.helmets[hel.key];
+  const hx = sx + hd.x * sc * (info.flip ? -1 : 1), hy = sy + hd.y * sc, hw = hd.w * sc * ART.helmetFit.w * (over ? over.k || 1 : 1);
+  const art = over || ART.helmets[hel.key], upK = ART.helmetFit.up + (over ? over.up || 0 : 0);
   if (art && art.ready) {
     const [rx, ry, rw, rh] = art.rect || [0, 0, art.img.width, art.img.height];
     const h = rh * hw / rw;
-    ctx.save(); ctx.translate(hx, hy - hw * ART.helmetFit.up); if (info.flip) ctx.scale(-1, 1);
+    ctx.save(); ctx.translate(hx, hy - hw * upK); if (info.flip) ctx.scale(-1, 1);
     ctx.drawImage(art.img, rx, ry, rw, rh, -hw / 2, 0, hw, h);
     ctx.restore();
   } else {
