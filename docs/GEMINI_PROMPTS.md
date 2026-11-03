@@ -1563,7 +1563,7 @@ Match the art style of the attached concept image, and use exactly the same size
 | 58-2 | `concept_chinatown.png` | 인천 차이나타운 (붉은 등불 골목 · Lv42~44) |
 | 58-3 | `concept_incheonport.png` | 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv44~46) |
 | 58-4 | `concept_songdo.png` | 송도 프리미엄 아울렛 단지 (쇼핑 마을 · Lv46~48) |
-| 58-5 | `concept_airport.png` | 영종도 인천공항 (활주로 · 터미널 · 격납고 · Lv48~50) |
+| 58-5 | `concept_airport.png` | 인천공항 **도전 던전** (터미널 · 수하물 · 화물 · 격납고 · 관제탑 · Lv48~) — 실내 던전 분위기 기준 |
 
 ### 58-1 · 남동공단 · 소래포구 (공장 지대 + 포구 · Lv40~42) · `concept_namdong.png`
 ```
@@ -1585,9 +1585,10 @@ Match the art style of the attached concept image. Create ONE wide isometric 3/4
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined open-air premium outlet shopping village: a pastel European-style village of two-story shop buildings with arched windows and covered walkways, a central plaza with a tall clock tower, cracked fountains, rows of empty shop windows with toppled mannequins, overturned shopping carts piled in the large parking lots at the edges, faded banners with no writing, cold pastel colors gone gray and dusty with sickly green vines, a few warm orange emergency lights. The buildings are generic and must not resemble any real brand, logo or sign. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-### 58-5 · 영종도 인천공항 (활주로 · 터미널 · 격납고 · Lv48~50) · `concept_airport.png`
+### 58-5 · 인천공항 도전 던전 (터미널 · 수하물 · 화물 · 격납고 · 관제탑 · Lv48~) · `concept_airport.png`
+이 그림은 야외가 아니라 **실내 던전 분위기** 기준입니다 (연구소 · 스카이타워처럼 층마다 바닥 · 벽 · 소품이 따로 옵니다).
 ```
-Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined international airport on an island: a long cracked runway with abandoned airliners (generic, no airline logos), a collapsed terminal with a broken glass roof, a tall control tower, baggage carts and jet bridges, a hangar with a stranded helicopter, pale concrete and gray sky with warm orange runway beacon lights. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
+Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) cut-away of the inside of a ruined international airport, shown as a stacked cross-section of floors: a big arrivals hall with a broken baggage carousel and abandoned suitcases, a security checkpoint corridor with metal detector gates and overturned trays, a cargo terminal with tall container shelves and forklifts, a huge aircraft hangar with a generic airliner nose and maintenance robots, and a control tower room with dead radar screens at the top. Cold gray concrete and glass, dim emergency lights with warm orange highlights, a faint blue glow of a malfunctioning central computer. All signs are blank, no airline logos. Detailed dark pixel art, desaturated colors with warm orange highlights, moody lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
 **올릴 때 알려 주세요**: 5장 중 마음에 드는 것(또는 다시 뽑을 것)과 바꾸고 싶은 느낌 (예: 「공항은 더 어둡게」). 확정되면 다음은 **랜드마크 5장 + 남동공단 소품**입니다.
