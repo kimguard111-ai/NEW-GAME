@@ -8,7 +8,7 @@ const TESTERS = ['17사단탈영범', '하누라', '수도안양절대사수'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v2.0.34' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v2.0.35' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = true; // v2.0 출시 (금요일 공개) — 한강 · 7장 · Lv40 · 작전 · 새 시즌 초기화가 한꺼번에 켜짐
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
@@ -49,6 +49,9 @@ const RARITIES = [
   { name: '전설', mul: 2.0, color: '#ffa53a', weight: 1.0 },
   { name: '신화', mul: 2.3, color: '#ff4f3a', weight: 0 }, // v1.53 특별 무기 전용 (무작위로는 안 나옴) — 이름은 여기 한 곳
 ];
+// v2.0.35 봉인: 이번 출격에서 주운 영웅 이상 장비(무기 · 방어구 · 헬멧 · 벨트)는 탈출에 성공하기 전까지 착용 불가 — 귀한 것일수록 탈출이 긴장되게
+const SEAL_RARITY = 3;
+function isSealed(it) { return !!(it && it.raid && (it.rarity || 0) >= SEAL_RARITY && (it.kind === 'weapon' || it.kind === 'armor' || it.kind === 'helmet' || it.kind === 'belt')); }
 // 천장: 몬스터 장비 드랍이 이 횟수만큼 영웅 미만이면 다음 드랍은 영웅 이상 확정
 // v1.25 파밍 경제: 장비가 귀하고 돈이 덜 벌리게 (확률 드랍 · 땅에 떨어지는 크레딧 · 판매가에 곱함)
 const DUN_ILVL = 6; // v2.0.25 연구소 · 스카이타워 보스 장비는 아이템 레벨 +6 (어설트 위협 높은 단계의 템렙을 넘도록)

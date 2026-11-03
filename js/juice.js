@@ -49,7 +49,7 @@ const Juice = {
     const r = it.rarity || 0, col = it.unique ? '#ff5aa0' : it.set ? SETS[it.set].color : RARITIES[r].color, up = it.kind !== 'cons' && isUpgrade(G.player, it);
     const box = $('loot-feed'); if (!box) return;
     const c = document.createElement('div'); c.className = 'loot-card r' + r; c.style.setProperty('--rc', col);
-    c.innerHTML = `${itemIcon(it)} <span>${itemName(it)}${it.count > 1 ? ' x' + it.count : ''}</span>${up ? ' <span class="up">▲</span>' : ''}${it.kind !== 'cons' && r >= 1 ? ` <small>${RARITIES[r].name}</small>` : ''}`;
+    c.innerHTML = `${itemIcon(it)} <span>${itemName(it)}${it.count > 1 ? ' x' + it.count : ''}</span>${up ? ' <span class="up">▲</span>' : ''}${it.kind !== 'cons' && r >= 1 ? ` <small>${RARITIES[r].name}</small>` : ''}${isSealed(it) ? ' <small class="seal-tag">🔒봉인</small>' : ''}`;
     box.appendChild(c); while (box.children.length > 5) box.firstChild.remove();
     setTimeout(() => c.remove(), 3800);
     if (it.kind === 'cons') return;

@@ -141,9 +141,9 @@ const FirstRun = {
     if (p.hints.includes('rules')) return go();
     p.hints.push('rules');
     UI.dialog('작전 장교 윤씨', `"딱 세 가지만 기억해."<div class="rules3">`
-      + `<div class="r3">${ICON('box')}<b>1. 줍는다</b><span>밖에서 주운 건 가방에 <i class="tag-raid">미확정</i> 표시. 아직 네 것이 아니야.</span></div>`
+      + `<div class="r3">${ICON('box')}<b>1. 줍는다</b><span>밖에서 주운 건 가방에 <i class="tag-raid">미확정</i> 표시. 아직 네 것이 아니야. <b style="color:#c77dff">영웅 이상 🔒</b>은 탈출해야 낄 수 있다.</span></div>`
       + `<div class="r3-arrow">→</div><div class="r3"><span class="r3-ring">◎</span><b>2. 탈출한다</b><span>맵 끝 <b style="color:#6ef082">초록 ◎</b>에 5초 서 있으면 확정. 미니맵에도 보인다.</span></div>`
-      + `<div class="r3-arrow">→</div><div class="r3">${ICON('skull')}<b>3. 죽으면</b><span>주운 것만 그 자리 <b style="color:#ff8a8a">시체 가방</b>에. 같은 맵에 다시 나가 [E]로 되찾는다. 또 죽으면 새 가방으로 바뀐다.</span></div>`
+      + `<div class="r3-arrow">→</div><div class="r3">${ICON('skull')}<b>3. 죽으면</b><span>주운 장비는 그 자리 <b style="color:#ff8a8a">시체 가방</b>에 — 같은 맵에서 [E]로 되찾는다. 이번에 번 크레딧은 <b style="color:#ff8a8a">사라진다</b>.</span></div>`
       + `</div><span class="muted">캠프에서 들고 나간 장비, 창고에 맡긴 물건은 죽어도 안 잃는다.</span>`,
       [['알겠다, 나간다', () => { UI.close('dialog'); go(); }]]);
     SFX.play('ui');

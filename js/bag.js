@@ -98,7 +98,7 @@ const Bag = {
     for (let i = 0; i < BAG_COLS * R; i++) { const c = document.createElement('div'); c.className = 'bag-slot'; c.style.gridColumn = (i % BAG_COLS) + 1; c.style.gridRow = Math.floor(i / BAG_COLS) + 1; el.appendChild(c); }
     for (const it of inv) {
       const [w, h] = this.shape(it), c = document.createElement('div');
-      c.className = 'inv-cell bag-item bc' + (it.rarity || 0) + (opts.sel === it ? ' sel' : '') + (w >= 3 ? ' wide' : '') + (h >= 2 ? ' tall' : '');
+      c.className = 'inv-cell bag-item bc' + (it.rarity || 0) + (opts.sel === it ? ' sel' : '') + (w >= 3 ? ' wide' : '') + (h >= 2 ? ' tall' : '') + (isSealed(it) ? ' sealed' : '');
       c.style.gridColumn = `${it.gx + 1} / span ${w}`; c.style.gridRow = `${it.gy + 1} / span ${h}`;
       c.innerHTML = UI.itemCell(it); c.style.setProperty('--w', w); c.style.setProperty('--h', h);
       if (it.kind === 'weapon' && h === 1) { const u = Icons.flatUrl(it.key); const im = u && c.querySelector('.icon .ico'); if (im) { im.src = u; im.classList.add('flat'); } } // v1.87.1 눕힌 무기 그림

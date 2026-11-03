@@ -185,7 +185,10 @@ const Raid = {
     Companion.onExtract(r); // v1.44 동료 개인 부탁
     Settlement.onExtract(r); // v1.43 구한 사람 합류 · 캠프 사람들이 물건을 모아 둠
     const items = this.allItems().filter(it => it.raid);
+    const unsealed = items.filter(isSealed); // v2.0.35 봉인 해제(개봉) 목록
     for (const it of items) delete it.raid;
+    this.lastUnsealed = unsealed;
+    if (unsealed.length) { UI.toast('🔓 봉인 해제', unsealed.map(itemName).join(' · ')); SFX.play('item', 4); log(`🔓 봉인 해제: ${unsealed.map(itemName).join(', ')} — 이제 착용할 수 있다.`, '#c77dff'); }
     const firstExtract = !(p.rec && p.rec.extracts) && !p.smgGift; // v2.0.23 첫 탈출 → 정찰조 기관단총 지급
     Journal.onExtract(r, r.credits); // v1.15 기록
     p.raid = null;
@@ -213,10 +216,10 @@ const Raid = {
     const lost = Math.min(p.credits, r.credits);
     p.credits -= lost;
     for (const it of lostItems) delete it.raid;
-    Scavenge.makeGrave(lostItems, lost); // v1.4: 다음 출격 때 같은 맵에서 회수
+    Scavenge.makeGrave(lostItems, 0); // v1.4: 다음 출격 때 같은 맵에서 장비 회수 · v2.0.35 이번 출격에서 번 크레딧은 시체 가방에도 안 남고 사라짐
     p.raid = null;
     this.lastDeath = { r, items: lostItems, credits: lost, kept };
-    return lostItems.length || lost ? `이번 출격의 장비 ${lostItems.length}개와 ₵${fmt(lost)}가 시체 가방에 남았다. 다음에 「${MAPS[r.map].name}」에 출격해 회수할 수 있다.` : '캠프로 돌아갑니다.';
+    return lostItems.length || lost ? `${lostItems.length ? `이번 출격의 장비 ${lostItems.length}개가 시체 가방에 남았다. 다음에 「${MAPS[r.map].name}」에 출격해 회수할 수 있다.` : ''}${lost ? ` 이번에 번 ₵${fmt(lost)}는 사라졌다.` : ''}` : '캠프로 돌아갑니다.';
   },
 
   toCamp() {
@@ -232,7 +235,7 @@ const Raid = {
 
   // 출격 결과 (탈출 성공 / 사망)
   summary(ok, r, items) {
-    const li = items.length ? items.map(it => `<div class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</div>`).join('') : '<span class="muted">없음</span>';
+    const li = items.length ? items.map(it => `<div class="r${it.rarity || 0}">${ok && (this.lastUnsealed || []).includes(it) ? '🔓 ' : ''}${itemIcon(it)} ${itemName(it)}</div>`).join('') : '<span class="muted">없음</span>';
     $('summary-title').textContent = ok ? '탈출 성공' : '사망';
     $('summary-title').className = ok ? 'ok' : 'bad';
     const myth = ok ? items.filter(it => it.rarity === 5) : (this.lastDeath && this.lastDeath.kept) || [], mc = RARITIES[5].color; // v1.63 신화 확보는 결과 카드 맨 위에
@@ -240,9 +243,9 @@ const Raid = {
       + (ok ? '' : (dc => dc.length ? `<div class="sum-row"><span>쓰러뜨린 것</span><b style="color:#ff8a6a">${dc.map(([n, d], i) => i ? `<span class="muted" style="font-weight:normal">${n} ${fmt(Math.round(d))}</span>` : `${n} ${fmt(Math.round(d))}`).join(' · ')}</b></div>` : '')(deathCause())) // v1.70 사망 원인 (마지막 6초 피해)
       + `<div class="sum-row"><span>시간</span><b>${Math.floor(r.t / 60)}분 ${Math.floor(r.t % 60)}초</b></div>`
       + `<div class="sum-row"><span>처치</span><b>${r.kills || 0}</b></div>`
-      + `<div class="sum-row"><span>${ok ? '확보한 크레딧' : '잃은 크레딧'}</span><b>₵${fmt(ok ? r.credits : this.lastDeath.credits)}</b></div>`
+      + `<div class="sum-row"><span>${ok ? '확보한 크레딧' : '잃은 크레딧 (회수 불가)'}</span><b>₵${fmt(ok ? r.credits : this.lastDeath.credits)}</b></div>`
       + `<div class="sum-head">${ok ? '가져온 장비' : '시체 가방에 남은 장비'} (${items.length})</div><div class="sum-items">${li}</div>`
-      + (ok ? '' : `<div class="muted">다음에 「${MAPS[r.map].name}」에 출격하면 쓰러진 자리(미니맵 붉은 ✚)에서 회수할 수 있습니다. 다시 죽으면 새 가방으로 바뀝니다.</div>`);
+      + (ok ? ((this.lastUnsealed || []).length ? `<div class="sum-row"><span>🔓 봉인 해제</span><b>${this.lastUnsealed.length}개</b></div>` : '') : `<div class="muted">장비는 다음에 「${MAPS[r.map].name}」에 출격하면 쓰러진 자리(미니맵 붉은 ✚)에서 회수할 수 있습니다. 크레딧은 회수할 수 없습니다. 다시 죽으면 새 가방으로 바뀝니다.</div>`);
     $('raid-summary').classList.toggle('ok', !!ok); $('raid-summary').classList.toggle('bad', !ok); // v1.83 50절 배경 그림
     $('raid-summary').classList.remove('hidden');
   },

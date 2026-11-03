@@ -339,7 +339,7 @@ const UI = {
     const cmp = UI.cmpHtml(it, equippedSlot); // v1.92 PC 마우스 설명에도 같이
     const req = itemReqLevel(it);
     box.innerHTML = `<b class="r${it.rarity || 0}">${itemIcon(it)} ${itemName(it)}</b> ${it.ilvl ? `<span class="muted">(아이템 Lv${it.ilvl})</span>` : ''}`
-      + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + `<br>${itemHtml(it, true)}${cmp}<div class="btns"></div>`; // v1.50 부품은 아래 부품 칸에서
+      + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + (isSealed(it) ? ' <span class="seal-tag">🔒 봉인 · 탈출하면 착용 가능</span>' : '') + `<br>${itemHtml(it, true)}${cmp}<div class="btns"></div>`; // v1.50 부품은 아래 부품 칸에서
     const btns = box.querySelector('.btns');
     if (it.kind === 'weapon' && !WEAPONS[it.key].melee) Attach.panel(box, it); // v1.50 부품 칸
     const add = (label, fn) => { const b = document.createElement('button'); b.innerHTML = label; b.onclick = fn; btns.appendChild(b); };
@@ -349,11 +349,11 @@ const UI = {
       add('장착 해제', () => UI.unequip(equippedSlot));
       return;
     }
-    if (it.kind === 'weapon') { add('주무기로 장착', () => UI.equip(it, 'w1')); add('보조무기로 장착', () => UI.equip(it, 'w2')); }
+    if (it.kind === 'weapon') { add(isSealed(it) ? '🔒 탈출 후 착용' : '주무기로 장착', () => UI.equip(it, 'w1')); add(isSealed(it) ? '🔒 탈출 후 착용' : '보조무기로 장착', () => UI.equip(it, 'w2')); }
     if (Companion.canGive(it) && !it.locked) add(`${COMPANIONS[G.player.comp].name}에게 주기`, () => Companion.give(it)); // v1.44
-    if (it.kind === 'armor') add('장착', () => UI.equip(it, 'armor'));
-    if (it.kind === 'helmet') add('장착', () => UI.equip(it, 'helmet'));
-    if (it.kind === 'belt') add('차기', () => { UI.equip(it, 'belt'); UI.buildHotbar(); }); // 칸이 늘면 못 넣었던 스킬을 채움
+    if (it.kind === 'armor') add(isSealed(it) ? '🔒 탈출 후 착용' : '장착', () => UI.equip(it, 'armor'));
+    if (it.kind === 'helmet') add(isSealed(it) ? '🔒 탈출 후 착용' : '장착', () => UI.equip(it, 'helmet'));
+    if (it.kind === 'belt') add(isSealed(it) ? '🔒 탈출 후 착용' : '차기', () => { UI.equip(it, 'belt'); UI.buildHotbar(); }); // 칸이 늘면 못 넣었던 스킬을 채움
     if (it.kind === 'cons') add('사용', () => useItem(it));
     if (it.kind === 'att') Attach.partButtons(add, it); // v1.50
     if (it.locked) return; // 잠긴 장비는 판매·버리기 버튼 없음
@@ -365,6 +365,7 @@ const UI = {
   equip(it, slot) {
     const p = G.player;
     if (p.level < itemReqLevel(it)) { log(`레벨이 부족합니다. (요구 Lv${itemReqLevel(it)})`, '#f88'); return; }
+    if (isSealed(it)) { log('🔒 봉인된 장비입니다. 탈출에 성공하면 착용할 수 있습니다.', '#c77dff'); SFX.play('ui'); return; } // v2.0.35
     const idx = p.inventory.indexOf(it);
     if (idx < 0) return; // v1.96.3 이미 장착했거나 가방에 없는 것 (두 번 눌림)
     const old = p.equip[slot];
