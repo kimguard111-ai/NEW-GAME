@@ -1590,7 +1590,7 @@ Match the art style of the attached concept image. Create ONE wide isometric 3/4
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined international airport on an island: a long cracked runway with abandoned airliners (generic, no airline logos), a collapsed terminal with a broken glass roof, a tall control tower, baggage carts and jet bridges, a hangar with a stranded helicopter, pale concrete and gray sky with warm orange runway beacon lights. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-**올릴 때 알려 주세요**: 5장 중 마음에 드는 것(또는 다시 뽑을 것)과 바꾸고 싶은 느낌 (예: 「공항은 더 어둡게」). 확정되면 다음은 **랜드마크 5장 + 부평 소품**입니다.
+**올릴 때 알려 주세요**: 5장 중 마음에 드는 것(또는 다시 뽑을 것)과 바꾸고 싶은 느낌 (예: 「공항은 더 어둡게」). 확정되면 다음은 **랜드마크 5장 + 남동공단 소품**입니다.
 
 ## 결과가 이상할 때
 
