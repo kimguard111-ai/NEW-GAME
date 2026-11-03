@@ -1552,38 +1552,45 @@ Match the art style of the attached concept image, and use exactly the same size
 Match the art style of the attached concept image, and use exactly the same size, pose layout and row structure as the attached existing zombie sprite sheet. Create ONE sprite sheet image of an infected zombie amusement-park mascot performer wearing a faded, torn, generic cartoon bunny mascot costume. The big bunny head is permanently fused to the costume like a helmet: it is a solid, fully enclosed head with one drooping torn ear, a cracked muzzle, and hollow dark glowing red eye holes. The head NEVER comes off and NEVER shows any human skin or face in any frame, including the attack and death rows. The body wears a stained striped vest, oversized worn-out three-fingered gloves and big worn shoes, hunched posture, arms reaching forward. The costume must not resemble any real brand mascot. Rows: row 1: 4 frames of idle swaying; row 2: 6 frames of a slow shambling walk; row 3: 4 frames of raising both arms then a claw attack lunging forward; row 4: 2 frames of getting hit; row 5: 5 frames of a death animation, collapsing and lying on the ground. The same character with the same bunny head in every single frame, same size, all facing right, wide empty gaps between frames, feet of each row on the same line. Isometric 3/4 top-down view (camera about 35 degrees above). Detailed dark pixel art, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no grid lines, no border, no logos or brand marks. Do not use pink or magenta on the character.
 ```
 
-## 58. 인천 편 콘셉트 아트 (분위기 기준 그림) · v3.0 준비 · 4장
-설계서는 `docs/INCHEON.md`. **게임에 들어가는 그림이 아니라**, 이후 모든 인천 편 프롬프트(랜드마크 · 소품 · 질감 · 적 · 보스)에 **함께 첨부할 분위기 기준 그림**입니다. 먼저 이 4장을 만들고, 마음에 들 때까지 고르세요. 마음에 든 4장을 `art_raw/new/` 에 올려 주시면 제가 그 색 · 분위기를 기준으로 다음 프롬프트들을 씁니다.
+## 58. 인천 편 콘셉트 아트 (분위기 기준 그림) · v3.0 준비 · 5장
+설계서는 `docs/INCHEON.md`. **게임에 들어가는 그림이 아니라**, 이후 모든 인천 편 프롬프트(랜드마크 · 소품 · 질감 · 적 · 보스)에 **함께 첨부할 분위기 기준 그림**입니다. 먼저 이 5장을 만들고, 마음에 들 때까지 고르세요. 마음에 든 5장을 `art_raw/new/` 에 올려 주시면 제가 그 색 · 분위기를 기준으로 다음 프롬프트들을 씁니다.
 📐 **16:9** · 📎 기존 콘셉트 아트 + 그림체 기준으로 `assets/title.png` 또는 서울 지역 그림 한 장 첨부 · 글자 · 상표 · 로고 없음 · 배경색 규칙 없음 (풍경이라 마젠타 안 씀)
+⚠ **송도는 실제 아울렛의 이름 · 로고 · 간판을 쓰지 않습니다.** 「파스텔 유럽풍 쇼핑 마을 + 시계탑」이라는 분위기만 그리고, 간판은 모두 빈 판 (게임이 글씨를 얹음). 차이나타운도 한자 · 글자 없이.
 
 | 장 | 파일 이름 | 지역 |
 |---|---|---|
 | 58-1 | `concept_bupyeong.png` | 부평 · 계양 (폐공장 지대 · Lv40~42) |
-| 58-2 | `concept_incheonport.png` | 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv43~45) |
-| 58-3 | `concept_songdo.png` | 송도 (유리 고층 신도시 · Lv46~48) |
-| 58-4 | `concept_airport.png` | 영종도 인천공항 (활주로 · 터미널 · 격납고 · Lv48~50) |
+| 58-2 | `concept_chinatown.png` | 인천 차이나타운 (붉은 등불 골목 · Lv42~44) |
+| 58-3 | `concept_incheonport.png` | 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv44~46) |
+| 58-4 | `concept_songdo.png` | 송도 프리미엄 아울렛 단지 (쇼핑 마을 · Lv46~48) |
+| 58-5 | `concept_airport.png` | 영종도 인천공항 (활주로 · 터미널 · 격납고 · Lv48~50) |
 
 ### 58-1 · 부평 · 계양 (폐공장 지대 · Lv40~42) · `concept_bupyeong.png`
 ```
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined industrial district west of Seoul: derelict factories with rusted corrugated walls, a tall brick smokestack, collapsed gantry cranes, rusted railway tracks with an abandoned freight train, stacked steel drums and coils of cable, rusty orange and dull steel-gray palette with sooty haze, a few warm orange fires in barrels. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-### 58-2 · 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv43~45) · `concept_incheonport.png`
+### 58-2 · 인천 차이나타운 (붉은 등불 골목 · Lv42~44) · `concept_chinatown.png`
+```
+Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined old Chinatown quarter of a port city: a large traditional Chinese-style ceremonial gate (paifang) with a tiled roof standing over the main street, narrow alleys of low tile-roofed restaurants and shops with blank signboards, strings of faded red paper lanterns hanging across the alleys, bamboo steamers and cooking woks left outside, overgrown moss on the roof tiles, red and dark-green palette with warm orange lantern glow, a distant harbor mast between the roofs. All signboards are blank with no writing. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
+```
+
+### 58-3 · 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv44~46) · `concept_incheonport.png`
 ```
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined harbor on the west coast: rows of stacked faded shipping containers in broken piles, a huge tilted container gantry crane, an amusement-park Ferris wheel and carousel half-sunk at the pier, murky green-blue water with rusted ships, a foggy sea horizon, teal and rust colors with warm orange lantern lights. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-### 58-3 · 송도 (유리 고층 신도시 · Lv46~48) · `concept_songdo.png`
+### 58-4 · 송도 프리미엄 아울렛 단지 (쇼핑 마을 · Lv46~48) · `concept_songdo.png`
 ```
-Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined high-tech planned city: tall cracked glass skyscrapers with overgrown vines, an overgrown central park with a stagnant canal, a half-collapsed sky bridge, dead street lights and wrecked self-driving cars, hovering broken delivery drones, cold blue-gray glass tones with sickly green vegetation and a few warm orange emergency lights. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
+Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined open-air premium outlet shopping village: a pastel European-style village of two-story shop buildings with arched windows and covered walkways, a central plaza with a tall clock tower, cracked fountains, rows of empty shop windows with toppled mannequins, overturned shopping carts piled in the large parking lots at the edges, faded banners with no writing, cold pastel colors gone gray and dusty with sickly green vines, a few warm orange emergency lights. The buildings are generic and must not resemble any real brand, logo or sign. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-### 58-4 · 영종도 인천공항 (활주로 · 터미널 · 격납고 · Lv48~50) · `concept_airport.png`
+### 58-5 · 영종도 인천공항 (활주로 · 터미널 · 격납고 · Lv48~50) · `concept_airport.png`
 ```
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined international airport on an island: a long cracked runway with abandoned airliners (generic, no airline logos), a collapsed terminal with a broken glass roof, a tall control tower, baggage carts and jet bridges, a hangar with a stranded helicopter, pale concrete and gray sky with warm orange runway beacon lights. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-**올릴 때 알려 주세요**: 4장 중 마음에 드는 것(또는 다시 뽑을 것)과 바꾸고 싶은 느낌 (예: 「공항은 더 어둡게」). 확정되면 다음은 **랜드마크 4장 + 부평 소품**입니다.
+**올릴 때 알려 주세요**: 5장 중 마음에 드는 것(또는 다시 뽑을 것)과 바꾸고 싶은 느낌 (예: 「공항은 더 어둡게」). 확정되면 다음은 **랜드마크 5장 + 부평 소품**입니다.
 
 ## 결과가 이상할 때
 
