@@ -1593,6 +1593,47 @@ Match the art style of the attached concept image. Create ONE wide isometric 3/4
 
 **올릴 때 알려 주세요**: 5장 중 마음에 드는 것(또는 다시 뽑을 것)과 바꾸고 싶은 느낌 (예: 「공항은 더 어둡게」). 확정되면 다음은 **랜드마크 5장 + 남동공단 소품**입니다.
 
+## 59. 인천 편 랜드마크 4장 (설계서 단계 1) · 정사각형
+📎 **첨부 2장**: ① `docs/incheon/` 의 **그 지역 콘셉트 아트**(아래 표) ② 기존 랜드마크 한 장(예: `assets/` 의 성당 · 펌프장) — 크기 · 각도 맞추기 · 📐 **1:1** · 🎨 배경 단색 마젠타 · 글자 · 상표 · 로고 없음
+결과는 `art_raw/new/` 에 파일 이름대로 올려 주세요. 제가 `js/assets.js` 의 `landmarks` 에 등록합니다. (공항 도전 던전의 출격 카드는 나중에)
+
+| 장 | 파일 이름 | 첨부할 콘셉트 | 대상 |
+|---|---|---|---|
+| 59-1 | `landmark_sorae.png` | `concept_namdong.png` | 소래철교 (남동공단 · 소래포구 랜드마크) |
+| 59-2 | `landmark_paifang.png` | `concept_chinatown.png` | 패루 (차이나타운 랜드마크) |
+| 59-3 | `landmark_crane.png` | `concept_incheonport.png` | 컨테이너 크레인 (인천항 · 월미도 랜드마크) |
+| 59-4 | `landmark_outlet.png` | `concept_songdo.png` | 시계탑 광장 (송도 아울렛 랜드마크) |
+
+### 59-1 · 소래철교 (남동공단 · 소래포구 랜드마크) · `landmark_sorae.png`
+```
+Match the art style of the attached concept images. Create ONE image of a single short section of an old rusted narrow-gauge steel truss railway bridge over a muddy tidal creek: two weathered stone-and-concrete piers, rusted riveted steel trusses with a sagging span, rotten wooden sleepers and bent rails, a small corrugated-metal signal hut at one end with a dead lantern, mud and salt crust at the base, a few fishing nets and crates piled near the abutment, a faint warm orange lamp. The structure stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the structure: no street, no ground, no river, no people, no shadow, no text, no numbers, no logos or brand marks. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty.
+```
+
+### 59-2 · 패루 (차이나타운 랜드마크) · `landmark_paifang.png`
+```
+Match the art style of the attached concept images. Create ONE image of a single large traditional Chinese-style ceremonial gate (paifang) with a three-bay tiled roof, thick faded red pillars on stone bases, mossy dark roof tiles with upturned eaves, a blank weathered panel in the center, overgrown vines, strings of faded red paper lanterns still hanging from the roof corners glowing warm orange, a few barricade planks at the base. All panels are blank with no writing. The structure stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the structure: no street, no ground, no river, no people, no shadow, no text, no numbers, no logos or brand marks. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty.
+```
+
+### 59-3 · 컨테이너 크레인 (인천항 · 월미도 랜드마크) · `landmark_crane.png`
+```
+Match the art style of the attached concept images. Create ONE image of a single huge tilted rusted container gantry crane on a concrete quay, its tall steel legs and long boom bent and leaning, hanging cables, a rusted operator cabin high up with broken windows, a pile of broken stacked shipping containers at its feet, a few warm orange lantern lights near the base. The structure stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the structure: no street, no ground, no river, no people, no shadow, no text, no numbers, no logos or brand marks. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty.
+```
+
+### 59-4 · 시계탑 광장 (송도 아울렛 랜드마크) · `landmark_outlet.png`
+```
+Match the art style of the attached concept images. Create ONE image of a single ruined outlet-mall central plaza: a tall slim clock tower pylon with a cracked clock face, a cracked fountain, bare dead trees in planters, a small wrecked playground, overturned shopping carts and a pile of scooters, two low empty shop fronts with broken glass and toppled mannequins on the sides, creeping vines, a few warm orange emergency lights. The buildings are generic and must not resemble any real brand, logo or sign. The structure stands on a square diamond-shaped footprint, viewed from the south corner, so the bottom tip of the footprint touches the bottom center of the image. Isometric 3/4 top-down view, detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Only the structure: no street, no ground, no river, no people, no shadow, no text, no numbers, no logos or brand marks. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty.
+```
+
+## 60. 남동공단 · 소래포구 지역 소품 9종 · `props_namdong.png` (3×3) · 54절과 같은 방식
+📐 **16:9** · 📎 `concept_namdong.png` + 기존 소품 시트 한 장(예: `assets/props_jongno.png`) · 🎨 배경 마젠타 · 글자 · 상표 없음
+연결될 자리(코드): 공단 쪽 — 오염 드럼 · 탱크 · 파이프 · 지게차 / 포구 쪽 — 어시장 상자 · 그물 건조대 · 배 · 염전 소금 더미 · 경고 표지
+### 60-1 · 남동공단 · 소래포구 소품 · `props_namdong.png`
+```
+Match the art style of the attached concept images. Create ONE image with a 3 by 3 grid of 9 separate street objects from a ruined industrial complex and fishing harbor (Namdong industrial park and Sorae port), each centered in its own equal cell with wide empty space between them, every object standing upright with its base at the bottom of its cell, all in the same isometric 3/4 top-down view (camera about 35 degrees above), objects seen from the front-left so they read clearly. In order, left to right, top to bottom: a cluster of rusty oil drums with one leaking toxic green-yellow liquid; a large corroded chemical storage tank on a steel frame with a ladder; a short section of tangled thick pipes with a rusted valve wheel; a rusty forklift with a pallet of broken crates; a stack of wooden fish crates and a dented white cooler box; a wooden fish-drying rack with torn nets hanging; a small wooden fishing boat resting on a rusty trailer; a heap of gray salt with a rusty wheelbarrow and shovel; a bent metal warning-sign post with a blank hazard panel and a hanging chain. Detailed dark pixel art, gritty post-apocalyptic, desaturated colors with warm orange highlights. Solid flat #FF00FF magenta background. Leave the bottom-right corner empty. No shadow, no ground, no text, no numbers, no logos or brand marks.
+```
+
+**등록할 때:** `art_raw/new/` 에 파일 이름대로 올려 주세요. 제가 9개를 잘라 등록하고, 남동공단 맵 장면(`SCENES`)과 길가 비율에 연결합니다.
+
 ## 결과가 이상할 때
 
 | 증상 | 해결 |
