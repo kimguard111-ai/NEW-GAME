@@ -1559,15 +1559,15 @@ Match the art style of the attached concept image, and use exactly the same size
 
 | 장 | 파일 이름 | 지역 |
 |---|---|---|
-| 58-1 | `concept_bupyeong.png` | 부평 · 계양 (폐공장 지대 · Lv40~42) |
+| 58-1 | `concept_namdong.png` | 남동공단 · 소래포구 (공장 지대 + 포구 · Lv40~42) |
 | 58-2 | `concept_chinatown.png` | 인천 차이나타운 (붉은 등불 골목 · Lv42~44) |
 | 58-3 | `concept_incheonport.png` | 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv44~46) |
 | 58-4 | `concept_songdo.png` | 송도 프리미엄 아울렛 단지 (쇼핑 마을 · Lv46~48) |
 | 58-5 | `concept_airport.png` | 영종도 인천공항 (활주로 · 터미널 · 격납고 · Lv48~50) |
 
-### 58-1 · 부평 · 계양 (폐공장 지대 · Lv40~42) · `concept_bupyeong.png`
+### 58-1 · 남동공단 · 소래포구 (공장 지대 + 포구 · Lv40~42) · `concept_namdong.png`
 ```
-Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined industrial district west of Seoul: derelict factories with rusted corrugated walls, a tall brick smokestack, collapsed gantry cranes, rusted railway tracks with an abandoned freight train, stacked steel drums and coils of cable, rusty orange and dull steel-gray palette with sooty haze, a few warm orange fires in barrels. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
+Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined industrial complex that meets a small fishing harbor on the west coast. The inner half: rows of low derelict chemical, dyeing and metal workshops with rusted corrugated walls, big storage tanks and tangled pipes, a tall brick smokestack, toxic green-yellow puddles seeping across the road with faint fumes. The outer half: a tiny fish-market pier with blank-signed wooden stalls and overturned crates, drying racks, a grid of salt pans and tidal mudflats reflecting the sky, and an old rusted narrow railway bridge crossing a tidal creek. Rusty orange and dull steel-gray palette with a few sickly green accents and warm orange fires in barrels. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
 ### 58-2 · 인천 차이나타운 (붉은 등불 골목 · Lv42~44) · `concept_chinatown.png`
