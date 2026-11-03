@@ -1559,33 +1559,33 @@ Match the art style of the attached concept image, and use exactly the same size
 
 | 장 | 파일 이름 | 지역 |
 |---|---|---|
-| 58-1 | `concept_namdong.png` | 남동공단 · 소래포구 (공장 지대 + 포구 · Lv40~42) |
-| 58-2 | `concept_chinatown.png` | 인천 차이나타운 (붉은 등불 골목 · Lv42~44) |
-| 58-3 | `concept_incheonport.png` | 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv44~46) |
-| 58-4 | `concept_songdo.png` | 송도 프리미엄 아울렛 단지 (쇼핑 마을 · Lv46~48) |
-| 58-5 | `concept_airport.png` | 인천공항 **도전 던전** (터미널 · 수하물 · 화물 · 격납고 · 관제탑 · Lv48~) — 실내 던전 분위기 기준 |
+| 58-1 | `concept_namdong.png` | 남동공단 · 소래포구 (공장 지대 + 포구 · Lv40~44) |
+| 58-2 | `concept_chinatown.png` | 인천 차이나타운 (붉은 등불 골목 · Lv44~48) |
+| 58-3 | `concept_incheonport.png` | 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv48~52) |
+| 58-4 | `concept_songdo.png` | 송도 프리미엄 아울렛 단지 (쇼핑 마을 · Lv52~56) |
+| 58-5 | `concept_airport.png` | 인천공항 **도전 던전** (터미널 · 수하물 · 화물 · 격납고 · 관제탑 · Lv56~) — 실내 던전 분위기 기준 |
 
-### 58-1 · 남동공단 · 소래포구 (공장 지대 + 포구 · Lv40~42) · `concept_namdong.png`
+### 58-1 · 남동공단 · 소래포구 (공장 지대 + 포구 · Lv40~44) · `concept_namdong.png`
 ```
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined industrial complex that meets a small fishing harbor on the west coast. The inner half: rows of low derelict chemical, dyeing and metal workshops with rusted corrugated walls, big storage tanks and tangled pipes, a tall brick smokestack, toxic green-yellow puddles seeping across the road with faint fumes. The outer half: a tiny fish-market pier with blank-signed wooden stalls and overturned crates, drying racks, a grid of salt pans and tidal mudflats reflecting the sky, and an old rusted narrow railway bridge crossing a tidal creek. Rusty orange and dull steel-gray palette with a few sickly green accents and warm orange fires in barrels. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-### 58-2 · 인천 차이나타운 (붉은 등불 골목 · Lv42~44) · `concept_chinatown.png`
+### 58-2 · 인천 차이나타운 (붉은 등불 골목 · Lv44~48) · `concept_chinatown.png`
 ```
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined old Chinatown quarter of a port city: a large traditional Chinese-style ceremonial gate (paifang) with a tiled roof standing over the main street, narrow alleys of low tile-roofed restaurants and shops with blank signboards, strings of faded red paper lanterns hanging across the alleys, bamboo steamers and cooking woks left outside, overgrown moss on the roof tiles, red and dark-green palette with warm orange lantern glow, a distant harbor mast between the roofs. All signboards are blank with no writing. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-### 58-3 · 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv44~46) · `concept_incheonport.png`
+### 58-3 · 인천항 · 월미도 (항만 · 놀이공원 부두 · Lv48~52) · `concept_incheonport.png`
 ```
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined harbor on the west coast: rows of stacked faded shipping containers in broken piles, a huge tilted container gantry crane, an amusement-park Ferris wheel and carousel half-sunk at the pier, murky green-blue water with rusted ships, a foggy sea horizon, teal and rust colors with warm orange lantern lights. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-### 58-4 · 송도 프리미엄 아울렛 단지 (쇼핑 마을 · Lv46~48) · `concept_songdo.png`
+### 58-4 · 송도 프리미엄 아울렛 단지 (쇼핑 마을 · Lv52~56) · `concept_songdo.png`
 ```
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) of a ruined open-air premium outlet shopping village: a pastel European-style village of two-story shop buildings with arched windows and covered walkways, a central plaza with a tall clock tower, cracked fountains, rows of empty shop windows with toppled mannequins, overturned shopping carts piled in the large parking lots at the edges, faded banners with no writing, cold pastel colors gone gray and dusty with sickly green vines, a few warm orange emergency lights. The buildings are generic and must not resemble any real brand, logo or sign. Include a few survivors' makeshift camps and barricades far in the distance. Detailed dark pixel art, desaturated colors with warm orange highlights, moody dusk lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
 ```
 
-### 58-5 · 인천공항 도전 던전 (터미널 · 수하물 · 화물 · 격납고 · 관제탑 · Lv48~) · `concept_airport.png`
+### 58-5 · 인천공항 도전 던전 (터미널 · 수하물 · 화물 · 격납고 · 관제탑 · Lv56~) · `concept_airport.png`
 이 그림은 야외가 아니라 **실내 던전 분위기** 기준입니다 (연구소 · 스카이타워처럼 층마다 바닥 · 벽 · 소품이 따로 옵니다).
 ```
 Match the art style of the attached concept image. Create ONE wide isometric 3/4 top-down concept scene (camera about 35 degrees above, like a strategy game view) cut-away of the inside of a ruined international airport, shown as a stacked cross-section of floors: a big arrivals hall with a broken baggage carousel and abandoned suitcases, a security checkpoint corridor with metal detector gates and overturned trays, a cargo terminal with tall container shelves and forklifts, a huge aircraft hangar with a generic airliner nose and maintenance robots, and a control tower room with dead radar screens at the top. Cold gray concrete and glass, dim emergency lights with warm orange highlights, a faint blue glow of a malfunctioning central computer. All signs are blank, no airline logos. Detailed dark pixel art, desaturated colors with warm orange highlights, moody lighting. No text, no numbers, no logos or brand marks, no characters in the foreground, no border.
