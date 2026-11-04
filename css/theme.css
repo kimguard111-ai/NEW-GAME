@@ -797,3 +797,12 @@ body.touch #touch-side button::before { content: ''; position: absolute; inset: 
 .inv-cell.sealed { outline: 1px dashed #c77dff; }
 .inv-cell.sealed::after { content: '🔒'; position: absolute; right: 2px; top: 1px; font-size: 11px; filter: drop-shadow(0 0 2px #000); }
 .seal-tag { color: #c77dff; font-size: 11px; }
+
+/* v2.0.36 앱 안 브라우저 경고 (타이틀) */
+#inapp-warn { margin: 10px auto 0; max-width: 560px; padding: 8px 12px; border: 1px solid #e0b23a; background: rgba(60,45,10,.85); color: #ffd76a; font-size: 13px; line-height: 1.45; text-align: center; }
+#inapp-warn.hidden { display: none; }
+#inapp-warn button { margin: 4px 4px 0; padding: 5px 12px; font-size: 13px; border: 1px solid #e0b23a; color: #ffd76a; background: rgba(30,25,10,.9); cursor: pointer; }
+#inapp-warn button.inapp-no { border-color: #6b6350; color: #b8ae92; }
+#inapp-warn .inapp-help { margin-top: 4px; color: #ffe9a8; font-weight: bold; }
+body.touch #inapp-warn { font-size: 11px; padding: 5px 8px; margin-top: 6px; }
+body.touch #inapp-warn button { font-size: 11px; padding: 4px 9px; }
