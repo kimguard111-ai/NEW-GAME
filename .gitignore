@@ -1,2 +1,10 @@
 # 커뮤니티용 영상 (용량이 커서 저장소에 넣지 않음)
 docs/community/v2.0.23/video/
+
+# 앱 서명 키 · 비밀번호 파일은 저장소에 절대 올리지 않음 (잃어버리면 업데이트 불가 · 노출되면 위험)
+*.keystore
+*.jks
+*.p12
+signing-key-info.txt
+*.aab
+*.apk

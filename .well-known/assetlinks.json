@@ -3,6 +3,8 @@
   "target": {
     "namespace": "android_app",
     "package_name": "com.guardk111.cityofruins",
-    "sha256_cert_fingerprints": ["D3:5A:F8:F5:BB:5B:F9:AE:AC:28:7B:19:6F:D5:CE:35:6D:34:DC:25:7E:45:10:C1:6B:BD:74:32:71:E5:FA:FE"]
+    "sha256_cert_fingerprints": [
+      "4D:8A:CD:A6:46:8C:6F:F6:88:5A:0C:B3:03:4F:AA:CD:88:45:14:ED:9A:A7:90:84:C7:10:6B:20:3B:48:CD:A2"
+    ]
   }
 }]
