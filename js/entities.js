@@ -406,6 +406,7 @@ const AMMO_CAP = { pistol: 360, auto: 1080, shell: 330 }; // v1.98.10 산탄 150
 function ammoCap(p, t) { let m = 0; for (const k of ['w1', 'w2']) { const w = p.equip && p.equip[k], b = w && WEAPONS[w.key]; if (b && b.ammo === t && !b.melee) m = Math.max(m, magSize(w)); } return Math.max(AMMO_CAP[t] || 450, m * 6); } // v1.98.37 탄창 4배 → 6배
 function addAmmo(p, t, n) { const room = Math.max(0, ammoCap(p, t) - (p.ammo[t] || 0)), a = Math.min(room, Math.max(1, Math.round(n))); p.ammo[t] = (p.ammo[t] || 0) + a; return a; }
 // v1.98 소모품 한 묶음 최대 (CONSUMABLES.stack — 있었지만 안 쓰이던 것: 구급상자 20 · 탄약 상자 20 · 나머지 10)
+const medRoom = () => Math.max(0, consCap('medkit') - ((G.player.inventory.find(i => i && i.kind === 'cons' && i.key === 'medkit') || {}).count || 0)); // v2.0.37 구급상자 최대 5개
 const consCap = k => (CONSUMABLES[k] && CONSUMABLES[k].stack) || 10;
 // 기관총탄 u발어치를 들고 있는 총(없으면 장착한 총, 그것도 없으면 권총탄)에 맞춰 줌
 function giveAmmoUnits(p, u, t) { t = t || ammoOf(curWeapon()) || gunAmmoTypes(p)[0] || 'pistol'; return [t, addAmmo(p, t, u * AMMO[t].k)]; }

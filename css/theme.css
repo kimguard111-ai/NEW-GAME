@@ -815,3 +815,7 @@ body.touch.shop-open .bag-grid { --bag-cell: 27px; }
 body.touch #item-detail > .btns:first-child { position: sticky; top: 0; z-index: 3; background: #17140f; padding: 2px 0 4px; margin: 0 0 4px; }
 /* v2.0.37 폰: 강화 · 분해 · 재조정 버튼은 창 아래에 붙여 스크롤 없이 */
 body.touch #panel-enhance #enh-detail .btns, body.touch #panel-enhance .btns { position: sticky; bottom: 0; z-index: 3; background: #17140f; padding: 4px 0; box-shadow: 0 -6px 8px #17140f; }
+/* v2.0.37 폰: 목표창 펼치면 안에서 스크롤 · 이름 옆 레벨 · 타이틀 버전 표기 위치 */
+body.touch #quest-tracker:not(.min) { max-height: calc(100vh - 150px) !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; }
+body.touch #hud-name { display: block !important; font-size: 9px !important; letter-spacing: 0; margin: 0 0 1px !important; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.touch .title-main #version-label { top: 6px !important; bottom: auto !important; right: 10px !important; }

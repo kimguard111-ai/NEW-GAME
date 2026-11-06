@@ -8,7 +8,7 @@ const TESTERS = ['17사단탈영범', '하누라', '수도안양절대사수'];
 const testersText = () => TESTERS.length ? `테스트에 도움 주신 분: ${TESTERS.join(' · ')} — 고맙습니다` : '';
 // v1.98.11 테스트 브랜치 미리보기 주소(…hangang-test…)면 한강이 주소 없이도 열리고 버전 옆에 「한강 테스트」 — 같은 코드가 실제 사이트에선 그대로 잠김
 const TEST_BUILD = typeof location !== 'undefined' && /hangang-test/.test(location.hostname);
-const GAME_VERSION = 'v2.0.37' + (TEST_BUILD ? ' · 한강 테스트' : '');
+const GAME_VERSION = 'v2.0.38' + (TEST_BUILD ? ' · 한강 테스트' : '');
 // v2.0 잠금: 한강 다리 · 7장 · Lv40 은 아트 작업이 끝날 때까지 닫아 둠 — 다 되면 V2_READY 를 true 로. 주소 끝에 ?v2 를 붙이면 미리 열림 (개발 · 테스트용)
 const V2_READY = true; // v2.0 출시 (금요일 공개) — 한강 · 7장 · Lv40 · 작전 · 새 시즌 초기화가 한꺼번에 켜짐
 // v1.98.16 업데이트 소식: 돌아온 플레이어에게 버전이 바뀐 뒤 처음 한 번 (새로 시작한 사람은 안 봄) — 큰 패치마다 여기만 고치면 됨
@@ -159,7 +159,7 @@ const LEGENDARY = {
   leech:   { name: '흡혈',      desc: '입힌 피해의 4%만큼 체력 회복' },
   execute: { name: '처형자',    desc: '체력 30% 이하의 적에게 피해 +60%' },
   thrift:  { name: '보급 장인', desc: '35% 확률로 탄약을 소모하지 않음', gun: true },
-  quickload: { name: '속사 장전', desc: '적을 처치하면 탄창이 즉시 가득 참', gun: true },
+  quickload: { name: '속사 장전', desc: '적을 처치하면 10% 확률로 탄창이 즉시 가득 참', gun: true },
   chain:   { name: '연쇄 타격', desc: '치명타가 근처 적 1명에게 50% 피해로 튐' },
   // v1.12 방어구 전설 (slot: armor)
   aegis:      { name: '반응 장갑', desc: '맞으면 20% 확률로 3초 방어막 (받는 피해 -40%, 재발동 10초)', slot: 'armor' },
@@ -261,7 +261,7 @@ const medPrice = lvl => Math.round((40 + 10 * Math.pow(Math.max(1, lvl), 1.4)) /
 const consPrice = k => k === 'medkit' && typeof G !== 'undefined' && G.player ? medPrice(G.player.level) : CONSUMABLES[k].price;
 const DUN_NEAR = 110; // v1.98.27 도전 던전 시야: 이 거리 안은 벽 너머라도 보임 (발소리 · 숨소리)
 const CONSUMABLES = {
-  medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복 · 8초에 한 번', price: 40, stack: 20 },
+  medkit: { name: '구급상자', icon: 'medkit', desc: '최대 체력의 40% 회복 · 8초에 한 번', price: 40, stack: 5 },
   ammo:   { name: '탄약 상자', icon: 'ammo', desc: '들고 있는 총의 탄약 (기관총탄 120발어치)', price: 45, stack: 20 },
   // v1.14 투척물 (6번 칸, T로 바꿈) · 보조 (7번 칸, Y로 바꿈)
   molotov: { name: '화염병', icon: 'molotov', desc: '던진 자리에 5초 불길 (넓게 · 계속 피해)', price: 90, stack: 10, slot: 'throw' },

@@ -78,8 +78,8 @@ function log(msg, color = '#ddd') { UI.log(msg, color); if (color === '#f88' && 
 function floatText(x, y, text, color = '#fff', size = 14) {
   // v1.47.1 글씨가 겹쳐 난잡하던 것: 0.35초 안에 근처(28px)에 뜬 같은 색 피해 숫자는 하나로 합침 · 한 화면 최대 18개
   const n = typeof text === 'number' ? text : /^-?\d+$/.test(text) ? +text : null;
-  if (n !== null) for (const t of G.texts) if (t.num !== undefined && t.color === color && t.t < 0.35 && Math.abs(t.x - x) < 28 && Math.abs(t.y - y) < 28) { t.num += n; t.text = String(t.num); t.t = 0; t.size = Math.min(22, Math.max(t.size, size) + 1); return; }
-  if (G.texts.length >= 18) G.texts.shift();
+  // v2.0.37 피해 숫자는 합치지 않고 하나씩 (한 화면 최대 24개)
+  if (G.texts.length >= 24) G.texts.shift();
   G.texts.push({ x: x + rand(-6, 6), y, z: 34, text, color, size, t: 0, life: 0.9, num: n === null ? undefined : n });
 }
 function burst(x, y, color, n, speed = 120, life = 0.5, size = 3) {
@@ -835,7 +835,7 @@ function damageEnemy(e, dmg, crit, angle, hit = {}) {
   if (e.hp <= 0) {
     e.lastHit = { crit, melee: hit.melee, fin: hit.fin, blast: hit.blast || hit.blastKill, fire: hit.fire, heavy: (hit.knock || 0) >= 9 || (hit.stagger || 0) >= 0.3, a: angle, ally: hit.ally };
     killEnemy(e);
-    if (w && w.legend === 'quickload' && w === curWeapon() && !hit.noProc) {
+    if (w && w.legend === 'quickload' && w === curWeapon() && !hit.noProc && Math.random() < 0.1) { // v2.0.37 매 처치 → 10%
       w.loaded = magSize(w); p.reloadT = 0;
       floatText(p.x, p.y - 34, '장전!', '#ffd27a', 13);
     }

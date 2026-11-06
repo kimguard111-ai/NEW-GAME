@@ -245,7 +245,7 @@ const RaidEvents = {
   openTrader(npc) {
     const p = G.player, st = npc.stock, g = st.gear, again = () => this.openTrader(npc);
     const btns = [];
-    const m3 = Math.round(medPrice(p.level) * 3 * 1.5 / 10) * 10; btns.push([`${ICON('medkit')} +3 (${fmt(m3)}₵)`, () => { if (p.credits < m3) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', 3))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= m3; SFX.play('coin'); again(); }]);
+    const mn = Math.min(3, medRoom()), m3 = Math.round(medPrice(p.level) * mn * 1.5 / 10) * 10; if (mn > 0) btns.push([`${ICON('medkit')} +${mn} (${fmt(m3)}₵)`, () => { if (p.credits < m3) return log('크레딧이 부족합니다.', '#f88'); if (!addItem(makeConsumable('medkit', mn))) return log('가방이 가득 찼습니다.', '#f88'); p.credits -= m3; SFX.play('coin'); again(); }]);
     btns.push([`${ICON('ammo')} 들고 있는 총 탄약 (70₵)`, () => { if (p.credits < 70) return log('크레딧이 부족합니다.', '#f88'); const [t, n] = giveAmmoUnits(p, 150); log(`${AMMO[t].name} +${n}`, '#cc8'); p.credits -= 70; SFX.play('ammo'); again(); }]);
     if (!st.sold) btns.push([`${itemIcon(g)} ${itemName(g)} (₵${fmt(st.price)})`, () => {
       if (p.credits < st.price) return log('크레딧이 부족합니다.', '#f88');

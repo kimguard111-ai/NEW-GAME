@@ -45,7 +45,10 @@ const Touch = {
     const ih = document.getElementById('interact-hint'); ih.addEventListener('touchstart', e => { e.preventDefault(); if (G.running && !G.player.dead) interact(); }, opts); // 「[E] …」 안내를 눌러도 상호작용
     // v1.45.1 목표 창: 누르면 접기/펴기 · 항상 캐릭터 창 바로 아래에
     const qt = document.getElementById('quest-tracker');
-    qt.addEventListener('touchstart', e => { e.preventDefault(); qt.classList.toggle('min'); try { localStorage.setItem('seoul2049-qtmin', qt.classList.contains('min') ? '1' : ''); } catch (er) {} }, opts);
+    let qtS = null; // v2.0.37 목표창: 살짝 톡 칠 때만 접기·펴기 · 끌면 안의 글을 스크롤
+    qt.addEventListener('touchstart', e => { const t = e.touches[0]; qtS = { x: t.clientX, y: t.clientY, t: performance.now(), moved: false }; }, { passive: true });
+    qt.addEventListener('touchmove', e => { if (!qtS) return; const t = e.touches[0]; if (Math.hypot(t.clientX - qtS.x, t.clientY - qtS.y) > 8) qtS.moved = true; }, { passive: true });
+    qt.addEventListener('touchend', e => { const s = qtS; qtS = null; if (!s || s.moved || performance.now() - s.t > 500) return; e.preventDefault(); qt.classList.toggle('min'); try { localStorage.setItem('seoul2049-qtmin', qt.classList.contains('min') ? '1' : ''); } catch (er) {} }, opts);
     try { if (localStorage.getItem('seoul2049-qtmin') !== '') qt.classList.add('min'); } catch (er) { qt.classList.add('min'); }
     const place = () => { const r = document.getElementById('hud-top-left').getBoundingClientRect(); qt.style.top = Math.round(r.bottom + 4) + 'px'; };
     window.addEventListener('resize', place); setInterval(place, 1000); place();
