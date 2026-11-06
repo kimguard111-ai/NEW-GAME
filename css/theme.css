@@ -806,3 +806,10 @@ body.touch #touch-side button::before { content: ''; position: absolute; inset: 
 #inapp-warn .inapp-help { margin-top: 4px; color: #ffe9a8; font-weight: bold; }
 body.touch #inapp-warn { font-size: 11px; padding: 5px 8px; margin-top: 6px; }
 body.touch #inapp-warn button { font-size: 11px; padding: 4px 9px; }
+
+/* v2.0.37 폰: 상점+가방 같이 열 때 격자가 설명 칸을 덮던 것 · 장착 버튼 고정 */
+body.touch.shop-open #panel-shop.panel { width: 36vw !important; }
+body.touch.shop-open #panel-inventory.panel { left: 38vw !important; width: 61vw !important; }
+body.touch.shop-open .bag { grid-template-columns: max-content minmax(0, 1fr); }
+body.touch.shop-open .bag-grid { --bag-cell: 27px; }
+body.touch #item-detail > .btns:first-child { position: sticky; top: 0; z-index: 3; background: #17140f; padding: 2px 0 4px; margin: 0 0 4px; }

@@ -55,18 +55,19 @@ const Touch = {
       if (!hot) return;
       e.preventDefault();
       const act = hot.dataset.act || ''; // v1.50 벨트(소모품) 칸
-      if (act === 'edit') Hotbar.edit(); else Hotbar.use(+hot.dataset.slot);
+      if (act === 'edit') Hotbar.edit(); else { const sl = +hot.dataset.slot, k = G.player.hotbar[sl]; if (k === 'molotov' || k === 'flash') ThrowAim.begin(e, () => Hotbar.use(sl)); else Hotbar.use(sl); }
     }, opts);
     // 시작 시 전체 화면 + 가로 고정 시도 (지원하는 브라우저만)
     for (const id of ['btn-new', 'btn-continue', 'btn-respawn']) document.getElementById(id).addEventListener('click', () => this.fullscreen());
     // v1.45.2 처음 누르는 순간(제목 화면 포함) 전체 화면 · 알림창 등으로 빠져나가도 다음 터치에 다시 (브라우저는 터치 없이 전체 화면을 못 켬)
+    window.addEventListener('orientationchange', () => { this._rot = true; }); // v2.0.37 화면을 돌린 뒤 첫 터치에 바로 전체 화면 (빠져나갔던 것)
     document.addEventListener('touchend', () => { if (Settings.fullscreen !== false && !document.fullscreenElement) this.fullscreen(); }, { passive: true });
   },
 
   fullscreen() {
     const d = document.documentElement;
     try {
-      if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+      if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen({ navigationUI: 'hide' }).then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
     } catch (e) { /* 미지원 */ }
   },
 
@@ -144,7 +145,39 @@ const Touch = {
       }
     }
     input.mx = tx; input.my = ty;
+    if (ThrowAim.st && ThrowAim.st.drag) { input.mx = ThrowAim.st.tx; input.my = ThrowAim.st.ty; } // v2.0.37 던질 곳 지정 중
     input.down = auto || (!!this.aim && this.aim.mag > 0.35);
+  },
+};
+// v2.0.37 수류탄 · 화염병 · 섬광탄: 버튼을 누른 채 끌어 던질 곳을 정하고 떼면 던짐 (그냥 탭하면 예전처럼)
+const ThrowAim = {
+  st: null, RANGE: 380,
+  begin(e, cast) {
+    const t = e.changedTouches[0]; this.st = { id: t.identifier, x: t.clientX, y: t.clientY, cast, drag: false, tx: 0, ty: 0 };
+    if (!this.bound) { this.bound = true; const o = { passive: false };
+      document.addEventListener('touchmove', ev => this.move(ev), o); document.addEventListener('touchend', ev => this.end(ev, true), o); document.addEventListener('touchcancel', ev => this.end(ev, false), o); }
+  },
+  find(e) { const s = this.st; if (!s) return null; for (const t of e.changedTouches) if (t.identifier === s.id) return t; return null; },
+  move(e) {
+    const t = this.find(e); if (!t) return; const s = this.st, dx = t.clientX - s.x, dy = t.clientY - s.y;
+    if (!s.drag && Math.hypot(dx, dy) < 14) return; s.drag = true; e.preventDefault();
+    const p = G.player, K = 2.2 / ZOOM; let mx = Iso.sx(p.x, p.y) + dx * K, my = Iso.sy(p.x, p.y) + dy * K;
+    const w = Iso.toWorld(mx, my), d = Math.hypot(w.x - p.x, w.y - p.y); // 사거리 밖이면 가장자리에 붙임
+    let wx = w.x, wy = w.y; if (d > this.RANGE) { wx = p.x + (w.x - p.x) / d * this.RANGE; wy = p.y + (w.y - p.y) / d * this.RANGE; }
+    s.tx = Iso.sx(wx, wy); s.ty = Iso.sy(wx, wy); s.wx = wx; s.wy = wy; this.mark(true);
+  },
+  end(e, fire) {
+    const t = this.find(e); if (!t) return; const s = this.st; this.st = null; this.mark(false);
+    if (!G.running || G.player.dead) return;
+    if (!s.drag) { s.cast(); return; }
+    if (!fire) return;
+    input.mx = s.tx; input.my = s.ty; s.cast();
+  },
+  mark(on) {
+    let m = document.getElementById('throw-mark');
+    if (!on) { if (m) m.style.display = 'none'; return; }
+    if (!m) { m = document.createElement('div'); m.id = 'throw-mark'; document.getElementById('hud').appendChild(m); }
+    const s = this.st, r = 26; m.style.cssText = `display:block;position:fixed;pointer-events:none;z-index:60;width:${r * 2}px;height:${r}px;border:2px solid #ffb040;border-radius:50%;background:rgba(255,176,64,.18);left:${s.tx * ZOOM - r}px;top:${s.ty * ZOOM - r / 2}px`;
   },
 };
 Touch.init();

@@ -46,7 +46,7 @@ const UI = {
     document.querySelectorAll('.panel .close').forEach(el => {
       el.onclick = () => UI.close(el.closest('.panel').id.replace('panel-', ''));
     });
-    document.querySelectorAll('#menu-buttons button').forEach(b => { b.onclick = () => UI.toggle(b.dataset.panel); });
+    document.querySelectorAll('#menu-buttons button[data-panel]').forEach(b => { b.onclick = () => UI.toggle(b.dataset.panel); });
     document.querySelectorAll('.equip-slot').forEach(el => { el.onclick = () => UI.selectEquip(el.dataset.slot); });
   },
 
@@ -121,7 +121,7 @@ const UI = {
     } else { // 모바일: 스킬은 오른쪽 아래 엄지 자리
       let ts = $('touch-skills');
       if (!ts) { ts = document.createElement('div'); ts.id = 'touch-skills'; $('hud').appendChild(ts);
-        ts.addEventListener('touchstart', e => { const h = e.target.closest('[data-sk]'); if (!h) return; e.preventDefault(); if (!G.running || G.player.dead) return; if (h.dataset.sk === 'edit') Hotbar.edit(undefined, 'skill'); else Hotbar.useSkill(+h.dataset.sk); }, { passive: false }); }
+        ts.addEventListener('touchstart', e => { const h = e.target.closest('[data-sk]'); if (!h) return; e.preventDefault(); if (!G.running || G.player.dead) return; if (h.dataset.sk === 'edit') Hotbar.edit(undefined, 'skill'); else { const a = G.player.skillbar[+h.dataset.sk], sd = a && SKILLS[+a.slice(2)]; if (sd && sd.id === 'grenade' && G.player.skills[sd.id] && !(G.player.skillCd[+a.slice(2)] > 0) && G.player.level >= sd.lvl) ThrowAim.begin(e, () => Hotbar.useSkill(+h.dataset.sk)); else Hotbar.useSkill(+h.dataset.sk); } }, { passive: false }); }
       ts.innerHTML = '';
       for (let i = 0; i < SKILLBAR; i++) { const a = p.skillbar[i]; if (!a) continue; const si = +a.slice(2), s = SKILLS[si], d = document.createElement('div'); d.className = 'tsk'; d.dataset.sk = i; d.innerHTML = `${ICON(s.icon)}<span>${s.name}</span><div class="cd" id="cd${si}"></div>`; ts.appendChild(d); }
       if (learned) { const d = document.createElement('div'); d.className = 'tsk mini'; d.dataset.sk = 'edit'; d.innerHTML = '<b>＋</b><span>스킬</span>'; ts.appendChild(d); }
@@ -342,6 +342,7 @@ const UI = {
       + (req > p.level ? ` <span style="color:#f66">요구 Lv${req}</span>` : '') + (isSealed(it) ? ' <span class="seal-tag">🔒 봉인 · 탈출하면 착용 가능</span>' : '') + `<br>${itemHtml(it, true)}${cmp}<div class="btns"></div>`; // v1.50 부품은 아래 부품 칸에서
     const btns = box.querySelector('.btns');
     if (it.kind === 'weapon' && !WEAPONS[it.key].melee) Attach.panel(box, it); // v1.50 부품 칸
+    if (IS_TOUCH) box.prepend(btns); // v2.0.37 폰: 장착·판매 버튼을 맨 위 (옵션이 길어도 스크롤 없이)
     const add = (label, fn) => { const b = document.createElement('button'); b.innerHTML = label; b.onclick = fn; btns.appendChild(b); };
     if (it.kind !== 'cons') add(it.locked ? `${ICON('lock')} 잠금 해제` : `${ICON('lock')} 잠금`, () => { it.locked = !it.locked; SFX.play('ui'); UI.refreshInventory(); }); // v1.15 잠금: 판매·분해·버리기 막음
     if (equippedSlot === 'belt') { add('칸 등록 (B)', () => Hotbar.edit()); return; } // v1.24 벨트는 바꿔 차기만
