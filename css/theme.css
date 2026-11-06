@@ -813,3 +813,5 @@ body.touch.shop-open #panel-inventory.panel { left: 38vw !important; width: 61vw
 body.touch.shop-open .bag { grid-template-columns: max-content minmax(0, 1fr); }
 body.touch.shop-open .bag-grid { --bag-cell: 27px; }
 body.touch #item-detail > .btns:first-child { position: sticky; top: 0; z-index: 3; background: #17140f; padding: 2px 0 4px; margin: 0 0 4px; }
+/* v2.0.37 폰: 강화 · 분해 · 재조정 버튼은 창 아래에 붙여 스크롤 없이 */
+body.touch #panel-enhance #enh-detail .btns, body.touch #panel-enhance .btns { position: sticky; bottom: 0; z-index: 3; background: #17140f; padding: 4px 0; box-shadow: 0 -6px 8px #17140f; }
